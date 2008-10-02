@@ -1,0 +1,20 @@
+<ul class="formfields">
+{% for field in form %}
+    {% if not field.is_hidden %}
+    <li class="{% if field.errors %}errors {% endif %} {% if field.field.required %}required{%endif%}">
+        {% if field.field.required and not field.errors %}<p class="required-text"><span>required</span></p>{%endif%}
+        {{field.label_tag}} {{field}}    
+        {% if field.help_text %}<p class="discreet">{{ field.help_text }}</p>{% endif %}
+        {% if field.errors %}{{ field.errors }}{% endif %}
+    </li>
+    {% else %}
+    <li class="{% if field.errors %}errors {% endif %} {% if field.field.required %}required{%endif%}">
+        {% if field.field.required and not field.errors %}<p class="required-text"><span>required</span>{%endif%}</p>
+        {{field}}    
+        {% if field.help_text %}<p class="discreet">{{ field.help_text }}</p>{% endif %}
+        {% if field.errors %}{{ field.errors }}{% endif %}
+    </li>
+    {% endif %}
+{% endfor %}
+</ul>
+	

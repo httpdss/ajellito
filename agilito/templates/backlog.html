@@ -1,0 +1,61 @@
+{% extends "master.html" %}
+
+{% block title %}Backlog{% endblock %}
+{% block js%}
+<script type="text/javascript" src="/resources/js/backlog.js"></script>
+{% endblock%}
+
+{% block main_nav %}
+<ul id="main_nav">
+    <li class="selected"><a href="{% url agilito.views.backlog project.id%}">Backlog</a></li>
+    <li><a href="{% url agilito.views.index %}">Iteration</a></li>
+    <li><a href="{% url agilito.views.index %}">Plan</a></li>
+    {% if current_project.iteration_set.all %}
+    <li><a href="{% url agilito.views.iteration_hours current_project.id%}">Hours</a></li>
+    {% endif %}
+
+    <div class="visualClear"></div>
+</ul>
+{% endblock %}
+
+{% block actions%} <a id='create-user-story' href='#'>Add User Story</a> | <a id='create-detailed-user-story' href='#'>Add Detailed User Story</a>{% endblock %}
+
+{% block content %}
+<div id='us-new' style='display:none;'>
+    <form method="post" action='create_us/' id='us-form'>
+        {{ us_form.as_p }}
+        <input type='submit' id='us-create' value='Create' />
+       
+        <input type='button' id='us-cancel' value='Cancel' />
+    </form>
+</div>
+
+
+
+
+<div id="us-heading">
+    <div id="col-info">
+        <span id="col-rank">Rank</span>
+        <span>&nbsp;</span>
+        <span id="col-id">Name</span>
+
+    </div>
+    <div id="col-extras">
+        <span id="col-est">Plan Est</span>
+        <span>&nbsp;</span>
+    </div>
+<div class="visualClear">
+</div>
+<ul id='user-story-list'>
+{% if us_list %}
+    {%for us in us_list%}
+      {% include "us-ajax.html" %}
+    {%endfor%} 
+{% else %}
+<p>No user story on the database</p>
+{% endif %}       
+</ul>
+
+
+</div>
+{% endblock %}

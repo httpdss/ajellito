@@ -1,0 +1,10 @@
+{% extends "master.html" %}
+{% block title %}Adding/Editing a task{% endblock %}
+{% block content %}
+
+<h2><small>adding/editing a task to</small><br /> {{ story }}</h2>
+<form method="post">
+{% include "generic_form.html" %}
+<input type="submit" class="save" value="Save"/>
+</form>
+{% endblock %}

@@ -1,0 +1,63 @@
+{% extends "master.html" %}
+
+{% block js %}
+<script type="text/javascript">
+
+function task_details() {
+    $.getJSON("/json/task/" + this.value + "/", function(data) {
+            $("#id_estimate").attr("value", data.estimate)
+            $("#id_remaining").attr("value", data.remaining)
+            $("#id_actuals").attr("value", data.actuals)
+            $("#id_state").attr("value", data.state)
+        });
+}
+
+$(window).ready(function(){
+    $("#timelog dt").addClass("shown");
+    $("#timelog dt").click(function() {
+        $(this).toggleClass("shown").next().toggle("blind", {direction:"vertical"}, 200);
+    });
+    $("#timelog .level0:not(:first) dt").toggleClass("shown").next().toggle();
+    $("#id_date").datepicker({dateFormat: "yy-mm-dd", duration: "fast", mandatory: true});
+    $("input.tasks-select").click(task_details);
+});
+</script>
+{% endblock %}
+
+{% block main_nav %}
+<ul id="main_nav">
+    <li><a href="{% url agilito.views.backlog current_project.id %}">Backlog</a></li>
+    {% if current_project.iteration_set.all %}
+    <li><a href="{% url agilito.views.iteration_status current_project.id %}">Iteration</a></li>
+    {% endif %}
+    <li class="selected"><a href="{% url agilito.views.timelog %}">Log</a></li>
+    {% if current_project.iteration_set.all %}
+    <li><a href="{% url agilito.views.iteration_hours current_project.id%}">Hours</a></li>
+    {% endif %}
+    <div class="visualClear"></div>
+</ul>
+{% endblock %}
+{% block content %}
+<h2>Log your hours!</h2>
+{% if message %}
+<p class="notice">{{ message }}</p>
+{% endif %}
+<form method="post" action="">
+    <div id="timelog-wrapper">
+        <ul id="timelog" class="formfields">
+        {% for field in form %}
+            <li class="{% if field.errors %}errors {% endif %} {% if field.field.required %}required{%endif%}">
+                {% if field.field.required and not field.errors %}<p class="required-text"><span>required</span>{%endif%}</p>
+                {{field.label_tag}} {{field}}    
+                {% if field.help_text %}<p class="discreet">{{ field.help_text }}</p>{% endif %}
+                {% if field.errors %}{{ field.errors }}{% endif %}
+            </li>
+        {% endfor %}
+        </ul>
+    </div>
+<input type="submit" value="Apply">
+</form>
+
+
+
+{% endblock %}

@@ -1,0 +1,107 @@
+{% extends "master.html" %}
+{% load humanize %}
+
+
+{% block title %} User Stories in the Backlog {% endblock %}
+
+{% if current_project %}
+
+{% block main_nav %}
+<ul id="main_nav">
+    <li class="selected"><a href="{% url agilito.views.backlog current_project.id %}">Backlog</a></li>
+    {% if current_project.iteration_set.all %}
+    <li><a href="{% url agilito.views.iteration_status current_project.id %}">Iteration</a></li>
+    {% endif %}
+    <li><a href="{% url agilito.views.timelog %}">Log</a></li>
+    {% if current_project.iteration_set.all %}
+    <li><a href="{% url agilito.views.iteration_hours current_project.id%}">Hours</a></li>
+    {% endif %}
+    <div class="visualClear"></div>
+</ul>
+{% endblock %}
+
+{% block actions %}
+<a id="create-user-story" class="action-link add-task"  href="{% url story_from_backlog current_project.id %}?last_page={{last_page}}">Add User Story</a>
+{% endblock %}
+
+
+
+
+
+{% block content %}
+<ul class="breadcrumbs">
+{% if current_project %}
+<li id="iteration">{{ current_project.name }} &gt; </li> 
+{% endif %}
+
+<li id="iteration">Backlog</li> 
+
+{% if object.planned %}
+{% endif %}
+<li class="visualClear" />
+</ul>
+
+
+<div id="us-head"> 
+    <h2>
+    Backlog
+    </h2>
+{% if current_project.release %}
+<span>Release:
+{{current_project.release.name}}
+</span>
+{% endif %}
+    <div class="visualClear"></div>
+</div>
+
+{% if user_stories %}
+<div id="us-resume">
+<span>Number of US in Backlog: <strong>{{ user_stories.count }}</strong> </span> 
+</div>
+{% endif %}
+{% if user_stories %}
+
+
+<table cellspacing="0" cellpadding="2" id="user-story-list">
+<thead>
+    <tr>
+        <th>Rank</th>
+        <th>Id</th>
+        <th>Name</th>
+        <th>Plan</th>
+    </tr>
+</thead>
+
+<tbody>
+<tr class="totals">
+    <td/>
+    <td/>
+    <td/>
+    <td class="total planned">{{ planned }}</td>
+    <td/>
+    <td/>
+    <td/>
+
+</tr>
+{% for object in user_stories %}
+    <tr class="{% cycle even,odd %}">
+        <td class="rank">{{object.rank}}</td>
+        <td class="id">US{{object.id}}</td>
+        <td class="name"><a href="{{object.get_absolute_url}}">{{object.name}}</a></td>
+        <td class="planned">{{object.planned|default_if_none:"-"}}</td>
+        <td id="add_task_us_{{object.id}}" class=""><a href="{% url agilito.views.task_create current_project.id,object.id %}?last_page={{last_page}}"><img src="/resources/add_.png" alt="add task" title="add task" width="16" height="16" /></a></td>
+        <td id="edit_us_{{object.id}}" class=""><a href="{% url agilito.views.userstory_edit current_project.id,object.id %}?last_page={{last_page}}"><img src="/resources/pencil.png" alt="edit" title="edit" width="16" height="16" /></a></td>
+        <td id="delete_us_{{object.id}}" class=""><a href="{% url agilito.views.userstory_delete current_project.id,object.id %}?last_page={{last_page}}"><img src="/resources/delete.png" alt="delete" title="delete" width="16" height="16" /></a></td>
+    </tr> 
+{%endfor%}
+</tbody>
+</table>
+</dd>
+{% else %}
+No user stories in the backlog.
+{% endif %}
+</dl>
+{% endblock %}
+
+
+{% endif %}

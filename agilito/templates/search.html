@@ -1,0 +1,39 @@
+{% extends "master.html" %}
+
+{% block title %} Search {% if query %} Results {% endif %} {% endblock %}
+
+
+{% block content %}
+  
+  <h2>Search for Uses Stories, Tasks, Test Cases</h2>
+
+  <form action="." method="GET">
+  <p>
+    <label for="query"> Search: </label>
+    <input size="20" type="text" name="query" value="{{ query|escape }}"/>
+  </p>
+  <p>
+    <label for="model" >Search for: </label>
+        <select name="model">
+            <option value="User Story">User Stories</option>
+            <option value="Task">Tasks</option>
+            <option value="Test Case">Test Cases</option>
+        </select>
+  </p>
+  <p>
+    <label for="pagesize">Page size: </label>
+        <select name="pagesize">
+        <option>10</option>
+        <option>20</option>
+        <option>50</option>
+        <option>100</option>
+        <option>200</option>
+        </select>
+  </p>
+  <input type="submit" value="Search"/>
+  </form>
+  
+  {% include "searchresults.html" %}
+
+
+{% endblock %}

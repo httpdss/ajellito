@@ -1,0 +1,10 @@
+{% extends "master.html" %}
+{% block title %}{{object.name}}{% endblock %}
+{% block content %}
+
+<h2><small>adding a testcase to</small><br /> {{ story }}</h2>
+<form method="post">
+{% include "generic_form.html" %}
+<input type="submit" class="save" value="Save"/>
+</form>
+{% endblock %}

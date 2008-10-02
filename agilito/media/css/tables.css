@@ -1,0 +1,48 @@
+table#user-story-list{
+width:100%;
+clear:both;
+}
+thead th{
+vertical-align:top;
+padding-left:0.5em;
+text-align:left;
+}
+td img {
+vertical-align:middle;
+}
+td.name{
+min-width:20em;
+width:50%;
+}
+tbody td{
+font-weight:normal;
+padding:0 0.5em;
+vertical-align:middle;
+}
+.mceEditor tbody td{
+padding:0;
+}
+form tbody td{
+border-right:none;
+
+}
+
+tr.even td { 
+background: #eef 
+}
+
+.estimates th{
+font-size:80%;
+}
+.totals td{
+border-bottom:2px solid #063;
+}
+.totals td.total{
+background:#9e9;
+text-align:center;
+}
+
+td.actuals, td.planned,td.estimated, td.progress, td.todo, td.actuals, td.failures, td.rank {
+text-align:center;
+}
+

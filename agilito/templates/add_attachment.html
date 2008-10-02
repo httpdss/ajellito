@@ -1,0 +1,14 @@
+{% extends "master.html" %}
+{% block title %}Adding / Editing an attachment to {{ story }}{% endblock %}
+{% block content %}
+
+<h2><small>Adding / Editing an attachment to</small><br /> {{ story }}</h2>
+{% if form.is_multipart %}
+    <form enctype="multipart/form-data" method="post">
+{% else %}
+    <form method="post">
+{% endif %}
+{% include "generic_form.html" %}
+<input type="submit" class="save" value="Save"/>
+</form>
+{% endblock %}

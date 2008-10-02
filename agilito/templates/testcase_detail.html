@@ -1,0 +1,107 @@
+{% extends "master.html" %}
+{% load markup %}
+{% load humanize %}
+
+{% block title %} {{ object.name }} {% endblock %}
+{% block actions %}
+        <span id="edit_testcase_{{object.id}}" class="">
+            <a class="action-link edit" href="{% url agilito.views.testcase_edit current_project.id,current_story.id,object.id %}?last_page={{last_page}}">Edit Test Case</a>
+        </span>
+        <span id="delete_testcase_{{object.id}}" class="">
+            <a class="action-link delete" href="{% url agilito.views.testcase_delete current_project.id,current_story.id,object.id %}?last_page={{last_page}}">Delete</a>
+        </span>
+
+{% endblock %}
+{% block content %}
+<ul class="breadcrumbs">
+<li id="iteration">{{ object.user_story.project.name }} &gt; </li>
+<li id="iteration"><a href="{{ object.user_story.iteration.get_absolute_url }}">{{ object.user_story.iteration.name }}</a> &gt; </li> 
+<li id="iteration"><a href="{{ object.user_story.get_absolute_url }}">{{ object.user_story.name }}</a> &gt; </li> 
+<li id="iteration">{{ object.name }} </li>
+<li class="visualClear" />
+</ul>
+
+
+
+<div id="us-head"> 
+    <h2> TC{{object.id}}: {{object.name}} </h2>
+    <span class="{{object.get_priority_display|slugify }}">Priority: {{object.get_priority_display}}</span> 
+    <div class="visualClear"></div>
+</div>
+
+
+<div id="us-resume">
+
+</div>
+
+<p class="description">{{object.description|safe}}</p>
+<dl>
+    <dt>Last Test Result</dt>
+    <dd class="">
+        {% if object.testresult_set.all %}
+            {% with object.testresult_set.latest as testresult %}
+            <dd><a href="{{testresult.get_absolute_url}}">{{testresult.get_result_display}}</a></dd>
+            {% endwith %}
+        {% else %}
+
+        {% endif %}
+    </dd>        
+
+    <dt>Precondition</dt> 
+    <dd class=""><pre>{{object.precondition|safe}}</pre></dd>
+
+    <dt>Steps</dt> 
+    <dd class=""><pre>{{object.steps|safe}}</pre></dd>
+
+</dl>
+
+
+
+
+<h3> Test Results </h3>
+<a href="{% url agilito.views.testresult_create current_project.id,current_story.id,object.id %}?last_page={{last_page}}"
+    class="action-link add-task" >add a test result</a>
+
+<table>
+<thead>
+    <tr>
+        <th>Id</th>
+
+        <th>Test Result</th>
+        <th>Date</th>
+        <th>Tester</th>
+        <th>Comments</th>
+
+    </tr>
+</thead>
+
+<tbody>
+{% with object as testcase %}
+{% for testresult in testcase.testresult_set.all %}
+    {% with testresult as object %}
+    <tr class="{% cycle even,odd%}">
+        <td><a href="{% url testresult_detail_with_id current_project.id,current_story.id,testcase.id,object.id %}?last_page={{last_page}}">TR{{object.id}}</a></td>
+        <td><a href="{% url testresult_detail_with_id current_project.id,current_story.id,testcase.id,object.id %}?last_page={{last_page}}">{{object.get_result_display}}</a></td>
+        <td>{{object.date|naturalday}}</td>
+        <td>{{object.tester}}</td>        
+        <td class="description"><pre>{{object.comments}}</pre></td>
+        <td id="edit_testresult_{{object.id}}" class="">
+            <a href="{% url agilito.views.testresult_edit current_project.id,current_story.id,testcase.id,object.id %}?last_page={{last_page}}">
+                <img src="/resources/pencil.png" alt="edit" title="edit" width="16" height="16" />
+            </a>
+        </td>
+        <td id="delete_testresult_{{object.id}}" class="">
+            <a href="{% url agilito.views.testresult_delete current_project.id,current_story.id,testcase.id,object.id %}?last_page={{last_page}}">
+                <img src="/resources/delete.png" alt="delete" title="delete" width="16" height="16" />
+            </a>
+        </td>
+    </tr>
+    {% endwith %}
+{% endfor %}
+{% endwith %}    
+</tbody>
+</table>
+
+
+
+{% endblock %}

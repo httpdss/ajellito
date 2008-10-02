@@ -1,0 +1,126 @@
+{% extends "master.html" %}
+{% load humanize %}
+
+{% block title %}
+{% if current_iteration %}
+{{current_iteration.name}} Hours
+{% else %}
+There are no iterations in this project.
+{% endif %}
+{% endblock %}
+
+{% block main_nav %}
+<ul id="main_nav">
+    <li><a href="{% url agilito.views.backlog current_project.id %}">Backlog</a></li>
+    {% if current_project.iteration_set.all %}
+    <li><a href="{% url agilito.views.iteration_status current_project.id %}">Iteration</a></li>
+    {% endif %}
+    <li><a href="{% url agilito.views.timelog %}">Log</a></li>
+    {% if current_project.iteration_set.all %}
+    <li class="selected"><a href="{% url agilito.views.iteration_hours current_project.id%}">Hours</a></li>
+    {% endif %}
+    <div class="visualClear"></div>
+</ul>
+{% endblock %}
+
+
+{% block content %}
+{% if current_iteration %}
+
+<ul class="breadcrumbs">
+{% if current_iteration.project %}
+<li id="iteration">{{ current_iteration.project.name }} &gt; </li> 
+{% endif %}
+<li id="iteration"> {{ current_iteration.name }} </li>
+
+<li class="visualClear" />
+</ul> 
+
+<div id="us-head"> 
+    {% if current_project.iteration_set.all %}
+    {% with current_project.iteration_set.all as itset %}
+    {% ifnotequal itset.count 1 %}
+    <h2>
+    <select id="iteration-selection" style="width:10em">
+        {%for iteration in itset %}
+        <option {% ifequal iteration.id current_iteration.id %} selected="selected" {%endifequal%}
+            value="{{iteration.get_absolute_url}}hours/">{{ iteration.name }}</option>
+        {%endfor%}
+    </select>
+    </h2>
+    {% else %}
+    <h2>
+        {% with itset.0 as iteration %}
+            {{ iteration.name }}
+        {% endwith %}
+    </h2>
+    {% endifnotequal %}
+    {% endwith %}
+    {% endif %}
+<span>Release:
+{{current_iteration.release.name}}
+</span>
+
+    <div class="visualClear"></div>
+</div>
+<div id="us-resume">
+    <span>Start date: 
+    <strong>{{current_iteration.start_date|naturalday}}</strong>
+    </span> |
+    <span>End date :
+    <strong>{{current_iteration.end_date|naturalday}}</strong>
+    </span>
+</div>
+
+<div class="hours-resume">
+    <dl id="resume">
+        <dt>Plan Estimate:</dt>
+        <dd>{{planned}}</dd>
+        <dt>Accepted:</dt>
+        <dd>{{current_iteration.us_accepted}} ({{current_iteration.us_accepted_percentage|floatformat:0 }} %)</dd>
+    </dl>
+</div>
+<div class="hours-resume">
+    <dl id="resume">
+        <dt>Task Estimated:</dt> 
+        <dd>{{estimated_total}}</dd>
+        <dt>Actuals:</dt> 
+        <dd>{{progress_total}}</dd>
+    </dl>
+</div>
+<div class="visualClear"></div>
+
+
+{% if rows_bill %}
+<table cellspacing="0" cellpadding="2">
+<thead>
+    <tr>
+        <th>Team Status</th>
+        <th>Task Estimates</th>
+        <th>Task Actuals</th>
+    </tr>
+</thead>
+
+<tbody>
+    <tr class="totals">
+        <td></td>
+        <td class="total">{{estimated_total}}</td>
+        <td class="total">{{progress_total}}</td>
+    </tr> 
+{% for r in rows_bill %}
+    <tr class="{% cycle even,odd %} {%if object.blocked%}blocked{% endif %}">
+        <td class="name">{{r.name}}</td>
+        <td class="estimated">{{r.estimated}}</td>
+        <td class="progress">{{r.progress}}</td>
+    </tr>
+{% endfor %}
+</tbody>
+</table>
+{% else%}
+There is no members on this project
+{% endif%}
+
+{% else %}
+
+{% endif %}
+{% endblock %}

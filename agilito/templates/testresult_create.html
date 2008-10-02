@@ -1,0 +1,10 @@
+{% extends "master.html" %}
+{% block title %}Adding / Editing a Test Result to {{ testcase }}{% endblock %}
+{% block content %}
+
+<h2><small>Adding / Editing a Test Result to</small><br /> {{ testcase }}</h2>
+<form method="post">
+{% include "generic_form.html" %}
+<input type="submit" class="save" value="Save"/>
+</form>
+{% endblock %}

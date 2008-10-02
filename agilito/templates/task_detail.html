@@ -1,0 +1,45 @@
+{% extends "master.html" %}
+{% load markup %}
+{% load humanize %}
+
+{% block title %} {{ task.name }} {% endblock %}
+{% block actions%}
+    <span id="edit_task_{{task.id}}" class="">    
+    <a class="action-link edit" href="{% url agilito.views.task_edit current_project.id,current_story.id,task.id %}?last_page={{last_page}}"> Edit Task </a>
+    </span>
+    <span id="delete_task_{{task.id}}" class="">
+        <a class="action-link delete" href="{% url agilito.views.task_delete current_project.id,current_story.id,task.id %}?last_page={{last_page}}">Delete Task</a>
+    </span>
+{% endblock %}
+
+
+{% block content %}
+<ul class="breadcrumbs">
+<li id="iteration">{{ task.user_story.project.name }} &gt; </li>
+<li id="iteration"><a href="{{ task.user_story.iteration.get_absolute_url }}">{{ task.user_story.iteration.name }}</a> &gt; </li> 
+<li id="iteration"><a href="{{ task.user_story.get_absolute_url }}">{{ task.user_story.name }}</a> &gt; </li> 
+<li id="iteration">{{ object.name }} </li>
+<li class="visualClear" />
+</ul>
+
+<div id="us-head"> 
+    <h2> TA{{task.id}}: {{task.name}} </h2>
+    <span class="{{task.get_state_display|slugify }}">State: {{task.get_state_display}}</span> 
+    <div class="visualClear"></div>
+</div>
+
+<div id="us-resume">
+    <span>Planned: <strong>{{task.planned}}</strong> | </span>
+    <span>Estimate: <strong>{{task.estimate}}</strong> | </span>
+    <span>To Do: <strong>{{task.remaining}}</strong> | </span>
+    <span>Actuals: <strong>{{task.actuals}}</strong> | </span>
+    {%if task.owner %} 
+        <span>Owner: <strong>{{task.owner}}</strong></span>
+    {%else%}
+        <span>Owner: <strong>No owner</strong></span>
+    {%endif%}
+</div>
+
+<p class="description">{{task.description|safe}}</p>
+{% endblock %}
+

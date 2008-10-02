@@ -1,0 +1,15 @@
+&x_axis_steps=1&
+&x_legend=Day,14,0&
+&y_legend=Hours,14,0x639F45&
+&y_ticks=5,10,10&
+&line_hollow=2,0x639F45,Ideal,14,3&
+&line_hollow_2=3,0x2693CF,Remaining,14,4&
+&values={{ ideal|join:"," }}&
+&values_2={{ remaining|join:"," }}&
+&x_labels={{ day|join:"," }}&
+&y_min=0&
+&y_max={{ y_max }}&
+&bg_colour=#ffffff&
+&tool_tip=%23key%23+for+%23x_legend%23+%23x_label%23%3A+%23val%23%3Cbr%3EDifference%3A+%23tip%23&
+&tool_tips_set={{ ideal_tips|join:"," }}&
+&tool_tips_set_2={{ remaining_tips|join:"," }}&

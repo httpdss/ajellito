@@ -1,0 +1,10 @@
+CREDITS
+~~~~~~~
+
+Backend, database models, view functions, templates, UI, testing, etc:
+
+John Lenton         <john@except.com.ar>
+Alejandro Peralta   <alep@except.com.ar>
+Francisco Herrero   <francisco.herrero@gmail.com>
+Matías Iturburu     <maturburu@gmail.com>
+

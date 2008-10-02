@@ -1,0 +1,9 @@
+    <p class="pager">[ 
+    {% for pag in page_range %}
+      {%ifequal page pag %}
+        <strong>{{ pag }}</strong>
+      {% else %}
+        <a href="?page={{ pag }}&{{ querystring }}" title="to page {{ pag }}">{{ pag }}</a>
+      {% endifequal %}
+    {% endfor %}
+      ]</p>

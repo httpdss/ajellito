@@ -1,0 +1,181 @@
+{% extends "master.html" %}
+{% load humanize %}
+{% load markup %}
+
+{% block title %}
+{% if current_iteration %}
+{{current_iteration.name}}
+{% else %}
+There are no iterations in this project.
+{% endif %}
+{% endblock %}
+
+{% block main_nav %}
+<ul id="main_nav">
+    <li><a href="{% url agilito.views.backlog current_project.id %}">Backlog</a></li>
+    {% if current_project.iteration_set.all %}
+    <li class="selected"><a href="{% url agilito.views.iteration_status current_project.id %}">Iteration</a></li>
+    {% endif %}
+    <li><a href="{% url agilito.views.timelog %}">Log</a></li>
+    {% if current_project.iteration_set.all %}
+    <li><a href="{% url agilito.views.iteration_hours current_project.id%}">Hours</a></li>
+    {% endif %}
+    <div class="visualClear"></div>
+</ul>
+{% endblock %}
+
+{% block actions%}
+{% if current_iteration %}
+<a id="create-user-story" class="action-link add-task" 
+    
+    href="{% url story_from_iteration project_id=current_project.id,iteration_id=current_iteration.id %}?last_page={{last_page}}">Add User Story</a>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+
+{% if current_iteration %}
+
+<ul class="breadcrumbs">
+{% if current_iteration.project %}
+<li id="iteration">{{ current_iteration.project.name }} &gt; </li> 
+{% endif %}
+<li id="iteration"> <a class="dropdown" href="#"> {{ current_iteration.name }} <img src="/resources/arrow_down_small.png" /></a>
+    {%if current_iteration.project.iteration_set.all %}
+        <div class="dropdown_menu">
+        {%for iteration in current_iteration.project.iteration_set.all %}
+        <a href="{{iteration.get_absolute_url}}">{{iteration.name}}</a>
+        {% endfor %}
+        </div>
+    {%endif%}
+    
+</li> 
+<li class="visualClear" />
+
+</ul>
+
+
+<div id="us-head"> 
+
+    {% if current_project.iteration_set.all %}
+    {% with current_project.iteration_set.all as itset %}
+    {% ifnotequal itset.count 1 %}
+    <h2>
+    <select id="iteration-selection" style="width:10em">
+        {%for iteration in itset %}
+        <option {% ifequal iteration.id current_iteration.id %} selected="selected" {%endifequal%}
+            value="{{iteration.get_absolute_url}}">{{ iteration.name }}</option>
+        {%endfor%}
+    </select>
+    </h2>
+    {% else %}
+    <h2>
+        {% with itset.0 as iteration %}
+            {{ iteration.name }}
+        {% endwith %}
+    </h2>
+    {% endifnotequal %}
+    {% endwith %}
+    {% endif %}
+<span>Release:
+{{current_iteration.release.name}}
+</span>
+
+    <div class="visualClear"></div>
+</div>
+
+
+<object align="right" classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000" codebase="http://fpdownload.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=8,0,0,0" 
+width="320" height="240" id="ie_chart" align="middle">
+<param name="allowScriptAccess" value="sameDomain" />
+<param name="movie" value="/resources/open-flash-chart.swf?data={{ data_url }}" />
+<param name="quality" value="high" />
+<param name="bgcolor" value="#FFFFFF" />
+<embed align="right" src="/resources/open-flash-chart.swf?data={{ data_url }}" quality="high" bgcolor="#FFFFFF" width="320" height="240" name="chart" align="middle" allowScriptAccess="sameDomain" 
+type="application/x-shockwave-flash" pluginspage="http://www.macromedia.com/go/getflashplayer" id="chart"/>
+</object>
+
+<div id="us-resume">
+    <span>Start date: 
+    <strong>{{current_iteration.start_date|naturalday}}</strong>
+    </span> |
+    <span>End date :
+    <strong>{{current_iteration.end_date|naturalday}}</strong>
+    </span>
+</div>
+<div class="description">{{current_iteration.description|safe}}</div>
+
+<dl id="resume">
+<dt>Accepted</dt>
+<dd>{{current_iteration.us_accepted_percentage|floatformat:0 }} %</dd>
+
+
+<dt>User Stories</dt>
+<dd>
+{% if user_stories %}
+Number of US in iteration: {{ user_stories.count }} 
+</dd>
+</dl>
+<table id="user-story-list" cellspacing="0" cellpadding="2">
+<thead>
+    <tr>
+        <th>Rank</th>
+        <th>Id</th>
+        <th>Name</th>
+        <th>State</th>
+        <th>Plan</th>
+        <th>Tasks</th>
+        <th>To-Do</th>
+        <th>Failures</th>
+    </tr>
+</thead>
+
+<tbody>
+    <tr class="totals">
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td class="total">{{planned}}</td>
+        <td class="total">{{estimated}}</td>
+        <td class="total">{{remaining}}</td>
+        <td class="total">{{failures}}</td>
+        <td></td>
+        <td></td>
+        <td></td>
+    </tr> 
+{% for object in user_stories %}
+    <tr class="{% cycle even,odd %} {%if object.blocked%}blocked{% endif %}">
+        <td class="rank">{{object.rank}}</td>
+        <td class="id"><a href="{{object.get_absolute_url}}">US{{object.id}}</a></td>
+        <td class="name"><a href="{{object.get_absolute_url}}">{{object.name}}</a></td>
+        <td class="state {{ object.get_state_display|slugify }}">{{object.get_state_display}}</td>
+        <td class="planned">{{object.planned|default_if_none:"-"}}</td>
+        <td class="estimated">{{object.estimated|default_if_none:"-"}}</td>
+        <td class="todo">{{object.remaining|default_if_none:"-"}}</td>
+        <td class="failures {% if object.test_failed %} fail {% endif %}">
+            {% if object.test_failed %}
+<a href="{{object.get_absolute_url}}#test-cases">{{object.test_failed|default_if_none:"-"}}</a>
+            {% else%}
+                {{object.test_failed|default_if_none:"-"}}
+            {%endif%}
+        </td>
+        <td id="add_task_us_{{object.id}}" class=""><a href="{% url agilito.views.task_create current_project.id,object.id %}?last_page={{last_page}}"><img src="/resources/add_.png" alt="add task" title="add task" width="16" height="16" /></a></td>
+        <td id="edit_us_{{object.id}}" class=""><a href="{% url agilito.views.userstory_edit current_project.id,object.id %}?last_page={{last_page}}"><img src="/resources/pencil.png" alt="edit" title="edit" width="16" height="16" /></a></td>
+        <td id="delete_us_{{object.id}}" class=""><a href="{% url agilito.views.userstory_delete current_project.id,object.id %}?last_page={{last_page}}"><img src="/resources/delete.png" alt="delete" title="delete" width="16" height="16" /></a></td>
+    </tr> 
+{%endfor%}
+</tbody>
+</table>
+
+{% else %}
+No user stories for this Iteration
+{% endif %}
+{% else %}
+There are no iterations in this project.
+{% endif %}
+
+{% endblock %}
+
+
+

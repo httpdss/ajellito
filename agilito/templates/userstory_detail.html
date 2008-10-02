@@ -1,0 +1,198 @@
+{% extends "master.html" %}
+{% load markup %}
+{% block title %}{{object.name}}{% endblock %}
+
+{% block actions %}
+<a class="action-link delete" href="delete/?last_page={{last_page}}">Delete</a>
+<a class="action-link edit" href="edit/?last_page={{last_page}}">Edit User Story</a>
+
+{% endblock %}
+
+
+
+{% block main_nav %}
+<ul id="main_nav">
+{% if object.iteration %}
+    <li><a href="{% url agilito.views.backlog current_project.id %}">Backlog</a></li>
+    {% if current_project.iteration_set.all %}
+    <li class="selected"><a href="{% url agilito.views.iteration_status current_project.id %}">Iteration</a></li>
+    {% endif %}
+    
+{% else %}    
+<li class="selected"><a href="{% url agilito.views.backlog current_project.id %}">Backlog</a></li>
+{% if current_project.iteration_set.all %}
+<li><a href="{% url agilito.views.iteration_status current_project.id %}">Iteration</a></li>
+{% endif %}
+
+
+{% endif %}
+    <li><a href="{% url agilito.views.timelog %}">Log</a></li>
+    {% if current_project.iteration_set.all %}
+    <li><a href="{% url agilito.views.iteration_hours current_project.id%}">Hours</a></li>
+    {% endif %}
+    <div class="visualClear"></div>
+</ul>
+{% endblock %}
+
+
+{% block content %}
+<ul class="breadcrumbs">
+<li id="project">{{ object.project.name }} &gt; </li>
+{% if object.iteration %}
+<li id="iteration"><a href="{{ object.iteration.get_absolute_url }}">{{ object.iteration.name }}</a> &gt; </li> 
+{% else %}
+<li id="backlog"><a href="/{{ object.project_id }}/backlog">Backlog</a> &gt; </li>
+{% endif %}
+<li id="iteration">{{ object.name }}</li>
+<li class="visualClear" />
+</ul>
+
+
+<div id="us-head" {%if object.blocked%}class="blocked"{% endif %}> 
+    <h2>
+    {{ object }}
+    </h2>
+    
+    <span id="state" class="{{ object.get_state_display|slugify }}">State: {{object.get_state_display}} {% if object.blocked %}blocked{% endif %}</span>
+{% if object.blocked %}
+<span style="display:none" id="blocked">{{object.blocked}}</span>
+{% endif %}
+    <div class="visualClear"></div>
+</div>
+
+<div id="us-resume">
+<p>
+{% if object.rank %}
+<span>Rank: <strong id="rank">{{ object.rank }} </strong></span>
+
+&nbsp;
+&nbsp;
+{% endif %} 
+<span>Time :</span>
+<span id="estimate">Estimate: <strong>{{object.estimated}}</strong></span> |
+<span id="actuals">Actuals: <strong>{{object.actuals}}</strong></span> |
+<span id="remaining">Remaining: <strong>{{object.remaining}} </strong></span>
+<span id="planned">
+{% if object.planned %}
+Planned :
+<strong>{{object.planned}}</strong>
+{% endif %}
+</span>
+
+</p>
+</div>
+
+<div id="description" class="description">{{object.description|safe}}</div>
+<!--Object's attachments-->
+
+
+<h4>Attachments :</h4>
+<a class="action-link add-task" href="attachment/add/?last_page={{last_page}}">add an attachment</a>
+
+{% if object.userstoryattachment_set.all %}
+<table>
+<thead>
+    <tr>
+        <th>Name</th>
+        <th>Description</th>
+    </tr>
+</thead>
+<tbody>
+{% for attach in object.userstoryattachment_set.all %}
+    <tr class="{% cycle even,odd %}">
+        <td class=""> 
+            <a href="{{attach.attachment.url}}"> 
+                {{attach.name}}
+            </a>
+        </td>
+        <td class="">
+            {{attach.description|safe}}
+        </td>
+        <td class="">
+            <a id="att_dwld" href="{{attach.attachment.url}}"> 
+                <img src="/resources/down.png" alt="download this file" />
+            </a>
+        </td>
+        <td class="">
+            <a id="att_del" href="{% url agilito.views.delete_attachment current_project.id,object.id,attach.id %}?last_page={{last_page}}">
+            <img src="/resources/delete.png" alt="delete" title="delete" width="16" height="16" />
+        </a>
+        </td>
+    </tr>
+{% endfor %}
+</tbody>
+</table>
+{% else%}
+<p>No attachments for this user story</p>
+{% endif %}
+
+
+<!-- Related items -->
+
+<h3>Related to US{{ object.id }}</h3>
+
+<h4 id="tasks">Tasks</h4>
+<a class="action-link add-task" href="task/add/?last_page={{last_page}}">add a task</a>
+
+  {% if object.task_set.all %}
+
+<table>
+
+<thead>
+    <tr>
+        <th>Id</th>
+        <th>Task Name</th>
+        <th>State</th>
+        <th>Planned</th>
+        <th>Estimate</th>
+        <th>To do</th>
+        <th>Actuals</th>
+        <th>Owner</th>
+    </tr>
+</thead>
+
+<tbody>
+{% for task in object.task_set.all %}
+    {% include "task.html" %}
+{%endfor%}
+</tbody>
+
+
+</table>
+
+{% else %}
+<p>No tasks for this user story</p>
+{% endif %}
+
+
+<h4 id="test-cases">Test Cases</h4>
+
+<a class="action-link add-task" href="testcase/add/?last_page={{last_page}}" >add a test case</a>
+
+{% if object.testcase_set.all %}
+<table>
+<thead>
+    <tr>
+        <th>Id</th>
+        <th>Test Name</th>
+        <th>Result</th>
+        <th>Priority</th>
+        <th>Description</th>
+    </tr>
+</thead>
+
+<tbody>
+{% for object in object.testcase_set.all %}
+{% include "testcase.html" %}
+{%endfor%}
+</tbody>
+</table>
+{% else %}
+<p>No tests for this user story</p>
+{% endif %}
+
+
+
+
+
+{% endblock %}

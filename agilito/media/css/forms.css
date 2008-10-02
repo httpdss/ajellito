@@ -1,0 +1,124 @@
+form{
+margin-bottom:1em;
+}
+form p, #timelog > li {
+clear:left;
+width:30em;
+padding:0.25em;
+margin:0 0 0.5em;
+}
+label{
+width:7em;
+float:left;
+text-align:right;
+padding:0 5px;
+}
+select{
+width:15em;
+}
+.formfields{
+list-style-type:none;
+}
+.formfields li{
+width:30em;
+padding: 0.25em;
+margin-bottom:0.5em;
+}
+.formfields li.required {
+}
+.formfields li.required label {
+
+}
+.formfields p.required-text{
+margin:0 0 0.25em 0;
+padding: 0 0 0 8em;
+}
+.formfields p.required-text span {
+color:#900;
+font-size:80%;
+}
+
+.formfields li.errors{
+background: #fe9 url(/resources/blocked.png) no-repeat !important;
+background-position: 0.5em center !important;
+border:1px solid #F99;
+background:#e99;
+}
+
+.errorlist{
+margin:0;
+padding: 0 0 0 8em;
+list-style-type:none;
+
+}
+.errorlist li{
+width:auto;
+padding:0;
+color:#900;
+margin:0;
+font-size:80%;
+
+}
+#timelog > li > ul { 
+padding: 4px;
+font-size: smaller;
+display: inline-block;
+}
+#timelog ul, #timelog dd { 
+padding: 0; 
+margin: 0; 
+}
+#timelog dl { 
+padding: 0; 
+margin-bottom: 2px 
+}
+#timelog dl label { 
+float: none; 
+display: block; 
+width: auto; 
+text-align: left 
+}
+#timelog-wrapper ul { 
+list-style-type: none
+}
+
+#timelog dt { 
+background: url(../add.png) no-repeat; 
+padding:5px 30px;
+cursor:pointer;
+}
+#timelog dt.shown { 
+background-image: url(../remove.png) 
+}
+#timelog dl.level1{
+padding-left:10px;
+}
+#timelog dl.level1 dd{
+overflow:auto;
+
+}
+#timelog dd li {
+width:auto;
+}
+#timelog dl.level2{
+margin-left:10px;
+border:1px solid #EBEBEB;
+}
+
+#timelog dl.level2 dd{
+height:auto;
+}
+
+#timelog > li:first-child { 
+float: right
+
+}
+#timelog > li:first-child p.required-text{
+padding:0;
+}
+#timelog > li:first-child label {
+float:none;
+display:block;
+text-align:left;
+}
+/* #content input[type=submit] { outline: 1px solid red } */

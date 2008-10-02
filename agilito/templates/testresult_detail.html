@@ -1,0 +1,26 @@
+{% extends "master.html" %}
+{% block title %} {{ object.name }} {% endblock %}
+
+{% block content %}
+
+<table>
+<thead>
+    <tr>
+        <th>Id</th>
+        <th>Test Name</th>
+        <th>Test Result</th>
+        <th>Date</th>
+        <th>Tester</th>
+        <th>Comments</th>
+
+    </tr>
+</thead>
+
+<tbody>
+
+{% include "testresult.html" %}
+
+</tbody>
+</table>
+
+{% endblock %}
