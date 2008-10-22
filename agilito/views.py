@@ -1,3 +1,8 @@
+import csv, StringIO
+import time 
+import datetime
+
+
 try:
     from collections import defaultdict
 except ImportError:
@@ -27,8 +32,6 @@ from agilito.forms import UserStoryForm, UserStoryShortForm, gen_TaskLogForm,\
     TestResultForm, UserStoryAttachmentForm
 
 from agilito.tools import restricted
-
-from datetime import datetime
 
 class UserHasNoProjectException(Exception):
     pass
@@ -407,7 +410,7 @@ def testresult_create(request, project_id, userstory_id, testcase_id, instance=N
         if instance is None:
             # Go with default data
             instance = TestResult(test_case=testcase, tester=request.user,
-                                  date=datetime.today(), result=0)
+                                  date=datetime.datetime.today(), result=0)
         url = request.GET.get('last_page', testcase.get_absolute_url())
         form = TestResultForm(initial={'http_referer' : url},
                               instance=instance,
@@ -503,10 +506,11 @@ def search(request, project_id):
                        extra_context=context)
 
 
-from datetime import datetime
-def _get_iteration(project_id, date=datetime.today()):
+def _get_iteration(project_id, date=None):
     # In case there are overlapping iterations we are going to pick
     # the one with the latest start date.    
+    if date is None:
+        date = datetime.date.today()
     iterations = Iteration.objects.filter(project__id=project_id,
                                           start_date__lte=date,
                                           end_date__gte=date)
@@ -684,13 +688,9 @@ def task_json(request, task_id):
     return HttpResponse(json, mimetype='application/json')
 
 
-import csv, StringIO
-import time 
-from datetime import date
-
 def _mk_time(date_string):
     _date = time.mktime(time.strptime(date_string, '%Y-%m-%d'))
-    _date = date.fromtimestamp(_date)
+    _date = datetime.date.fromtimestamp(_date)
     return _date
 
 def _gen(qset):
