@@ -11,9 +11,10 @@ def restricted(f):
     @wraps(f)
     @login_required
     def wrapper(request, project_id, *args, **kwargs):
-        try:
-            project = request.user.project_set.get(id=project_id)
-        except Project.DoesNotExist, msg:
-            raise Http404, msg
+        if not request.user.is_superuser:
+            try:
+                project = request.user.project_set.get(id=project_id)
+            except Project.DoesNotExist, msg:
+                raise Http404, msg
         return f(request, project_id, *args, **kwargs)
     return wrapper
