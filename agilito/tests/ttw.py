@@ -122,6 +122,14 @@ class TestProjectReachability(test.TestCase, TTW):
     fixtures = ['database_dump.json']
     def setUp(self):
         super(TestProjectReachability, self).setUp()
+        self.user = self.login()
+        self.user.is_superuser = False
+        self.user.save()
+
+    def tearDown(self):
+        super(TestProjectReachability, self).tearDown()
+        self.user.is_superuser = True
+        self.user.save()
 
     def test_cannot_reach_unassigned_project(self):
         user = self.login()
