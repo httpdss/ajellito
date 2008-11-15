@@ -90,6 +90,7 @@ class Project(ClueModel):
         permissions = (
             ('view', 'Can view the project.'),
         )
+        ordering = ('id',)
 
     def get_absolute_url(self):
         return '/%s/backlog/' % self.id
@@ -255,6 +256,7 @@ class UserStoryAttachment(ClueModel):
 
 class UserStory(ClueModel):
     STATES = [(10, 'Defined'),
+              (15, 'Specified'),
               (20, 'In Progress'),
               (30, 'Completed'),
               (40, 'Accepted'),
@@ -510,6 +512,10 @@ class TaskLog(models.Model):
                                                    self.task,
                                                    self.time_on_task,
                                                    self.owner.username)
+
+    @property
+    def project(self):
+        return self.iteration.project
 
     def get_container_model(self):
         return self.task
