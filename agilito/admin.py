@@ -45,7 +45,7 @@ class UserStoryAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'rank', 'planned', 'iteration', 'state',
                     'blocked', 'estimated', 'actuals', 'remaining')
     list_display_links = ('id', 'name',)
-    list_filter = ('iteration', 'state', 'blocked',)
+    list_filter = ('project', 'iteration', 'state', 'blocked',)
     ordering = ('rank','planned', 'blocked',)
     search_fields = ['name', 'description']
 

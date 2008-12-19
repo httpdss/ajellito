@@ -526,6 +526,33 @@ def _get_iteration(project_id, date=None):
  
     return latest_iteration
 
+def _iteration_get_burndown_data(it):
+    bd = it.burndown_data()
+    data = defaultdict(list)
+
+    for row in bd:
+        for k, v in row.items():
+            if v is not None:
+                data[k].append(v)
+        if row['remaining'] is not None:
+            diff = round(row['ideal'] - row['remaining'], 2)
+            data['ideal_tips'].append(diff)
+            data['remaining_tips'].append(-diff)
+        else:
+            data['ideal_tips'].append('-')
+            data['remaining_tips'].append('-')
+    data['y_max'] = max(data['ideal'] + data['remaining'])
+
+    gcd = 'cht=lc'
+    gcd += '&chd=t:' + ','.join([str(p) for p in data['ideal']])
+    gcd += '|' + ','.join(['%.1f' % p for p in data['remaining']])
+    gcd += '&chds=0,%.1f' % data['y_max']
+    gcd += '&chdl=Ideal|Burndown'
+    gcd += '&chxt=x,y&chxl=' + '|'.join(['0:'] + [str(d) for d in data['day']])
+    gcd += '&chxr=1,0,%f' % data['y_max']
+
+    data['google_chart'] = 'http://chart.apis.google.com/chart?' + gcd
+    return data
 
 @restricted
 def iteration_status(request, project_id, iteration_id=None):
@@ -547,17 +574,25 @@ def iteration_status(request, project_id, iteration_id=None):
         actuals = sum(i.actuals for i in user_stories)
         failures = sum(i.test_failed for i in user_stories)
 
+        data = _iteration_get_burndown_data(latest_iteration)
+
+        gc_url = data['google_chart']
         data_url = reverse('agilito.views.iteration_burndown_data',
                            args=[project_id, latest_iteration.id])
+        port = request.META['SERVER_PORT']
+        if not port:
+            port = '80'
         data_url = quote_plus('http://%s:%s%s' % (request.META['SERVER_NAME'],
-                                                  request.META['SERVER_PORT'],
+                                                  port,
                                                   data_url))
+        gc_url = data['google_chart']
 
         inner_context = { 'current_iteration' : latest_iteration,
                           'user_stories' : user_stories,
                           'planned' : planned,
                           'remaining' : todo,
                           'data_url': data_url,
+                          'google_chart': gc_url,
                           'estimated' : estimated,
                           'actuals' : actuals,
                           'failures' : failures, }
@@ -596,24 +631,13 @@ def iteration_hours(request, project_id, iteration_id=None):
 
     context = AgilitoContext(request, inner_context, current_project=project_id)
     return render_to_response('iteration_hours.html', context_instance=context)
-        
+
 @restricted
 def iteration_burndown_data(request, project_id, iteration_id):
     it = Iteration.objects.get(id=iteration_id, project__id=project_id)
-    bd = it.burndown_data()
-    data = defaultdict(list)
-    for row in bd:
-        for k, v in row.items():
-            if v is not None:
-                data[k].append(v)
-        if row['remaining'] is not None:
-            diff = round(row['ideal'] - row['remaining'], 2)
-            data['ideal_tips'].append(diff)
-            data['remaining_tips'].append(-diff)
-        else:
-            data['ideal_tips'].append('-')
-            data['remaining_tips'].append('-')
-    data['y_max'] = max(data['ideal'] + data['remaining'])
+
+    data = _iteration_get_burndown_data(it)
+
     ctx = AgilitoContext(request, data, current_project=project_id)
     return render_to_response('burndown_data.csv',
                               context_instance=ctx, 

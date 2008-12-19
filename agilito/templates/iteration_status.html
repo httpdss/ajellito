@@ -91,8 +91,42 @@ width="320" height="240" id="ie_chart" align="middle">
 <param name="movie" value="/resources/open-flash-chart.swf?data={{ data_url }}" />
 <param name="quality" value="high" />
 <param name="bgcolor" value="#FFFFFF" />
-<embed align="right" src="/resources/open-flash-chart.swf?data={{ data_url }}" quality="high" bgcolor="#FFFFFF" width="320" height="240" name="chart" align="middle" allowScriptAccess="sameDomain" 
-type="application/x-shockwave-flash" pluginspage="http://www.macromedia.com/go/getflashplayer" id="chart"/>
+
+<SCRIPT LANGUAGE="JavaScript">
+flash_versions = 10;
+flash_installed = 0;
+flash_version = '0.0';
+// Netscape style plugin detection
+if (navigator.plugins && navigator.plugins.length) {
+    for (x = 0; x <navigator.plugins.length; x++) {
+        if (navigator.plugins[x].name.indexOf('Shockwave Flash') != -1) {
+            flash_version = navigator.plugins[x].description.split('Shockwave Flash ')[1];
+            flash_installed = 1;
+            break;
+        }
+    }
+}
+// ActiveX style plugin detection
+else if (window.ActiveXObject) {
+    for (x = 2; x <= flash_versions; x++) {
+        try {
+            oFlash = eval("new ActiveXObject('ShockwaveFlash.ShockwaveFlash." + x + "');");
+            if (oFlash) {
+                flash_installed = 1;
+                flash_version = x + '.0';
+            }
+        }
+        catch(e) { }
+    }
+}
+
+if (flash_installed) {
+   document.write('<embed align="right" src="/resources/open-flash-chart.swf?data={{ data_url }}" quality="high" bgcolor="#FFFFFF" width="320" height="240" name="chart" align="middle" allowScriptAccess="sameDomain" type="application/x-shockwave-flash" pluginspage="http://www.macromedia.com/go/getflashplayer" id="chart"/>');
+}
+else {
+   document.write('<IMG SRC="{{ google_chart }}&chs=320x240&chco=00FF00,0000FF,FF0000&chm=o,0000FF,1,-1,5.0" style="align=right;" ALT="Burndown">');
+}
+</SCRIPT>
 </object>
 
 <div id="us-resume">
