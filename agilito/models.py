@@ -169,6 +169,14 @@ class Iteration(ClueModel):
         return sum(t.remaining_for_date(date)
                    for t in Task.objects.filter(user_story__iteration=self))
 
+    def remaining_stories(self, date):
+        stories = {}
+        for t in Task.objects.filter(user_story__iteration=self):
+            us = t.user_story.id
+            if not stories.has_key(us): stories[us] = 0
+            stories[us] += t.remaining_for_date(date)
+        return len(filter(lambda x: x > 0, stories.values()))
+
     def total_estimated(self):
         return sum(t.estimate or 0
                    for t in Task.objects.filter(user_story__iteration=self))
@@ -194,13 +202,47 @@ class Iteration(ClueModel):
                         ideal=self.ideal_hours(a_date))
             if a_date > today:
                 data['remaining'] = None
+                data['remaining_stories'] = None
             else:
                 data['remaining'] = self.remaining_hours(a_date)
+                data['remaining_stories'] = self.remaining_stories(a_date)
 
             burndown.append(data)
         return burndown
 
-    def cards(self):
+    def status_table(self):
+        status = []
+        rr = list(rrule(DAILY, cache=True,
+                        dtstart=self.start_date, until=self.end_date,
+                        byweekday=(MO,TU,WE,TH,FR)))
+        rr.append(rr[-1] + datetime.timedelta(1))
+        status.append(['taskID', 'priority', 'story', 'task'] + [d.date() for d in rr])
+
+        today = datetime.date.today()
+        for t in Task.objects.filter(user_story__iteration=self):
+            task = [t.id, t.user_story.rank, t.user_story.name, t.name]
+            for i, a_datetime in enumerate(rr):
+                a_date = a_datetime.date()
+                if a_date > today:
+                    task.append(None)
+                else:
+                    task.append(t.remaining_for_date(a_date))
+            status.append(task)
+        return status
+
+    def story_cards(self):
+        cards = []
+        for us in UserStory.objects.filter(iteration=self):
+            card = {}
+            card['StoryID'] = us.id
+            card['StoryName'] = us.name
+            card['StoryDescription'] = us.description
+            card['StoryRank'] = us.rank
+            card['StorySize'] = us.planned
+            cards.append(card)
+        return cards
+
+    def task_cards(self):
         cards = []
         for t in Task.objects.filter(user_story__iteration=self):
             card = {}
@@ -357,6 +399,7 @@ class UserStory(ClueModel):
                 """, (self.project_id, self.rank))
 
         super(UserStory, self).save()
+
 
 class UserProfile(models.Model):
     CATEGORIES = [(10, 'Client'),
