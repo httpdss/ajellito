@@ -3,8 +3,13 @@ import time
 import datetime
 import ODTLabels
 import types
-import decimal
 import agilitodev.settings
+import pyExcelerator
+import decimal
+
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot
 
 try:
     from collections import defaultdict
@@ -545,6 +550,10 @@ def _iteration_get_burndown_data(it):
             data['ideal_tips'].append('-')
             data['remaining_tips'].append('-')
     data['y_max'] = max(data['ideal'] + data['remaining'])
+    if len(data['remaining_stories']) > 0:
+        data['y2_max'] = max(data['remaining_stories'])
+    else:
+        data['y2_max'] = None
 
     gcd = 'cht=lc'
     gcd += '&chd=t:' + ','.join([str(p) for p in data['ideal']])
@@ -584,6 +593,10 @@ def iteration_status(request, project_id, iteration_id=None):
                            args=[project_id, latest_iteration.id])
         cards_url = reverse('agilito.views.iteration_cards',
                            args=[project_id, latest_iteration.id])
+        status_table_url = reverse('agilito.views.iteration_status_table',
+                           args=[project_id, latest_iteration.id])
+        burndown_chart_url = reverse('agilito.views.iteration_burndown_chart',
+                           args=[project_id, latest_iteration.id])
         port = request.META['SERVER_PORT']
         if not port:
             port = '80'
@@ -601,7 +614,10 @@ def iteration_status(request, project_id, iteration_id=None):
                           'estimated' : estimated,
                           'actuals' : actuals,
                           'failures' : failures,
-                          'cards_url': cards_url, }
+                          'cards_url': cards_url,
+                          'status_table_url': status_table_url,
+                          'burndown_chart_url': burndown_chart_url,
+                          }
     else:
         inner_context = {}
 
@@ -650,21 +666,42 @@ def iteration_burndown_data(request, project_id, iteration_id):
                               mimetype="text/plain")
 
 @restricted
+def iteration_burndown_chart(request, project_id, iteration_id):
+    it = Iteration.objects.get(id=iteration_id, project__id=project_id)
+
+    data = _iteration_get_burndown_data(it)
+
+    fig = matplotlib.pyplot.figure()
+
+    layers = []
+    max_h = max(data['ideal'] + data['remaining'])
+    max_s = max(data['remaining_stories'])
+    layers.append((fig.add_subplot(111), 'ro-', data['ideal'], 'Ideal', max_h))
+    layers.append((layers[0][0], 'bo-', data['remaining'], 'Hours', max_h))
+    layers.append((layers[0][0].twinx(), 'go-', data['remaining_stories'], 'Stories', float(max_s) + 0.1))
+
+    x = [str(x) for x in range(1, len(data['ideal']) + 1)]
+
+    for layer, linestyle, dataset, label, y_max in layers:
+        layer.plot(dataset, linestyle)
+        layer.set_ylabel(label, color=linestyle[0])
+
+        layer.set_xticks(range(1, len(x) + 1))
+        layer.set_xticklabels(x)
+        layer.set_ylim(0, float(y_max))
+
+    matplotlib.pyplot.grid(color='#999999')
+
+    response = HttpResponse(mimetype='image/png')
+    # response['Content-Disposition'] = 'attachment; filename=burndown.png'
+    matplotlib.pyplot.savefig(response)
+    return response
+
+@restricted
 def iteration_cards(request, project_id, iteration_id):
     it = Iteration.objects.get(id=iteration_id, project__id=project_id)
-    cards = it.cards()
-    for card in cards:
-        for k in card.keys():
-            tpe = type(card[k])
-
-            if tpe in [types.NoneType]:
-                card[k] = ''
-            if tpe in [types.IntType, types.FloatType, decimal.Decimal]:
-                card[k] = str(card[k])
-            elif isinstance(card[k], types.StringTypes):
-                pass
-            else:
-                raise Exception(type(card[k]))
+    tasks = it.task_cards()
+    stories = it.story_cards()
 
     labels = ODTLabels.ODTLabels(agilitodev.settings.CARD_INFO['ini'])
     labels.setSheetType(agilitodev.settings.CARD_INFO['spec'])
@@ -672,9 +709,32 @@ def iteration_cards(request, project_id, iteration_id):
 
     response = HttpResponse(mimetype='application/vnd.oasis.opendocument.text')
     response['Content-Disposition'] = 'attachment; filename=cards.odt'
-    labels.makeLabels(cards, response)
+    labels.makeLabels(tasks, stories, response)
     return response
 
+@restricted
+def iteration_status_table(request, project_id, iteration_id):
+    it = Iteration.objects.get(id=iteration_id, project__id=project_id)
+    status = it.status_table()
+
+    wb = pyExcelerator.Workbook()
+    ws = wb.add_sheet('Burndown')
+    for rownum, row in enumerate(status):
+        for colnum, cell in enumerate(row):
+            if cell is None:
+                continue
+            if type(cell) == decimal.Decimal:
+                cell = float(cell)
+            if type(cell) == datetime.date:
+                cell = str(cell)
+            ws.write(rownum, colnum, cell)
+
+    response = HttpResponse(mimetype='application/application/vnd.ms-excel')
+    response['Content-Disposition'] = 'attachment; filename=burndown.xls'
+
+    wb.save(response)
+
+    return response
 
 @restricted
 def iteration_burndown(request, project_id, iteration_id):
@@ -738,6 +798,7 @@ def task_json(request, task_id):
     task = Task.objects.get(id=task_id)
     json = simplejson.dumps(dict(id=task.id,
                                  name=task.name,
+                                 story=task.user_story.name,
                                  estimate=dec2str(task.estimate),
                                  remaining=dec2str(task.remaining),
                                  actuals=dec2str(task.actuals),

@@ -6,6 +6,9 @@ import zipfile
 import sys
 import xml.dom.minidom
 import cStringIO
+import types
+import decimal
+import htmllib, formatter
 
 class ODTLabels:
     UNITS = 'in'
@@ -40,7 +43,25 @@ class ODTLabels:
     def setTemplate(self, odt):
         self.srcODT = odt
 
-    def makeLabels(self, labels, output):
+    def toString(self, v):
+        tpe = type(v)
+        if tpe in [types.NoneType]:
+            v = ''
+        if tpe in [types.IntType, types.FloatType, decimal.Decimal]:
+            v = str(v)
+        elif isinstance(v, types.StringTypes):
+            f = cStringIO.StringIO()
+            wr = formatter.DumbWriter(f)
+            fmt = formatter.AbstractFormatter(wr)
+            p = htmllib.HTMLParser(fmt)
+            p.feed(v)
+            p.close()
+            v = f.getvalue()
+        else:
+            raise Exception(tpe)
+        return v
+
+    def makeLabels(self, tasks, stories, output):
         odtinput = zipfile.ZipFile(self.srcODT)
         odtoutput = zipfile.ZipFile(output, 'w', zipfile.ZIP_DEFLATED)
         #odtoutput = file(output, 'w')
@@ -54,8 +75,8 @@ class ODTLabels:
                 odtoutput.writestr(name, self._setPageSize(odtinput.read(name)))
                 #zipdata.append((None, name, self._setPageSize(odtinput.read(name))))
             elif name == 'content.xml':
-                odtoutput.writestr(name, self._makeLabels(odtinput.read(name), labels))
-                #zipdata.append((None, name, self._makeLabels(odtinput.read(name), labels)))
+                odtoutput.writestr(name, self._makeLabels(odtinput.read(name), tasks, stories))
+                #zipdata.append((None, name, self._makeLabels(odtinput.read(name), tasks, stories)))
             else:
                 odtoutput.writestr(name, odtinput.read(name))
                 #zipdata.append((None, name, odtinput.read(name)))
@@ -97,45 +118,54 @@ class ODTLabels:
         input.close()
         return styles.toxml('UTF-8')
 
-    def _makeLabels(self, xmldata, labels):
+    def _makeLabels(self, xmldata, tasks, stories):
         input = cStringIO.StringIO(xmldata)
         content = xml.dom.minidom.parse(input)
         frames = content.getElementsByTagNameNS(ODTLabels.nsDraw, 'frame')
-        template = None
+        taskTemplate = None
+        storyTemplate = None
         for frame in frames:
-            if template is None:
-                template = frame
+            name = frame.getAttributeNS(ODTLabels.nsDraw, 'name')
+            if name == 'Task':
+                taskTemplate = frame
+            elif name == 'Story':
+                storyTemplate = frame
             else:
                 frame.parentNode.removeChild(frame)
                 frame.unlink()
+                pass
     
-        if template is None:
+        if taskTemplate is None and storyTemplate is None:
             return content.toxml('UTF-8')
 
-        for sibling in template.parentNode.childNodes:
-            if sibling.nodeName == 'text:p':
-                sibling.parentNode.removeChild(sibling)
-                sibling.unlink()
+        for template in [taskTemplate, storyTemplate]:
+            if template is None: continue
 
-        for text in template.getElementsByTagNameNS(ODTLabels.nsDraw, 'text-box'):
-            try:
-                text.removeAttributeNS(ODTLabels.nsFO, 'min-height')
-            except xml.dom.NotFoundErr:
-                pass
+            for sibling in template.parentNode.childNodes:
+                if sibling.nodeName == 'text:p':
+                    sibling.parentNode.removeChild(sibling)
+                    sibling.unlink()
 
-        template.setAttributeNS(ODTLabels.nsSVG, 'svg:width', self.sizeStr(self.width))
-        template.setAttributeNS(ODTLabels.nsSVG, 'svg:height', self.sizeStr(self.height))
-        template.setAttributeNS(ODTLabels.nsText, 'text:anchor-type', 'page')
-        #template.setAttributeNS(ODTLabels.nsSVG, 'svg:x', self.sizeStr(self.left_margin))
-        #template.setAttributeNS(ODTLabels.nsSVG, 'svg:y', self.sizeStr(self.top_margin))
+        for template in [taskTemplate, storyTemplate]:
+            if template is None: continue
 
-        style_name = template.getAttributeNS(ODTLabels.nsDraw, 'style-name')
-        framestyles = content.getElementsByTagNameNS(ODTLabels.nsStyle, 'style')
-        for style in framestyles:
-            sn = style.getAttributeNS(ODTLabels.nsStyle, 'name')
-            if sn == style_name:
-                for gp in style.getElementsByTagNameNS(ODTLabels.nsStyle, 'graphic-properties'):
-                    gp.setAttributeNS(ODTLabels.nsStyle, 'style:protect', 'size')
+            for text in template.getElementsByTagNameNS(ODTLabels.nsDraw, 'text-box'):
+                try:
+                    text.removeAttributeNS(ODTLabels.nsFO, 'min-height')
+                except xml.dom.NotFoundErr:
+                    pass
+
+            template.setAttributeNS(ODTLabels.nsSVG, 'svg:width', self.sizeStr(self.width))
+            template.setAttributeNS(ODTLabels.nsSVG, 'svg:height', self.sizeStr(self.height))
+            template.setAttributeNS(ODTLabels.nsText, 'text:anchor-type', 'page')
+
+            style_name = template.getAttributeNS(ODTLabels.nsDraw, 'style-name')
+            framestyles = content.getElementsByTagNameNS(ODTLabels.nsStyle, 'style')
+            for style in framestyles:
+                sn = style.getAttributeNS(ODTLabels.nsStyle, 'name')
+                if sn == style_name:
+                    for gp in style.getElementsByTagNameNS(ODTLabels.nsStyle, 'graphic-properties'):
+                        gp.setAttributeNS(ODTLabels.nsStyle, 'style:protect', 'size')
 
         pagebreak = content.createElementNS(ODTLabels.nsStyle, 'style')
         pagebreak.setAttributeNS(ODTLabels.nsStyle, 'style:name', 'pagebreak')
@@ -151,10 +181,15 @@ class ODTLabels:
             
         cpp = self.down * self.across
 
-        for cardID, label in enumerate(labels):
+        for card in tasks: card['_template'] = taskTemplate
+        for card in stories: card['_template'] = storyTemplate
+
+        for cardID, label in enumerate(stories + tasks):
             page = cardID / cpp
             col = cardID % self.across
             row = (cardID /self.across) % self.down
+
+            template = label['_template']
 
             if cardID != 0 and cardID % cpp == 0:
                 #<text:p text:style-name="Standard"/><text:p text:style-name="pagebreak"/>
@@ -179,14 +214,16 @@ class ODTLabels:
                     v = label[varname]
                 else:
                     v = ''
-                subst = content.createTextNode(v)
+                subst = content.createTextNode(self.toString(v))
                 var.parentNode.replaceChild(subst, var)
                 var.unlink()
 
             template.parentNode.appendChild(card)
 
-        template.parentNode.removeChild(template)
-        template.unlink()
+        for template in [taskTemplate, storyTemplate]:
+            if template:
+                template.parentNode.removeChild(template)
+                template.unlink()
 
         input.close()
         return content.toxml('UTF-8')

@@ -202,6 +202,13 @@ Number of US in iteration: {{ user_stories.count }}
 </tbody>
 </table>
 
+Downloads for this iteration:
+<ul>
+<li><a href="{{ cards_url }}">task cards</a></li>
+<li><a href="{{ status_table_url }}">task status</a></li>
+<li><a target="_burndown" href="{{ burndown_chart_url }}">Burndown chart</a></li>
+</ul>
+
 {% else %}
 No user stories for this Iteration
 {% endif %}
