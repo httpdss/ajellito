@@ -200,6 +200,24 @@ class Iteration(ClueModel):
             burndown.append(data)
         return burndown
 
+    def cards(self):
+        cards = []
+        for t in Task.objects.filter(user_story__iteration=self):
+            card = {}
+            card['TaskID'] = t.id
+            card['TaskName'] = t.name
+            card['TaskDescription'] = t.description
+            card['TaskEstimate'] = t.estimate
+
+            us = t.user_story
+
+            card['StoryID'] = us.id
+            card['StoryName'] = us.name
+            card['StoryDescription'] = us.description
+            card['StoryRank'] = us.rank
+
+            cards.append(card)
+        return cards
 
     @property
     def estimated_without_owner(self):
@@ -339,7 +357,6 @@ class UserStory(ClueModel):
                 """, (self.project_id, self.rank))
 
         super(UserStory, self).save()
-
 
 class UserProfile(models.Model):
     CATEGORIES = [(10, 'Client'),

@@ -1,7 +1,10 @@
 import csv, StringIO
 import time 
 import datetime
-
+import ODTLabels
+import types
+import decimal
+import agilitodev.settings
 
 try:
     from collections import defaultdict
@@ -579,6 +582,8 @@ def iteration_status(request, project_id, iteration_id=None):
         gc_url = data['google_chart']
         data_url = reverse('agilito.views.iteration_burndown_data',
                            args=[project_id, latest_iteration.id])
+        cards_url = reverse('agilito.views.iteration_cards',
+                           args=[project_id, latest_iteration.id])
         port = request.META['SERVER_PORT']
         if not port:
             port = '80'
@@ -595,7 +600,8 @@ def iteration_status(request, project_id, iteration_id=None):
                           'google_chart': gc_url,
                           'estimated' : estimated,
                           'actuals' : actuals,
-                          'failures' : failures, }
+                          'failures' : failures,
+                          'cards_url': cards_url, }
     else:
         inner_context = {}
 
@@ -642,6 +648,33 @@ def iteration_burndown_data(request, project_id, iteration_id):
     return render_to_response('burndown_data.csv',
                               context_instance=ctx, 
                               mimetype="text/plain")
+
+@restricted
+def iteration_cards(request, project_id, iteration_id):
+    it = Iteration.objects.get(id=iteration_id, project__id=project_id)
+    cards = it.cards()
+    for card in cards:
+        for k in card.keys():
+            tpe = type(card[k])
+
+            if tpe in [types.NoneType]:
+                card[k] = ''
+            if tpe in [types.IntType, types.FloatType, decimal.Decimal]:
+                card[k] = str(card[k])
+            elif isinstance(card[k], types.StringTypes):
+                pass
+            else:
+                raise Exception(type(card[k]))
+
+    labels = ODTLabels.ODTLabels(agilitodev.settings.CARD_INFO['ini'])
+    labels.setSheetType(agilitodev.settings.CARD_INFO['spec'])
+    labels.setTemplate(agilitodev.settings.CARD_INFO['template'])
+
+    response = HttpResponse(mimetype='application/vnd.oasis.opendocument.text')
+    response['Content-Disposition'] = 'attachment; filename=cards.odt'
+    labels.makeLabels(cards, response)
+    return response
+
 
 @restricted
 def iteration_burndown(request, project_id, iteration_id):
