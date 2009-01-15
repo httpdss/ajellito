@@ -1,3 +1,5 @@
+import types
+import datetime
 from datetime import date
 from dateutil.relativedelta import relativedelta
 from operator import attrgetter
@@ -6,7 +8,7 @@ from django import forms
 from agilito.models import UserStory, Task, TestCase, TaskLog, TestResult,\
     UserProfile, UserStoryAttachment
 
-from agilito.widgets import GroupedRadioSelect
+from agilito.widgets import HierarchicRadioSelect, TaskHierarchy
 from agilito.fields import GroupedChoiceField
 
 class UserProfileForm(forms.ModelForm):
@@ -148,63 +150,79 @@ class UserStoryShortForm(HiddenHttpRefererForm):
         model = UserStory
         fields = 'name', 'description'
 
-class TaskField(GroupedChoiceField):
+class TaskField(forms.ChoiceField):
     def clean(self, value):
         value = super(TaskField, self).clean(value)
         return Task.objects.get(id=value[1:])
 
 def gen_TaskLogForm(user):
-    max_age = date.today() - relativedelta(months=1)
-    qs = Task.objects.filter(tasklog__owner=user,
-                             tasklog__task__state__lt=30,
-                             tasklog__date__gt=max_age).order_by('-tasklog__date')
+    from django.db import connection
+    cur = connection.cursor()
 
-    # distinct isn't working well with order_by onto related tables
-    recent = []
-    for i in qs:
-        if i not in recent:
-            recent.append(i)
-        if len(recent) >= 5:
-            break
+    me = user.id
+    today = datetime.date.today()
+    recent_task = (today - datetime.timedelta(days = 3)).strftime('%Y-%m-%d')
+    last_end = (today - datetime.timedelta(days = 7)).strftime('%Y-%m-%d')
+    today = today.strftime('%Y-%m-%d')
 
-    #recent.sort(key=attrgetter('user_story_id'))
-    recent.sort(key=(lambda x : (x.user_story.project.id, x.user_story.id)))
+    # this prevents hitting the database multiple times, quite a bit
+    # faster. Plus it automatically sorts the menu
+    tasks_sql = """
+        select distinct
+            'P',    p.id,   p.name
+            ,'IT',  i.id,   i.name
+            ,'US',  us.id,  us.name
+            ,'TA',  t.id,   t.name
 
-    grouped_recent = []
+            ,us.rank ,us.state
+            ,t.owner_id
 
-    for project, tasks_by_project in groupby(recent, lambda x: x.user_story.project):
-        by_project = []
-        grouped_recent.append((by_project, project))
-        for story, tasks_by_story in groupby(tasks_by_project, attrgetter('user_story')):
-            by_project.append((list(('r%d' % task.id, unicode(task)) for task in tasks_by_story), unicode(story)))
-    if len(grouped_recent) == 1:
-        # throw away the project header
-        grouped_recent = grouped_recent[0][0]
+            ,max(tlr.id) ,max(tlm.owner_id)
+        from agilito_project p
+        join agilito_project_project_members pm on pm.project_id = p.id and pm.user_id = %(me)d
+        join agilito_iteration i on i.project_id = p.id
+        join agilito_userstory us on us.project_id = p.id and us.iteration_id = i.id
+        join agilito_task t on t.user_story_id = us.id
+        left join agilito_tasklog tlr on tlr.task_id = t.id and tlr.iteration_id = i.id and tlr.date >= '%(recent_task)s'
+        left join agilito_tasklog tlm on tlm.task_id = t.id and tlm.iteration_id = i.id and tlm.owner_id = pm.user_id
+        where i.start_date <= '%(today)s' and i.end_date >= '%(last_end)s'
+        group by p.id, p.name, i.id, i.name, us.id, us.name, us.state, us.rank, t.id, t.name, t.owner_id
+        order by p.id, i.id, us.rank, us.id, t.id
+        """ % locals()
 
-    all = Task.objects.filter(user_story__project__project_members=user)\
-          .order_by('user_story__project',
-                    'user_story__iteration',
-                    'user_story__id')
+    menu = TaskHierarchy(None)
+    menu['recent'].name = 'Recent'
+    menu['mine'].name = 'My tasks'
+    menu['inprogress'].name = 'In progress'
+    menu['all'].name = 'All'
 
-    grouped_all = []
-    for project, tasks_by_project in groupby(all, lambda x: x.user_story.project):
-        by_project = []
-        grouped_all.append((by_project, project))
-        for iteration, tasks_by_iteration in groupby(tasks_by_project, lambda x: x.user_story.iteration):
-            by_iteration = []
-            by_project.append((by_iteration, unicode(iteration or u'Backlog')))
-            for story, tasks_by_story in groupby(tasks_by_iteration, attrgetter('user_story')):
-                by_iteration.append((list(('a%d' % task.id, unicode(task)) for task in tasks_by_story), unicode(story)))
-    if len(grouped_all) == 1:
-        # throw away the project header
-        grouped_all = grouped_all[0][0]
+    cur.execute(tasks_sql)
+    for row in cur.fetchall():
+        ss, to, r, logged = row[-4:]
 
-    if grouped_recent:
-        grouped_all = [(grouped_recent, "Recent"), (grouped_all, "All")]
+        for h, add in [(menu['all'], True), (menu['recent'], r), (menu['mine'], to == me or logged), (menu['inprogress'], ss == 20)]:
+            if not add: continue
+
+            submenu = h.id[0]
+
+            for i in range(0, 12, 3):
+                tpe, id, label = row[i:i+3]
+                key = '%s%s%d' % (submenu, tpe[0], id)
+                elt = h[key]
+
+                elt.name = '%s%d: %s' % (tpe, id, label)
+                elt.shrinkable = (tpe == 'P')
+
+                h = elt
+            h.task = True
+
+    menu.shrink()
 
     class TaskLogForm(HiddenHttpRefererForm):
-        task = TaskField(widget=GroupedRadioSelect(attrs={'class': 'tasks-select'}),
-                         choices=grouped_all)
+        task = TaskField(widget=HierarchicRadioSelect(attrs={'id': 'tasks-select', 'class': 'tasks-select'},
+                                                     choices=[],
+                                                     hierarchy=menu),
+                         choices=[])
         state = forms.ChoiceField(choices=Task.STATES)
         estimate = forms.DecimalField(widget=forms.TextInput(attrs={'type': "readonly",
                                                                     'readonly': "readonly",

@@ -8,7 +8,7 @@ padding:0.25em;
 margin:0 0 0.5em;
 }
 label{
-width:7em;
+/* width:7em; */
 float:left;
 text-align:right;
 padding:0 5px;
@@ -24,21 +24,26 @@ width:30em;
 padding: 0.25em;
 margin-bottom:0.5em;
 }
-.formfields li.required {
+.formfields .required {
 }
-.formfields li.required label {
+.formfields .required label {
 
 }
-.formfields p.required-text{
-margin:0 0 0.25em 0;
-padding: 0 0 0 8em;
+
+#timelog .required-text {
+    float: right;
 }
-.formfields p.required-text span {
+
+.formfields .required-text{
+margin:0 0 0.25em 0;
+padding: 0 0 0 1em;
+}
+.formfields .required-text {
 color:#900;
 font-size:80%;
 }
 
-.formfields li.errors{
+.formfields .errors{
 background: #fe9 url(/resources/blocked.png) no-repeat !important;
 background-position: 0.5em center !important;
 border:1px solid #F99;
@@ -59,6 +64,14 @@ margin:0;
 font-size:80%;
 
 }
+
+#timelog .timelog-label, #timelog .timelog-entry {
+    vertical-align: top;
+}
+#timelog .timelog-label span {
+    float: right;
+}
+
 #timelog > li > ul { 
 padding: 4px;
 font-size: smaller;
@@ -113,7 +126,7 @@ height:auto;
 float: right
 
 }
-#timelog > li:first-child p.required-text{
+#timelog > li:first-child .required-text{
 padding:0;
 }
 #timelog > li:first-child label {
@@ -122,3 +135,8 @@ display:block;
 text-align:left;
 }
 /* #content input[type=submit] { outline: 1px solid red } */
+
+#timelog-layout td {
+    vertical-align: top;
+    text-align: left;
+}

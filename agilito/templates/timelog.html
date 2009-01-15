@@ -3,8 +3,10 @@
 {% block js %}
 <script type="text/javascript">
 
-function task_details() {
-    $.getJSON("/json/task/" + this.value + "/", function(data) {
+function task_details(value) {
+    $.getJSON("/json/task/" + value + "/", function(data) {
+            $('#story-name').text(data.story);
+            $('#task-name').text(data.name);
             $("#id_estimate").attr("value", data.estimate)
             $("#id_remaining").attr("value", data.remaining)
             $("#id_actuals").attr("value", data.actuals)
@@ -20,6 +22,20 @@ $(window).ready(function(){
     $("#timelog .level0:not(:first) dt").toggleClass("shown").next().toggle();
     $("#id_date").datepicker({dateFormat: "yy-mm-dd", duration: "fast", mandatory: true});
     $("input.tasks-select").click(task_details);
+
+    $.fn.clickMenu.setDefaults({arrowSrc:'/media/right.gif'});
+    $('#tasks-select').clickMenu({
+        onClick: function() {
+            $(this).find('span').each(function() {
+                if (this.id) {
+                    task = this.id.match(/.*-[a-z][A-Z]([0-9]+)$/)[1]
+                    task_details(task);
+                }
+                return false;
+            });
+        }
+    });
+
 });
 </script>
 {% endblock %}
@@ -44,16 +60,48 @@ $(window).ready(function(){
 {% endif %}
 <form method="post" action="">
     <div id="timelog-wrapper">
-        <ul id="timelog" class="formfields">
+        <div>
+                {{ form.task }}
+        </div>
+        <table id="timelog" class="formfields">
+            <tr>
+                <td class="timelog-label">
+                    <span>
+                        Story
+                    </span>
+                </td>
+                <td class="timelog-entry">
+                    <p id="story-name"></p>
+                </td>
+            </tr>
+            <tr>
+                <td class="timelog-label">
+                    <span>
+                        Task
+                    </span>
+                </td>
+                <td class="timelog-entry">
+                    <p id="task-name"></p>
+                </td>
+            </tr>
         {% for field in form %}
-            <li class="{% if field.errors %}errors {% endif %} {% if field.field.required %}required{%endif%}">
-                {% if field.field.required and not field.errors %}<p class="required-text"><span>required</span>{%endif%}</p>
-                {{field.label_tag}} {{field}}    
-                {% if field.help_text %}<p class="discreet">{{ field.help_text }}</p>{% endif %}
-                {% if field.errors %}{{ field.errors }}{% endif %}
-            </li>
+        {% ifnotequal field.name "task" %}
+            <tr class="{% if field.errors %}errors {% endif %} {% if field.field.required %}required{%endif%}">
+                <td class="timelog-label">
+                    <span>
+                        {{ field.label_tag }}
+                        {% if field.field.required and not field.errors %}<br/><span class="required-text">required</span>{%endif%}
+                    </span>
+                </td>
+                <td class="timelog-entry">
+                    <p> {{ field }} </p>
+                    {% if field.help_text %}<p class="discreet">{{ field.help_text }}</p>{% endif %}
+                    {% if field.errors %}{{ field.errors }}{% endif %}
+                </td>
+            </tr>
+        {% endifnotequal %}
         {% endfor %}
-        </ul>
+        </table>
     </div>
 <input type="submit" value="Apply">
 </form>
