@@ -325,6 +325,22 @@ class UserStory(ClueModel):
             ('view', 'Can view the user stories.'),
         )
 
+    def save(self):
+        from django.db import connection
+        cursor = connection.cursor()
+        if not self.id is None:
+            cursor.execute('select rank from agilito_userstory where id=%s', (self.id,))
+            rank = cursor.fetchone()[0]
+            if not rank is None:
+                cursor.execute('update agilito_userstory set rank = rank - 1 where project_id=%s and rank > %s', (self.project_id,rank))
+        if not self.rank is None:
+            cursor.execute("""
+                update agilito_userstory set rank = rank + 1 where project_id=%s and not rank is null and rank >= %s
+                """, (self.project_id, self.rank))
+
+        super(UserStory, self).save()
+
+
 class UserProfile(models.Model):
     CATEGORIES = [(10, 'Client'),
                   (20, 'Project Manager'),
