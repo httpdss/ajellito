@@ -712,22 +712,83 @@ def iteration_cards(request, project_id, iteration_id):
     labels.makeLabels(tasks, stories, response)
     return response
 
+def _excel_column(n):
+    """
+    Returns excel formated column number for n
+    
+    Expects an int value greater than 0.
+    """
+
+    n-=1
+    div = n/26
+    if div==0:
+        return chr(65+n)
+    else:
+        return _excel_column(div)+chr(65+n%26)
+
 @restricted
 def iteration_status_table(request, project_id, iteration_id):
     it = Iteration.objects.get(id=iteration_id, project__id=project_id)
     status = it.status_table()
 
+    style = pyExcelerator.XFStyle()
+    defaultFont = style.font
+    defaultPattern = style.pattern
+
+    fade = pyExcelerator.Font()
+    fade.colour_index = 55
+
+    bold = pyExcelerator.Font()
+    bold.bold = True
+
+    orange = pyExcelerator.Pattern()
+    orange.pattern_fore_colour = 436
+    orange.pattern = style.pattern.SOLID_PATTERN
+
+    green = pyExcelerator.Pattern()
+    green.pattern_fore_colour = 562
+    green.pattern = style.pattern.SOLID_PATTERN
+
     wb = pyExcelerator.Workbook()
     ws = wb.add_sheet('Burndown')
+    lastcol = None
     for rownum, row in enumerate(status):
+        prev = None
         for colnum, cell in enumerate(row):
+            style.font = defaultFont
+            style.pattern = defaultPattern
+
             if cell is None:
                 continue
-            if type(cell) == decimal.Decimal:
+
+            if type(cell) in [decimal.Decimal, types.IntType, types.FloatType]:
+                lastcol = colnum
                 cell = float(cell)
+
+                if cell == 0:
+                    style.font = fade
+
+                if colnum > 4 :
+                    prev = float(row[colnum - 1])
+                    if cell < prev:
+                        style.pattern = green
+                    elif cell > prev:
+                        style.pattern = orange
+
             if type(cell) == datetime.date:
                 cell = str(cell)
-            ws.write(rownum, colnum, cell)
+
+            if rownum == 0:
+                style.font = bold
+
+            ws.write(rownum, colnum, cell, style)
+
+    rownum = len(status)
+    for colnum in range(4, lastcol + 1):
+        colname = _excel_column(colnum + 1)
+        ws.write(rownum, colnum, pyExcelerator.Formula("SUM(%s2:%s%d)" % (colname, colname, rownum)))
+    ws.write(rownum + 1, 4, pyExcelerator.Formula("E%d" % (rownum + 1)))
+    ws.write(rownum + 1, len(status[0]) - 1, 0)
 
     response = HttpResponse(mimetype='application/application/vnd.ms-excel')
     response['Content-Disposition'] = 'attachment; filename=burndown.xls'

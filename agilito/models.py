@@ -491,7 +491,7 @@ class Task(ClueModel):
         permissions = (
             ('view', 'Can view the task.'),
         )
-
+        ordering = ('user_story__rank', 'user_story__id', 'id')
 
 class TestCase(ClueModel):
     KINDS = [(10, 'Acceptance'),
