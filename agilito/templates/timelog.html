@@ -11,6 +11,7 @@ function task_details(value) {
             $("#id_remaining").attr("value", data.remaining)
             $("#id_actuals").attr("value", data.actuals)
             $("#id_state").attr("value", data.state)
+            $("#id_task").attr("value", value)
         });
 }
 
@@ -61,7 +62,7 @@ $(window).ready(function(){
 <form method="post" action="">
     <div id="timelog-wrapper">
         <div>
-                {{ form.task }}
+                {{ form.taskmenu }}
         </div>
         <table id="timelog" class="formfields">
             <tr>
@@ -85,7 +86,7 @@ $(window).ready(function(){
                 </td>
             </tr>
         {% for field in form %}
-        {% ifnotequal field.name "task" %}
+        {% ifnotequal field.name "taskmenu" %}
             <tr class="{% if field.errors %}errors {% endif %} {% if field.field.required %}required{%endif%}">
                 <td class="timelog-label">
                     <span>

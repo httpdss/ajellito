@@ -777,7 +777,7 @@ def timelog(request, instance=None):
             else:
                 story.state = 20
             story.save()
-            message = 'Great! More?'
+            message = 'Task %d updated! More?' % form.cleaned_data['task'].id
             form = gen_TaskLogForm(request.user)()
     else:
         form = TaskLogForm(instance=instance)

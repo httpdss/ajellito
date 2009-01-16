@@ -150,10 +150,10 @@ class UserStoryShortForm(HiddenHttpRefererForm):
         model = UserStory
         fields = 'name', 'description'
 
-class TaskField(forms.ChoiceField):
+class TaskField(forms.IntegerField):
     def clean(self, value):
         value = super(TaskField, self).clean(value)
-        return Task.objects.get(id=value[1:])
+        return Task.objects.get(id=value)
 
 def gen_TaskLogForm(user):
     from django.db import connection
@@ -219,10 +219,10 @@ def gen_TaskLogForm(user):
     menu.shrink()
 
     class TaskLogForm(HiddenHttpRefererForm):
-        task = TaskField(widget=HierarchicRadioSelect(attrs={'id': 'tasks-select', 'class': 'tasks-select'},
+        taskmenu = forms.Field(widget=HierarchicRadioSelect(attrs={'id': 'tasks-select', 'class': 'tasks-select'},
                                                      choices=[],
-                                                     hierarchy=menu),
-                         choices=[])
+                                                     hierarchy=menu), required = False)
+        task = TaskField(widget=forms.TextInput(attrs={'readonly': 'readonly', 'value': ''}))
         state = forms.ChoiceField(choices=Task.STATES)
         estimate = forms.DecimalField(widget=forms.TextInput(attrs={'type': "readonly",
                                                                     'readonly': "readonly",
@@ -238,9 +238,10 @@ def gen_TaskLogForm(user):
         date = forms.DateField(initial=str(date.today()))
         class Meta:
             model = TaskLog
-            fields = 'task', 'date', 'time_on_task', 'summary'
+            fields = 'taskmenu', 'task', 'date', 'time_on_task', 'summary'
 
-    TaskLogForm.base_fields.keyOrder = ['task', 
+    TaskLogForm.base_fields.keyOrder = ['taskmenu',
+                                        'task', 
                                         'estimate',
                                         'actuals',
                                         'remaining',
