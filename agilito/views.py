@@ -765,7 +765,11 @@ def iteration_status_table(request, project_id, iteration_id):
     for r, t in enumerate(Task.objects.filter(user_story__iteration=it)):
         us = t.user_story
 
-        prev = decimal.Decimal(t.estimate)
+        if t.estimate is None:
+            prev = 0
+        else:
+            prev = decimal.Decimal(t.estimate)
+
         for c, day in enumerate(days):
 
             last = decimal.Decimal(t.remaining_for_date(day))
@@ -786,7 +790,9 @@ def iteration_status_table(request, project_id, iteration_id):
             prev = last
 
         ws.write(r + 1, 0, t.id)
-        ws.write(r + 1, 1, us.rank)
+
+        if not us.rank is None:
+            ws.write(r + 1, 1, us.rank)
 
         style.font = defaultFont
         style.pattern = defaultPattern
@@ -800,7 +806,9 @@ def iteration_status_table(request, project_id, iteration_id):
 
         style.font = defaultFont
         style.pattern = defaultPattern
-        if t.state == 30 and last == 0:
+        if t.estimate is None:
+            style.font = fade
+        elif t.state == 30 and last == 0:
             style.pattern = green
         elif t.state != 30 and last == 0:
             style.pattern = orange
