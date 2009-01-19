@@ -210,26 +210,6 @@ class Iteration(ClueModel):
             burndown.append(data)
         return burndown
 
-    def status_table(self):
-        status = []
-        rr = list(rrule(DAILY, cache=True,
-                        dtstart=self.start_date, until=self.end_date,
-                        byweekday=(MO,TU,WE,TH,FR)))
-        rr.append(rr[-1] + datetime.timedelta(1))
-        status.append(['taskID', 'priority', 'story', 'task'] + [d.date() for d in rr])
-
-        today = datetime.date.today()
-        for t in Task.objects.filter(user_story__iteration=self):
-            task = [t.id, t.user_story.rank, t.user_story.name, t.name]
-            for i, a_datetime in enumerate(rr):
-                a_date = a_datetime.date()
-                if a_date > today:
-                    task.append(None)
-                else:
-                    task.append(t.remaining_for_date(a_date))
-            status.append(task)
-        return status
-
     def story_cards(self):
         cards = []
         for us in UserStory.objects.filter(iteration=self):

@@ -11,6 +11,8 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot
 
+from dateutil.rrule import rrule, DAILY, MO, TU, WE, TH, FR
+
 try:
     from collections import defaultdict
 except ImportError:
@@ -729,7 +731,6 @@ def _excel_column(n):
 @restricted
 def iteration_status_table(request, project_id, iteration_id):
     it = Iteration.objects.get(id=iteration_id, project__id=project_id)
-    status = it.status_table()
 
     style = pyExcelerator.XFStyle()
     defaultFont = style.font
@@ -751,44 +752,66 @@ def iteration_status_table(request, project_id, iteration_id):
 
     wb = pyExcelerator.Workbook()
     ws = wb.add_sheet('Burndown')
-    lastcol = None
-    for rownum, row in enumerate(status):
-        prev = None
-        for colnum, cell in enumerate(row):
-            style.font = defaultFont
-            style.pattern = defaultPattern
 
-            if cell is None:
-                continue
+    days= list(rrule(DAILY, cache=True, dtstart=it.start_date, until=it.end_date, byweekday=(MO,TU,WE,TH,FR)))
+    days.append(days[-1] + datetime.timedelta(1))
 
-            if type(cell) in [decimal.Decimal, types.IntType, types.FloatType]:
-                lastcol = colnum
-                cell = float(cell)
+    style.font = bold
+    for c, h in enumerate(['task ID', 'priority', 'story', 'task'] + [str(d.date()) for d in days]):
+        ws.write(0, c, h, style)
 
-                if cell == 0:
-                    style.font = fade
+    today = datetime.date.today()
+    days = [d.date() for d in filter(lambda d: d.date()<=today, days)]
+    for r, t in enumerate(Task.objects.filter(user_story__iteration=it)):
+        us = t.user_story
 
-                if colnum > 4 :
-                    prev = float(row[colnum - 1])
-                    if cell < prev:
-                        style.pattern = green
-                    elif cell > prev:
-                        style.pattern = orange
+        prev = decimal.Decimal(t.estimate)
+        for c, day in enumerate(days):
 
-            if type(cell) == datetime.date:
-                cell = str(cell)
+            last = decimal.Decimal(t.remaining_for_date(day))
 
-            if rownum == 0:
-                style.font = bold
+            if last < prev:
+                style.pattern = green
+            elif last > prev:
+                style.pattern = orange
+            else:
+                style.pattern = defaultPattern
 
-            ws.write(rownum, colnum, cell, style)
+            if last == 0:
+                style.font = fade
+            else:
+                style.font = defaultFont
 
-    rownum = len(status)
-    for colnum in range(4, lastcol + 1):
-        colname = _excel_column(colnum + 1)
-        ws.write(rownum, colnum, pyExcelerator.Formula("SUM(%s2:%s%d)" % (colname, colname, rownum)))
-    ws.write(rownum + 1, 4, pyExcelerator.Formula("E%d" % (rownum + 1)))
-    ws.write(rownum + 1, len(status[0]) - 1, 0)
+            ws.write(r + 1, c + 4, float(last), style)
+            prev = last
+
+        ws.write(r + 1, 0, t.id)
+        ws.write(r + 1, 1, us.rank)
+
+        style.font = defaultFont
+        style.pattern = defaultPattern
+        if us.state == 30 and us.remaining == 0:
+            style.pattern = green
+        elif t.state != 30 and us.remaining == 0:
+            style.pattern = orange
+        elif t.state == 30 and us.remaining != 0:
+            style.pattern = orange
+        ws.write(r + 1, 2, us.name, style)
+
+        style.font = defaultFont
+        style.pattern = defaultPattern
+        if t.state == 30 and last == 0:
+            style.pattern = green
+        elif t.state != 30 and last == 0:
+            style.pattern = orange
+        elif t.state == 30 and last != 0:
+            style.pattern = orange
+        ws.write(r + 1, 3, t.name, style)
+            
+    # sum remaining
+    for c in range(len(days)):
+        colname = _excel_column(c + 5)
+        ws.write(r + 2, c + 4, pyExcelerator.Formula("SUM(%s2:%s%d)" % (colname, colname, r + 2)))
 
     response = HttpResponse(mimetype='application/application/vnd.ms-excel')
     response['Content-Disposition'] = 'attachment; filename=burndown.xls'
