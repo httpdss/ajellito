@@ -755,6 +755,7 @@ def iteration_status_table(request, project_id, iteration_id):
 
     days= list(rrule(DAILY, cache=True, dtstart=it.start_date, until=it.end_date, byweekday=(MO,TU,WE,TH,FR)))
     days.append(days[-1] + datetime.timedelta(1))
+    sprintlength = len(days)
 
     style.font = bold
     for c, h in enumerate(['task ID', 'priority', 'story', 'task'] + [str(d.date()) for d in days]):
@@ -815,11 +816,25 @@ def iteration_status_table(request, project_id, iteration_id):
         elif t.state == 30 and last != 0:
             style.pattern = orange
         ws.write(r + 1, 3, t.name, style)
-            
-    # sum remaining
+
+    style.font = bold
+    style.pattern = defaultPattern
+
+    ws.write(r+2, 3, 'Tasks', style)
     for c in range(len(days)):
         colname = _excel_column(c + 5)
         ws.write(r + 2, c + 4, pyExcelerator.Formula("SUM(%s2:%s%d)" % (colname, colname, r + 2)))
+
+    ws.write(r+3, 3, 'Stories', style)
+    for c, d in enumerate(days):
+        ws.write(r+3, c+4, it.remaining_stories(d))
+
+    ws.write(r+4, 3, 'Ideal', style)
+    total = '$%s%d' % (_excel_column(5), r + 3)
+    sl = sprintlength - 1
+    for c in range(sprintlength):
+        f = '(%(total)s/%(sl)d) * (%(sl)d - (COLUMN() - 5))' % locals()
+        ws.write(r + 4, c + 4, pyExcelerator.Formula(f))
 
     response = HttpResponse(mimetype='application/application/vnd.ms-excel')
     response['Content-Disposition'] = 'attachment; filename=burndown.xls'
