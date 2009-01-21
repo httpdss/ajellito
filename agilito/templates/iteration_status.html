@@ -124,7 +124,7 @@ if (flash_installed) {
    document.write('<embed align="right" src="/resources/open-flash-chart.swf?data={{ data_url }}" quality="high" bgcolor="#FFFFFF" width="320" height="240" name="chart" align="middle" allowScriptAccess="sameDomain" type="application/x-shockwave-flash" pluginspage="http://www.macromedia.com/go/getflashplayer" id="chart"/>');
 }
 else {
-   document.write('<IMG SRC="{{ google_chart }}&chs=320x240&chco=00FF00,0000FF,FF0000&chm=o,0000FF,1,-1,5.0" style="align=right;" ALT="Burndown">');
+   document.write('<IMG SRC="{{ burndown_chart_small_url }}" style="align=right;" ALT="Burndown">');
 }
 </SCRIPT>
 </object>

@@ -557,15 +557,6 @@ def _iteration_get_burndown_data(it):
     else:
         data['y2_max'] = None
 
-    gcd = 'cht=lc'
-    gcd += '&chd=t:' + ','.join([str(p) for p in data['ideal']])
-    gcd += '|' + ','.join(['%.1f' % p for p in data['remaining']])
-    gcd += '&chds=0,%.1f' % data['y_max']
-    gcd += '&chdl=Ideal|Burndown'
-    gcd += '&chxt=x,y&chxl=' + '|'.join(['0:'] + [str(d) for d in data['day']])
-    gcd += '&chxr=1,0,%f' % data['y_max']
-
-    data['google_chart'] = 'http://chart.apis.google.com/chart?' + gcd
     return data
 
 @restricted
@@ -598,7 +589,9 @@ def iteration_status(request, project_id, iteration_id=None):
         status_table_url = reverse('agilito.views.iteration_status_table',
                            args=[project_id, latest_iteration.id])
         burndown_chart_url = reverse('agilito.views.iteration_burndown_chart',
-                           args=[project_id, latest_iteration.id])
+                           args=[project_id, latest_iteration.id, 'large'])
+        burndown_chart_small_url = reverse('agilito.views.iteration_burndown_chart',
+                           args=[project_id, latest_iteration.id, 'small'])
         port = request.META['SERVER_PORT']
         if not port:
             port = '80'
@@ -619,6 +612,7 @@ def iteration_status(request, project_id, iteration_id=None):
                           'cards_url': cards_url,
                           'status_table_url': status_table_url,
                           'burndown_chart_url': burndown_chart_url,
+                          'burndown_chart_small_url': burndown_chart_small_url,
                           }
     else:
         inner_context = {}
@@ -668,12 +662,14 @@ def iteration_burndown_data(request, project_id, iteration_id):
                               mimetype="text/plain")
 
 @restricted
-def iteration_burndown_chart(request, project_id, iteration_id):
+def iteration_burndown_chart(request, project_id, iteration_id, name):
     it = Iteration.objects.get(id=iteration_id, project__id=project_id)
 
     data = _iteration_get_burndown_data(it)
 
     fig = matplotlib.pyplot.figure()
+
+    small = (name == 'small')
 
     layers = []
     max_h = max(data['ideal'] + data['remaining'])
@@ -686,16 +682,29 @@ def iteration_burndown_chart(request, project_id, iteration_id):
 
     for layer, linestyle, dataset, label, y_max in layers:
         layer.plot(dataset, linestyle)
-        layer.set_ylabel(label, color=linestyle[0])
+        layer.set_ylabel(label, color=linestyle[0], fontsize=8)
 
         layer.set_xticks(range(1, len(x) + 1))
         layer.set_xticklabels(x)
         layer.set_ylim(0, float(y_max))
+        if small:
+            for l in layer.get_xticklabels():
+                l.set_rotation(45)
+                l.set_horizontalalignment('right')
+                l.set_fontsize(6)
+            for l in layer.get_yticklabels():
+                l.set_fontsize(6)
 
     matplotlib.pyplot.grid(color='#999999')
 
     response = HttpResponse(mimetype='image/png')
     # response['Content-Disposition'] = 'attachment; filename=burndown.png'
+    matplotlib.pyplot.grid(color='#999999')
+
+    if small:
+        dpi = fig.get_dpi()
+        fig.set_figsize_inches(270.0 / dpi, 200.0 / dpi)
+
     matplotlib.pyplot.savefig(response)
     return response
 
