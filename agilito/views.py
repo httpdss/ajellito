@@ -7,6 +7,10 @@ import agilitodev.settings
 import pyExcelerator
 import decimal
 
+import cStringIO
+import formatter
+import htmllib
+
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot
@@ -244,8 +248,9 @@ def backlog(request, project_id):
     """
     user_stories = UserStory.backlogged(project=project_id)
     planned = sum(i.planned for i in user_stories if i.planned)
+    full_backlog = reverse('agilito.views.product_backlog', args=[project_id])
 
-    context = AgilitoContext(request, { 'user_stories' : user_stories, 'planned':planned }, 
+    context = AgilitoContext(request, { 'full_backlog' : full_backlog, 'user_stories' : user_stories, 'planned':planned }, 
                             current_project=project_id)
         
 
@@ -736,6 +741,60 @@ def _excel_column(n):
         return chr(65+n)
     else:
         return _excel_column(div)+chr(65+n%26)
+
+@restricted
+def product_backlog(request, project_id):
+    statename = {}
+
+    for state, name in UserStory.STATES:
+        statename[state] = name
+
+    stories = UserStory.objects.filter(project__id=project_id).order_by('rank').order_by('id')
+    wb = pyExcelerator.Workbook()
+    ws = wb.add_sheet('Product Backlog')
+
+    style = pyExcelerator.XFStyle()
+    style.font = pyExcelerator.Font()
+    style.font.bold = True
+
+    for c, header in enumerate(['Story', 'Rank', 'Name', 'Description', 'State', 'Iteration']):
+        ws.write(0, c, header, style)
+
+    for r, story in enumerate(stories):
+        ws.write(r+1, 0, story.id)
+
+        if not story.rank is None:
+            ws.write(r+1, 1, story.rank)
+
+        ws.write(r+1, 2, story.name)
+
+        if not story.description is None:
+            try:
+                desc = unicode(story.description).decode('utf-8')
+            except:
+                v_a = story.description.encode('ascii', 'ignore')
+                desc = unicode(v_a).decode('utf-8')
+
+            f = cStringIO.StringIO()
+            wr = formatter.DumbWriter(f)
+            fmt = formatter.AbstractFormatter(wr)
+            p = htmllib.HTMLParser(fmt)
+            p.feed(desc)
+            p.close()
+
+            ws.write(r+1, 3, f.getvalue())
+
+        ws.write(r+1, 4, statename[story.state])
+
+        if not story.iteration is None:
+            ws.write(r+1, 5, story.iteration.name)
+
+    response = HttpResponse(mimetype='application/application/vnd.ms-excel')
+    response['Content-Disposition'] = 'attachment; filename=burndown.xls'
+
+    wb.save(response)
+
+    return response
 
 @restricted
 def iteration_status_table(request, project_id, iteration_id):
