@@ -45,10 +45,11 @@ class ODTLabels:
 
     def toString(self, v):
         tpe = type(v)
+
         if tpe in [types.NoneType]:
-            v = ''
+            v = u''
         if tpe in [types.IntType, types.FloatType, decimal.Decimal]:
-            v = str(v)
+            v = unicode(str(v))
         elif isinstance(v, types.StringTypes):
             f = cStringIO.StringIO()
             wr = formatter.DumbWriter(f)
@@ -59,7 +60,12 @@ class ODTLabels:
             v = f.getvalue()
         else:
             raise Exception(tpe)
-        return v
+
+        try:
+            return unicode(v).decode('utf-8')
+        except:
+            v_a = v.decode('ascii', 'ignore')
+            return unicode(v_a).decode('utf-8')
 
     def makeLabels(self, tasks, stories, output):
         odtinput = zipfile.ZipFile(self.srcODT)
@@ -102,21 +108,21 @@ class ODTLabels:
     def sizeStr(self, s):
         s = ('%.4f' % s).rstrip('0')
         if s[-1] == '.': s = s[:-1]
-        return s + ODTLabels.UNITS
+        return (s + ODTLabels.UNITS).decode('utf-8')
 
 
     def _setPageSize(self, xmldata):
         input = cStringIO.StringIO(xmldata)
         styles = xml.dom.minidom.parse(input)
         for p in styles.getElementsByTagNameNS(ODTLabels.nsStyle, 'page-layout-properties'):
-            p.setAttributeNS(ODTLabels.nsFO, 'fo:page-height', self.page_height)
-            p.setAttributeNS(ODTLabels.nsFO, 'fo:page-width', self.page_width)
-            p.setAttributeNS(ODTLabels.nsFO, 'fo:margin-bottom', self.sizeStr(0))
-            p.setAttributeNS(ODTLabels.nsFO, 'fo:margin-top', self.sizeStr(0))
-            p.setAttributeNS(ODTLabels.nsFO, 'fo:margin-left', self.sizeStr(0))
-            p.setAttributeNS(ODTLabels.nsFO, 'fo:margin-right', self.sizeStr(0))
+            p.setAttributeNS(ODTLabels.nsFO, u'fo:page-height', self.page_height.decode('utf-8'))
+            p.setAttributeNS(ODTLabels.nsFO, u'fo:page-width', self.page_width.decode('utf-8'))
+            p.setAttributeNS(ODTLabels.nsFO, u'fo:margin-bottom', self.sizeStr(0))
+            p.setAttributeNS(ODTLabels.nsFO, u'fo:margin-top', self.sizeStr(0))
+            p.setAttributeNS(ODTLabels.nsFO, u'fo:margin-left', self.sizeStr(0))
+            p.setAttributeNS(ODTLabels.nsFO, u'fo:margin-right', self.sizeStr(0))
         input.close()
-        return styles.toxml('UTF-8')
+        return styles.toxml('utf-8')
 
     def _makeLabels(self, xmldata, tasks, stories):
         input = cStringIO.StringIO(xmldata)
@@ -136,7 +142,7 @@ class ODTLabels:
                 pass
     
         if taskTemplate is None and storyTemplate is None:
-            return content.toxml('UTF-8')
+            return content.toxml('utf-8')
 
         for template in [taskTemplate, storyTemplate]:
             if template is None: continue
@@ -155,9 +161,9 @@ class ODTLabels:
                 except xml.dom.NotFoundErr:
                     pass
 
-            template.setAttributeNS(ODTLabels.nsSVG, 'svg:width', self.sizeStr(self.width))
-            template.setAttributeNS(ODTLabels.nsSVG, 'svg:height', self.sizeStr(self.height))
-            template.setAttributeNS(ODTLabels.nsText, 'text:anchor-type', 'page')
+            template.setAttributeNS(ODTLabels.nsSVG, u'svg:width', self.sizeStr(self.width))
+            template.setAttributeNS(ODTLabels.nsSVG, u'svg:height', self.sizeStr(self.height))
+            template.setAttributeNS(ODTLabels.nsText, u'text:anchor-type', u'page')
 
             style_name = template.getAttributeNS(ODTLabels.nsDraw, 'style-name')
             framestyles = content.getElementsByTagNameNS(ODTLabels.nsStyle, 'style')
@@ -165,14 +171,14 @@ class ODTLabels:
                 sn = style.getAttributeNS(ODTLabels.nsStyle, 'name')
                 if sn == style_name:
                     for gp in style.getElementsByTagNameNS(ODTLabels.nsStyle, 'graphic-properties'):
-                        gp.setAttributeNS(ODTLabels.nsStyle, 'style:protect', 'size')
+                        gp.setAttributeNS(ODTLabels.nsStyle, u'style:protect', u'size')
 
-        pagebreak = content.createElementNS(ODTLabels.nsStyle, 'style')
-        pagebreak.setAttributeNS(ODTLabels.nsStyle, 'style:name', 'pagebreak')
-        pagebreak.setAttributeNS(ODTLabels.nsStyle, 'style:family', 'paragraph')
-        pagebreak.setAttributeNS(ODTLabels.nsStyle, 'style:parent-style-name', 'Standard')
-        spp = content.createElementNS(ODTLabels.nsStyle, 'paragraph-properties')
-        spp.setAttributeNS(ODTLabels.nsFO, 'fo:break-before', 'page')
+        pagebreak = content.createElementNS(ODTLabels.nsStyle, u'style')
+        pagebreak.setAttributeNS(ODTLabels.nsStyle, u'style:name', u'pagebreak')
+        pagebreak.setAttributeNS(ODTLabels.nsStyle, u'style:family', u'paragraph')
+        pagebreak.setAttributeNS(ODTLabels.nsStyle, u'style:parent-style-name', u'Standard')
+        spp = content.createElementNS(ODTLabels.nsStyle, u'paragraph-properties')
+        spp.setAttributeNS(ODTLabels.nsFO, u'fo:break-before', u'page')
         pagebreak.appendChild(spp)
 
         for oaa in content.getElementsByTagNameNS(ODTLabels.nsOffice, 'automatic-styles'):
@@ -193,20 +199,20 @@ class ODTLabels:
 
             if cardID != 0 and cardID % cpp == 0:
                 #<text:p text:style-name="Standard"/><text:p text:style-name="pagebreak"/>
-                pagebreak = content.createElementNS(ODTLabels.nsText, 'p')
-                pagebreak.setAttributeNS(ODTLabels.nsText, 'text:style', 'pagebreak')
+                pagebreak = content.createElementNS(ODTLabels.nsText, u'p')
+                pagebreak.setAttributeNS(ODTLabels.nsText, u'text:style', u'pagebreak')
                 template.parentNode.appendChild(pagebreak)
 
             card = template.cloneNode(True)
 
             for table in card.getElementsByTagNameNS(ODTLabels.nsTable, 'table'):
-                table.setAttributeNS(ODTLabels.nsTable, 'table:name', 'table-%d' % cardID)
+                table.setAttributeNS(ODTLabels.nsTable, u'table:name', u'table-%d' % cardID)
 
-            card.setAttributeNS(ODTLabels.nsDraw, 'draw:name', 'card-%d' % cardID)
-            card.setAttributeNS(ODTLabels.nsDraw, 'draw:z-index', '%d' % cardID)
-            card.setAttributeNS(ODTLabels.nsSVG, 'svg:x', self.sizeStr((self.left_margin + col * self.horizontal_pitch)))
-            card.setAttributeNS(ODTLabels.nsSVG, 'svg:y', self.sizeStr((self.top_margin + row * self.vertical_pitch)))
-            card.setAttributeNS(ODTLabels.nsText, 'text:anchor-page-number', str(page + 1))
+            card.setAttributeNS(ODTLabels.nsDraw, u'draw:name', u'card-%d' % cardID)
+            card.setAttributeNS(ODTLabels.nsDraw, u'draw:z-index', u'%d' % cardID)
+            card.setAttributeNS(ODTLabels.nsSVG, u'svg:x', self.sizeStr((self.left_margin + col * self.horizontal_pitch)))
+            card.setAttributeNS(ODTLabels.nsSVG, u'svg:y', self.sizeStr((self.top_margin + row * self.vertical_pitch)))
+            card.setAttributeNS(ODTLabels.nsText, u'text:anchor-page-number', str(page + 1))
 
             for var in card.getElementsByTagNameNS(ODTLabels.nsText, 'variable-set'):
                 varname = var.getAttributeNS(ODTLabels.nsText, 'name')
@@ -214,6 +220,7 @@ class ODTLabels:
                     v = label[varname]
                 else:
                     v = ''
+
                 subst = content.createTextNode(self.toString(v))
                 var.parentNode.replaceChild(subst, var)
                 var.unlink()
@@ -226,7 +233,7 @@ class ODTLabels:
                 template.unlink()
 
         input.close()
-        return content.toxml('UTF-8')
+        return content.toxml('utf-8')
 
 if __name__ == "__main__":
     labels = ODTLabels()
