@@ -365,6 +365,8 @@ class UserStory(ClueModel):
             ('view', 'Can view the user stories.'),
         )
 
+        ordering = ('rank', 'id')
+
     def save(self):
         from django.db import connection
         cursor = connection.cursor()

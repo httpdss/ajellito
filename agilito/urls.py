@@ -9,6 +9,7 @@ media_root = os.path.join(os.path.dirname(__file__), 'media')
 
 urlpatterns = patterns('agilito.views',
     (r'^$', 'index'),
+
     (r'^(?P<project_id>\d+)/backlog/$', 'backlog'),
     (r'^(?P<project_id>\d+)/product_backlog/$', 'product_backlog'),
     url(r'^(?P<project_id>\d+)/backlog/userstory/add/$', 'userstory_create', name="story_from_backlog"),
@@ -65,5 +66,7 @@ urlpatterns = patterns('agilito.views',
 urlpatterns += patterns('',
     (r'^admin/(.*)', admin.site.root),
     (r'^resources/(?P<path>.*)$', 'django.views.static.serve', {'document_root': media_root}),
+    (r'^xmlrpc/', 'agilito.xmlrpc.xmlrpc.view', {'module':'agilito.xmlrpc'}),
+    (r'^(rsd.xml)$', 'django.views.static.serve', {'document_root': media_root}),
 )
 
