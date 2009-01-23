@@ -4,7 +4,7 @@ import types
 
 ## this is a monkey patch to trick pyExcelerator into saving to a
 ## stream instead of to a file(name)
-def pyexceleratir_compounddoc_xlsdoc_save(self, filename, stream):
+def pyexcelerator_compounddoc_xlsdoc_save(self, filename, stream):
     # 1. Align stream on 0x1000 boundary (and therefore on sector boundary)
     padding = '\x00' * (0x1000 - (len(stream) % 0x1000))
     self.book_stream_len = len(stream) + len(padding)
@@ -26,4 +26,4 @@ def pyexceleratir_compounddoc_xlsdoc_save(self, filename, stream):
     f.write(self.dir_stream)
     f.close()
 
-pyExcelerator.CompoundDoc.XlsDoc.save = pyexceleratir_compounddoc_xlsdoc_save
+pyExcelerator.CompoundDoc.XlsDoc.save = pyexcelerator_compounddoc_xlsdoc_save
