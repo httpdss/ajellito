@@ -332,7 +332,7 @@ class UserStory(ClueModel):
 
     @classmethod
     def backlogged(klass, project):
-        return klass.objects.filter(project__id=project, iteration=None).order_by('rank')
+        return klass.objects.filter(project__id=project, iteration=None).exclude(state=1).order_by('rank')
 
     @property
     def test_failed(self):
