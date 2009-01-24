@@ -26,7 +26,7 @@
 
 
 {% endif %}
-    <li><a href="{% url agilito.views.timelog %}">Log</a></li>
+    <li><a href="{% url agilito.views.timelog "" %}">Log</a></li>
     {% if current_project.iteration_set.all %}
     <li><a href="{% url agilito.views.iteration_hours current_project.id%}">Hours</a></li>
     {% endif %}
@@ -148,6 +148,9 @@ Planned :
         <th>To do</th>
         <th>Actuals</th>
         <th>Owner</th>
+        <th></th>
+        <th></th>
+        <th></th>
     </tr>
 </thead>
 

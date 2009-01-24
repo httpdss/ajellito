@@ -708,7 +708,7 @@ def iteration_burndown_chart(request, project_id, iteration_id, name):
 
     if small:
         dpi = fig.get_dpi()
-        fig.set_figsize_inches(270.0 / dpi, 200.0 / dpi)
+        fig.set_size_inches(270.0 / dpi, 200.0 / dpi)
 
     matplotlib.pyplot.savefig(response)
     return response
@@ -920,13 +920,43 @@ def iteration_burndown(request, project_id, iteration_id):
 
 
 # XXX fixme: should take a project_id
+def _parseTimelogCmd(spec):
+
+    if spec is None:
+        return (None, None)
+
+    spec = spec.strip('/')
+
+    if spec == '':
+        return (None, None)
+
+    cmd = spec.split('/')
+
+
+    if len(cmd) != 2:
+        return ('Invalid task/project specification "%s"' % spec, None)
+
+    key = cmd[0]
+    id = cmd[1]
+
+    if not key in ['task', 'project']:
+        return ('Invalid task/project specification "%s"' % spec, None)
+    
+    try:
+        id = int(id)
+    except:
+        return ('Invalid task/project specification "%s"' % spec, None)
+
+    return (None, (key, id))
+
 @login_required
-def timelog(request, instance=None):
+def timelog(request, cmd, instance=None):
 
-    TaskLogForm = gen_TaskLogForm(request.user)
-    message = None
+    message, cmd = _parseTimelogCmd(cmd)
 
-    if request.method == 'POST':
+    TaskLogForm = gen_TaskLogForm(request.user, cmd)
+
+    if message is None and request.method == 'POST':
         form = TaskLogForm(request.POST, instance=instance)
         if form.is_valid():
             tasklog = form.save(commit=False)
@@ -957,8 +987,13 @@ def timelog(request, instance=None):
     else:
         form = TaskLogForm(instance=instance)
 
+    if cmd is None or cmd[0] != 'task':
+        selectedTask = ''
+    else:
+        selectedTask = str(cmd[1])
     context = AgilitoContext(request, {'form': form,
-                                      'message': message,})
+                                      'message': message,
+                                      'selectedTask': selectedTask})
     
     return render_to_response('timelog.html', context_instance=context)
 

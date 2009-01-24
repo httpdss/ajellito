@@ -155,7 +155,7 @@ class TaskField(forms.IntegerField):
         value = super(TaskField, self).clean(value)
         return Task.objects.get(id=value)
 
-def gen_TaskLogForm(user):
+def gen_TaskLogForm(user, cmd=None):
     from django.db import connection
     cur = connection.cursor()
 
