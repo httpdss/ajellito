@@ -295,7 +295,8 @@ class UserStoryAttachment(ClueModel):
         )
 
 class UserStory(ClueModel):
-    STATES = [(10, 'Defined'),
+    STATES = [(1, 'Archived'),
+              (10, 'Defined'),
               (15, 'Specified'),
               (20, 'In Progress'),
               (30, 'Completed'),
@@ -347,6 +348,14 @@ class UserStory(ClueModel):
                 pass
                
         return out
+
+    @property
+    def is_archived(self):
+        return (self.state == 1)
+
+    def archive(self):
+        self.state = 1
+        self.save()
 
     def get_container_model(self):
         return self.iteration
@@ -408,7 +417,8 @@ class UserProfile(models.Model):
         verbose_name_plural = _(u'User Profiles')
 
 class Task(ClueModel):
-    STATES = [(10, 'Defined'),
+    STATES = [(1, 'Archived'),
+              (10, 'Defined'),
               (20, 'In Progress'),
               (30, 'Complete'),
               ]
@@ -440,12 +450,21 @@ class Task(ClueModel):
         return (self.state == 30)
 
     @property
+    def is_archived(self):
+        return (self.state == 1)
+
+    @property
     def is_in_progress(self):
         return (self.state == 20)
 
     @property
     def is_defined(self):
         return (self.state == 10)
+
+    def archive(self):
+        self.state = 1
+        self.remaining = 0
+        self.save()
 
     def remaining_for_date(self, date):
         # find the oldest tasklog that is newer than date and check

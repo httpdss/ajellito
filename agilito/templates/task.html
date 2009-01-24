@@ -1,6 +1,6 @@
     <tr class="{% cycle even,odd %}">
-        <td>TA{{task.id}}</td>
-        <td class="name"><a href="{{task.get_absolute_url}}">{{task.name}}</a></td>
+        <td><span class="{% if task.is_archived %}archived{% endif %}">TA{{task.id}}</span></td>
+        <td class="name"><span class="{% if task.is_archived %}archived{% endif %}"><a href="{{task.get_absolute_url}}">{{task.name}}</a></span></td>
         <td class="state">{{task.get_state_display}}</td>
         <td class="planned">{{task.planned}}</td>
         <td class="estimated">{{task.estimate}}</td>

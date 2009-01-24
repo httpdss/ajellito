@@ -356,3 +356,6 @@ a.action-link.add-task { background-image: url("/resources/add_.png") }
     padding-right: 50px;
 }
 
+.archived {
+    text-decoration: line-through;
+}

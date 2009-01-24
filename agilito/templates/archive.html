@@ -1,0 +1,14 @@
+{% extends "master.html" %}
+{% block title %}{{object.name}}{% endblock %}
+{% block content %}
+
+<h2>Archiving {{ object }}</h2>
+<p>Are you sure you want to archive this?
+{% if deleted_objects %}All of the following related items will be archived:
+<ul>{{ deleted_objects|unordered_list }}</ul>{% endif %}
+<form method="post">
+<div>
+  <input type="hidden" name="post" value="yes" />
+  <input type="submit" value="Yes, I'm sure" />
+</div></form>
+{% endblock %}

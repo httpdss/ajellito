@@ -7,6 +7,9 @@ import agilitodev.settings
 import pyExcelerator
 import decimal
 
+from django.core.xheaders import populate_xheaders
+from django.utils.translation import ugettext
+
 import cStringIO
 import formatter
 import htmllib
@@ -236,9 +239,16 @@ def userstory_delete(request, project_id, userstory_id):
             testcases.append(testresults)
     if testcases:
         delobjs.extend(['TestCases', testcases])
-    return create_update.delete_object(request, object_id=userstory_id,
+
+    if len(delobjs) > 0:
+        actor = archive
+        template = 'archive.html'
+    else:
+        actor = create_update.delete_object
+        template = 'userstory_delete.html'
+    return actor(request, object_id=userstory_id,
                                        model=UserStory,
-                                       template_name='userstory_delete.html',
+                                       template_name=template,
                                        post_delete_redirect=url,
                                        extra_context={'deleted_objects': delobjs})
 
@@ -349,10 +359,16 @@ def task_delete(request, project_id, userstory_id, task_id):
     if url.find('task') != -1:
         url = task.get_container_url()
 
-    tasklogs = list(task.tasklog_set.all())
-    return create_update.delete_object(request, object_id=task_id,
+    tasklogs = task.tasklog_set.all()
+    if tasklogs.count() > 0:
+        actor = archive
+        template = 'archive.html'
+    else:
+        actor = create_update.delete_object
+        template = 'userstory_delete.html'
+    return actor(request, object_id=task_id,
                                        model=Task,
-                                       template_name='userstory_delete.html',
+                                       template_name=template,
                                        post_delete_redirect=url,
                                        extra_context={'deleted_objects': tasklogs})
 
@@ -1094,3 +1110,41 @@ def csv_log_all_projects(request):
     
     return response
 
+def archive(request, model, post_delete_redirect, object_id=None,
+        slug=None, slug_field='slug', template_name=None,
+        template_loader=loader, extra_context=None, login_required=False,
+        context_processors=None, template_object_name='object'):
+    """
+    Generic object-delete function.
+
+    The given template will be used to confirm deletetion if this view is
+    fetched using GET; for safty, deletion will only be performed if this
+    view is POSTed.
+
+    Templates: ``<app_label>/<model_name>_confirm_delete.html``
+    Context:
+        object
+            the original object being deleted
+    """
+    if extra_context is None: extra_context = {}
+    if login_required and not request.user.is_authenticated():
+        return redirect_to_login(request.path)
+
+    obj = create_update.lookup_object(model, object_id, slug, slug_field)
+
+    if request.method == 'POST':
+        obj.archive()
+        if request.user.is_authenticated():
+            request.user.message_set.create(message=ugettext("The %(verbose_name)s was archived.") % {"verbose_name": model._meta.verbose_name})
+        return HttpResponseRedirect(post_delete_redirect)
+    else:
+        if not template_name:
+            template_name = "%s/%s_confirm_delete.html" % (model._meta.app_label, model._meta.object_name.lower())
+        t = template_loader.get_template(template_name)
+        c = RequestContext(request, {
+            template_object_name: obj,
+        }, context_processors)
+        create_update.apply_extra_context(extra_context, c)
+        response = HttpResponse(t.render(c))
+        populate_xheaders(request, response, model, getattr(obj, obj._meta.pk.attname))
+        return response
