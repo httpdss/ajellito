@@ -50,7 +50,7 @@
 
 <body>
 <div id="wrapper">
-    <div id="notice"><p>Beware of the warecode!, this is app is in active development.</p></div>
+    <!-- div id="notice"><p>Beware of the warecode!, this is app is in active development.</p></div -->
     <div id="head">
 
         {% if current_project %}
@@ -68,8 +68,7 @@
         {% endif %}
 
         <h1>
-            <a href="/{{ current_project.id }}/backlog">
-                <img src="/resources/ifpeople_logo-en.png" alt="IfPeople"/><span>Agilito: the scrum donkey</span>
+            <a href="/{{ current_project.id }}/backlog"> <img src="/resources/bglogo-splash.gif" alt="Hogeschool van Arnhem en Nijmegeb"/><span>Agilito: the scrum donkey</span>
             </a>
         </h1>
 
@@ -134,7 +133,7 @@
     <div id="content">
         {% block content %}The main content{% endblock %}
     </div>
-    <div id="footer">
+    <!-- div id="footer">
       {% block footer %} {% endblock %}
 
 <p><a href="http://www.ifpeople.net">ifPeople</a> | 130 Boulevard NE #6 | Atlanta, GA 30312
@@ -142,7 +141,7 @@ t: 678-608-3408 | <a href="http://getsatisfaction.com/ifpeople/products/ifpeople
 <p>Powered by <a href="http://www.agilito.com">Agilito</a> | Built with <a href="http://www.djangoproject.com">Django</a>
 </p>
 
-    </div>
+    </div -->
     </div>
 </body>
 </html>

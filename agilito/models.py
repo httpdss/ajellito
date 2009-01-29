@@ -16,6 +16,28 @@ def _if_is_none_else(item,  rv_case_none,  fun_case_not_none):
     else:
         return fun_case_not_none(item)
 
+class FieldChoices:
+    def __init__(self, *args, **kwargs):
+        self.__choices = []
+
+        for c in args:
+            k = c[1].replace(' ', '_').upper()
+            setattr(self, k, c[0])
+            self.__choices.append(c)
+
+        for k in kwargs.keys():
+            k = k.upper()
+            if hasattr(self, k):
+                raise Exception('Duplicate key %s' % k)
+
+            setattr(self, k, kwargs[k][0])
+            self.__choices.append(kwargs[k])
+
+    def choices(self):
+        return self.__choices
+
+    def label(self, value):
+        return filter(lambda x: x[0] == value, self.__choices)[1]
 
 class NoProjectException(Exception):
     pass
@@ -131,7 +153,7 @@ class Iteration(ClueModel):
                                                 
     @property
     def us_accepted(self):
-        return sum(us.planned or 0 for us in self.userstory_set.filter(Q(state=40)))
+        return sum(us.planned or 0 for us in self.userstory_set.filter(Q(state=UserStory.STATES.ACCEPTED)))
     
     @property
     def us_accepted_percentage(self):
@@ -300,22 +322,23 @@ class UserStoryAttachment(ClueModel):
         )
 
 class UserStory(ClueModel):
-    STATES = [(1, 'Archived'),
-              (10, 'Defined'),
-              (15, 'Specified'),
-              (20, 'In Progress'),
-              (30, 'Completed'),
-              (40, 'Accepted'),
-              ]
-    SIZES = [(1,  'XXS'),
-             (2,  'XS'),
-             (3,  'S'),
-             (5,  'M'),
-             (8,  'L'),
-             (13, 'XL'),
-             (21, 'XXL'),
-             (1000,  'Too large'),
-            ]
+    STATES = FieldChoices(
+                (1, 'Archived'),
+                (10, 'Defined'),
+                (15, 'Specified'),
+                (20, 'In Progress'),
+                (30, 'Completed'),
+                (40, 'Accepted'))
+
+    SIZES = FieldChoices(
+                (1,  'XXS'),
+                (2,  'XS'),
+                (3,  'S'),
+                (5,  'M'),
+                (8,  'L'),
+                (13, 'XL'),
+                (21, 'XXL'),
+                (1000,  'Too large'))
 
     project = models.ForeignKey(Project)
 
@@ -323,11 +346,11 @@ class UserStory(ClueModel):
     iteration = models.ForeignKey(Iteration, null=True, blank=True)
     rank = models.IntegerField(null=True, blank=True)
 
-    state = models.SmallIntegerField(choices=STATES, default=10)
+    state = models.SmallIntegerField(choices=STATES.choices(), default=STATES.DEFINED)
     blocked = models.BooleanField(default=False)
 
     # alter table agilito_userstory add column size smallint
-    size = models.SmallIntegerField(choices=SIZES, null=True)
+    size = models.SmallIntegerField(choices=SIZES.choices(), null=True)
 
     def __unicode__(self):
         return u'US%s: %s' % (self.id, self.name)
@@ -368,10 +391,10 @@ class UserStory(ClueModel):
 
     @property
     def is_archived(self):
-        return (self.state == 1)
+        return (self.state == UserStory.STATES.ARCHIVED)
 
     def archive(self):
-        self.state = 1
+        self.state = UserStory.STATES.ARCHIVED
         self.save()
 
     def get_container_model(self):
@@ -410,16 +433,16 @@ class UserStory(ClueModel):
 
 
 class UserProfile(models.Model):
-    CATEGORIES = [(10, 'Client'),
-                  (20, 'Project Manager'),
-                  (30, 'Developer'),
-                  (40, 'Designer'),
-                  (50, 'Tester'),
-                  (99, 'Other'), 
-                  ]
+    CATEGORIES = FieldChoices(
+                    (10, 'Client'),
+                    (20, 'Project Manager'),
+                    (30, 'Developer'),
+                    (40, 'Designer'),
+                    (50, 'Tester'),
+                    (99, 'Other'))
 
     hours_per_week = models.SmallIntegerField()
-    category = models.SmallIntegerField(choices=CATEGORIES)
+    category = models.SmallIntegerField(choices=CATEGORIES.choices())
     user = models.ForeignKey(User, unique=True)
     
     def __unicode__(self):
@@ -434,26 +457,26 @@ class UserProfile(models.Model):
         verbose_name_plural = _(u'User Profiles')
 
 class Task(ClueModel):
-    STATES = [(1, 'Archived'),
-              (10, 'Defined'),
-              (20, 'In Progress'),
-              (30, 'Complete'),
-              ]
+    STATES = FieldChoices(
+                (1, 'Archived'),
+                (10, 'Defined'),
+                (20, 'In Progress'),
+                (30, 'Complete'))
 
-    CATEGORIES = [( 0, 'Undefined'),
-                  (10, 'UI'),
-                  (20, 'Design'),
-                  (30, 'Development'),
-                  (40, 'Testing'),
-                  (99, 'Other'),
-                  ]
+    CATEGORIES = FieldChoices(
+                ( 0, 'Undefined'),
+                (10, 'UI'),
+                (20, 'Design'),
+                (30, 'Development'),
+                (40, 'Testing'),
+                (99, 'Other'))
 
     estimate = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True)
     remaining = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True)
 
-    state = models.SmallIntegerField(choices=STATES, default=10)
+    state = models.SmallIntegerField(choices=STATES.choices(), default=STATES.DEFINED)
 
-    category = models.SmallIntegerField(choices=CATEGORIES, default=00)
+    category = models.SmallIntegerField(choices=CATEGORIES.choices(), default=CATEGORIES.UNDEFINED)
 
     owner = models.ForeignKey(User, blank=True, null=True)
     user_story = models.ForeignKey('UserStory')
@@ -464,22 +487,22 @@ class Task(ClueModel):
 
     @property
     def is_complete(self):
-        return (self.state == 30)
+        return (self.state == Task.STATES.COMPLETE)
 
     @property
     def is_archived(self):
-        return (self.state == 1)
+        return (self.state == Task.STATES.ARCHIVED)
 
     @property
     def is_in_progress(self):
-        return (self.state == 20)
+        return (self.state == Task.STATES.IN_PROGRESS)
 
     @property
     def is_defined(self):
-        return (self.state == 10)
+        return (self.state == Task.STATES.DEFINED)
 
     def archive(self):
-        self.state = 1
+        self.state = Task.STATES.ARCHIVED
         self.remaining = 0
         self.save()
 
@@ -512,19 +535,19 @@ class Task(ClueModel):
         ordering = ('user_story__rank', 'user_story__id', 'id')
 
 class TestCase(ClueModel):
-    KINDS = [(10, 'Acceptance'),
-             (20, 'Functional'),
-             (99, 'Other'),
-             ]
+    KINDS = FieldChoices(
+                (10, 'Acceptance'),
+                (20, 'Functional'),
+                (99, 'Other'))
 
-    PRIORITIES = [(10, 'Useful'),
-                  (20, 'Important'),
-                  (30, 'Critical'),
-                  ]
+    PRIORITIES = FieldChoices(
+                (10, 'Useful'),
+                (20, 'Important'),
+                (30, 'Critical'))
 
     user_story = models.ForeignKey('UserStory')
 
-    priority = models.SmallIntegerField(choices=PRIORITIES,
+    priority = models.SmallIntegerField(choices=PRIORITIES.choices(),
                                         null=True, blank=True, default=20)
     precondition = models.TextField(blank=True)
     steps = models.TextField(blank=True)
@@ -547,12 +570,13 @@ class TestCase(ClueModel):
         )
 
 class TestResult(models.Model):
-    RESULTS = [(0, 'Fail'),
-               (1, 'Pass'),
-               (2, 'Error'),
-               (3, 'Inconclusive'),
-               ]
-    result = models.SmallIntegerField(choices=RESULTS)
+    RESULTS = FieldChoices(
+                (0, 'Fail'),
+                (1, 'Pass'),
+                (2, 'Error'),
+                (3, 'Inconclusive'))
+
+    result = models.SmallIntegerField(choices=RESULTS.choices())
     comments = models.TextField(blank=True)
     date = models.DateTimeField()
     tester = models.ForeignKey(User)
