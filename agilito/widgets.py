@@ -14,6 +14,7 @@ class TaskHierarchy:
         self.task = False
         self.children = []
         self.shrinkable = False
+        self.project = None
 
     def keys(self):
         return [c.id for c in self.children]

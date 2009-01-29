@@ -165,6 +165,37 @@ def gen_TaskLogForm(user, cmd=None):
     last_end = (today - datetime.timedelta(days = 7)).strftime('%Y-%m-%d')
     today = today.strftime('%Y-%m-%d')
 
+    menu = TaskHierarchy(None)
+    menu['recent'].name = 'Recent'
+    menu['mine'].name = 'My tasks'
+    menu['inprogress'].name = 'In progress'
+    
+    projectmenus = []
+    
+    projects_sql = """
+        select distinct
+            p.id,   p.name
+        from agilito_project p
+        join agilito_project_project_members pm on pm.project_id = p.id and pm.user_id = %(me)d
+        join agilito_iteration i on i.project_id = p.id
+        where i.start_date <= '%(today)s' and i.end_date >= '%(last_end)s'
+        order by p.id
+        """ % locals()
+    cur.execute(projects_sql)
+
+    projects = cur.fetchall()
+
+    if len(projects) > 5: # this is arbitrary
+        mi = menu['all']
+        mi.name = 'All'
+        projectmenus.append((mi, True))
+    else:
+        for id, name in projects:
+            mi = menu['P%d' % id]
+            mi.name = name
+            mi.project = id
+            projectmenus.append((mi, None))
+
     # this prevents hitting the database multiple times, quite a bit
     # faster. Plus it automatically sorts the menu
     tasks_sql = """
@@ -190,17 +221,14 @@ def gen_TaskLogForm(user, cmd=None):
         order by p.id, i.id, us.rank, us.id, t.id
         """ % locals()
 
-    menu = TaskHierarchy(None)
-    menu['recent'].name = 'Recent'
-    menu['mine'].name = 'My tasks'
-    menu['inprogress'].name = 'In progress'
-    menu['all'].name = 'All'
-
     cur.execute(tasks_sql)
     for row in cur.fetchall():
         ss, to, r, logged = row[-4:]
 
-        for h, add in [(menu['all'], True), (menu['recent'], r), (menu['mine'], to == me or logged), (menu['inprogress'], ss == 20)]:
+        for h, add in [(menu['recent'], r), (menu['mine'], to == me or logged), (menu['inprogress'], ss == 20)] + projectmenus:
+            if add is None:
+                add = (h.project == row[1])
+
             if not add: continue
 
             submenu = h.id[0]
