@@ -299,13 +299,13 @@ def task_create(request, project_id, userstory_id, instance=None):
 
             if task.actuals > 0:    # there are hours logged against this task
                 if task.is_defined and task.remaining != 0:
-                    task.state = 20
+                    task.state = Task.STATES.IN_PROGRESS
                 elif task.is_in_progress and task.remaining == 0:
-                    task.state = 30
+                    task.state = Task.STATES.COMPLETE
                 elif task.is_complete:
                     task.remaining = 0
                 elif task.remaining == 0:
-                    task.state = 30
+                    task.state = Task.STATES.COMPLETE
             else:
                 if task.is_complete:
                     task.remaining = 0  # maybe you want to set the task complete
@@ -315,12 +315,12 @@ def task_create(request, project_id, userstory_id, instance=None):
             # this code has changed compatered to what is in the timelog
             story = task.user_story
             total_tasks = story.task_set.all().count()
-            if story.task_set.filter(state=10).count() == total_tasks:
-                story.state = 10
-            elif story.task_set.filter(state=30).count() == total_tasks:
-                story.state = 30
+            if story.task_set.filter(state=Task.STATES.DEFINED).count() == total_tasks:
+                story.state = UserStory.STATES.DEFINED
+            elif story.task_set.filter(state=Task.STATES.COMPLETE).count() == total_tasks:
+                story.state = UserStory.STATES.COMPLETED
             else:
-                story.state = 20
+                story.state = UserStory.STATES.IN_PROGRESS
             story.save()
 
             return HttpResponseRedirect(form.cleaned_data['http_referer'])
@@ -881,11 +881,11 @@ def iteration_status_table(request, project_id, iteration_id):
 
         style.font = defaultFont
         style.pattern = defaultPattern
-        if us.state == 30 and us.remaining == 0:
+        if us.state == UserStory.STATES.COMPLETED and us.remaining == 0:
             style.pattern = green
-        elif t.state != 30 and us.remaining == 0:
+        elif t.state != Task.STATES.COMPLETE and us.remaining == 0:
             style.pattern = orange
-        elif t.state == 30 and us.remaining != 0:
+        elif t.state == Task.STATES.COMPLETE and us.remaining != 0:
             style.pattern = orange
         ws.write(r + 1, 2, us.name, style)
 
@@ -893,11 +893,11 @@ def iteration_status_table(request, project_id, iteration_id):
         style.pattern = defaultPattern
         if t.estimate is None:
             style.font = fade
-        elif t.state == 30 and last == 0:
+        elif t.state == Task.STATES.COMPLETE and last == 0:
             style.pattern = green
-        elif t.state != 30 and last == 0:
+        elif t.state != Task.STATES.COMPLETE and last == 0:
             style.pattern = orange
-        elif t.state == 30 and last != 0:
+        elif t.state == Task.STATES.COMPLETE and last != 0:
             style.pattern = orange
         ws.write(r + 1, 3, t.name, style)
 
@@ -982,9 +982,9 @@ def timelog(request, cmd, instance=None):
                 tasklog.iteration = tasklog.task.user_story.iteration
                 tasklog.old_remaining = tasklog.task.remaining
             state = int(form.cleaned_data['state'])
-            if state == 10: # aka 'Defined'
-                state = 20  # in progress
-            if state == 30: # complete
+            if state == Task.STATES.DEFINED:
+                state = Task.STATES.IN_PROGRESS
+            if state == Task.STATES.COMPLETE:
                 tasklog.task.remaining = 0
             else:
                 tasklog.task.remaining = form.cleaned_data['remaining']
@@ -992,11 +992,11 @@ def timelog(request, cmd, instance=None):
             tasklog.task.save()
             tasklog.save()
             story = tasklog.task.user_story
-            if not story.task_set.exclude(state=30).count():
+            if not story.task_set.exclude(state=Task.STATES.COMPLETE).count():
                 # all the storie's tasks are Complete
-                story.state = 30
+                story.state = UserStory.STATES.COMPLETED
             else:
-                story.state = 20
+                story.state = UserStory.STATES.IN_PROGRESS
             story.save()
             message = 'Task %d updated! More?' % form.cleaned_data['task'].id
             form = gen_TaskLogForm(request.user)()
