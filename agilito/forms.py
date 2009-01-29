@@ -198,6 +198,7 @@ def gen_TaskLogForm(user, cmd=None):
 
     # this prevents hitting the database multiple times, quite a bit
     # faster. Plus it automatically sorts the menu
+    archived = Task.STATES.ARCHIVED
     tasks_sql = """
         select distinct
             'P',    p.id,   p.name
@@ -216,7 +217,7 @@ def gen_TaskLogForm(user, cmd=None):
         join agilito_task t on t.user_story_id = us.id
         left join agilito_tasklog tlr on tlr.task_id = t.id and tlr.iteration_id = i.id and tlr.date >= '%(recent_task)s'
         left join agilito_tasklog tlm on tlm.task_id = t.id and tlm.iteration_id = i.id and tlm.owner_id = pm.user_id
-        where i.start_date <= '%(today)s' and i.end_date >= '%(last_end)s'
+        where i.start_date <= '%(today)s' and i.end_date >= '%(last_end)s' and t.state != %(archived)d
         group by p.id, p.name, i.id, i.name, us.id, us.name, us.state, us.rank, t.id, t.name, t.owner_id
         order by p.id, i.id, us.rank, us.id, t.id
         """ % locals()
@@ -251,7 +252,7 @@ def gen_TaskLogForm(user, cmd=None):
                                                      choices=[],
                                                      hierarchy=menu), required = False)
         task = TaskField(widget=forms.TextInput(attrs={'readonly': 'readonly', 'value': ''}))
-        state = forms.ChoiceField(choices=Task.STATES)
+        state = forms.ChoiceField(choices=Task.STATES.choices())
         estimate = forms.DecimalField(widget=forms.TextInput(attrs={'type': "readonly",
                                                                     'readonly': "readonly",
                                                                     'style' : "border: 0"}),
