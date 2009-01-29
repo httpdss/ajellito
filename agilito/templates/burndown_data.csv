@@ -1,11 +1,11 @@
 &x_axis_steps=1&
 &x_legend=Day,14,0&
 &y_legend=Hours,14,0x639F45&
-&y2_legend=Stories,14,0x639F45&
+&y2_legend=Story points,14,0x639F45&
 &y_ticks=5,10,10&
 &line_hollow=2,0x639F45,Ideal,14,3&
 &line_hollow_2=3,0x2693CF,Remaining,14,4&
-&line_hollow_3=3,0x2603CF,Stories,14,4&
+&line_hollow_3=3,0x2603CF,Story points,14,4&
 &values={{ ideal|join:"," }}&
 &values_2={{ remaining|join:"," }}&
 &values_3={{ remaining_stories|join:"," }}&

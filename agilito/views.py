@@ -573,8 +573,8 @@ def _iteration_get_burndown_data(it):
             data['ideal_tips'].append('-')
             data['remaining_tips'].append('-')
     data['y_max'] = max(data['ideal'] + data['remaining'])
-    if len(data['remaining_stories']) > 0:
-        data['y2_max'] = max(data['remaining_stories'])
+    if len(data['remaining_storypoints']) > 0:
+        data['y2_max'] = max(data['remaining_storypoints'])
     else:
         data['y2_max'] = None
 
@@ -694,10 +694,10 @@ def iteration_burndown_chart(request, project_id, iteration_id, name):
 
     layers = []
     max_h = max(data['ideal'] + data['remaining'])
-    max_s = max(data['remaining_stories'])
+    max_s = max(data['remaining_storypoints'])
     layers.append((fig.add_subplot(111), 'ro-', data['ideal'], 'Ideal', max_h))
     layers.append((layers[0][0], 'bo-', data['remaining'], 'Hours', max_h))
-    layers.append((layers[0][0].twinx(), 'go-', data['remaining_stories'], 'Stories', float(max_s) + 0.1))
+    layers.append((layers[0][0].twinx(), 'go-', data['remaining_storypoints'], 'Story points', float(max_s) + 0.1))
 
     x = [str(x) for x in range(1, len(data['ideal']) + 1)]
 
@@ -909,9 +909,9 @@ def iteration_status_table(request, project_id, iteration_id):
         colname = _excel_column(c + 5)
         ws.write(r + 2, c + 4, pyExcelerator.Formula("SUM(%s2:%s%d)" % (colname, colname, r + 2)))
 
-    ws.write(r+3, 3, 'Stories', style)
+    ws.write(r+3, 3, 'Story points', style)
     for c, d in enumerate(days):
-        ws.write(r+3, c+4, it.remaining_stories(d))
+        ws.write(r+3, c+4, it.remaining_storypoints(d))
 
     ws.write(r+4, 3, 'Ideal', style)
     total = '$%s%d' % (_excel_column(5), r + 3)

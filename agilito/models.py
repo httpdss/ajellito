@@ -169,13 +169,18 @@ class Iteration(ClueModel):
         return sum(t.remaining_for_date(date)
                    for t in Task.objects.filter(user_story__iteration=self))
 
-    def remaining_stories(self, date):
-        stories = {}
-        for t in Task.objects.filter(user_story__iteration=self):
-            us = t.user_story.id
-            if not stories.has_key(us): stories[us] = 0
-            stories[us] += t.remaining_for_date(date)
-        return len(filter(lambda x: x > 0, stories.values()))
+    def remaining_storypoints(self, date):
+        left = {}
+        for us in UserStory.objects.filter(iteration=self):
+            left[us.id] = 0
+            for t in Task.objects.filter(user_story=us):
+                if t.remaining_for_date(date) > 0:
+                    left[us.id] = us.size
+                    if not left[us.id]:
+                        left[us.id] = 1
+                    break
+
+        return sum(left.values())
 
     def total_estimated(self):
         return sum(t.estimate or 0
@@ -202,10 +207,10 @@ class Iteration(ClueModel):
                         ideal=self.ideal_hours(a_date))
             if a_date > today:
                 data['remaining'] = None
-                data['remaining_stories'] = None
+                data['remaining_storypoints'] = None
             else:
                 data['remaining'] = self.remaining_hours(a_date)
-                data['remaining_stories'] = self.remaining_stories(a_date)
+                data['remaining_storypoints'] = self.remaining_storypoints(a_date)
 
             burndown.append(data)
         return burndown
@@ -302,6 +307,15 @@ class UserStory(ClueModel):
               (30, 'Completed'),
               (40, 'Accepted'),
               ]
+    SIZES = [(1,  'XXS'),
+             (2,  'XS'),
+             (3,  'S'),
+             (5,  'M'),
+             (8,  'L'),
+             (13, 'XL'),
+             (21, 'XXL'),
+             (1000,  'Too large'),
+            ]
 
     project = models.ForeignKey(Project)
 
@@ -311,6 +325,9 @@ class UserStory(ClueModel):
 
     state = models.SmallIntegerField(choices=STATES, default=10)
     blocked = models.BooleanField(default=False)
+
+    # alter table agilito_userstory add column size smallint
+    size = models.IntegerField(null=True, blank=True)
 
     def __unicode__(self):
         return u'US%s: %s' % (self.id, self.name)
