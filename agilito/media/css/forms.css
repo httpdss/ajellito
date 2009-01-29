@@ -65,10 +65,10 @@ font-size:80%;
 
 }
 
-#timelog .timelog-label, #timelog .timelog-entry {
+#timelog .form-label, #timelog .form-entry {
     vertical-align: top;
 }
-#timelog .timelog-label span {
+#timelog .form-label span {
     float: right;
 }
 

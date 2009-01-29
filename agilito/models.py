@@ -327,7 +327,7 @@ class UserStory(ClueModel):
     blocked = models.BooleanField(default=False)
 
     # alter table agilito_userstory add column size smallint
-    size = models.IntegerField(null=True, blank=True)
+    size = models.SmallIntegerField(choices=SIZES, null=True)
 
     def __unicode__(self):
         return u'US%s: %s' % (self.id, self.name)

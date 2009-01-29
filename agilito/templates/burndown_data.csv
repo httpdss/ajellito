@@ -8,7 +8,7 @@
 &line_hollow_3=3,0x2603CF,Story points,14,4&
 &values={{ ideal|join:"," }}&
 &values_2={{ remaining|join:"," }}&
-&values_3={{ remaining_stories|join:"," }}&
+&values_3={{ remaining_storypoints|join:"," }}&
 &x_labels={{ day|join:"," }}&
 &y_min=0&
 &y_max={{ y_max }}&

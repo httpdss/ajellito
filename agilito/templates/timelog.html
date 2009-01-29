@@ -69,35 +69,35 @@ $(window).ready(function(){
         </div>
         <table id="timelog" class="formfields">
             <tr>
-                <td class="timelog-label">
+                <td class="form-label">
                     <span>
                         Story
                     </span>
                 </td>
-                <td class="timelog-entry">
+                <td class="form-entry">
                     <p id="story-name"></p>
                 </td>
             </tr>
             <tr>
-                <td class="timelog-label">
+                <td class="form-label">
                     <span>
                         Task
                     </span>
                 </td>
-                <td class="timelog-entry">
+                <td class="form-entry">
                     <p id="task-name"></p>
                 </td>
             </tr>
         {% for field in form %}
         {% ifnotequal field.name "taskmenu" %}
             <tr class="{% if field.errors %}errors {% endif %} {% if field.field.required %}required{%endif%}">
-                <td class="timelog-label">
+                <td class="form-label">
                     <span>
                         {{ field.label_tag }}
                         {% if field.field.required and not field.errors %}<br/><span class="required-text">required</span>{%endif%}
                     </span>
                 </td>
-                <td class="timelog-entry">
+                <td class="form-entry">
                     <p> {{ field }} </p>
                     {% if field.help_text %}<p class="discreet">{{ field.help_text }}</p>{% endif %}
                     {% if field.errors %}{{ field.errors }}{% endif %}

@@ -57,7 +57,7 @@ class UserStoryForm(HiddenHttpRefererForm):
 
     class Meta:
         model = UserStory
-        fields = 'name', 'description', 'rank', 'planned', 'state', 'blocked', 'iteration'
+        fields = 'name', 'description', 'rank', 'size', 'planned', 'state', 'iteration', 'blocked'
 
 class TaskForm(HiddenHttpRefererForm):
     actuals = forms.CharField(widget=forms.HiddenInput, required=False)
