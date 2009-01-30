@@ -718,17 +718,20 @@ def product_backlog_chart(request, project_id, iteration_id):
 
     # story=450, state=Completed, created=2008-09-24, day=2008-09-24
     for st in UserStory.objects.filter(project__id = project_id):
+        size = st.size
+        if not size:
+            size = 1
         for x, day in enumerate(days):
 
             if st.state == UserStory.STATES.COMPLETED and st.closed <= day:
-                completed[x] += 1
+                completed[x] += size
 
             elif st.state != UserStory.STATES.ARCHIVED and st.created > days[0] and st.created <= day:
                 # print 'story=%s, state=%s, created=%s, day=%s' % (st.id, UserStory.STATES.label(st.state), st.created, day)
-                added[x] += 1
+                added[x] += size
 
             elif st.created <= day:
-                existing[x] += 1
+                existing[x] += size
 
     ind = range(len(days))
 
