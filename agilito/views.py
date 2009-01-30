@@ -700,29 +700,37 @@ def product_backlog_chart(request, project_id, iteration_id):
 
     today = datetime.date.today()
 
-    weeks = list(rrule(WEEKLY, cache=True, dtstart=start_date, until=today))
-    weeks.append(weeks[-1] + datetime.timedelta(7))
-    weeks = [d.date() for d in weeks]
+    #days = list(rrule(WEEKLY, cache=True, dtstart=start_date, until=today))
+    #days = [d.date() for d in days]
+    #days.append(days[-1] + datetime.timedelta(7))
+    #labels = [str(d) for d in days]
 
-    existing = [0 for week in weeks]
-    added = [0 for week in weeks]
-    completed = [0 for week in weeks]
+    days = [start_date]
+    labels = ['']
+    it = Iteration.objects.filter(project__id=project_id, end_date__gte=start_date, start_date__lte=today).order_by('end_date')
+    for i in it:
+        days.append(i.end_date)
+        labels.append(i.name)
+
+    existing = [0 for week in days]
+    added = [0 for week in days]
+    completed = [0 for week in days]
 
     # story=450, state=Completed, created=2008-09-24, day=2008-09-24
     for st in UserStory.objects.filter(project__id = project_id):
-        for x, day in enumerate(weeks):
+        for x, day in enumerate(days):
 
             if st.state == UserStory.STATES.COMPLETED and st.closed <= day:
                 completed[x] += 1
 
-            elif st.state != UserStory.STATES.ARCHIVED and st.created > weeks[0] and st.created <= day:
+            elif st.state != UserStory.STATES.ARCHIVED and st.created > days[0] and st.created <= day:
                 # print 'story=%s, state=%s, created=%s, day=%s' % (st.id, UserStory.STATES.label(st.state), st.created, day)
                 added[x] += 1
 
             elif st.created <= day:
                 existing[x] += 1
 
-    ind = range(len(weeks))
+    ind = range(len(days))
 
     uso = []
     usobase = []
@@ -741,7 +749,7 @@ def product_backlog_chart(request, project_id, iteration_id):
     p2 = matplotlib.pyplot.bar(ind, usc, width, color='y', bottom=uscbase)
 
     matplotlib.pyplot.ylabel('Stories')
-    matplotlib.pyplot.xticks(ind, [str(d) for d in weeks])
+    matplotlib.pyplot.xticks(ind, labels)
     for t in matplotlib.pyplot.gca().get_xticklabels():
         t.set_rotation(45)
         t.set_horizontalalignment('right')
