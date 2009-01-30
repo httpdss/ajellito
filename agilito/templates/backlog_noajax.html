@@ -103,7 +103,8 @@ No user stories in the backlog.
 </dl>
 
 <p>
-<a href="{{ full_backlog }}">Full backlog in Excel format</a>
+<a href="{{ full_backlog }}">Full backlog in Excel format</a><br/>
+<a target="_chart" href="{% url agilito.views.product_backlog_chart current_project.id,"" %}">Backlog evolution since start of project</a>
 </p>
 {% endblock %}
 

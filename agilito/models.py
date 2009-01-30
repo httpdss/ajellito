@@ -37,7 +37,7 @@ class FieldChoices:
         return self.__choices
 
     def label(self, value):
-        return filter(lambda x: x[0] == value, self.__choices)[1]
+        return filter(lambda x: x[0] == value, self.__choices)[0][1]
 
 class NoProjectException(Exception):
     pass
@@ -352,6 +352,11 @@ class UserStory(ClueModel):
     # alter table agilito_userstory add column size smallint
     size = models.SmallIntegerField(choices=SIZES.choices(), null=True)
 
+    # alter table agilito_userstory add column created date NOT NULL default 'now',
+    # alter table agilito_userstory add column closed date
+    created = models.DateField()
+    closed = models.DateField(null=True)
+
     def __unicode__(self):
         return u'US%s: %s' % (self.id, self.name)
 
@@ -461,7 +466,7 @@ class Task(ClueModel):
                 (1, 'Archived'),
                 (10, 'Defined'),
                 (20, 'In Progress'),
-                (30, 'Complete'))
+                (30, 'Completed'))
 
     CATEGORIES = FieldChoices(
                 ( 0, 'Undefined'),
@@ -487,7 +492,7 @@ class Task(ClueModel):
 
     @property
     def is_complete(self):
-        return (self.state == Task.STATES.COMPLETE)
+        return (self.state == Task.STATES.COMPLETED)
 
     @property
     def is_archived(self):

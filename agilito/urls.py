@@ -24,6 +24,7 @@ urlpatterns = patterns('agilito.views',
     (r'^(?P<project_id>\d+)/iteration/(?P<iteration_id>\d+)/cards/$', 'iteration_cards'),
     (r'^(?P<project_id>\d+)/iteration/(?P<iteration_id>\d+)/status_table/$', 'iteration_status_table'),
     (r'^(?P<project_id>\d+)/iteration/(?P<iteration_id>\d+)/burndown_chart/(?P<name>[a-z0-9]+)[.]png$', 'iteration_burndown_chart'),
+    (r'^(?P<project_id>\d+)/product_backlog_chart/(?P<iteration_id>.*)$', 'product_backlog_chart'),
 
     (r'^(?P<project_id>\d+)/userstory/(?P<userstory_id>\d+)/$', 'userstory_detail'),
     (r'^(?P<project_id>\d+)/userstory/(?P<userstory_id>\d+)/delete/$', 'userstory_delete'),

@@ -207,6 +207,7 @@ Downloads for this iteration:
 <li><a href="{{ cards_url }}">task cards</a></li>
 <li><a href="{{ status_table_url }}">task status</a></li>
 <li><a target="_burndown" href="{{ burndown_chart_url }}">Burndown chart</a></li>
+<li><a target="_chart" href="{% url agilito.views.product_backlog_chart current_project.id,current_iteration.id %}">Backlog evolution since start of iteration</a></li>
 </ul>
 
 {% else %}

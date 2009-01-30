@@ -18,7 +18,7 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot
 
-from dateutil.rrule import rrule, DAILY, MO, TU, WE, TH, FR
+from dateutil.rrule import rrule, WEEKLY, DAILY, MO, TU, WE, TH, FR
 
 try:
     from collections import defaultdict
@@ -301,11 +301,11 @@ def task_create(request, project_id, userstory_id, instance=None):
                 if task.is_defined and task.remaining != 0:
                     task.state = Task.STATES.IN_PROGRESS
                 elif task.is_in_progress and task.remaining == 0:
-                    task.state = Task.STATES.COMPLETE
+                    task.state = Task.STATES.COMPLETED
                 elif task.is_complete:
                     task.remaining = 0
                 elif task.remaining == 0:
-                    task.state = Task.STATES.COMPLETE
+                    task.state = Task.STATES.COMPLETED
             else:
                 if task.is_complete:
                     task.remaining = 0  # maybe you want to set the task complete
@@ -317,7 +317,7 @@ def task_create(request, project_id, userstory_id, instance=None):
             total_tasks = story.task_set.all().count()
             if story.task_set.filter(state=Task.STATES.DEFINED).count() == total_tasks:
                 story.state = UserStory.STATES.DEFINED
-            elif story.task_set.filter(state=Task.STATES.COMPLETE).count() == total_tasks:
+            elif story.task_set.filter(state=Task.STATES.COMPLETED).count() == total_tasks:
                 story.state = UserStory.STATES.COMPLETED
             else:
                 story.state = UserStory.STATES.IN_PROGRESS
@@ -683,6 +683,76 @@ def iteration_burndown_data(request, project_id, iteration_id):
                               mimetype="text/plain")
 
 @restricted
+def product_backlog_chart(request, project_id, iteration_id):
+    if iteration_id:
+        it = Iteration.objects.get(id=iteration_id, project__id=project_id)
+        start_date = it.start_date
+    else:
+        us = UserStory.objects.filter(project__id = project_id).order_by('created')[0]
+        us_start = us.created
+        it = Iteration.objects.filter(project__id=project_id).order_by('start_date')[0]
+        it_start = it.start_date
+
+        if us_start < it_start:
+            start_date = us_start
+        else:
+            start_date = it_start
+
+    today = datetime.date.today()
+
+    weeks = list(rrule(WEEKLY, cache=True, dtstart=start_date, until=today))
+    weeks.append(weeks[-1] + datetime.timedelta(7))
+    weeks = [d.date() for d in weeks]
+
+    existing = [0 for week in weeks]
+    added = [0 for week in weeks]
+    completed = [0 for week in weeks]
+
+    # story=450, state=Completed, created=2008-09-24, day=2008-09-24
+    for st in UserStory.objects.filter(project__id = project_id):
+        for x, day in enumerate(weeks):
+
+            if st.state == UserStory.STATES.COMPLETED and st.closed <= day:
+                completed[x] += 1
+
+            elif st.state != UserStory.STATES.ARCHIVED and st.created > weeks[0] and st.created <= day:
+                # print 'story=%s, state=%s, created=%s, day=%s' % (st.id, UserStory.STATES.label(st.state), st.created, day)
+                added[x] += 1
+
+            elif st.created <= day:
+                existing[x] += 1
+
+    ind = range(len(weeks))
+
+    uso = []
+    usobase = []
+    usc = []
+    uscbase = []
+
+    for x in ind:
+        uso.append(added[x] + existing[x])
+        usobase.append(-added[x])
+
+        usc.append(completed[x])
+        uscbase.append(existing[x])
+
+    width = 0.35       # the width of the bars: can also be len(x) sequence
+    p1 = matplotlib.pyplot.bar(ind, uso,   width, color='#1D91DB', bottom=usobase)
+    p2 = matplotlib.pyplot.bar(ind, usc, width, color='y', bottom=uscbase)
+
+    matplotlib.pyplot.ylabel('Stories')
+    #matplotlib.pyplot.xticks(ind+width/2., ('G1', 'G2', 'G3', 'G4', 'G5') )
+    #matplotlib.pyplot.yticks(np.arange(0,81,10))
+    matplotlib.pyplot.legend( (p1[0], p2[0]), ('Open', 'Completed'), 'best' )
+    matplotlib.pyplot.grid(color='#999999')
+
+    matplotlib.pyplot.axhline(linewidth=2, color='k', zorder=-1)
+
+    response = HttpResponse(mimetype='image/png')
+    matplotlib.pyplot.savefig(response)
+    return response
+
+@restricted
 def iteration_burndown_chart(request, project_id, iteration_id, name):
     it = Iteration.objects.get(id=iteration_id, project__id=project_id)
 
@@ -883,9 +953,9 @@ def iteration_status_table(request, project_id, iteration_id):
         style.pattern = defaultPattern
         if us.state == UserStory.STATES.COMPLETED and us.remaining == 0:
             style.pattern = green
-        elif t.state != Task.STATES.COMPLETE and us.remaining == 0:
+        elif t.state != Task.STATES.COMPLETED and us.remaining == 0:
             style.pattern = orange
-        elif t.state == Task.STATES.COMPLETE and us.remaining != 0:
+        elif t.state == Task.STATES.COMPLETED and us.remaining != 0:
             style.pattern = orange
         ws.write(r + 1, 2, us.name, style)
 
@@ -893,11 +963,11 @@ def iteration_status_table(request, project_id, iteration_id):
         style.pattern = defaultPattern
         if t.estimate is None:
             style.font = fade
-        elif t.state == Task.STATES.COMPLETE and last == 0:
+        elif t.state == Task.STATES.COMPLETED and last == 0:
             style.pattern = green
-        elif t.state != Task.STATES.COMPLETE and last == 0:
+        elif t.state != Task.STATES.COMPLETED and last == 0:
             style.pattern = orange
-        elif t.state == Task.STATES.COMPLETE and last != 0:
+        elif t.state == Task.STATES.COMPLETED and last != 0:
             style.pattern = orange
         ws.write(r + 1, 3, t.name, style)
 
@@ -984,7 +1054,7 @@ def timelog(request, cmd, instance=None):
             state = int(form.cleaned_data['state'])
             if state == Task.STATES.DEFINED:
                 state = Task.STATES.IN_PROGRESS
-            if state == Task.STATES.COMPLETE:
+            if state == Task.STATES.COMPLETED:
                 tasklog.task.remaining = 0
             else:
                 tasklog.task.remaining = form.cleaned_data['remaining']
@@ -992,7 +1062,7 @@ def timelog(request, cmd, instance=None):
             tasklog.task.save()
             tasklog.save()
             story = tasklog.task.user_story
-            if not story.task_set.exclude(state=Task.STATES.COMPLETE).count():
+            if not story.task_set.exclude(state=Task.STATES.COMPLETED).count():
                 # all the storie's tasks are Complete
                 story.state = UserStory.STATES.COMPLETED
             else:
