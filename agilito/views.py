@@ -741,8 +741,11 @@ def product_backlog_chart(request, project_id, iteration_id):
     p2 = matplotlib.pyplot.bar(ind, usc, width, color='y', bottom=uscbase)
 
     matplotlib.pyplot.ylabel('Stories')
-    #matplotlib.pyplot.xticks(ind+width/2., ('G1', 'G2', 'G3', 'G4', 'G5') )
-    #matplotlib.pyplot.yticks(np.arange(0,81,10))
+    matplotlib.pyplot.xticks(ind, [str(d) for d in weeks])
+    for t in matplotlib.pyplot.gca().get_xticklabels():
+        t.set_rotation(45)
+        t.set_horizontalalignment('right')
+        t.set_fontsize(6)
     matplotlib.pyplot.legend( (p1[0], p2[0]), ('Open', 'Completed'), 'best' )
     matplotlib.pyplot.grid(color='#999999')
 
