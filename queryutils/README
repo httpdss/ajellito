@@ -1,0 +1,56 @@
+_Queryutils App for Django_
+
+This module is used to implement a very simple query/search language bound to
+some model for a webapp. The idea is to have a simple way in which users of a 
+webapp can specify a search/query in some written form (a textbox). 
+
+Suppose we have an Author Model, 
+
+class Author (models.Model):
+    
+    first_name models.CharField()
+    last_name = model.CharField()
+    books = models.ManyToMany(Books)
+    ...
+    
+
+We want to allow the user to type something like this: "author:Arthur book:Space*"
+to retrieve all the books written by Arthur whose titles start with 'Space'     
+    
+Given a mapping of the keywords to some model's fields :
+    
+      'author' -> Author.first_name, Author.last_name
+      'book' -> Author.books 
+      
+and a string of the form 'keyword1:value keyword2:value' this module allows you
+perform a query on the mapped fields of the model. The values given on the search
+string written by the user are the values that we are inquiring for.
+
+In short:
+    
+    1) Definie a mapping:
+
+      'author' -> Author.first_name, Author.last_name
+      'book' -> Author.books 
+
+    2) write a query:
+    
+        author:Arthur C. book:Space*
+        
+    3) use our module:
+    
+        SearchQueryGenerator.__init__(mapping)
+        SearchQueryGenerator.make_query(query)
+    
+    4) result:
+    
+        Author.objects.filter((Q(first_name='Arthur') | Q(last_name='Arthur')) 
+                                & Q(book_iregex='Space.*'))s 
+
+For more details on how to use this read the module documentation.
+
+__How To Install__
+
+Checkout the project to the directory where you keep your django third-party
+apps. (Or checkit out and add it to you PYTHONPATH) In settings.py of your
+project add to the INSTALLED_APPS variable: 'queryutils',
