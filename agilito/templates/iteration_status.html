@@ -1,4 +1,18 @@
 {% extends "master.html" %}
+
+{% block js %}
+<script type="text/javascript">
+$(window).ready(function(){
+    $("#user-story-list").treeTable();
+});
+
+function timelog(url)
+{
+    window.open(url, "timelog", "location=1, menubar=1, resizable=1, scrollbars=1");
+    return false;
+}
+</script>
+{% endblock %}
 {% load humanize %}
 {% load markup %}
 
@@ -178,27 +192,45 @@ Number of US in iteration: {{ user_stories.count }}
         <td></td>
         <td></td>
     </tr> 
-{% for object in user_stories %}
-    <tr class="{% cycle even,odd %} {%if object.blocked%}blocked{% endif %}">
-        <td class="rank">{{object.rank}}</td>
-        <td class="id"><a href="{{object.get_absolute_url}}">US{{object.id}}</a></td>
-        <td class="name"><a href="{{object.get_absolute_url}}">{{object.name}}</a></td>
-        <td class="state {{ object.get_state_display|slugify }}">{{object.get_state_display}}</td>
-        <td class="planned">{{object.planned|default_if_none:"-"}}</td>
-        <td class="estimated">{{object.estimated|default_if_none:"-"}}</td>
-        <td class="todo">{{object.remaining|default_if_none:"-"}}</td>
-        <td class="failures {% if object.test_failed %} fail {% endif %}">
-            {% if object.test_failed %}
-<a href="{{object.get_absolute_url}}#test-cases">{{object.test_failed|default_if_none:"-"}}</a>
-            {% else%}
-                {{object.test_failed|default_if_none:"-"}}
+
+{% for us in user_stories %}
+    <tr id="us-{{us.id}}" class="{% cycle even,odd %} {%if us.blocked%}blocked{% endif %}">
+        <td class="rank">{{us.rank}}</td>
+        <td class="id"><a href="{{us.get_absolute_url}}">US{{us.id}}</a></td>
+        <td class="name"><a href="{{us.get_absolute_url}}">{{us.name}}</a></td>
+        <td class="state {{ us.get_state_display|slugify }}">{{us.get_state_display}}</td>
+        <td class="planned">{{us.planned|default_if_none:"-"}}</td>
+        <td class="estimated">{{us.estimated|default_if_none:"-"}}</td>
+        <td class="todo">{{us.remaining|default_if_none:"-"}}</td>
+        <td class="failures {% if us.test_failed %} fail {% endif %}">
+            {% if us.test_failed %}
+<a href="{{us.get_absolute_url}}#test-cases">{{us.test_failed|default_if_none:"-"}}</a>
+            {% else %}
+                {{us.test_failed|default_if_none:"-"}}
             {%endif%}
         </td>
-        <td id="add_task_us_{{object.id}}" class=""><a href="{% url agilito.views.task_create current_project.id,object.id %}?last_page={{last_page}}"><img src="/resources/add_.png" alt="add task" title="add task" width="16" height="16" /></a></td>
-        <td id="edit_us_{{object.id}}" class=""><a href="{% url agilito.views.userstory_edit current_project.id,object.id %}?last_page={{last_page}}"><img src="/resources/pencil.png" alt="edit" title="edit" width="16" height="16" /></a></td>
-        <td id="delete_us_{{object.id}}" class=""><a href="{% url agilito.views.userstory_delete current_project.id,object.id %}?last_page={{last_page}}"><img src="/resources/delete.png" alt="delete" title="delete" width="16" height="16" /></a></td>
+        <td id="add_task_us_{{us.id}}" class=""><a href="{% url agilito.views.task_create current_project.id,us.id %}?last_page={{last_page}}"><img src="/resources/add_.png" alt="add task" title="add task" width="16" height="16" /></a></td>
+        <td id="edit_us_{{us.id}}" class=""><a href="{% url agilito.views.userstory_edit current_project.id,us.id %}?last_page={{last_page}}"><img src="/resources/pencil.png" alt="edit" title="edit" width="16" height="16" /></a></td>
+        <td id="delete_us_{{us.id}}" class=""><a href="{% url agilito.views.userstory_delete current_project.id,us.id %}?last_page={{last_page}}"><img src="/resources/delete.png" alt="delete" title="delete" width="16" height="16" /></a></td>
     </tr> 
-{%endfor%}
+    {% for ta in us.tasks %}
+        <tr id="ta-{{ta.id}}" class="child-of-us-{{us.id}} {% cycle even,odd %}">
+            <td></td><!-- rank -->
+            <td class="id"><a href="{{ta.get_absolute_url}}">TA{{ta.id}}</a></td>
+            <td class="name"><a href="{{ta.get_absolute_url}}">{{ta.name}}</a>
+                <span class="tags">{{ ta.tags }}</span>
+            </td>
+            <td class="state {{ ta.get_state_display|slugify }}">{{ta.get_state_display}}</td>
+            <td></td><!-- planned -->
+            <td>{{ta.estimate|default_if_none:"-"}}</td>
+            <td>{{ta.remaining|default_if_none:"-"}}</td>
+            <td></td><!-- failures -->
+            <td>{% if not ta.is_archived %}<a href="#" onclick="timelog('{% url agilito.views.timelog "" %}/task/{{ ta.id }}')"><img src="/resources/log.png" alt="log" title="log" width="16" height="16" /></a>{% endif %}</td>
+            <td><a id="task_edit_{{task.id}}" href="{% url agilito.views.task_edit current_project.id,us.id,ta.id %}?last_page={{last_page}}"><img src="/resources/pencil.png" alt="edit" title="edit" width="16" height="16" /></a></td>
+            <td><a id="task_del_{{task.id}}" href="{% url agilito.views.task_delete current_project.id,us.id,ta.id %}?last_page={{last_page}}"><img src="/resources/delete.png" alt="delete" title="delete" width="16" height="16" /></a></td>
+        </tr> 
+    {% endfor %}
+{% endfor %}
 </tbody>
 </table>
 

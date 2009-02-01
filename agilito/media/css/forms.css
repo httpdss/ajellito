@@ -140,3 +140,8 @@ text-align:left;
     vertical-align: top;
     text-align: left;
 }
+
+.tags {
+    font-size: x-small;
+    font-style: italic;
+}

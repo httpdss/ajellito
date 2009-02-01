@@ -413,6 +413,10 @@ class UserStory(ClueModel):
         else:
             return self.iteration.get_absolute_url()
 
+    @property
+    def tasks(self):
+        return Task.objects.filter(user_story=self)
+
     class Meta:
         verbose_name = _(u'User Story')
         verbose_name_plural = _(u'User Stories')
