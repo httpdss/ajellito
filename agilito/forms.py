@@ -76,7 +76,7 @@ class TaskForm(HiddenHttpRefererForm):
 
     class Meta:
         model = Task
-        fields = 'name', 'description', 'state', 'estimate', 'remaining', 'owner'
+        fields = 'name', 'tags', 'description', 'state', 'estimate', 'remaining', 'owner'
     
     class Media:
         js = ('/resources/js/copy_estimate_to_remaining.js',)

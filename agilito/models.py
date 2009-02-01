@@ -3,6 +3,8 @@ from django.contrib.auth.models import User
 from django.utils.translation import ugettext_lazy as _
 from django.db.models import Q
 
+from tagging.fields import TagField
+
 from dateutil.rrule import rrule, DAILY, MO, TU, WE, TH, FR
 import datetime
 
@@ -485,6 +487,9 @@ class Task(ClueModel):
 
     owner = models.ForeignKey(User, blank=True, null=True)
     user_story = models.ForeignKey('UserStory')
+
+    # alter table agilito_task add column tags varchar(255) NOT NULL default ''
+    tags = TagField()
 
     @property
     def actuals(self):
