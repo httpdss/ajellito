@@ -58,6 +58,8 @@ class UserStoryForm(HiddenHttpRefererForm):
             self.fields['iteration'] = forms.ModelChoiceField(queryset=iterations,
                                                               required=False)
 
+        self.fields['size'].required = False
+
     class Meta:
         model = UserStory
         fields = 'name', 'description', 'rank', 'size', 'planned', 'state', 'iteration', 'blocked'

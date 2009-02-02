@@ -358,7 +358,7 @@ class UserStory(ClueModel):
 
     # alter table agilito_userstory add column created date NOT NULL default 'now',
     # alter table agilito_userstory add column closed date
-    created = models.DateField()
+    created = models.DateField(default=datetime.datetime.now())
     closed = models.DateField(null=True)
 
     def __unicode__(self):
