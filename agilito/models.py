@@ -4,6 +4,8 @@ from django.utils.translation import ugettext_lazy as _
 from django.db.models import Q
 
 from tagging.fields import TagField
+import tagging
+from tagging.utils import parse_tag_input
 
 from dateutil.rrule import rrule, DAILY, MO, TU, WE, TH, FR
 import datetime
@@ -496,6 +498,10 @@ class Task(ClueModel):
     tags = TagField()
 
     @property
+    def taglist(self):
+        return parse_tag_input(self.tags)
+
+    @property
     def actuals(self):
         return sum(i.time_on_task for i in self.tasklog_set.all())
 
@@ -582,6 +588,7 @@ class TestCase(ClueModel):
         permissions = (
             ('view', 'Can view the test cases.'),
         )
+#tagging.register(Task)
 
 class TestResult(models.Model):
     RESULTS = FieldChoices(

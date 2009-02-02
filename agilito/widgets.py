@@ -5,6 +5,10 @@ from django.utils.encoding import force_unicode
 from django.utils.html import escape, conditional_escape
 from django.utils.safestring import mark_safe
 
+from tagging.models import Tag
+
+from django.utils import simplejson
+
 import types
 
 class TaskHierarchy:
@@ -180,3 +184,39 @@ class HierarchicRadioSelect(forms.RadioSelect):
         str_value = force_unicode(value) # Normalize to string.
         final_attrs = self.build_attrs(attrs)
         return self.renderer(name, str_value, final_attrs, self.choices, self.hierarchy).render()
+
+class AutoCompleteTagInput(forms.TextInput):
+    def __init__(self, *args, **kwargs):
+        self.__ac_model__ = kwargs['model']
+        del kwargs['model']
+
+        super(AutoCompleteTagInput, self).__init__(*args, **kwargs)
+
+    class Media:
+        css = {
+            'all': ('/resources/jquery-autocomplete/jquery.autocomplete.css',)
+        }
+        js = (
+            '/resources/jquery-autocomplete/lib/jquery.bgiframe.min.js',
+            '/resources/jquery-autocomplete/lib/jquery.ajaxQueue.js',
+            '/resources/jquery-autocomplete/jquery.autocomplete.js'
+        )
+
+    def render(self, name, value, attrs=None):
+        output = super(AutoCompleteTagInput, self).render(name, value, attrs)
+        page_tags = Tag.objects.usage_for_model(self.__ac_model__)
+        tag_list = simplejson.dumps([tag.name for tag in page_tags], ensure_ascii=False)
+        print tag_list
+        return output + mark_safe(u'''<script type="text/javascript">
+            jQuery("#id_%s").autocomplete(%s, {
+                width: 150,
+                max: 10,
+                highlight: false,
+                multiple: true,
+                multipleSeparator: ", ",
+                scroll: true,
+                scrollHeight: 300,
+                matchContains: true,
+                autoFill: true,
+            });
+            </script>''' % (name, tag_list))

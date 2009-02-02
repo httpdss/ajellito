@@ -11,6 +11,32 @@ function timelog(url)
     window.open(url, "timelog", "location=1, menubar=1, resizable=1, scrollbars=1");
     return false;
 }
+
+function highlightTag(ids)
+{
+    $("tr.userstory").each(function() {
+        $(this).removeClass("expanded");
+        $(this).collapse();
+    });
+    $("tr.task .name a, .task-tag a").each(function() {
+        $(this).css({fontWeight:"normal"});
+    });
+
+    ids = ids.split(',');
+    for (i in ids) {
+        id = ids[i];
+        if (id.indexOf('us-') == 0) {
+            $("#" + id).expand();
+        }
+        if (id.indexOf('ta-') == 0) {
+            $("#" + id + " .name a").css({fontWeight:"bold"});
+        }
+        if (id.indexOf('tag-') == 0) {
+            $("#" + id + " a").css({fontWeight:"bold"});
+        }
+    }
+}
+
 </script>
 {% endblock %}
 {% load humanize %}
@@ -153,17 +179,28 @@ else {
 </div>
 <div class="description">{{current_iteration.description|safe}}: <a href="{{ cards_url }}">task cards</a></div>
 
-<dl id="resume">
-<dt>Accepted</dt>
-<dd>{{current_iteration.us_accepted_percentage|floatformat:0 }} %</dd>
+<table id="resume">
+<tr><td>Accepted</td>
+<td>{{current_iteration.us_accepted_percentage|floatformat:0 }} %</td></tr>
 
 
-<dt>User Stories</dt>
-<dd>
+<tr><td>User Stories</td>
+<td>
 {% if user_stories %}
 Number of US in iteration: {{ user_stories.count }} 
-</dd>
-</dl>
+</td></tr>
+
+{% regroup tags|dictsort:"tag" by tag as grouped_tags %}
+<tr><td>Tags</td>
+<td><ul class="tags">
+{% for tag in grouped_tags %}
+<li id="tag-{{tag.grouper|slugify}}" class="big task-tag">
+    <a href="#" onclick="{% for elt in tag.list %}highlightTag('tag-{{tag.grouper|slugify}},{{ elt.data }}');{% endfor %}return false">{{ tag.grouper }}</a>
+</li>
+{% endfor %}
+</ul></td></tr>
+</table>
+
 <table id="user-story-list" cellspacing="0" cellpadding="2">
 <thead>
     <tr>
@@ -194,7 +231,7 @@ Number of US in iteration: {{ user_stories.count }}
     </tr> 
 
 {% for us in user_stories %}
-    <tr id="us-{{us.id}}" class="{% cycle even,odd %} {%if us.blocked%}blocked{% endif %}">
+    <tr id="us-{{us.id}}" class="userstory {% cycle even,odd %} {%if us.blocked%}blocked{% endif %}">
         <td class="rank">{{us.rank}}</td>
         <td class="id"><a href="{{us.get_absolute_url}}">US{{us.id}}</a></td>
         <td class="name"><a href="{{us.get_absolute_url}}">{{us.name}}</a></td>
@@ -214,11 +251,15 @@ Number of US in iteration: {{ user_stories.count }}
         <td id="delete_us_{{us.id}}" class=""><a href="{% url agilito.views.userstory_delete current_project.id,us.id %}?last_page={{last_page}}"><img src="/resources/delete.png" alt="delete" title="delete" width="16" height="16" /></a></td>
     </tr> 
     {% for ta in us.tasks %}
-        <tr id="ta-{{ta.id}}" class="child-of-us-{{us.id}} {% cycle even,odd %}">
+        <tr id="ta-{{ta.id}}" class="task child-of-us-{{us.id}} {% cycle even,odd %}">
             <td></td><!-- rank -->
             <td class="id"><a href="{{ta.get_absolute_url}}">TA{{ta.id}}</a></td>
             <td class="name"><a href="{{ta.get_absolute_url}}">{{ta.name}}</a>
-                <span class="tags">{{ ta.tags }}</span>
+                <ul class="tags">
+                    {% for tag in ta.taglist %}
+                        <li><span class="small">{{ tag }}</span></li>
+                    {% endfor %}
+                </ul>
             </td>
             <td class="state {{ ta.get_state_display|slugify }}">{{ta.get_state_display}}</td>
             <td></td><!-- planned -->
@@ -226,8 +267,8 @@ Number of US in iteration: {{ user_stories.count }}
             <td>{{ta.remaining|default_if_none:"-"}}</td>
             <td></td><!-- failures -->
             <td>{% if not ta.is_archived %}<a href="#" onclick="timelog('{% url agilito.views.timelog "" %}/task/{{ ta.id }}')"><img src="/resources/log.png" alt="log" title="log" width="16" height="16" /></a>{% endif %}</td>
-            <td><a id="task_edit_{{task.id}}" href="{% url agilito.views.task_edit current_project.id,us.id,ta.id %}?last_page={{last_page}}"><img src="/resources/pencil.png" alt="edit" title="edit" width="16" height="16" /></a></td>
-            <td><a id="task_del_{{task.id}}" href="{% url agilito.views.task_delete current_project.id,us.id,ta.id %}?last_page={{last_page}}"><img src="/resources/delete.png" alt="delete" title="delete" width="16" height="16" /></a></td>
+            <td>{% if not ta.is_archived %}<a id="task_edit_{{task.id}}" href="{% url agilito.views.task_edit current_project.id,us.id,ta.id %}?last_page={{last_page}}"><img src="/resources/pencil.png" alt="edit" title="edit" width="16" height="16" />{% endif %}</a></td>
+            <td>{% if not ta.is_archived %}<a id="task_del_{{task.id}}" href="{% url agilito.views.task_delete current_project.id,us.id,ta.id %}?last_page={{last_page}}"><img src="/resources/delete.png" alt="delete" title="delete" width="16" height="16" />{% endif %}</a></td>
         </tr> 
     {% endfor %}
 {% endfor %}

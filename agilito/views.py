@@ -20,6 +20,8 @@ import matplotlib.pyplot
 
 from dateutil.rrule import rrule, WEEKLY, DAILY, MO, TU, WE, TH, FR
 
+from tagging.utils import parse_tag_input
+
 try:
     from collections import defaultdict
 except ImportError:
@@ -600,6 +602,18 @@ def iteration_status(request, project_id, iteration_id=None):
         actuals = sum(i.actuals for i in user_stories)
         failures = sum(i.test_failed for i in user_stories)
 
+        tags = defaultdict(list)
+        tasks = Task.objects.filter(user_story__iteration=latest_iteration)
+        for task in tasks:
+            us = 'us-%d' % task.user_story.id
+            ta = 'ta-%d' % task.id
+            for tag in parse_tag_input(task.tags):
+                # tag = tag.name
+                if not us in tags[tag]:
+                    tags[tag].append(us)
+                tags[tag].append(ta)
+        tags = [{'tag': tag, 'data': ','.join(tags[tag])} for tag in tags.keys()]
+
         data = _iteration_get_burndown_data(latest_iteration)
 
         gc_url = data['google_chart']
@@ -623,6 +637,7 @@ def iteration_status(request, project_id, iteration_id=None):
 
         inner_context = { 'current_iteration' : latest_iteration,
                           'user_stories' : user_stories,
+                          'tags': tags,
                           'planned' : planned,
                           'remaining' : todo,
                           'data_url': data_url,

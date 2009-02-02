@@ -141,7 +141,22 @@ text-align:left;
     text-align: left;
 }
 
-.tags {
+ul.tags {
+    margin: 0;
+    padding: 0;
+    /* list-style-type: none: */
+    display: inline;
+}
+ul.tags li {
+    display: inline;
+    list-style-type: none:
+}
+ul.tags span.big {
+    padding-right: 1em;
+}
+ul.tags span.small {
+    padding-left: 0.5em;
     font-size: x-small;
     font-style: italic;
 }
+

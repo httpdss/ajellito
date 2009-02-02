@@ -11,6 +11,9 @@ from agilito.models import UserStory, Task, TestCase, TaskLog, TestResult,\
 from agilito.widgets import HierarchicRadioSelect, TaskHierarchy
 from agilito.fields import GroupedChoiceField
 
+from tagging.forms import TagField
+from agilito.widgets import AutoCompleteTagInput
+
 class UserProfileForm(forms.ModelForm):
     class Meta:
         model = UserProfile
@@ -61,6 +64,8 @@ class UserStoryForm(HiddenHttpRefererForm):
 
 class TaskForm(HiddenHttpRefererForm):
     actuals = forms.CharField(widget=forms.HiddenInput, required=False)
+    tags = TagField(widget=AutoCompleteTagInput(model=Task), required=False)
+
     def __init__(self,*args, **kwargs):
         try:
             project = kwargs.pop('project')
