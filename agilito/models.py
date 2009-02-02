@@ -404,6 +404,7 @@ class UserStory(ClueModel):
 
     def archive(self):
         self.state = UserStory.STATES.ARCHIVED
+        self.closed = datetime.date.today()
         self.save()
 
     def get_container_model(self):

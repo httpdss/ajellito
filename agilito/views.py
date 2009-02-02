@@ -699,68 +699,90 @@ def iteration_burndown_data(request, project_id, iteration_id):
 
 @restricted
 def product_backlog_chart(request, project_id, iteration_id):
+    today = datetime.date.today()
+
     if iteration_id:
         it = Iteration.objects.get(id=iteration_id, project__id=project_id)
         start_date = it.start_date
+        end_date = it.end_date
+        if end_date > today:
+            end_date = today
+
+        days= list(rrule(DAILY, cache=True, dtstart=it.start_date, until=end_date, byweekday=(MO,TU,WE,TH,FR)))
+        days = [d.date() for d in days]
+        days.append(days[-1] + datetime.timedelta(1))
+        labels = [str(d) for d in days]
+
+        stories = UserStory.objects.filter(iteration=it).order_by('created')
+
+        leeway = 5
     else:
-        us = UserStory.objects.filter(project__id = project_id).order_by('created')[0]
-        us_start = us.created
+        stories = UserStory.objects.filter(project__id = project_id).order_by('created')
+
+        us_start = stories[0].created
         it = Iteration.objects.filter(project__id=project_id).order_by('start_date')[0]
         it_start = it.start_date
 
         if us_start < it_start:
             start_date = us_start
+            days = [start_date]
+            labels = ['']
         else:
             start_date = it_start
+            days = []
+            labels = []
 
-    today = datetime.date.today()
+        it = Iteration.objects.filter(project__id=project_id, end_date__gte=start_date, start_date__lte=today).order_by('end_date')
+        for i in it:
+            days.append(i.end_date)
+            labels.append(i.name)
 
-    #days = list(rrule(WEEKLY, cache=True, dtstart=start_date, until=today))
-    #days = [d.date() for d in days]
-    #days.append(days[-1] + datetime.timedelta(7))
-    #labels = [str(d) for d in days]
+        leeway = 1
 
-    days = [start_date]
-    labels = ['']
-    it = Iteration.objects.filter(project__id=project_id, end_date__gte=start_date, start_date__lte=today).order_by('end_date')
-    for i in it:
-        days.append(i.end_date)
-        labels.append(i.name)
+    existing = [0 for d in range(len(days))]
+    added = existing[:]
+    completed = existing[:]
 
-    existing = [0 for week in days]
-    added = [0 for week in days]
-    completed = [0 for week in days]
+    added_after = stories[0].created
+    if added_after < start_date:
+        added_after = start_date
 
-    # story=450, state=Completed, created=2008-09-24, day=2008-09-24
-    for st in UserStory.objects.filter(project__id = project_id):
+    for st in stories:
         size = st.size
         if not size:
             size = 1
         for x, day in enumerate(days):
+            if st.created > day:
+                continue
 
-            if st.state == UserStory.STATES.COMPLETED and st.closed <= day:
+            if st.state == UserStory.STATES.COMPLETED and ((st.closed is None and day >= today) or day >= st.closed):
                 completed[x] += size
+                continue
 
-            elif st.state != UserStory.STATES.ARCHIVED and st.created > days[0] and st.created <= day:
-                # print 'story=%s, state=%s, created=%s, day=%s' % (st.id, UserStory.STATES.label(st.state), st.created, day)
+            if st.state == UserStory.STATES.ARCHIVED:
+                if not st.closed is None and st.closed < day:
+                    existing[x] += size
+                continue
+
+            if st.created > added_after and day >= added_after: # st.created > days[leeway]:
                 added[x] += size
+                continue
 
-            elif st.created <= day:
-                existing[x] += size
+            existing[x] += size
 
     ind = range(len(days))
 
-    uso = []
-    usobase = []
-    usc = []
-    uscbase = []
+    uso = [None for d in range(len(days))]
+    usobase = uso[:]
+    usc = uso[:]
+    uscbase = uso[:]
 
     for x in ind:
-        uso.append(added[x] + existing[x])
-        usobase.append(-added[x])
+        uso[x] = added[x] + existing[x]
+        usobase[x] = -added[x]
 
-        usc.append(completed[x])
-        uscbase.append(existing[x])
+        usc[x] = completed[x]
+        uscbase[x] = existing[x]
 
     width = 0.35       # the width of the bars: can also be len(x) sequence
     p1 = matplotlib.pyplot.bar(ind, uso,   width, color='#1D91DB', bottom=usobase)
