@@ -202,6 +202,7 @@ def userstory_create(request, project_id, iteration_id=None, instance=None):
                             current_project=project_id)
     return render_to_response('userstory_edit.html', context_instance=context)
 
+@restricted
 def userstory_edit(request, project_id, userstory_id):
     instance = UserStory.objects.get(pk=userstory_id, project__pk=project_id)
     if instance.iteration is None:
@@ -338,6 +339,7 @@ def task_create(request, project_id, userstory_id, instance=None):
                             current_project=project_id)
     return render_to_response('task_create.html', context_instance=context)
 
+@restricted
 def task_edit(request, project_id, userstory_id, task_id):
     instance = Task.objects.get(id=task_id)
     return task_create(request, project_id, userstory_id, instance)
@@ -397,6 +399,7 @@ def testcase_create(request, project_id, userstory_id, instance=None):
                             current_project=project_id)
     return render_to_response('testcase_create.html', context_instance=context)
 
+@restricted
 def testcase_edit(request, project_id, userstory_id, testcase_id):
     instance = TestCase.objects.get(id=testcase_id)
     return testcase_create(request, project_id, userstory_id, instance)
@@ -428,8 +431,8 @@ def testcase_delete(request, project_id, userstory_id, testcase_id):
                                        post_delete_redirect=url,
                                        extra_context={'deleted_objects': testresults})
 
-@restricted
 # ToDo: Remove the userstory_id field? Makes sense?
+@restricted
 def testresult_create(request, project_id, userstory_id, testcase_id, instance=None):
     testcase = TestCase.objects.get(id=testcase_id, user_story__id=userstory_id,
                                     user_story__project__id=project_id)
