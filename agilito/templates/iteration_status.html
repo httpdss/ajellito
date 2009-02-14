@@ -3,7 +3,7 @@
 {% block js %}
 <script type="text/javascript">
 $(window).ready(function(){
-    $("#user-story-list").treeTable();
+    $("#user-story-list").treeTable({treeColumn: 1});
 });
 
 function timelog(url)
