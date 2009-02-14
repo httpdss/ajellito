@@ -233,7 +233,7 @@ else {
 
 {% for us in user_stories %}
     <tr id="us-{{us.id}}" class="userstory {% cycle even,odd %} {%if us.blocked%}blocked{% endif %}">
-        <td class="rank">{{us.rank}}</td>
+        <td class="rank">{{us.relative_rank}}</td>
         <td class="id"><a href="{{us.get_absolute_url}}">US{{us.id}}</a></td>
         <td class="name"><a href="{{us.get_absolute_url}}">{{us.name}}</a></td>
         <td class="state {{ us.get_state_display|slugify }}">{{us.get_state_display}}</td>

@@ -48,7 +48,7 @@ class ODTLabels:
 
         if tpe in [types.NoneType]:
             v = u''
-        if tpe in [types.IntType, types.FloatType, decimal.Decimal]:
+        if tpe in [types.LongType, types.IntType, types.FloatType, decimal.Decimal]:
             v = unicode(str(v))
         elif isinstance(v, types.StringTypes):
             try:

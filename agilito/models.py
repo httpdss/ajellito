@@ -248,7 +248,7 @@ class Iteration(ClueModel):
             card['StoryID'] = us.id
             card['StoryName'] = us.name
             card['StoryDescription'] = us.description
-            card['StoryRank'] = us.rank
+            card['StoryRank'] = us.relative_rank
             if us.size:
                 card['StorySize'] = UserStory.SIZES.label(us.size)
             else:
@@ -275,7 +275,7 @@ class Iteration(ClueModel):
             card['StoryID'] = us.id
             card['StoryName'] = us.name
             card['StoryDescription'] = us.description
-            card['StoryRank'] = us.rank
+            card['StoryRank'] = us.relative_rank
 
             cards.append(card)
         return cards
@@ -371,6 +371,13 @@ class UserStory(ClueModel):
 
     def __unicode__(self):
         return u'US%s: %s' % (self.id, self.name)
+
+    @property
+    def relative_rank(self):
+        if self.iteration is None or self.rank is None:
+            return None
+
+        return UserStory.objects.filter(iteration=self.iteration, rank__lt=self.rank).count() + 1
 
     @property
     def estimated(self):
