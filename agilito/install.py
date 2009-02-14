@@ -141,7 +141,7 @@ CARD_INFO = {
     'spec': 'Buro1 129820',
     'template': '%(installdir)s/agilito/templates/template.odt'
 }
-"""
+""" % locals()
     rerun()
 
 print
