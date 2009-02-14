@@ -263,7 +263,7 @@ else {
                 </ul>
             </td>
             <td class="state {{ ta.get_state_display|slugify }}">{{ta.get_state_display}}</td>
-            <td></td><!-- planned -->
+            <td>{{ta.owner|default_if_none:""}}</td>
             <td>{{ta.estimate|default_if_none:"-"}}</td>
             <td>{{ta.remaining|default_if_none:"-"}}</td>
             <td></td><!-- failures -->
