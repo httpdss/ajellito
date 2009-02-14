@@ -6,9 +6,9 @@ $(window).ready(function(){
     $("#user-story-list").treeTable({treeColumn: 1});
 });
 
-function timelog(url)
+function popup(link, id)
 {
-    window.open(url, "timelog", "location=1, menubar=1, resizable=1, scrollbars=1");
+    window.open(link.href, id, "width=800, height=600, location=1, menubar=1, resizable=1, scrollbars=1");
     return false;
 }
 
@@ -267,9 +267,29 @@ else {
             <td>{{ta.estimate|default_if_none:"-"}}</td>
             <td>{{ta.remaining|default_if_none:"-"}}</td>
             <td></td><!-- failures -->
-            <td>{% if not ta.is_archived %}<a href="#" onclick="timelog('{% url agilito.views.timelog "" %}/task/{{ ta.id }}')"><img src="/agilito/log.png" alt="log" title="log" width="16" height="16" /></a>{% endif %}</td>
-            <td>{% if not ta.is_archived %}<a id="task_edit_{{task.id}}" href="{% url agilito.views.task_edit current_project.id,us.id,ta.id %}?last_page={{last_page}}"><img src="/agilito/pencil.png" alt="edit" title="edit" width="16" height="16" />{% endif %}</a></td>
-            <td>{% if not ta.is_archived %}<a id="task_del_{{task.id}}" href="{% url agilito.views.task_delete current_project.id,us.id,ta.id %}?last_page={{last_page}}"><img src="/agilito/delete.png" alt="delete" title="delete" width="16" height="16" />{% endif %}</a></td>
+            <td>
+                {% if not ta.is_archived %}
+                    <a href="{% url agilito.views.timelog "" %}/task/{{ ta.id }}"
+                        onclick="popup(this, 'timelog'); return false"><img src="/agilito/log.png" alt="log" title="log" width="16" height="16" /></a>
+                {% endif %}
+            </td>
+            <td>
+                {% if not ta.is_archived %}
+                    <a id="task_edit_{{task.id}}"
+                        onclick="popup(this, 'taskedit'); return false"
+                        href="{% url agilito.views.task_edit current_project.id,us.id,ta.id %}?last_page={{last_page}}"><img
+                        src="/agilito/pencil.png" alt="edit"
+                        title="edit" width="16" height="16" /></a>
+                {% endif %}
+            </td>
+            <td>
+                {% if not ta.is_archived %}
+                    <a id="task_del_{{task.id}}"
+                        onclick="popup(this, 'taskdel'); return false"
+                        href="{% url agilito.views.task_delete current_project.id,us.id,ta.id %}?last_page={{last_page}}"><img
+                        src="/agilito/delete.png" alt="delete" title="delete" width="16" height="16" /></a>
+                {% endif %}
+            </td>
         </tr> 
     {% endfor %}
 {% endfor %}
