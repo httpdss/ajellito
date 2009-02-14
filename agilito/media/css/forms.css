@@ -149,7 +149,7 @@ ul.tags {
 }
 ul.tags li {
     display: inline;
-    list-style-type: none:
+    list-style-type: none;
 }
 ul.tags span.big {
     padding-right: 1em;
