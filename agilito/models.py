@@ -249,7 +249,10 @@ class Iteration(ClueModel):
             card['StoryName'] = us.name
             card['StoryDescription'] = us.description
             card['StoryRank'] = us.rank
-            card['StorySize'] = us.planned
+            if us.size:
+                card['StorySize'] = UserStory.SIZES.label(us.size)
+            else:
+                card['StorySize'] = ''
             cards.append(card)
         return cards
 
