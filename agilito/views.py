@@ -1259,8 +1259,8 @@ def archive(request, model, post_delete_redirect, object_id=None,
     obj = create_update.lookup_object(model, object_id, slug, slug_field)
 
     if request.method == 'POST':
-        obj.archive()
         if request.user.is_authenticated():
+            obj.archive(request.user)
             request.user.message_set.create(message=ugettext("The %(verbose_name)s was archived.") % {"verbose_name": model._meta.verbose_name})
         return HttpResponseRedirect(post_delete_redirect)
     else:

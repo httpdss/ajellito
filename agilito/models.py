@@ -381,22 +381,21 @@ class UserStory(ClueModel):
 
     @property
     def estimated(self):
-        return sum(i.estimate for i in self.task_set.all()
-                   if i.estimate)
+        return sum(t.estimate for t in self.task_set.all() if t.estimate and not t.is_archived)
 
     @property
     def actuals(self):
-        return sum(i.actuals for i in self.task_set.all()
-                   if i.actuals)
+        return sum(t.actuals for t in self.task_set.all() if t.actuals and not t.is_archived)
 
     @property
     def remaining(self):
-        return sum(i.remaining for i in self.task_set.all()
-                   if i.remaining)
+        if self.is_archived:
+            return 0
+        return sum(t.remaining for t in self.task_set.all() if t.remaining and not t.is_archived)
 
     @classmethod
     def backlogged(klass, project):
-        return klass.objects.filter(project__id=project, iteration=None).exclude(state=1).order_by('rank')
+        return klass.objects.filter(project__id=project, iteration=None).exclude(state=UserStory.STATES.ARCHIVED).order_by('rank')
 
     @property
     def test_failed(self):
@@ -417,7 +416,10 @@ class UserStory(ClueModel):
     def is_archived(self):
         return (self.state == UserStory.STATES.ARCHIVED)
 
-    def archive(self):
+    def archive(self, archiver):
+        for task in self.task_set.all():
+            task.archive(archiver)
+
         self.state = UserStory.STATES.ARCHIVED
         self.closed = datetime.date.today()
         self.save()
@@ -537,7 +539,17 @@ class Task(ClueModel):
     def is_defined(self):
         return (self.state == Task.STATES.DEFINED)
 
-    def archive(self):
+    def archive(self, archiver):
+        tasklog = TaskLog()
+        tasklog.task = self
+        tasklog.time_on_task = 0
+        tasklog.summary = 'Archived'
+        tasklog.date = datetime.datetime.now()
+        tasklog.iteration = self.user_story.iteration
+        tasklog.owner = archiver
+        tasklog.old_remaining = self.remaining
+        tasklog.save()
+
         self.state = Task.STATES.ARCHIVED
         self.remaining = 0
         self.save()
