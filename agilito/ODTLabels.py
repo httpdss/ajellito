@@ -197,8 +197,9 @@ class ODTLabels:
 
         for cardID, label in enumerate(stories + tasks):
             page = cardID / cpp
-            col = cardID % self.across
-            row = (cardID /self.across) % self.down
+
+            row = cardID % self.down
+            col = (cardID / self.down) % self.across
 
             template = label['_template']
 
