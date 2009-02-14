@@ -14,9 +14,11 @@ import datetime
 from queryutils.queryutils import SearchEqualOp, SearchQueryGenerator
 
 # Auxiliary functions.
-def _if_is_none_else(item,  rv_case_none,  fun_case_not_none):
+def _if_is_none_else(item,  rv_case_none,  fun_case_not_none=None):
     if item is None:
         return rv_case_none
+    elif fun_case_not_none is None:
+        return item
     else:
         return fun_case_not_none(item)
 
@@ -256,11 +258,8 @@ class Iteration(ClueModel):
             card['StoryID'] = us.id
             card['StoryName'] = us.name
             card['StoryDescription'] = us.description
-            card['StoryRank'] = us.relative_rank
-            if us.size:
-                card['StorySize'] = UserStory.SIZES.label(us.size)
-            else:
-                card['StorySize'] = ''
+            card['StoryRank'] = _if_is_none_else(us.relative_rank, '?')
+            card['StorySize'] = _if_is_none_else(us.size, '?', lambda s: UserStory.SIZES.label(s))
             cards.append(card)
         return cards
 
@@ -271,12 +270,9 @@ class Iteration(ClueModel):
             card['TaskID'] = t.id
             card['TaskName'] = t.name
             card['TaskDescription'] = t.description
-            card['TaskEstimate'] = t.estimate
-            card['TaskRemaining'] = t.remaining
-            if t.owner:
-                card['TaskOwner'] = t.owner.username
-            else:
-                card['TaskOwner'] = ''
+            card['TaskEstimate'] = _if_is_none_else(t.estimate, '?')
+            card['TaskRemaining'] = _if_is_none_else(t.remaining, '?')
+            card['TaskOwner'] = _if_is_none_else(t.owner, 'Unassigned', lambda u: u.username)
             card['TaskTags'] = t.tags
 
             us = t.user_story
@@ -284,7 +280,7 @@ class Iteration(ClueModel):
             card['StoryID'] = us.id
             card['StoryName'] = us.name
             card['StoryDescription'] = us.description
-            card['StoryRank'] = us.relative_rank
+            card['StoryRank'] = _if_is_none_else(us.relative_rank, '?')
 
             cards.append(card)
         return cards
