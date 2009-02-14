@@ -44,7 +44,7 @@ class UserStoryAttachmentForm(HiddenHttpRefererForm):
         exclude = ('user_story',)
 
 class ImpedimentForm(HiddenHttpRefererForm):
-    tasks = forms.MultipleChoiceField(widget=TableSelectMultiple(item_attrs=('id', 'name', 'user_story.name')))
+    tasks = forms.MultipleChoiceField(widget=TableSelectMultiple(item_attrs=('id', 'name'), grouper=('user_story', 'name')))
 
     def __init__(self, *args, **kwargs):
         iteration = kwargs.pop('iteration')

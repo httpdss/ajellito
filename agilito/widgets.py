@@ -236,7 +236,7 @@ class TableSelectMultiple(forms.widgets.SelectMultiple):
 
         field.choices = [(item.id, item) for item in item_list]
     """
-    def __init__(self, item_attrs, *args, **kwargs):
+    def __init__(self, item_attrs, grouper, *args, **kwargs):
         """
         item_attrs
             Defines the attributes of each item which will be displayed
@@ -249,34 +249,48 @@ class TableSelectMultiple(forms.widgets.SelectMultiple):
         """
 
         super(TableSelectMultiple, self).__init__(*args, **kwargs)
+
         self.item_attrs = item_attrs
+        if grouper is None:
+            self.grouper = None
+            self.group_label = None
+        else:
+            self.grouper, self.group_label = grouper
 
     def render(self, name, value, attrs=None, choices=()):
         if value is None: value = []
-        has_id = attrs and 'id' in attrs
+
+        id = attrs['id']
+
         final_attrs = self.build_attrs(attrs, name=name)
-        output = ['<table>']
+        output = ['<table id="%s">' % id]
         str_values = set([force_unicode(v) for v in value]) # Normalize to strings.
+        parent = None
+        parent_id = '%s-p-%%d' % id
+        colspan = len(self.item_attrs) + 1
         for i, (option_value, item) in enumerate(self.choices):
-            # If an ID attribute was given, add a numeric index as a suffix,
-            # so that the checkboxes don't all have the same ID attribute.
-            if has_id:
-                final_attrs = dict(final_attrs, id='%s_%s' % (attrs['id'], i))
+            if self.grouper:
+                grouper = getattr(item, self.grouper, None)
+                if grouper:
+                    if grouper.id != parent:
+                        parent = grouper.id
+                        label = getattr(grouper, self.group_label)
+                        child = ' class="child-of-%s"' % (parent_id % parent)
+                        output.append(u'<tr id="%s"><td colspan="%d">%s</td></tr>' % (parent_id % parent, colspan, label))
+                else:
+                    parent = None
+                    child = ''
+            
+            final_attrs = dict(final_attrs, id='%s_%s' % (attrs['id'], i))
             cb = forms.widgets.CheckboxInput(final_attrs, check_test=lambda value: value in str_values)
             option_value = force_unicode(option_value)
             rendered_cb = cb.render(name, option_value)
-            output.append(u'<tr><td>%s</td>' % rendered_cb)
+            output.append(u'<tr%s><td>%s</td>' % (child, rendered_cb))
             for attr in self.item_attrs:
-                li = item
-                ats = attr.split('.')
-                for at in ats[:-1]:
-                    li = getattr(li, at)
-                attr = ats[-1]
-                
-                if callable(getattr(li, attr)):
-                    content = getattr(li, attr)()
+                if callable(getattr(item, attr)):
+                    content = getattr(item, attr)()
                 else:
-                    content = getattr(li, attr)
+                    content = getattr(item, attr)
                 output.append(u'<td>%s</td>' % escape(content))
             output.append(u'</tr>')
         output.append('</table>')
