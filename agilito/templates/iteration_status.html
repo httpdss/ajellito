@@ -184,10 +184,10 @@ else {
 <td>{{current_iteration.us_accepted_percentage|floatformat:0 }} %</td></tr>
 
 
-<tr><td>User Stories</td>
+<tr><td>User Stories in iteration</td>
 <td>
 {% if user_stories %}
-Number of US in iteration: {{ user_stories.count }} 
+{{ user_stories.count }} 
 </td></tr>
 
 {% regroup tags|dictsort:"tag" by tag as grouped_tags %}
