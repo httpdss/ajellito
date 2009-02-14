@@ -29,7 +29,7 @@ $(window).ready(function(){
         onClick: function() {
             $(this).find('span').each(function() {
                 if (this.id) {
-                    task = this.id.match(/.*-[a-z][A-Z]([0-9]+)$/)[1]
+                    task = this.id.toLowerCase().match(/.*-[a-z][a-z]([0-9]+)$/)[1]
                     task_details(task);
                 }
                 return false;
