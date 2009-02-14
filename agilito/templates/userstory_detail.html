@@ -48,14 +48,14 @@
 </ul>
 
 
-<div id="us-head" {%if object.blocked%}class="blocked"{% endif %}> 
+<div id="us-head" {%if object.is_blocked%}class="blocked"{% endif %}> 
     <h2>
     {{ object }}
     </h2>
     
-    <span id="state" class="{{ object.get_state_display|slugify }}">State: {{object.get_state_display}} {% if object.blocked %}blocked{% endif %}</span>
-{% if object.blocked %}
-<span style="display:none" id="blocked">{{object.blocked}}</span>
+    <span id="state" class="{{ object.get_state_display|slugify }}">State: {{object.get_state_display}} {% if object.is_blocked %}blocked{% endif %}</span>
+{% if object.is_blocked %}
+<span style="display:none" id="blocked">{{object.is_blocked}}</span>
 {% endif %}
     <div class="visualClear"></div>
 </div>
@@ -87,7 +87,7 @@ Planned :
 
 
 <h4>Attachments :</h4>
-<a class="action-link add-task" href="attachment/add/?last_page={{last_page}}">add an attachment</a>
+<a class="action-link add-object" href="attachment/add/?last_page={{last_page}}">add an attachment</a>
 
 {% if object.userstoryattachment_set.all %}
 <table>
@@ -132,7 +132,7 @@ Planned :
 <h3>Related to US{{ object.id }}</h3>
 
 <h4 id="tasks">Tasks</h4>
-<a class="action-link add-task" href="task/add/?last_page={{last_page}}">add a task</a>
+<a class="action-link add-object" href="task/add/?last_page={{last_page}}">add a task</a>
 
   {% if object.task_set.all %}
 
@@ -170,7 +170,7 @@ Planned :
 
 <h4 id="test-cases">Test Cases</h4>
 
-<a class="action-link add-task" href="testcase/add/?last_page={{last_page}}" >add a test case</a>
+<a class="action-link add-object" href="testcase/add/?last_page={{last_page}}" >add a test case</a>
 
 {% if object.testcase_set.all %}
 <table>

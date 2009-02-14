@@ -45,10 +45,11 @@ from django.contrib.auth.decorators import login_required
 from urllib import quote, urlencode
 
 from agilito.models import Project, Iteration, UserStory, Task, TestCase,\
-    TaskLog, UserProfile, User, TestResult, UserStoryAttachment
+    TaskLog, UserProfile, User, TestResult, UserStoryAttachment, \
+    Impediment
 from agilito.forms import UserStoryForm, UserStoryShortForm, gen_TaskLogForm,\
     TaskForm, TestCaseAddForm, TestCaseEditForm, testcase_form_factory,\
-    TestResultForm, UserStoryAttachmentForm
+    TestResultForm, UserStoryAttachmentForm, ImpedimentForm
 
 from agilito.tools import restricted
 
@@ -178,6 +179,42 @@ def delete_attachment(request, project_id, userstory_id, attachment_id):
                                        model=UserStoryAttachment,
                                        template_name='userstory_delete.html',
                                        post_delete_redirect=url)
+
+@restricted
+def impediment_create(request, project_id, iteration_id, instance=None):
+    it = Iteration.objects.get(pk=iteration_id)
+
+    if request.method == 'POST':
+        form = ImpedimentForm(request.POST, iteration=it, instance=instance)
+        if form.is_valid():
+            impediment = form.save(commit=False)
+
+            state = form.cleaned_data['state']
+            if impediment.id is None:
+                # state must be 'open'
+                pass
+            elif state in ['open', 'reopen']:
+                impediment.resolved = None
+            else:
+                impediment.resolved = datetime.datetime.now()
+
+            impediment.save()
+            form.save_m2m()
+
+            return HttpResponseRedirect(form.cleaned_data['http_referer'])
+
+    else:
+
+        url = '/%s/iteration/%s/' % (it.project.id, it.id)
+        form = ImpedimentForm(iteration=it, initial={'http_referer' : url}, instance=instance)
+
+    context = AgilitoContext(request, {'form': form})
+    return render_to_response('impediment_edit.html', context_instance=context)
+
+@restricted
+def impediment_edit(request, project_id, iteration_id, impediment_id):
+    instance = Impediment.objects.get(id=impediment_id)
+    return impediment_create(request, project_id, iteration_id, instance)
 
 @restricted
 def userstory_create(request, project_id, iteration_id=None, instance=None):
@@ -605,6 +642,9 @@ def iteration_status(request, project_id, iteration_id=None):
         actuals = sum(i.actuals for i in user_stories)
         failures = sum(i.test_failed for i in user_stories)
 
+        open_impediments = Impediment.objects.filter(tasks__user_story__iteration=latest_iteration, resolved=None).order_by('opened').distinct()
+        resolved_impediments = Impediment.objects.filter(tasks__user_story__iteration=latest_iteration).exclude(resolved=None).order_by('opened').distinct()
+
         tags = defaultdict(list)
         tasks = Task.objects.filter(user_story__iteration=latest_iteration)
         for task in tasks:
@@ -657,6 +697,8 @@ def iteration_status(request, project_id, iteration_id=None):
                           'status_table_url': status_table_url,
                           'burndown_chart_url': burndown_chart_url,
                           'burndown_chart_small_url': burndown_chart_small_url,
+                          'open_impediments': open_impediments,
+                          'resolved_impediments': resolved_impediments,
                           }
     else:
         inner_context = {}

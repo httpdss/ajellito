@@ -6,13 +6,13 @@ from operator import attrgetter
 from itertools import groupby
 from django import forms
 from agilito.models import UserStory, Task, TestCase, TaskLog, TestResult,\
-    UserProfile, UserStoryAttachment
+    UserProfile, UserStoryAttachment, Impediment
 
 from agilito.widgets import HierarchicRadioSelect, TaskHierarchy
 from agilito.fields import GroupedChoiceField
 
 from tagging.forms import TagField
-from agilito.widgets import AutoCompleteTagInput
+from agilito.widgets import AutoCompleteTagInput, TableSelectMultiple
 
 class UserProfileForm(forms.ModelForm):
     class Meta:
@@ -43,6 +43,46 @@ class UserStoryAttachmentForm(HiddenHttpRefererForm):
         model = UserStoryAttachment
         exclude = ('user_story',)
 
+class ImpedimentForm(HiddenHttpRefererForm):
+    tasks = forms.MultipleChoiceField(widget=TableSelectMultiple(item_attrs=('id', 'name')))
+
+    def __init__(self, *args, **kwargs):
+        iteration = kwargs.pop('iteration')
+
+        try:
+            impediment = kwargs['instance']
+        except KeyError:
+            impediment = None
+
+        super(ImpedimentForm, self).__init__(*args, **kwargs)
+
+        #self.fields['tasks'].queryset = Task.objects.filter(user_story__iteration=iteration)
+        self.fields['tasks'].choices = [(t.id, t) for t in Task.objects.filter(user_story__iteration=iteration)]
+
+        if impediment is None or impediment.opened is None:
+            self.fields['state'] = forms.CharField(widget=forms.HiddenInput, required=False, initial='open')
+        elif impediment.resolved is None:
+            self.fields['state'] = forms.ChoiceField(choices=[('open', 'Open'), ('resolved', 'Resolved')], initial='open')
+        else:
+            self.fields['state'] = forms.ChoiceField(choices=[('reopen', 'Reopen')], initial='reopen')
+
+        print self.fields['tasks'].widget
+
+    def clean_state(self):
+        state = self.cleaned_data['state']
+        if not state in ('open', 'resolved', 'reopen'):
+            raise forms.ValidationError('Invalid state selected')
+        return state
+
+    def clean(self):
+        if 'tasks' not in self.cleaned_data or len(self.cleaned_data['tasks']) == 0:
+            raise forms.ValidationError( u'You must select at least one task.')
+        return self.cleaned_data
+
+    class Meta:
+        model = Impediment
+        fields = 'name', 'description', 'state', 'tasks'
+
 class UserStoryForm(HiddenHttpRefererForm):
 
     def __init__(self,*args, **kwargs):
@@ -62,7 +102,7 @@ class UserStoryForm(HiddenHttpRefererForm):
 
     class Meta:
         model = UserStory
-        fields = 'name', 'description', 'rank', 'size', 'planned', 'state', 'iteration', 'blocked'
+        fields = 'name', 'description', 'rank', 'size', 'planned', 'state', 'iteration'
 
 class TaskForm(HiddenHttpRefererForm):
     actuals = forms.CharField(widget=forms.HiddenInput, required=False)

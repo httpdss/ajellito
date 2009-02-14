@@ -348,7 +348,7 @@ a.action-link { padding-left: 20px;
 }
 a.action-link.edit { background-image: url("/agilito/pencil.png") }
 a.action-link.delete { background-image: url("/agilito/delete.png") }
-a.action-link.add-task { background-image: url("/agilito/add_.png") }
+a.action-link.add-object { background-image: url("/agilito/add_.png") }
 
 /* Iteration Hours styles */
 .hours-resume {

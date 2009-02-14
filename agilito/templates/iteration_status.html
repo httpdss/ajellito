@@ -4,6 +4,7 @@
 <script type="text/javascript">
 $(window).ready(function(){
     $("#user-story-list").treeTable({treeColumn: 1});
+    $("#impediment-list").treeTable();
 });
 
 function popup(link, id)
@@ -66,8 +67,7 @@ There are no iterations in this project.
 
 {% block actions%}
 {% if current_iteration %}
-<a id="create-user-story" class="action-link add-task" 
-    
+<a id="create-user-story" class="action-link add-object" 
     href="{% url story_from_iteration project_id=current_project.id,iteration_id=current_iteration.id %}?last_page={{last_page}}">Add User Story</a>
 {% endif %}
 {% endblock %}
@@ -200,7 +200,6 @@ else {
 {% endfor %}
 </ul></dd>
 </dl>
-</table>
 
 <table id="user-story-list" cellspacing="0" cellpadding="2">
 <thead>
@@ -232,7 +231,7 @@ else {
     </tr> 
 
 {% for us in user_stories %}
-    <tr id="us-{{us.id}}" class="userstory {% cycle even,odd %} {%if us.blocked%}blocked{% endif %}">
+    <tr id="us-{{us.id}}" class="userstory {% cycle even,odd %} {%if us.is_blocked%}blocked{% endif %}">
         <td class="rank">{{us.relative_rank}}</td>
         <td class="id"><a href="{{us.get_absolute_url}}">US{{us.id}}</a></td>
         <td class="name"><a href="{{us.get_absolute_url}}">{{us.name}}</a></td>
@@ -252,7 +251,7 @@ else {
         <td id="delete_us_{{us.id}}" class=""><a href="{% url agilito.views.userstory_delete current_project.id,us.id %}?last_page={{last_page}}"><img src="/agilito/delete.png" alt="delete" title="delete" width="16" height="16" /></a></td>
     </tr> 
     {% for ta in us.tasks %}
-        <tr id="ta-{{ta.id}}" class="task child-of-us-{{us.id}} {% cycle even,odd %}">
+        <tr id="ta-{{ta.id}}" class="task child-of-us-{{us.id}} {% cycle even,odd %} {%if ta.is_blocked%}blocked{% endif %}">
             <td></td><!-- rank -->
             <td class="id"><a href="{{ta.get_absolute_url}}">TA{{ta.id}}</a></td>
             <td class="name"><a href="{{ta.get_absolute_url}}">{{ta.name}}</a>
@@ -295,6 +294,66 @@ else {
 {% endfor %}
 </tbody>
 </table>
+
+<h3>Impediments</h3>
+<div>
+<a id="add-impediment" class="action-link add-object" 
+    href="{% url agilito.views.impediment_create project_id=current_project.id,iteration_id=current_iteration.id %}?last_page={{last_page}}">New Impediment</a></div>
+
+{% if open_impediments or resolved_impediments %}
+<table id="impediment-list" cellspacing="0" cellpadding="2">
+<thead>
+    <tr>
+        <th>Id</th>
+        <th>Tasks</th>
+        <th>Name</th>
+    </tr>
+</thead>
+<tbody>
+    {% if open_impediments %}
+    {% for impediment in open_impediments %}
+        <tr id="impediment-{{ impediment.id }}">
+            <td><a onclick="popup(this, 'impediment')" href="{{ impediment.get_absolute_url }}">IM{{ impediment.id }}</a></td>
+            <td>{{ impediment.tasks.all.count }}</a></td>
+            <td><a onclick="popup(this, 'impediment')" href="{{ impediment.get_absolute_url }}">{{ impediment.name }}</a></td>
+        </tr>
+        {% for task in impediment.tasks.all %}
+            <tr id="impediment-{{ impediment.id }}-task-{{ task.id }}" class="child-of-impediment-{{ impediment.id }}">
+                <td>TA{{ task.id }}</td>
+                <td>&nbsp;</td>
+                <td>{{ task.name }}</td>
+            </tr>
+        {% endfor %}
+    {% endfor %}
+    {% endif %}
+
+    {% if resolved_impediments %}
+    <tr id="resolved-impediments">
+        <td>&nbsp;</td>
+        <td>{{ resolved_impediments.count }}</a></td>
+        <td>Resolved</td>
+    </tr>
+
+    {% for impediment in resolved_impediments %}
+        <tr id="impediment-{{ impediment.id }}" class="child-of-resolved-impediments">
+            <td><a onclick="popup(this, 'impediment')" href="{{ impediment.get_absolute_url }}">IM{{ impediment.id }}</a></td>
+            <td>{{ impediment.tasks.all.count }}</a></td>
+            <td><a onclick="popup(this, 'impediment')" href="{{ impediment.get_absolute_url }}">{{ impediment.name }}</a></td>
+        </tr>
+        {% for task in impediment.tasks.all %}
+            <tr id="impediment-{{ impediment.id }}-task-{{ task.id }}" class="child-of-impediment-{{ impediment.id }}">
+                <td>TA{{ task.id }}</td>
+                <td>&nbsp;</td>
+                <td>{{ task.name }}</td>
+            </tr>
+        {% endfor %}
+    {% endfor %}
+    {% endif %}
+</tbody>
+</table>
+{% endif %}
+
+<p/>
 
 Downloads for this iteration:
 <ul>

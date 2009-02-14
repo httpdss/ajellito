@@ -22,7 +22,7 @@
 </thead>
 <tbody>
         {% for object in object_list %}
-    <tr class="{% cycle even,odd %}{% if object.blocked %} blocked{% endif %}">
+    <tr class="{% cycle even,odd %}{% if object.is_blocked %} blocked{% endif %}">
         <td class="id">{{prefix}}{{object.id}}</td>
         <td class="name"><a href="{{object.get_absolute_url}}">{{object.name}}</a></td>
         {% ifnotequal prefix "TC" %}  

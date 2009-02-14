@@ -213,7 +213,6 @@ class Iteration(ClueModel):
                     if not left[us.id]:
                         left[us.id] = 1
                     break
-            print date, us.id, left[us.id]
 
         return sum(left.values())
 
@@ -368,7 +367,6 @@ class UserStory(ClueModel):
     rank = models.IntegerField(null=True, blank=True)
 
     state = models.SmallIntegerField(choices=STATES.choices(), default=STATES.DEFINED)
-    blocked = models.BooleanField(default=False)
 
     # alter table agilito_userstory add column size smallint
     size = models.SmallIntegerField(choices=SIZES.choices(), null=True)
@@ -380,6 +378,10 @@ class UserStory(ClueModel):
 
     def __unicode__(self):
         return u'US%s: %s' % (self.id, self.name)
+
+    @property
+    def is_blocked(self):
+        return (Impediment.objects.filter(resolved=None, tasks__user_story=self).count() != 0)
 
     @property
     def relative_rank(self):
@@ -529,6 +531,10 @@ class Task(ClueModel):
         return parse_tag_input(self.tags)
 
     @property
+    def is_blocked(self):
+        return (Impediment.objects.filter(resolved=None, tasks=self).count() != 0)
+
+    @property
     def actuals(self):
         return sum(i.time_on_task for i in self.tasklog_set.all())
 
@@ -671,6 +677,30 @@ class TestResult(models.Model):
 
         permissions = (
             ('view', 'Can view the test results.'),
+        )
+
+class Impediment(models.Model):
+    name = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    opened = models.DateField(default=datetime.datetime.now())
+    resolved = models.DateTimeField(null=True)
+
+    tasks = models.ManyToManyField('Task')
+
+    @models.permalink
+    def get_absolute_url(self):
+        it = self.tasks.all()[0].user_story.iteration
+
+        return PERMLINK_PREFIX + 'impediment_edit', (), {'project_id': it.project.id, 'iteration_id': it.id, 'impediment_id': self.id }
+
+    class Meta:
+        ordering = ('-opened',)        
+        
+        verbose_name = _(u'Impediment')
+        verbose_name_plural = _(u'Impediments')
+
+        permissions = (
+            ('view', 'Can view the impediments.'),
         )
 
 class TaskLog(models.Model):

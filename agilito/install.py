@@ -144,5 +144,9 @@ CARD_INFO = {
 """ % locals()
     rerun()
 
+if not 'LOGIN_REDIRECT_URL' in dir(settings) or settings.LOGIN_REDIRECT_URL != '/':
+    print 'Please set LOGIN_REDIRECT_URL to "/" in %(installdir)s/settings.py' % locals()
+    rerun()
+
 print
 print "You should be good to go. Edit your settings.py a and run 'python manage.py syncdb'"

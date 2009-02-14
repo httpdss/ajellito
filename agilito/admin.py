@@ -1,5 +1,6 @@
 from agilito.models import Project, Release, Iteration, UserStoryAttachment,\
-    UserStory, UserProfile, Task, TestCase, TestResult, TaskLog
+    UserStory, UserProfile, Task, TestCase, TestResult, TaskLog, \
+    Impediment
 from django.contrib import admin
 
 #
@@ -15,6 +16,10 @@ class TestCaseInLine(admin.TabularInline):
 
 class TaskInLine(admin.TabularInline):
     model = Task
+    extra = 1
+
+class ImpedimentInLine(admin.TabularInline):
+    model = Impediment
     extra = 1
 
 class ProjectAdmin(admin.ModelAdmin):
@@ -43,17 +48,18 @@ class UserStoryAttachmentAdmin(admin.ModelAdmin):
 class UserStoryAdmin(admin.ModelAdmin):
     inlines = [UserStoryAttachmentInLine, TestCaseInLine, TaskInLine]
     list_display = ('id', 'name', 'rank', 'planned', 'iteration', 'state',
-                    'blocked', 'estimated', 'actuals', 'remaining')
+                    'estimated', 'actuals', 'remaining')
     list_display_links = ('id', 'name',)
-    list_filter = ('project', 'iteration', 'state', 'blocked',)
-    ordering = ('rank','planned', 'blocked',)
+    list_filter = ('project', 'iteration', 'state', )
+    ordering = ('rank','planned', )
     search_fields = ['name', 'description']
 
     fieldsets = ((None, {'fields': ('name', 'description',
                                    ('project', 'iteration'),
-                                   ('rank', 'state', 'planned', 'blocked'))}), )
+                                   ('rank', 'state', 'planned', ))}), )
 
 class TaskAdmin(admin.ModelAdmin):
+    inlines = [ImpedimentInLine]
     list_display = ('name', 'estimate', 'actuals', 'remaining', 
                     'state', 'category', 'owner', 'user_story')
     list_display_links = ('name', 'owner', 'user_story')
@@ -90,6 +96,10 @@ class TaskLogAdmin(admin.ModelAdmin):
     search_fields = ('summary', 'iteration__name', 'iteration__project__name')
     ordering = ('-date',)
 
+class ImpedimentAdmin(admin.ModelAdmin):
+    list_display = ('name', 'description', 'opened', 'resolved', 'tasks')
+    ordering = ('-opened',)
+
 admin.site.register(Project, ProjectAdmin)
 admin.site.register(Release, ReleaseAdmin)
 admin.site.register(Iteration, IterationAdmin)
@@ -100,3 +110,4 @@ admin.site.register(Task, TaskAdmin)
 admin.site.register(TestCase, TestCaseAdmin)
 admin.site.register(TestResult, TestResultAdmin)
 admin.site.register(TaskLog, TaskLogAdmin)
+#admin.site.register(Impediment, ImpedimentAdmin)

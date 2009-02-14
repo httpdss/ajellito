@@ -108,7 +108,7 @@ There are no iterations in this project.
         <td class="total">{{progress_total}}</td>
     </tr> 
 {% for r in rows_bill %}
-    <tr class="{% cycle even,odd %} {%if object.blocked%}blocked{% endif %}">
+    <tr class="{% cycle even,odd %} {%if object.is_blocked%}blocked{% endif %}">
         <td class="name">{{r.name}}</td>
         <td class="estimated">{{r.estimated}}</td>
         <td class="progress">{{r.progress}}</td>
