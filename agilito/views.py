@@ -607,6 +607,11 @@ def iteration_status(request, project_id, iteration_id=None):
         for task in tasks:
             us = 'us-%d' % task.user_story.id
             ta = 'ta-%d' % task.id
+            if task.owner:
+                tag = 'owner:' + task.owner.username
+                tags[tag].append(ta)
+                if not us in tags[tag]:
+                    tags[tag].append(us)
             for tag in parse_tag_input(task.tags):
                 # tag = tag.name
                 if not us in tags[tag]:
