@@ -1161,6 +1161,7 @@ def timelog(request, cmd, instance=None):
                 tasklog.task.remaining = form.cleaned_data['remaining']
             tasklog.task.state = state
             tasklog.task.save()
+
             tasklog.save()
             story = tasklog.task.user_story
             if not story.task_set.exclude(state=Task.STATES.COMPLETED).count():

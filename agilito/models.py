@@ -272,6 +272,7 @@ class Iteration(ClueModel):
             card['TaskName'] = t.name
             card['TaskDescription'] = t.description
             card['TaskEstimate'] = t.estimate
+            card['TaskRemaining'] = t.remaining
             if t.owner:
                 card['TaskOwner'] = t.owner.username
             else:
