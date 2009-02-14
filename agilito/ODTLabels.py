@@ -51,11 +51,16 @@ class ODTLabels:
         if tpe in [types.IntType, types.FloatType, decimal.Decimal]:
             v = unicode(str(v))
         elif isinstance(v, types.StringTypes):
+            try:
+                vd = unicode(v).decode('utf-8')
+            except:
+                vd = v.encode('ascii', 'ignore')
+                vd = unicode(vd).decode('utf-8')
             f = cStringIO.StringIO()
             wr = formatter.DumbWriter(f)
             fmt = formatter.AbstractFormatter(wr)
             p = htmllib.HTMLParser(fmt)
-            p.feed(v)
+            p.feed(vd)
             p.close()
             v = f.getvalue()
         else:
