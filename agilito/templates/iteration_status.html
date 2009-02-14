@@ -314,10 +314,10 @@ else {
     {% if open_impediments %}
     {% for impediment in open_impediments %}
         <tr id="impediment-{{ impediment.id }}">
-            <td><a onclick="popup(this, 'impediment')" href="{{ impediment.get_absolute_url }}">IM{{ impediment.id }}</a></td>
+            <td><a onclick="popup(this, 'impediment'); return false" href="{{ impediment.get_absolute_url }}">IM{{ impediment.id }}</a></td>
             <td>{{ impediment.tasks.all.count }}</a></td>
             <td>{{ impediment.blocked }}</a></td>
-            <td><a onclick="popup(this, 'impediment')" href="{{ impediment.get_absolute_url }}">{{ impediment.name }}</a></td>
+            <td><a onclick="popup(this, 'impediment'); return false" href="{{ impediment.get_absolute_url }}">{{ impediment.name }}</a></td>
         </tr>
         {% for task in impediment.tasks.all %}
             <tr id="impediment-{{ impediment.id }}-task-{{ task.id }}" class="child-of-impediment-{{ impediment.id }}">
@@ -340,10 +340,10 @@ else {
 
     {% for impediment in resolved_impediments %}
         <tr id="impediment-{{ impediment.id }}" class="child-of-resolved-impediments">
-            <td><a onclick="popup(this, 'impediment')" href="{{ impediment.get_absolute_url }}">IM{{ impediment.id }}</a></td>
+            <td><a onclick="popup(this, 'impediment'); return false" href="{{ impediment.get_absolute_url }}">IM{{ impediment.id }}</a></td>
             <td>{{ impediment.tasks.all.count }}</a></td>
             <td>&nbsp;</td>
-            <td><a onclick="popup(this, 'impediment')" href="{{ impediment.get_absolute_url }}">{{ impediment.name }}</a></td>
+            <td><a onclick="popup(this, 'impediment'); return false" href="{{ impediment.get_absolute_url }}">{{ impediment.name }}</a></td>
         </tr>
         {% for task in impediment.tasks.all %}
             <tr id="impediment-{{ impediment.id }}-task-{{ task.id }}" class="child-of-impediment-{{ impediment.id }}">
