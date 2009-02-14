@@ -179,26 +179,27 @@ else {
 </div>
 <div class="description">{{current_iteration.description|safe}}</div>
 
-<table id="resume">
-<tr><td>Accepted</td>
-<td>{{current_iteration.us_accepted_percentage|floatformat:0 }} %</td></tr>
+<dl id="resume">
+<dt>Accepted</dt>
+<dd>{{current_iteration.us_accepted_percentage|floatformat:0 }} %</dd>
 
 
-<tr><td>User Stories in iteration</td>
-<td>
+<dt>User Stories in iteration</dt>
+<dd>
 {% if user_stories %}
 {{ user_stories.count }} 
-</td></tr>
+</dd>
 
 {% regroup tags|dictsort:"tag" by tag as grouped_tags %}
-<tr><td>Tags</td>
-<td><ul class="tags">
+<dt>Tags</dt>
+<dd><ul class="tags">
 {% for tag in grouped_tags %}
 <li id="tag-{{tag.grouper|slugify}}" class="big task-tag">
     <a href="#" onclick="{% for elt in tag.list %}highlightTag('tag-{{tag.grouper|slugify}},{{ elt.data }}');{% endfor %}return false">{{ tag.grouper }}</a>
 </li>
 {% endfor %}
-</ul></td></tr>
+</ul></dd>
+</dl>
 </table>
 
 <table id="user-story-list" cellspacing="0" cellpadding="2">

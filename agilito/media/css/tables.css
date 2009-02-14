@@ -17,7 +17,7 @@ width:50%;
 tbody td{
 font-weight:normal;
 padding:0 0.5em;
-vertical-align:middle;
+vertical-align:top;
 }
 .mceEditor tbody td{
 padding:0;

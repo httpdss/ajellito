@@ -65,6 +65,11 @@ font-size:80%;
 
 }
 
+td {
+    vertical-align: top;
+    text-align: left 
+}
+
 #timelog .form-label, #timelog .form-entry {
     vertical-align: top;
 }
