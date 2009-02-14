@@ -247,6 +247,7 @@ class TableSelectMultiple(forms.widgets.SelectMultiple):
 
             All attribute values will be escaped.
         """
+
         super(TableSelectMultiple, self).__init__(*args, **kwargs)
         self.item_attrs = item_attrs
 
@@ -266,10 +267,16 @@ class TableSelectMultiple(forms.widgets.SelectMultiple):
             rendered_cb = cb.render(name, option_value)
             output.append(u'<tr><td>%s</td>' % rendered_cb)
             for attr in self.item_attrs:
-                if callable(getattr(item, attr)):
-                    content = getattr(item, attr)()
+                li = item
+                ats = attr.split('.')
+                for at in ats[:-1]:
+                    li = getattr(li, at)
+                attr = ats[-1]
+                
+                if callable(getattr(li, attr)):
+                    content = getattr(li, attr)()
                 else:
-                    content = getattr(item, attr)
+                    content = getattr(li, attr)
                 output.append(u'<td>%s</td>' % escape(content))
             output.append(u'</tr>')
         output.append('</table>')
