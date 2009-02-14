@@ -44,7 +44,7 @@ font-size:80%;
 }
 
 .formfields .errors{
-background: #fe9 url(/resources/blocked.png) no-repeat !important;
+background: #fe9 url(/agilito/blocked.png) no-repeat !important;
 background-position: 0.5em center !important;
 border:1px solid #F99;
 background:#e99;

@@ -232,7 +232,7 @@ text-align:right;
 background:#f99 !important;
 }
 .blocked .name{
-background:#f99 url(/resources/blocked.png) no-repeat !important;
+background:#f99 url(/agilito/blocked.png) no-repeat !important;
 background-position: left center !important;
 padding-left:20px;
 }
@@ -319,7 +319,7 @@ border-bottom:1px solid #999;
 clear:both;
 }
 #us-head.blocked{
-background:#f99 url(/resources/blocked-big.png) no-repeat !important;
+background:#f99 url(/agilito/blocked-big.png) no-repeat !important;
 background-position: left center !important;
 padding-left:32px;
 }
@@ -346,9 +346,9 @@ a.action-link { padding-left: 20px;
                 background: no-repeat center left;
                 font-size: smaller;
 }
-a.action-link.edit { background-image: url("/resources/pencil.png") }
-a.action-link.delete { background-image: url("/resources/delete.png") }
-a.action-link.add-task { background-image: url("/resources/add_.png") }
+a.action-link.edit { background-image: url("/agilito/pencil.png") }
+a.action-link.delete { background-image: url("/agilito/delete.png") }
+a.action-link.add-task { background-image: url("/agilito/add_.png") }
 
 /* Iteration Hours styles */
 .hours-resume {
