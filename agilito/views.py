@@ -3,7 +3,7 @@ import time
 import datetime
 import ODTLabels
 import types
-import agilitodev.settings
+import settings
 import pyExcelerator
 import decimal
 
@@ -861,9 +861,9 @@ def iteration_cards(request, project_id, iteration_id):
     tasks = it.task_cards()
     stories = it.story_cards()
 
-    labels = ODTLabels.ODTLabels(agilitodev.settings.CARD_INFO['ini'])
-    labels.setSheetType(agilitodev.settings.CARD_INFO['spec'])
-    labels.setTemplate(agilitodev.settings.CARD_INFO['template'])
+    labels = ODTLabels.ODTLabels(settings.CARD_INFO['ini'])
+    labels.setSheetType(settings.CARD_INFO['spec'])
+    labels.setTemplate(settings.CARD_INFO['template'])
 
     response = HttpResponse(mimetype='application/vnd.oasis.opendocument.text')
     response['Content-Disposition'] = 'attachment; filename=cards.odt'

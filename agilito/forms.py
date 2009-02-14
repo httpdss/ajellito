@@ -86,7 +86,7 @@ class TaskForm(HiddenHttpRefererForm):
         fields = 'name', 'tags', 'description', 'state', 'estimate', 'remaining', 'owner', 'actuals'
     
     class Media:
-        js = ('/resources/js/copy_estimate_to_remaining.js',)
+        js = ('/agilito/js/copy_estimate_to_remaining.js',)
 
 class TestCaseAddForm(HiddenHttpRefererForm):
 

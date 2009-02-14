@@ -89,9 +89,9 @@
         <td class="id">US{{object.id}}</td>
         <td class="name"><a href="{{object.get_absolute_url}}">{{object.name}}</a></td>
         <td class="planned">{{object.planned|default_if_none:"-"}}</td>
-        <td id="add_task_us_{{object.id}}" class=""><a href="{% url agilito.views.task_create current_project.id,object.id %}?last_page={{last_page}}"><img src="/resources/add_.png" alt="add task" title="add task" width="16" height="16" /></a></td>
-        <td id="edit_us_{{object.id}}" class=""><a href="{% url agilito.views.userstory_edit current_project.id,object.id %}?last_page={{last_page}}"><img src="/resources/pencil.png" alt="edit" title="edit" width="16" height="16" /></a></td>
-        <td id="delete_us_{{object.id}}" class=""><a href="{% url agilito.views.userstory_delete current_project.id,object.id %}?last_page={{last_page}}"><img src="/resources/delete.png" alt="delete" title="delete" width="16" height="16" /></a></td>
+        <td id="add_task_us_{{object.id}}" class=""><a href="{% url agilito.views.task_create current_project.id,object.id %}?last_page={{last_page}}"><img src="/agilito/add_.png" alt="add task" title="add task" width="16" height="16" /></a></td>
+        <td id="edit_us_{{object.id}}" class=""><a href="{% url agilito.views.userstory_edit current_project.id,object.id %}?last_page={{last_page}}"><img src="/agilito/pencil.png" alt="edit" title="edit" width="16" height="16" /></a></td>
+        <td id="delete_us_{{object.id}}" class=""><a href="{% url agilito.views.userstory_delete current_project.id,object.id %}?last_page={{last_page}}"><img src="/agilito/delete.png" alt="delete" title="delete" width="16" height="16" /></a></td>
     </tr> 
 {%endfor%}
 </tbody>

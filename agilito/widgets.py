@@ -194,12 +194,12 @@ class AutoCompleteTagInput(forms.TextInput):
 
     class Media:
         css = {
-            'all': ('/resources/jquery-autocomplete/jquery.autocomplete.css',)
+            'all': ('/agilito/jquery-autocomplete/jquery.autocomplete.css',)
         }
         js = (
-            '/resources/jquery-autocomplete/lib/jquery.bgiframe.min.js',
-            '/resources/jquery-autocomplete/lib/jquery.ajaxQueue.js',
-            '/resources/jquery-autocomplete/jquery.autocomplete.js'
+            '/agilito/jquery-autocomplete/lib/jquery.bgiframe.min.js',
+            '/agilito/jquery-autocomplete/lib/jquery.ajaxQueue.js',
+            '/agilito/jquery-autocomplete/jquery.autocomplete.js'
         )
 
     def render(self, name, value, attrs=None):

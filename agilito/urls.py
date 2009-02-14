@@ -66,7 +66,7 @@ urlpatterns = patterns('agilito.views',
 
 urlpatterns += patterns('',
     (r'^admin/(.*)', admin.site.root),
-    (r'^resources/(?P<path>.*)$', 'django.views.static.serve', {'document_root': media_root}),
+    (r'^agilito/(?P<path>.*)$', 'django.views.static.serve', {'document_root': media_root}),
     (r'^xmlrpc/', 'agilito.xmlrpc.xmlrpc.view', {'module':'agilito.xmlrpc'}),
     (r'^(rsd.xml)$', 'django.views.static.serve', {'document_root': media_root}),
 )

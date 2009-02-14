@@ -5,16 +5,16 @@
         <strong class="info">
         <span class='rank'>{{ us.rank }}</span>
         <a href='#' class="collapse-controls">
-            <img src='/resources/add.png' class="us-expand" alt="expand" />
-            <img src='/resources/remove.png' class="us-collapse" alt="collapse" style="display:none"/>
+            <img src='/agilito/add.png' class="us-expand" alt="expand" />
+            <img src='/agilito/remove.png' class="us-collapse" alt="collapse" style="display:none"/>
         </a>
         <a href="{{ us.get_absolute_url }}" class='title' id="{{us.id}}">US{{us.id}}: <span id="us-span-{{us.id}}" class="name">{{ us.name }}</span></a>
 
         </strong>
         <span class="extra">
         <span class='est'>{{ us.planned }}</span>
-        <a class="edit" href="{% url agilito.views.userstory_edit current_project.id,us.id %}"><img src='/resources/edit.png' alt="edit"/></a>
-        <a href='#' ><img src='/resources/trash.png' alt="delete"/></a>
+        <a class="edit" href="{% url agilito.views.userstory_edit current_project.id,us.id %}"><img src='/agilito/edit.png' alt="edit"/></a>
+        <a href='#' ><img src='/agilito/trash.png' alt="delete"/></a>
         </span>
         <div class="visualClear"></div>
     </div>

@@ -80,7 +80,7 @@ There are no iterations in this project.
 {% if current_iteration.project %}
 <li id="iteration">{{ current_iteration.project.name }} &gt; </li> 
 {% endif %}
-<li id="iteration"> <a class="dropdown" href="#"> {{ current_iteration.name }} <img src="/resources/arrow_down_small.png" /></a>
+<li id="iteration"> <a class="dropdown" href="#"> {{ current_iteration.name }} <img src="/agilito/arrow_down_small.png" /></a>
     {%if current_iteration.project.iteration_set.all %}
         <div class="dropdown_menu">
         {%for iteration in current_iteration.project.iteration_set.all %}
@@ -128,7 +128,7 @@ There are no iterations in this project.
 <object align="right" classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000" codebase="http://fpdownload.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=8,0,0,0" 
 width="320" height="240" id="ie_chart" align="middle">
 <param name="allowScriptAccess" value="sameDomain" />
-<param name="movie" value="/resources/open-flash-chart.swf?data={{ data_url }}" />
+<param name="movie" value="/agilito/open-flash-chart.swf?data={{ data_url }}" />
 <param name="quality" value="high" />
 <param name="bgcolor" value="#FFFFFF" />
 
@@ -161,7 +161,7 @@ else if (window.ActiveXObject) {
 }
 
 if (flash_installed) {
-   document.write('<embed align="right" src="/resources/open-flash-chart.swf?data={{ data_url }}" quality="high" bgcolor="#FFFFFF" width="320" height="240" name="chart" align="middle" allowScriptAccess="sameDomain" type="application/x-shockwave-flash" pluginspage="http://www.macromedia.com/go/getflashplayer" id="chart"/>');
+   document.write('<embed align="right" src="/agilito/open-flash-chart.swf?data={{ data_url }}" quality="high" bgcolor="#FFFFFF" width="320" height="240" name="chart" align="middle" allowScriptAccess="sameDomain" type="application/x-shockwave-flash" pluginspage="http://www.macromedia.com/go/getflashplayer" id="chart"/>');
 }
 else {
    document.write('<IMG SRC="{{ burndown_chart_small_url }}" style="align=right;" ALT="Burndown">');
@@ -247,9 +247,9 @@ else {
                 {{us.test_failed|default_if_none:"-"}}
             {%endif%}
         </td>
-        <td id="add_task_us_{{us.id}}" class=""><a href="{% url agilito.views.task_create current_project.id,us.id %}?last_page={{last_page}}"><img src="/resources/add_.png" alt="add task" title="add task" width="16" height="16" /></a></td>
-        <td id="edit_us_{{us.id}}" class=""><a href="{% url agilito.views.userstory_edit current_project.id,us.id %}?last_page={{last_page}}"><img src="/resources/pencil.png" alt="edit" title="edit" width="16" height="16" /></a></td>
-        <td id="delete_us_{{us.id}}" class=""><a href="{% url agilito.views.userstory_delete current_project.id,us.id %}?last_page={{last_page}}"><img src="/resources/delete.png" alt="delete" title="delete" width="16" height="16" /></a></td>
+        <td id="add_task_us_{{us.id}}" class=""><a href="{% url agilito.views.task_create current_project.id,us.id %}?last_page={{last_page}}"><img src="/agilito/add_.png" alt="add task" title="add task" width="16" height="16" /></a></td>
+        <td id="edit_us_{{us.id}}" class=""><a href="{% url agilito.views.userstory_edit current_project.id,us.id %}?last_page={{last_page}}"><img src="/agilito/pencil.png" alt="edit" title="edit" width="16" height="16" /></a></td>
+        <td id="delete_us_{{us.id}}" class=""><a href="{% url agilito.views.userstory_delete current_project.id,us.id %}?last_page={{last_page}}"><img src="/agilito/delete.png" alt="delete" title="delete" width="16" height="16" /></a></td>
     </tr> 
     {% for ta in us.tasks %}
         <tr id="ta-{{ta.id}}" class="task child-of-us-{{us.id}} {% cycle even,odd %}">
@@ -267,9 +267,9 @@ else {
             <td>{{ta.estimate|default_if_none:"-"}}</td>
             <td>{{ta.remaining|default_if_none:"-"}}</td>
             <td></td><!-- failures -->
-            <td>{% if not ta.is_archived %}<a href="#" onclick="timelog('{% url agilito.views.timelog "" %}/task/{{ ta.id }}')"><img src="/resources/log.png" alt="log" title="log" width="16" height="16" /></a>{% endif %}</td>
-            <td>{% if not ta.is_archived %}<a id="task_edit_{{task.id}}" href="{% url agilito.views.task_edit current_project.id,us.id,ta.id %}?last_page={{last_page}}"><img src="/resources/pencil.png" alt="edit" title="edit" width="16" height="16" />{% endif %}</a></td>
-            <td>{% if not ta.is_archived %}<a id="task_del_{{task.id}}" href="{% url agilito.views.task_delete current_project.id,us.id,ta.id %}?last_page={{last_page}}"><img src="/resources/delete.png" alt="delete" title="delete" width="16" height="16" />{% endif %}</a></td>
+            <td>{% if not ta.is_archived %}<a href="#" onclick="timelog('{% url agilito.views.timelog "" %}/task/{{ ta.id }}')"><img src="/agilito/log.png" alt="log" title="log" width="16" height="16" /></a>{% endif %}</td>
+            <td>{% if not ta.is_archived %}<a id="task_edit_{{task.id}}" href="{% url agilito.views.task_edit current_project.id,us.id,ta.id %}?last_page={{last_page}}"><img src="/agilito/pencil.png" alt="edit" title="edit" width="16" height="16" />{% endif %}</a></td>
+            <td>{% if not ta.is_archived %}<a id="task_del_{{task.id}}" href="{% url agilito.views.task_delete current_project.id,us.id,ta.id %}?last_page={{last_page}}"><img src="/agilito/delete.png" alt="delete" title="delete" width="16" height="16" />{% endif %}</a></td>
         </tr> 
     {% endfor %}
 {% endfor %}

@@ -3,18 +3,18 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
     <title>{% block title %}Agilito Project Managment App{% endblock %}</title>
-    <link rel="stylesheet" href="/resources/css/style.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="/agilito/css/style.css" type="text/css" media="screen" />
 
-    <link rel="stylesheet" href="/resources/css/forms.css" type="text/css" media="screen" />
-    <link rel="stylesheet" href="/resources/css/tables.css" type="text/css" media="screen" />
-    <link rel="stylesheet" href="/resources/css/ui.datepicker.css" type="text/css" media="screen" />
-    <link rel="stylesheet" href="/resources/treeTable/src/stylesheets/jquery.treeTable.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="/agilito/css/forms.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="/agilito/css/tables.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="/agilito/css/ui.datepicker.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="/agilito/treeTable/src/stylesheets/jquery.treeTable.css" type="text/css" media="screen" />
 
-    <link rel="stylesheet" href="/resources/css/clickmenu.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="/agilito/css/clickmenu.css" type="text/css" media="screen" />
 
     {% block css%} {%endblock%}
     <!-- tinyMCE -->
-    <script language="javascript" type="text/javascript" src="/resources/js/tiny_mce/tiny_mce.js"></script>
+    <script language="javascript" type="text/javascript" src="/agilito/js/tiny_mce/tiny_mce.js"></script>
     <script language="javascript" type="text/javascript">
     	// Notice: The simple theme does not use all options some of them are limited to the advanced theme
         tinyMCE.init({
@@ -30,10 +30,10 @@
 
     </script>
     <!-- /tinyMCE -->
-    <script type="text/javascript" src="/resources/js/jquery.js"></script>
-    <script type="text/javascript" src="/resources/js/ui.js"></script>
-    <script type="text/javascript" src="/resources/js/jquery.clickmenu.js"></script>
-    <script type="text/javascript" src="/resources/treeTable/src/javascripts/jquery.treeTable.js"></script>
+    <script type="text/javascript" src="/agilito/js/jquery.js"></script>
+    <script type="text/javascript" src="/agilito/js/ui.js"></script>
+    <script type="text/javascript" src="/agilito/js/jquery.clickmenu.js"></script>
+    <script type="text/javascript" src="/agilito/treeTable/src/javascripts/jquery.treeTable.js"></script>
     <script type="text/javascript">
     $(document).ready(function(){
         target = "/"
@@ -52,7 +52,7 @@
 
 <body>
 <div id="wrapper">
-    <div id="notice"><p>Beware of the warecode!, this is app is in active development.</p></div>
+    <!-- div id="notice"><p>Beware of the warecode!, this is app is in active development.</p></div -->
     <div id="head">
 
         {% if current_project %}
@@ -70,8 +70,7 @@
         {% endif %}
 
         <h1>
-            <a href="/{{ current_project.id }}/backlog">
-                <img src="/resources/ifpeople_logo-en.png" alt="IfPeople"/><span>Agilito: the scrum donkey</span>
+            <a href="/{{ current_project.id }}/backlog"> <img src="/agilito/logo.png" alt="Hogeschool van Arnhem en Nijmegeb"/><span>Agilito: the scrum donkey</span>
             </a>
         </h1>
 
@@ -136,7 +135,7 @@
     <div id="content">
         {% block content %}The main content{% endblock %}
     </div>
-    <div id="footer">
+    <!-- div id="footer">
       {% block footer %} {% endblock %}
 
 <p><a href="http://www.ifpeople.net">ifPeople</a> | 130 Boulevard NE #6 | Atlanta, GA 30312
@@ -144,7 +143,7 @@ t: 678-608-3408 | <a href="http://getsatisfaction.com/ifpeople/products/ifpeople
 <p>Powered by <a href="http://www.agilito.com">Agilito</a> | Built with <a href="http://www.djangoproject.com">Django</a>
 </p>
 
-    </div>
+    </div -->
     </div>
 </body>
 </html>
