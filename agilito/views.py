@@ -841,6 +841,7 @@ def product_backlog_chart(request, project_id, iteration_id):
         usc[x] = completed[x]
         uscbase[x] = existing[x]
 
+    matplotlib.pyplot.clf()
     width = 0.35       # the width of the bars: can also be len(x) sequence
     p1 = matplotlib.pyplot.bar(ind, uso,   width, color='#1D91DB', bottom=usobase)
     p2 = matplotlib.pyplot.bar(ind, usc, width, color='y', bottom=uscbase)
@@ -866,6 +867,7 @@ def iteration_burndown_chart(request, project_id, iteration_id, name):
 
     data = _iteration_get_burndown_data(it)
 
+    matplotlib.pyplot.clf()
     fig = matplotlib.pyplot.figure()
 
     small = (name == 'small')
