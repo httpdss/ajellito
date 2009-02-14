@@ -197,14 +197,23 @@ class Iteration(ClueModel):
 
     def remaining_storypoints(self, date):
         left = {}
+        firstday = ((date - self.start_date).days == 0)
         for us in UserStory.objects.filter(iteration=self):
-            left[us.id] = 0
+            if firstday:
+                if not us.size:
+                    left[us.id] = 1
+                else:
+                    left[us.id] = us.size
+            else:
+                left[us.id] = 0
+
             for t in Task.objects.filter(user_story=us):
                 if t.remaining_for_date(date) > 0:
                     left[us.id] = us.size
                     if not left[us.id]:
                         left[us.id] = 1
                     break
+            print date, us.id, left[us.id]
 
         return sum(left.values())
 
