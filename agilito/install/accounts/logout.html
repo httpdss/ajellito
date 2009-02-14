@@ -1,0 +1,13 @@
+{% extends "master.html" %}
+
+{% block content %}
+
+{% if form.errors %}
+<p>Your username and password didn't match. Please try again.</p>
+{% endif %}
+
+<form method="post" action=".">
+<h3>You are now logged out</h3>
+</form>
+
+{% endblock %}
