@@ -206,7 +206,6 @@ class AutoCompleteTagInput(forms.TextInput):
         output = super(AutoCompleteTagInput, self).render(name, value, attrs)
         page_tags = Tag.objects.usage_for_model(self.__ac_model__)
         tag_list = simplejson.dumps([tag.name for tag in page_tags], ensure_ascii=False)
-        print tag_list
         return output + mark_safe(u'''<script type="text/javascript">
             jQuery("#id_%s").autocomplete(%s, {
                 width: 150,

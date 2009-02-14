@@ -1,5 +1,10 @@
 <table class="formfields">
     {% for field in form %}
+        {% if field.is_hidden %}
+            {{ field }}
+        {% endif %}
+    {% endfor %}
+    {% for field in form %}
         {% if not field.is_hidden %}
             <tr class="{% if field.errors %}errors {% endif %} {% if field.field.required %}required{%endif%}">
                 <td class="form-label">
