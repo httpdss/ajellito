@@ -212,6 +212,10 @@ else {
         <th>Tasks</th>
         <th>To-Do</th>
         <th>Failures</th>
+        <th></th>
+        <th></th>
+        <th></th>
+        <th></th>
     </tr>
 </thead>
 
@@ -228,13 +232,14 @@ else {
         <td></td>
         <td></td>
         <td></td>
+        <td></td>
     </tr> 
 
 {% for us in user_stories %}
     <tr id="us-{{us.id}}" class="userstory {% cycle even,odd %} {%if us.is_blocked%}blocked{% endif %}">
         <td class="rank">{{us.relative_rank}}</td>
         <td class="id"><a href="{{us.get_absolute_url}}">US{{us.id}}</a></td>
-        <td class="name"><a href="{{us.get_absolute_url}}">{{us.name}}</a></td>
+        <td class="name{% if us.is_archived %} archived{% endif %}"><a href="{{us.get_absolute_url}}">{{us.name}}</a></td>
         <td class="state {{ us.get_state_display|slugify }}">{{us.get_state_display}}</td>
         <td class="planned">{{us.planned|default_if_none:"-"}}</td>
         <td class="estimated">{{us.estimated|default_if_none:"-"}}</td>
@@ -246,9 +251,22 @@ else {
                 {{us.test_failed|default_if_none:"-"}}
             {%endif%}
         </td>
-        <td id="add_task_us_{{us.id}}" class=""><a href="{% url agilito.views.task_create current_project.id,us.id %}?last_page={{last_page}}"><img src="/agilito/add_.png" alt="add task" title="add task" width="16" height="16" /></a></td>
+        <td id="add_task_us_{{us.id}}" class="">
+            {% if not us.is_archived %}
+                <a href="{% url agilito.views.task_create current_project.id,us.id %}?last_page={{last_page}}"><img src="/agilito/add_.png" alt="add task" title="add task" width="16" height="16" /></a>
+            {% endif %}
+        </td>
         <td id="edit_us_{{us.id}}" class=""><a href="{% url agilito.views.userstory_edit current_project.id,us.id %}?last_page={{last_page}}"><img src="/agilito/pencil.png" alt="edit" title="edit" width="16" height="16" /></a></td>
-        <td id="delete_us_{{us.id}}" class=""><a href="{% url agilito.views.userstory_delete current_project.id,us.id %}?last_page={{last_page}}"><img src="/agilito/delete.png" alt="delete" title="delete" width="16" height="16" /></a></td>
+        <td id="delete_us_{{us.id}}" class="">
+            {% if not us.is_archived %}
+                <a href="{% url agilito.views.userstory_delete current_project.id,us.id %}?last_page={{last_page}}"><img src="/agilito/delete.png" alt="delete" title="delete" width="16" height="16" /></a>
+            {% endif %}
+        </td>
+        <td id="move_us_{{us.id}}" class="">
+            <a href="{% url agilito.views.userstory_move current_project.id,us.id %}?last_page={{last_page}}"
+            onclick="popup(this, 'us-move'); return false"><img
+            src="/agilito/bullet_go.png" alt="move" title="move" width="16" height="16" /></a>
+        </td>
     </tr> 
     {% for ta in us.tasks %}
         <tr id="ta-{{ta.id}}" class="task child-of-us-{{us.id}} {% cycle even,odd %} {%if ta.is_blocked%}blocked{% endif %}">
@@ -289,6 +307,7 @@ else {
                         src="/agilito/delete.png" alt="delete" title="delete" width="16" height="16" /></a>
                 {% endif %}
             </td>
+            <td></td>
         </tr> 
     {% endfor %}
 {% endfor %}

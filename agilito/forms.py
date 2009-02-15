@@ -84,25 +84,61 @@ class ImpedimentForm(HiddenHttpRefererForm):
         fields = 'name', 'description', 'state', 'tasks'
 
 class UserStoryForm(HiddenHttpRefererForm):
-
     def __init__(self,*args, **kwargs):
         try:
             project = kwargs.pop('project')
         except KeyError:
             project = None
 
+        try:
+            user_story = kwargs['instance']
+            pinned = user_story.is_pinned
+        except KeyError:
+            user_story = None
+            pinned = False
+
         super(UserStoryForm, self).__init__(*args, **kwargs)
-        
+
         if project is not None:
-            iterations = project.iteration_set.all()
-            self.fields['iteration'] = forms.ModelChoiceField(queryset=iterations,
-                                                              required=False)
+            if pinned:
+                empty_label = None
+                iterations = project.iteration_set.filter(pk=user_story.iteration.id)
+            else:
+                empty_label = '<Product Backlog>'
+                iterations = project.iteration_set.all()
+
+            self.fields['iteration'] = forms.ModelChoiceField(queryset=iterations, required=pinned, empty_label=empty_label)
 
         self.fields['size'].required = False
 
     class Meta:
         model = UserStory
         fields = 'name', 'description', 'rank', 'size', 'planned', 'state', 'iteration'
+
+class UserStoryMoveForm(forms.ModelForm):
+    copy_tasks = forms.BooleanField(label='Copy tasks', required=False)
+    action = forms.ChoiceField(choices=[])
+
+    def __init__(self,*args, **kwargs):
+        user_story = kwargs['instance']
+        project = kwargs.pop('project')
+
+        super(UserStoryMoveForm, self).__init__(*args, **kwargs)
+
+        if user_story.task_set.all().count() == 0:
+            self.fields['copy_tasks'].hidden = True
+
+        if user_story.is_pinned:
+            self.fields['action'].choices = [('copy_archive', 'Copy and Archive'), ('copy', 'Copy')]
+        else:
+            self.fields['action'].choices = [('copy_archive', 'Copy and Archive'), ('copy', 'Copy'), ('move', 'Move')]
+
+        iterations = project.iteration_set.all().exclude(id=user_story.iteration.id)
+        self.fields['iteration'] = forms.ModelChoiceField(queryset=iterations, required=False)
+
+    class Meta:
+        model = UserStory
+        fields = 'iteration', 'action', 'copy_tasks'
 
 class TaskForm(HiddenHttpRefererForm):
     actuals = forms.CharField(widget=forms.HiddenInput, required=False)

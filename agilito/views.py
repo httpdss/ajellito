@@ -49,7 +49,8 @@ from agilito.models import Project, Iteration, UserStory, Task, TestCase,\
     Impediment
 from agilito.forms import UserStoryForm, UserStoryShortForm, gen_TaskLogForm,\
     TaskForm, TestCaseAddForm, TestCaseEditForm, testcase_form_factory,\
-    TestResultForm, UserStoryAttachmentForm, ImpedimentForm
+    TestResultForm, UserStoryAttachmentForm, ImpedimentForm, \
+    UserStoryMoveForm
 
 from agilito.tools import restricted
 
@@ -218,7 +219,6 @@ def impediment_edit(request, project_id, iteration_id, impediment_id):
 
 @restricted
 def userstory_create(request, project_id, iteration_id=None, instance=None):
- 
     if request.method == 'POST':
         form = UserStoryForm(request.POST, instance=instance, project=Project.objects.get(id=project_id))
         if form.is_valid():
@@ -238,6 +238,33 @@ def userstory_create(request, project_id, iteration_id=None, instance=None):
     context = AgilitoContext(request, {'form': form},
                             current_project=project_id)
     return render_to_response('userstory_edit.html', context_instance=context)
+
+@restricted
+def userstory_move(request, project_id, userstory_id):
+    instance = UserStory.objects.get(pk=userstory_id, project__pk=project_id)
+    project=Project.objects.get(id=project_id)
+
+    if request.method == 'POST':
+        form = UserStoryMoveForm(request.POST, instance=instance, project=project)
+        if form.is_valid():
+            story = form.save(commit=False)
+            data = form.cleaned_data
+
+            if data['action'] == 'move':
+                story.iteration = data['iteration']
+                story.save()
+            else:
+                if data['action'] == 'copy_archive':
+                    archiver = request.user
+                else:
+                    archiver = None
+                story.copy_to_iteration(data['iteration'], data['copy_tasks'], archiver)
+            return render_to_response('close_window.html')
+    else:
+        form = UserStoryMoveForm(instance=instance, project=project)
+
+    context = AgilitoContext(request, {'object': instance, 'action': 'Copy/Move User Story', 'form': form}, current_project=project_id)
+    return render_to_response('generic_action.html', context_instance=context)
 
 @restricted
 def userstory_edit(request, project_id, userstory_id):

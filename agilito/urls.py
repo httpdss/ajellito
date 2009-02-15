@@ -31,6 +31,7 @@ urlpatterns = patterns('agilito.views',
     (r'^(?P<project_id>\d+)/userstory/(?P<userstory_id>\d+)/$', 'userstory_detail'),
     (r'^(?P<project_id>\d+)/userstory/(?P<userstory_id>\d+)/delete/$', 'userstory_delete'),
     (r'^(?P<project_id>\d+)/userstory/(?P<userstory_id>\d+)/edit/$', 'userstory_edit'),
+    (r'^(?P<project_id>\d+)/userstory/(?P<userstory_id>\d+)/move/$', 'userstory_move'),
 
     (r'^(?P<project_id>\d+)/userstory/(?P<userstory_id>\d+)/task/add/$', 'task_create'),
     (r'^(?P<project_id>\d+)/userstory/(?P<userstory_id>\d+)/task/(?P<task_id>\d+)/edit/$', 'task_edit'),

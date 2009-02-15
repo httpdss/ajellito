@@ -381,6 +381,15 @@ class UserStory(ClueModel):
         return (Impediment.objects.filter(resolved=None, tasks__user_story=self).count() != 0)
 
     @property
+    def is_pinned(self):
+        # eeh: this might need refinement. I was considering making an
+        # object pinned when it is assigned to an iteration, but that
+        # would duplicate stories even if you accidently set the wrong
+        # iteration. Best to let the user choose. Stuff that has seen
+        # work (= tasklogs) should be considered in-use though.
+        return (TaskLog.objects.filter(task__user_story=self).count() != 0)
+
+    @property
     def relative_rank(self):
         if self.iteration is None or self.rank is None:
             return None
@@ -423,6 +432,25 @@ class UserStory(ClueModel):
     @property
     def is_archived(self):
         return (self.state == UserStory.STATES.ARCHIVED)
+
+    def copy_to_iteration(self, iteration, copy_tasks, archiver):
+        id = self.id
+
+        tasks = self.task_set.all()
+
+        self.id = None
+        self.iteration=iteration
+        self.save()
+
+        if copy_tasks:
+            for task in tasks:
+                task.id = None
+                task.user_story = self
+                task.save()
+
+        if archiver:
+            story = UserStory.objects.get(id=id)
+            story.archive(archiver)
 
     def archive(self, archiver):
         for task in self.task_set.all():
