@@ -149,4 +149,4 @@ if not 'LOGIN_REDIRECT_URL' in dir(settings) or settings.LOGIN_REDIRECT_URL != '
     rerun()
 
 print
-print "You should be good to go. Edit your settings.py a and run 'python manage.py syncdb'"
+print "You should be good to go. Edit your settings.py and run 'python manage.py syncdb'"
