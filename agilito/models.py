@@ -43,6 +43,8 @@ class FieldChoices:
         return self.__choices
 
     def label(self, value):
+        if value is None:
+            return None
         return filter(lambda x: x[0] == value, self.__choices)[0][1]
 
 class NoProjectException(Exception):
@@ -126,6 +128,9 @@ class Project(ClueModel):
     @classmethod
     def get_current_project(klass):
         return klass.objects.all()[0]
+
+    def backlog(self):
+        return UserStory.objects.filter(project=self).exclude(state=UserStory.STATES.ARCHIVED, state=UserStory.STATES.COMPLETED).order_by('rank')
     
 class Release(ClueModel):
     project = models.ForeignKey(Project)
@@ -377,6 +382,33 @@ class UserStory(ClueModel):
         return u'US%s: %s' % (self.id, self.name)
 
     @property
+    def size_label(self):
+        return UserStory.SIZES.label(self.size)
+
+    @property
+    def state_label(self):
+        return UserStory.STATES.label(self.state)
+
+    @property
+    def backlog_state(self):
+        if self.iteration is None:
+            return 'unplanned'
+
+        if self.state == UserStory.STATES.ARCHIVED:
+            return 'archived'
+
+        if self.state == UserStory.STATES.COMPLETED:
+            return 'completed'
+
+        if self.iteration.start_date > datetime.date.today():
+            return 'planned'
+
+        if self.iteration.end_date >= datetime.date.today():
+            return 'in-progress'
+
+        return 'forgotten'
+
+    @property
     def is_blocked(self):
         return (Impediment.objects.filter(resolved=None, tasks__user_story=self).count() != 0)
 
@@ -409,10 +441,6 @@ class UserStory(ClueModel):
         if self.is_archived:
             return 0
         return sum(t.remaining for t in self.task_set.all() if t.remaining and not t.is_archived)
-
-    @classmethod
-    def backlogged(klass, project):
-        return klass.objects.filter(project__id=project, iteration=None).exclude(state=UserStory.STATES.ARCHIVED).order_by('rank')
 
     @property
     def test_failed(self):

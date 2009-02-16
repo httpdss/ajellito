@@ -36,8 +36,6 @@
 
 <li id="iteration">Backlog</li> 
 
-{% if object.planned %}
-{% endif %}
 <li class="visualClear" />
 </ul>
 
@@ -68,31 +66,36 @@
         <th>Rank</th>
         <th>Id</th>
         <th>Name</th>
-        <th>Plan</th>
+        <th>Size</th>
+        <th>State</th>
+        <th><!-- add task --></th>
+        <th><!-- edit --></th>
+        <th><!-- delete --></th>
     </tr>
 </thead>
 
 <tbody>
 <tr class="totals">
-    <td/>
-    <td/>
-    <td/>
-    <td class="total planned">{{ planned }}</td>
-    <td/>
-    <td/>
-    <td/>
-
+    <td><!-- rank --></td>
+    <td><!-- id --></td>
+    <td><!-- name --></td>
+    <td class="total size">{{ size }}</td>
+    <td><!-- state --></td>
+    <td><!-- add task --></td>
+    <td><!-- edit --></td>
+    <td><!-- delete --></td>
 </tr>
 {% for object in user_stories %}
-    <tr class="{% cycle even,odd %}">
+    <tr class="{% cycle even,odd %} {{ object.backlog_state }}">
         <td class="rank">{{object.rank}}</td>
         <td class="id">US{{object.id}}</td>
         <td class="name"><a href="{{object.get_absolute_url}}">{{object.name}}</a></td>
-        <td class="planned">{{object.planned|default_if_none:"-"}}</td>
+        <td class="size">{{object.size_label|default_if_none:"-"}}</td>
+        <td class="state">{{object.state_label|default_if_none:"-"}}/{{ object.backlog_state }}</td>
         <td id="add_task_us_{{object.id}}" class=""><a href="{% url agilito.views.task_create current_project.id,object.id %}?last_page={{last_page}}"><img src="/agilito/add_.png" alt="add task" title="add task" width="16" height="16" /></a></td>
         <td id="edit_us_{{object.id}}" class=""><a href="{% url agilito.views.userstory_edit current_project.id,object.id %}?last_page={{last_page}}"><img src="/agilito/pencil.png" alt="edit" title="edit" width="16" height="16" /></a></td>
         <td id="delete_us_{{object.id}}" class=""><a href="{% url agilito.views.userstory_delete current_project.id,object.id %}?last_page={{last_page}}"><img src="/agilito/delete.png" alt="delete" title="delete" width="16" height="16" /></a></td>
-    </tr> 
+    </tr>
 {%endfor%}
 </tbody>
 </table>

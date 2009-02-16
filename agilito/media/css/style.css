@@ -236,16 +236,19 @@ background:#f99 url(/agilito/blocked.png) no-repeat !important;
 background-position: left center !important;
 padding-left:20px;
 }
-.defined{
+.defined, .defined td, .unplanned, .unplanned td, .planned, .planned td {
 background:#FFE699 !important;
 }
-.in-progress{
+.in-progress, .in-progress td{
 background:#FFC71F !important;
 }
-.completed{
+.forgotten, .forgotten td{
+background:red !important;
+}
+.completed, .completed td {
 background:#99FFB3 !important;
 }
-.accepted{
+.accepted, .accepted td {
 background:#E699FF !important;
 }
 .fail a{

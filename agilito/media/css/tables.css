@@ -42,7 +42,7 @@ background:#9e9;
 text-align:center;
 }
 
-td.actuals, td.planned,td.estimated, td.progress, td.todo, td.actuals, td.failures, td.rank {
+td.actuals, td.size,td.estimated, td.progress, td.todo, td.actuals, td.failures, td.rank {
 text-align:center;
 }
 

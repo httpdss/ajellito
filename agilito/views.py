@@ -323,15 +323,16 @@ def userstory_delete(request, project_id, userstory_id):
 def backlog(request, project_id):
     """
     """
-    user_stories = UserStory.backlogged(project=project_id)
-    planned = sum(i.planned for i in user_stories if i.planned)
+    project = Project.objects.get(id=project_id)
+    user_stories = project.backlog()
+    print user_stories.count()
+    size = sum(i.size for i in user_stories if i.size)
     full_backlog = reverse('agilito.views.product_backlog', args=[project_id])
 
-    context = AgilitoContext(request, { 'full_backlog' : full_backlog, 'user_stories' : user_stories, 'planned':planned }, 
+    context = AgilitoContext(request, { 'full_backlog' : full_backlog, 'user_stories' : user_stories, 'size':size }, 
                             current_project=project_id)
-        
 
-    return render_to_response('backlog_noajax.html', context_instance=context)
+    return render_to_response('product_backlog.html', context_instance=context)
 
 
 
