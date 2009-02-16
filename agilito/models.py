@@ -130,7 +130,7 @@ class Project(ClueModel):
         return klass.objects.all()[0]
 
     def backlog(self):
-        return UserStory.objects.filter(project=self).exclude(state=UserStory.STATES.ARCHIVED, state=UserStory.STATES.COMPLETED).order_by('rank')
+        return UserStory.objects.filter(project=self).exclude(state=UserStory.STATES.ARCHIVED, state=UserStory.STATES.COMPLETED, state=UserStory.STATES.FAILED).order_by('rank')
     
 class Release(ClueModel):
     project = models.ForeignKey(Project)
@@ -350,7 +350,8 @@ class UserStory(ClueModel):
                 (15, 'Specified'),
                 (20, 'In Progress'),
                 (30, 'Completed'),
-                (40, 'Accepted'))
+                (40, 'Accepted'),
+                (50, 'Failed'))
 
     SIZES = FieldChoices(
                 (1,  'XXS'),
@@ -461,7 +462,7 @@ class UserStory(ClueModel):
     def is_archived(self):
         return (self.state == UserStory.STATES.ARCHIVED)
 
-    def copy_to_iteration(self, iteration, copy_tasks, archiver):
+    def copy_to_iteration(self, iteration, copy_tasks, state, archiver):
         id = self.id
 
         tasks = self.task_set.all()
@@ -481,7 +482,12 @@ class UserStory(ClueModel):
                 task.state = Task.STATES.DEFINED
                 task.save()
 
-        if archiver:
+        if state == UserStory.STATES.FAILED:
+            story = UserStory.objects.get(id=id)
+            story.state = state
+            story.save()
+
+        elif state == UserStory.STATES.ARCHIVED:
             story = UserStory.objects.get(id=id)
             story.archive(archiver)
 

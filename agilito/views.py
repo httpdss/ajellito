@@ -254,11 +254,15 @@ def userstory_move(request, project_id, userstory_id):
                 story.iteration = data['iteration']
                 story.save()
             else:
+                archiver = None
+                state = None
                 if data['action'] == 'copy_archive':
+                    state = UserStory.STATES.ARCHIVED
                     archiver = request.user
-                else:
-                    archiver = None
-                story.copy_to_iteration(data['iteration'], data['copy_tasks'], archiver)
+                elif data['action'] == 'copy_fail':
+                    state = UserStory.STATES.FAILED
+
+                story.copy_to_iteration(data['iteration'], data['copy_tasks'], state, archiver)
             return render_to_response('close_window.html')
     else:
         form = UserStoryMoveForm(instance=instance, project=project)

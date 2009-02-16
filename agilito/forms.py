@@ -128,13 +128,13 @@ class UserStoryMoveForm(forms.ModelForm):
         if user_story.task_set.all().count() == 0:
             self.fields['copy_tasks'].hidden = True
 
-        if user_story.is_pinned:
-            choices = [('copy_archive', 'Copy and Archive'), ('copy', 'Copy')]
-        else:
+        choices = [('copy_archive', 'Copy and Archive'), ('copy_fail', 'Copy and Fail original'), ('copy', 'Copy')]
+
+        if not user_story.is_pinned:
             if user_story.iteration is None:
-                choices = [('move', 'Move'), ('copy_archive', 'Copy and Archive'), ('copy', 'Copy')]
+                choices = [('move', 'Move')] + choices
             else:
-                choices = [('copy_archive', 'Copy and Archive'), ('copy', 'Copy'), ('move', 'Move')]
+                choices.append(('move', 'Move'))
 
         self.fields['action'].choices = choices
 
