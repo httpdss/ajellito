@@ -131,7 +131,7 @@ class UserStoryMoveForm(forms.ModelForm):
 
         choices = [('copy_archive', 'Copy and Archive'), ('copy_fail', 'Copy and Fail original')]
         if user_story.is_blocked or (user_story.state != UserStory.STATES.COMPLETED and it.end_date < datetime.date.today()):
-            choices = reversed(choices)
+            choices.reverse()
         choices.append(('copy', 'Copy'))
 
         if not user_story.is_pinned:
