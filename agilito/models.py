@@ -440,12 +440,17 @@ class UserStory(ClueModel):
 
         self.id = None
         self.iteration=iteration
+        self.state = UserStory.STATES.DEFINED
+        self.created = datetime.datetime.now()
+        self.closed = None
         self.save()
 
         if copy_tasks:
             for task in tasks:
                 task.id = None
                 task.user_story = self
+                task.estimate = task.remaining
+                task.state = Task.STATES.DEFINED
                 task.save()
 
         if archiver:
