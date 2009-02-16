@@ -130,7 +130,10 @@ class Project(ClueModel):
         return klass.objects.all()[0]
 
     def backlog(self):
-        return UserStory.objects.filter(project=self).exclude(state=UserStory.STATES.ARCHIVED, state=UserStory.STATES.COMPLETED, state=UserStory.STATES.FAILED).order_by('rank')
+        return UserStory.objects.filter(project=self).exclude(
+            state=UserStory.STATES.ARCHIVED).exclude(
+            state=UserStory.STATES.COMPLETED).exclude(
+            state=UserStory.STATES.FAILED).order_by('rank')
     
 class Release(ClueModel):
     project = models.ForeignKey(Project)
