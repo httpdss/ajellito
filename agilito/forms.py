@@ -122,13 +122,17 @@ class UserStoryMoveForm(forms.ModelForm):
     def __init__(self,*args, **kwargs):
         user_story = kwargs['instance']
         project = kwargs.pop('project')
+        it = user_story.iteration
 
         super(UserStoryMoveForm, self).__init__(*args, **kwargs)
 
         if user_story.task_set.all().count() == 0:
             self.fields['copy_tasks'].hidden = True
 
-        choices = [('copy_archive', 'Copy and Archive'), ('copy_fail', 'Copy and Fail original'), ('copy', 'Copy')]
+        choices = [('copy_archive', 'Copy and Archive'), ('copy_fail', 'Copy and Fail original')]
+        if user_story.is_blocked or (user_story.state != UserStory.STATES.COMPLETED and it.end_date < datetime.date.today()):
+            choices = reversed(choices)
+        choices.append(('copy', 'Copy'))
 
         if not user_story.is_pinned:
             if user_story.iteration is None:
