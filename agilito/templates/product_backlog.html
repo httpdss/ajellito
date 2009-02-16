@@ -70,6 +70,7 @@
         <th>State</th>
         <th><!-- add task --></th>
         <th><!-- edit --></th>
+        <th><!-- move --></th>
         <th><!-- delete --></th>
     </tr>
 </thead>
@@ -83,6 +84,7 @@
     <td><!-- state --></td>
     <td><!-- add task --></td>
     <td><!-- edit --></td>
+    <td><!-- move --></td>
     <td><!-- delete --></td>
 </tr>
 {% for object in user_stories %}
@@ -94,6 +96,11 @@
         <td class="state">{{object.state_label|default_if_none:"-"}}/{{ object.backlog_state }}</td>
         <td id="add_task_us_{{object.id}}" class=""><a href="{% url agilito.views.task_create current_project.id,object.id %}?last_page={{last_page}}"><img src="/agilito/add_.png" alt="add task" title="add task" width="16" height="16" /></a></td>
         <td id="edit_us_{{object.id}}" class=""><a href="{% url agilito.views.userstory_edit current_project.id,object.id %}?last_page={{last_page}}"><img src="/agilito/pencil.png" alt="edit" title="edit" width="16" height="16" /></a></td>
+        <td id="move_us_{{us.id}}" class="">
+            <a href="{% url agilito.views.userstory_move current_project.id,object.id %}?last_page={{last_page}}"
+            onclick="popup(this, 'us-move'); return false"><img
+            src="/agilito/bullet_go.png" alt="move" title="move" width="16" height="16" /></a>
+        </td>
         <td id="delete_us_{{object.id}}" class=""><a href="{% url agilito.views.userstory_delete current_project.id,object.id %}?last_page={{last_page}}"><img src="/agilito/delete.png" alt="delete" title="delete" width="16" height="16" /></a></td>
     </tr>
 {%endfor%}

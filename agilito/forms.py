@@ -92,7 +92,7 @@ class UserStoryForm(HiddenHttpRefererForm):
 
         try:
             user_story = kwargs['instance']
-            pinned = user_story.is_pinned
+            pinned = (not user_story is None and user_story.is_pinned)
         except KeyError:
             user_story = None
             pinned = False
@@ -129,11 +129,20 @@ class UserStoryMoveForm(forms.ModelForm):
             self.fields['copy_tasks'].hidden = True
 
         if user_story.is_pinned:
-            self.fields['action'].choices = [('copy_archive', 'Copy and Archive'), ('copy', 'Copy')]
+            choices = [('copy_archive', 'Copy and Archive'), ('copy', 'Copy')]
         else:
-            self.fields['action'].choices = [('copy_archive', 'Copy and Archive'), ('copy', 'Copy'), ('move', 'Move')]
+            if user_story.iteration is None:
+                choices = [('move', 'Move'), ('copy_archive', 'Copy and Archive'), ('copy', 'Copy')]
+            else:
+                choices = [('copy_archive', 'Copy and Archive'), ('copy', 'Copy'), ('move', 'Move')]
 
-        iterations = project.iteration_set.all().exclude(id=user_story.iteration.id)
+        self.fields['action'].choices = choices
+
+        if user_story.iteration is None:
+            iterations = project.iteration_set.all()
+        else:
+            iterations = project.iteration_set.all().exclude(id=user_story.iteration.id)
+
         self.fields['iteration'] = forms.ModelChoiceField(queryset=iterations, required=False)
 
     class Meta:
