@@ -129,7 +129,7 @@ class UserStoryMoveForm(forms.ModelForm):
         if user_story.task_set.all().count() == 0:
             self.fields['copy_tasks'].hidden = True
 
-        choices = [('copy_archive', 'Copy and Archive'), ('copy_fail', 'Copy and Fail original')]
+        choices = [('copy_archive', 'Copy and Archive original'), ('copy_fail', 'Copy and Fail original')]
         if user_story.is_blocked or (user_story.state != UserStory.STATES.COMPLETED and it.end_date < datetime.date.today()):
             choices.reverse()
         choices.append(('copy', 'Copy'))
