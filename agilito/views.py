@@ -329,7 +329,6 @@ def backlog(request, project_id):
     """
     project = Project.objects.get(id=project_id)
     user_stories = project.backlog()
-    print user_stories.count()
     size = sum(i.size for i in user_stories if i.size)
     full_backlog = reverse('agilito.views.product_backlog', args=[project_id])
 
@@ -674,6 +673,8 @@ def iteration_status(request, project_id, iteration_id=None):
         actuals = sum(i.actuals for i in user_stories)
         failures = sum(i.test_failed for i in user_stories)
 
+        total = float(sum(u.size or 1 for u in user_stories)) / 100.0
+
         open_impediments = Impediment.objects.filter(tasks__user_story__iteration=latest_iteration, resolved=None).order_by('opened').distinct()
         resolved_impediments = Impediment.objects.filter(tasks__user_story__iteration=latest_iteration).exclude(resolved=None).order_by('opened').distinct()
 
@@ -681,7 +682,12 @@ def iteration_status(request, project_id, iteration_id=None):
         td = latest_iteration.total_days()
 
         for i in open_impediments:
-            i.blocked = '%.0f%%' % ((float(sum(t.remaining for t in i.tasks.all() if t.remaining)) / float(todo)) * 100)
+            stories = {}
+            for t in i.tasks.all():
+                if not t.user_story.state in [UserStory.STATES.COMPLETED, UserStory.STATES.ARCHIVED]:
+                    stories[t.user_story.id] = t.user_story.size or 1
+            risk = sum(stories.values())
+            i.blocked = '%.0f%%' % (float(risk) / total)
 
         tags = defaultdict(list)
         tasks = Task.objects.filter(user_story__iteration=latest_iteration)
