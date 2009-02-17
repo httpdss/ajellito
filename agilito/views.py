@@ -681,7 +681,7 @@ def iteration_status(request, project_id, iteration_id=None):
         td = latest_iteration.total_days()
 
         for i in open_impediments:
-            i.blocked = '%.0f%%' % ((float(sum(t.remaining for t in i.tasks.all())) / float(todo)) * 100)
+            i.blocked = '%.0f%%' % ((float(sum(t.remaining for t in i.tasks.all() if t.remaining)) / float(todo)) * 100)
 
         tags = defaultdict(list)
         tasks = Task.objects.filter(user_story__iteration=latest_iteration)
