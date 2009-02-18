@@ -263,7 +263,7 @@ else {
             {% endif %}
         </td>
         <td id="move_us_{{us.id}}" class="">
-            <a href="{% url agilito.views.userstory_move current_project.id,us.id %}?last_page={{last_page}}"
+            <a href="{% url agilito.views.userstory_move current_project.id,us.id %}?last_page=/close/"
             onclick="popup(this, 'us-move'); return false"><img
             src="/agilito/bullet_go.png" alt="move" title="move" width="16" height="16" /></a>
         </td>
@@ -286,7 +286,7 @@ else {
             <td></td><!-- failures -->
             <td>
                 {% if not ta.is_archived %}
-                    <a href="{% url agilito.views.timelog "" %}/task/{{ ta.id }}"
+                    <a href="{% url agilito.views.timelog "" %}/task/{{ ta.id }}?last_page=/close/"
                         onclick="popup(this, 'timelog'); return false"><img src="/agilito/log.png" alt="log" title="log" width="16" height="16" /></a>
                 {% endif %}
             </td>
@@ -294,7 +294,7 @@ else {
                 {% if not ta.is_archived %}
                     <a id="task_edit_{{task.id}}"
                         onclick="popup(this, 'taskedit'); return false"
-                        href="{% url agilito.views.task_edit current_project.id,us.id,ta.id %}?last_page={{last_page}}"><img
+                        href="{% url agilito.views.task_edit current_project.id,us.id,ta.id %}?last_page=/close/"><img
                         src="/agilito/pencil.png" alt="edit"
                         title="edit" width="16" height="16" /></a>
                 {% endif %}
@@ -303,7 +303,7 @@ else {
                 {% if not ta.is_archived %}
                     <a id="task_del_{{task.id}}"
                         onclick="popup(this, 'taskdel'); return false"
-                        href="{% url agilito.views.task_delete current_project.id,us.id,ta.id %}?last_page={{last_page}}"><img
+                        href="{% url agilito.views.task_delete current_project.id,us.id,ta.id %}?last_page=/close/"><img
                         src="/agilito/delete.png" alt="delete" title="delete" width="16" height="16" /></a>
                 {% endif %}
             </td>
@@ -333,10 +333,10 @@ else {
     {% if open_impediments %}
     {% for impediment in open_impediments %}
         <tr id="impediment-{{ impediment.id }}">
-            <td><a onclick="popup(this, 'impediment'); return false" href="{{ impediment.get_absolute_url }}">IM{{ impediment.id }}</a></td>
+            <td><a onclick="popup(this, 'impediment'); return false" href="{{ impediment.get_absolute_url }}?last_page=/close/">IM{{ impediment.id }}</a></td>
             <td>{{ impediment.tasks.all.count }}</a></td>
             <td>{{ impediment.blocked }}</a></td>
-            <td><a onclick="popup(this, 'impediment'); return false" href="{{ impediment.get_absolute_url }}">{{ impediment.name }}</a></td>
+            <td><a onclick="popup(this, 'impediment'); return false" href="{{ impediment.get_absolute_url }}?last_page=/close/">{{ impediment.name }}</a></td>
         </tr>
         {% for task in impediment.tasks.all %}
             <tr id="impediment-{{ impediment.id }}-task-{{ task.id }}" class="child-of-impediment-{{ impediment.id }}">
@@ -359,10 +359,10 @@ else {
 
     {% for impediment in resolved_impediments %}
         <tr id="impediment-{{ impediment.id }}" class="child-of-resolved-impediments">
-            <td><a onclick="popup(this, 'impediment'); return false" href="{{ impediment.get_absolute_url }}">IM{{ impediment.id }}</a></td>
+            <td><a onclick="popup(this, 'impediment'); return false" href="{{ impediment.get_absolute_url }}?last_page=/close/">IM{{ impediment.id }}</a></td>
             <td>{{ impediment.tasks.all.count }}</a></td>
             <td>&nbsp;</td>
-            <td><a onclick="popup(this, 'impediment'); return false" href="{{ impediment.get_absolute_url }}">{{ impediment.name }}</a></td>
+            <td><a onclick="popup(this, 'impediment'); return false" href="{{ impediment.get_absolute_url }}?last_page=/close/">{{ impediment.name }}</a></td>
         </tr>
         {% for task in impediment.tasks.all %}
             <tr id="impediment-{{ impediment.id }}-task-{{ task.id }}" class="child-of-impediment-{{ impediment.id }}">

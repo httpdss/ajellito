@@ -104,6 +104,10 @@ class AgilitoContext(RequestContext):
         return self.dictionary.iteritems()
 
 # Views
+
+def close_window(request):
+    return render_to_response('close_window.html', context_instance=Context())
+
 @login_required
 def index(request):
     """
