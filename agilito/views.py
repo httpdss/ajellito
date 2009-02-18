@@ -925,6 +925,8 @@ def product_backlog_chart(request, project_id, iteration_id):
 
     matplotlib.pyplot.axhline(linewidth=2, color='k', zorder=-1)
 
+    matplotlib.pyplot.plot(completed, 'mo-')
+
     response = HttpResponse(mimetype='image/png')
     matplotlib.pyplot.savefig(response)
     return response
