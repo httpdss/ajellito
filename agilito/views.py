@@ -385,9 +385,24 @@ def task_create(request, project_id, userstory_id, instance=None):
                 if task.is_complete:
                     task.remaining = 0  # maybe you want to set the task complete
                                         # but not log hours.
-            task.save()
 
-            # this code has changed compatered to what is in the timelog
+            tasklog = None
+            if task.id: # existing task
+                old = Task.objects.get(id=task.id)
+                if old.remaining != task.remaining:
+                    tasklog = TaskLog()
+                    tasklog.time_on_task = 0
+                    tasklog.summary = 'updated'
+                    tasklog.date = datetime.datetime.now()
+                    tasklog.iteration = task.user_story.iteration
+                    tasklog.owner = request.user
+                    tasklog.old_remaining = old.remaining
+            task.save()
+            if tasklog:
+                tasklog.task = task
+                tasklog.save()
+
+            # this code has changed compared to what is in the timelog
             story = task.user_story
             total_tasks = story.task_set.all().count()
             if story.task_set.filter(state=Task.STATES.DEFINED).count() == total_tasks:
