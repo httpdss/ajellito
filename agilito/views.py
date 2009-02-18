@@ -658,7 +658,7 @@ def _iteration_get_burndown_data(it):
     return data
 
 @restricted
-def iteration_status(request, project_id, iteration_id=None):
+def iteration_status(request, project_id, iteration_id=None, template='iteration_status.html'):
     if iteration_id is None:
         latest_iteration = _get_iteration(project_id)
     else:
@@ -752,7 +752,11 @@ def iteration_status(request, project_id, iteration_id=None):
         inner_context = {}
 
     context = AgilitoContext(request, inner_context, current_project=project_id)
-    return render_to_response('iteration_status.html', context_instance=context)
+    return render_to_response(template, context_instance=context)
+
+@restricted
+def taskboard(request, project_id, iteration_id=None):
+    return iteration_status(request, project_id, iteration_id=iteration_id, template='taskboard.html')
 
 @restricted
 def iteration_hours(request, project_id, iteration_id=None):
