@@ -865,26 +865,34 @@ def product_backlog_chart(request, project_id, iteration_id):
         added_after = start_date
 
     for st in stories:
-        size = st.size
-        if not size:
-            size = 1
+        size = st.size or 1
         for x, day in enumerate(days):
+            # story didn't exist on day we're looking at now; skip
             if st.created > day:
                 continue
 
-            if st.state == UserStory.STATES.COMPLETED and ((st.closed is None and day >= today) or day >= st.closed):
+            # story is completed before the current day; it counts as
+            # completed as of now
+            if st.state == UserStory.STATES.COMPLETED and not st.closed is None and st.closed < day:
                 completed[x] += size
                 continue
 
+            # if the story is archived, consider it existing if it
+            # isn't closed (which shouldn't happen!) or if it was
+            # closed after the current day
             if st.state == UserStory.STATES.ARCHIVED:
-                if not st.closed is None and st.closed < day:
+                if not st.closed is None and st.closed > day:
                     existing[x] += size
                 continue
 
+            # if the story wasn't created on day 0 and the current day
+            # isn't day 0, consider it added-after-start
             if st.created > added_after and day >= added_after: # st.created > days[leeway]:
                 added[x] += size
                 continue
 
+            # if the story doesn't match all these criteria, consider
+            # it existing-at-start
             existing[x] += size
 
     ind = range(len(days))
