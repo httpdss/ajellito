@@ -273,7 +273,7 @@ class Iteration(ClueModel):
 
     def task_cards(self):
         cards = []
-        for t in Task.objects.filter(user_story__iteration=self):
+        for t in Task.objects.filter(user_story__iteration=self).exclude(state=Task.STATES.ARCHIVED):
             card = {}
             card['TaskID'] = t.id
             card['TaskName'] = t.name
