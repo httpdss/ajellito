@@ -206,25 +206,8 @@ class Iteration(ClueModel):
                    for t in Task.objects.filter(user_story__iteration=self))
 
     def remaining_storypoints(self, date):
-        left = {}
-        firstday = ((date - self.start_date).days == 0)
-        for us in UserStory.objects.filter(iteration=self):
-            if firstday:
-                if not us.size:
-                    left[us.id] = 1
-                else:
-                    left[us.id] = us.size
-            else:
-                left[us.id] = 0
-
-            for t in Task.objects.filter(user_story=us):
-                if t.remaining_for_date(date) > 0:
-                    left[us.id] = us.size
-                    if not left[us.id]:
-                        left[us.id] = 1
-                    break
-
-        return sum(left.values())
+        is_start = ((date - self.start_date).days == 0)
+        return sum(us.size or 1 for us in self.userstory_set.all() if is_start or us.remaining_for_date(date) > 0)
 
     def total_estimated(self):
         return sum(t.estimate or 0
@@ -445,6 +428,9 @@ class UserStory(ClueModel):
         if self.is_archived:
             return 0
         return sum(t.remaining for t in self.task_set.all() if t.remaining and not t.is_archived)
+
+    def remaining_for_date(self, date):
+        return sum(t.remaining_for_date(date) for t in self.task_set.all())
 
     @property
     def test_failed(self):
