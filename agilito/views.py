@@ -333,6 +333,15 @@ def backlog(request, project_id):
     """
     project = Project.objects.get(id=project_id)
     user_stories = project.backlog()
+
+    suggested_size = project.suggest_sizes()
+
+    for us in user_stories:
+        if suggested_size.has_key(us.id):
+            us.suggested_size = suggested_size[us.id][1]
+        else:
+            us.suggested_size = None
+
     size = sum(i.size for i in user_stories if i.size)
     full_backlog = reverse('agilito.views.product_backlog', args=[project_id])
 
@@ -1012,7 +1021,7 @@ def _excel_column(n):
 def product_backlog(request, project_id):
     statename = {}
 
-    for state, name in UserStory.STATES:
+    for state, name in UserStory.STATES.choices():
         statename[state] = name
 
     stories = UserStory.objects.filter(project__id=project_id).order_by('rank').order_by('id')
@@ -1023,8 +1032,16 @@ def product_backlog(request, project_id):
     style.font = pyExcelerator.Font()
     style.font.bold = True
 
-    for c, header in enumerate(['Story', 'Rank', 'Name', 'Description', 'State', 'Iteration']):
+    for c, header in enumerate(['Story', 'Rank', 'Name', 'Description', 'State', 'Iteration', 'Size', 'Suggested size']):
         ws.write(0, c, header, style)
+
+    suggested_size = Project.objects.get(id=project_id).suggest_sizes()
+
+    for us in stories:
+        if suggested_size.has_key(us.id):
+            us.suggested_size = suggested_size[us.id][1]
+        else:
+            us.suggested_size = None
 
     for r, story in enumerate(stories):
         ws.write(r+1, 0, story.id)
@@ -1054,6 +1071,12 @@ def product_backlog(request, project_id):
 
         if not story.iteration is None:
             ws.write(r+1, 5, story.iteration.name)
+
+        if story.size:
+            ws.write(r+1, 6, UserStory.SIZES.label(story.size))
+
+        if story.suggested_size:
+            ws.write(r+1, 7, story.suggested_size)
 
     response = HttpResponse(mimetype='application/application/vnd.ms-excel')
     response['Content-Disposition'] = 'attachment; filename=burndown.xls'

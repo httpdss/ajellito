@@ -9,6 +9,7 @@ from tagging.utils import parse_tag_input
 
 from dateutil.rrule import rrule, DAILY, MO, TU, WE, TH, FR
 import datetime
+import math
 
 # We are using our own search application here!
 from queryutils.queryutils import SearchEqualOp, SearchQueryGenerator
@@ -134,7 +135,49 @@ class Project(ClueModel):
             state=UserStory.STATES.ARCHIVED).exclude(
             state=UserStory.STATES.COMPLETED).exclude(
             state=UserStory.STATES.FAILED).order_by('rank')
-    
+
+    def closest(self, v, choices):
+        sel = 0
+        d = None
+
+        for i, c in enumerate(choices):
+            if d is None or math.fabs(v - c) < d:
+                sel = i
+                d = math.fabs(v - c)
+        return sel
+
+    def baseline_story(self):
+        data = []
+        for story in self.userstory_set.exclude(state=UserStory.STATES.ARCHIVED).all():
+            est = story.estimated
+            if not est:
+                continue
+
+            data.append((story.id, float(est)))
+
+        avg = sum(d[1] for d in data)/len(data)
+
+        baseline = self.closest(avg, [d[1] for d in data])
+        return UserStory.objects.get(id=data[baseline][0])
+
+    def suggest_sizes(self, baseline=None, size=5): # UserStory.SIZES.M): but needs forward declaration
+        if baseline is None:
+            baseline = self.baseline_story()
+
+        factor = float(size) / float(baseline.estimated)
+
+        sizes = [s[0] for s in UserStory.SIZES.choices()]
+        
+        suggestions = {}
+        for story in self.userstory_set.exclude(state=UserStory.STATES.ARCHIVED).all():
+            est = float(story.estimated)
+            if not est:
+                continue
+
+            suggestions[story.id] = UserStory.SIZES.choices()[self.closest(int(factor * est), sizes)]
+
+        return suggestions
+
 class Release(ClueModel):
     project = models.ForeignKey(Project)
     
