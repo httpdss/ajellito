@@ -1122,7 +1122,7 @@ def iteration_status_table(request, project_id, iteration_id):
 
     today = datetime.date.today()
     days = [d.date() for d in filter(lambda d: d.date()<=today, days)]
-    for r, t in enumerate(Task.objects.filter(user_story__iteration=it)):
+    for r, t in enumerate(Task.objects.filter(user_story__iteration=it).exclude(state=Task.STATES.ARCHIVED)):
         us = t.user_story
 
         if t.estimate is None:
