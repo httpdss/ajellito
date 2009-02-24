@@ -246,7 +246,7 @@ class Iteration(ClueModel):
 
     def remaining_hours(self, date):
         return sum(t.remaining_for_date(date)
-                   for t in Task.objects.filter(user_story__iteration=self))
+                   for t in Task.objects.filter(user_story__iteration=self).exclude(state=Task.STATES.ARCHIVED))
 
     def remaining_storypoints(self, date):
         is_start = ((date - self.start_date).days == 0)
@@ -254,10 +254,11 @@ class Iteration(ClueModel):
 
     def total_estimated(self):
         return sum(t.estimate or 0
-                   for t in Task.objects.filter(user_story__iteration=self))
+                   for t in Task.objects.filter(user_story__iteration=self).exclude(state=Task.STATES.ARCHIVED))
 
     def user_estimated(self, userid):    
-        tasks = Task.objects.filter(owner__id=userid, user_story__iteration__pk=self.id)
+        tasks = Task.objects.filter(owner__id=userid, user_story__iteration__pk=self.id).exclude(state=Task.STATES.ARCHIVED)
+
         return sum(t.estimate or 0 for t in tasks)
 
     def user_progress(self, userid):
@@ -321,7 +322,8 @@ class Iteration(ClueModel):
 
     @property
     def estimated_without_owner(self):
-        tasks = Task.objects.filter(owner=None, user_story__iteration__pk=self.id)
+        tasks = Task.objects.filter(owner=None, user_story__iteration__pk=self.id).exclude(state=Task.STATES.ARCHIVED)
+
         return sum(tl.estimate or 0 for tl in tasks)
 
 
