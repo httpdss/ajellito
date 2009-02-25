@@ -133,7 +133,7 @@ class Project(ClueModel):
     def backlog(self):
         return UserStory.objects.filter(project=self).exclude(
             state=UserStory.STATES.ARCHIVED).exclude(
-            state=UserStory.STATES.COMPLETED).exclude(
+            state=UserStory.STATES.ACCEPTED).exclude(
             state=UserStory.STATES.FAILED).order_by('rank')
 
     def closest(self, v, choices):
@@ -435,13 +435,14 @@ class UserStory(ClueModel):
         if self.state == UserStory.STATES.ARCHIVED:
             return 'archived'
 
-        if self.state == UserStory.STATES.COMPLETED:
-            return 'completed'
+        if self.state == UserStory.STATES.ACCEPTED:
+            return 'accepted'
 
         if self.iteration.start_date > datetime.date.today():
             return 'planned'
 
-        if self.iteration.end_date >= datetime.date.today():
+        # allow for one day of leeway
+        if self.iteration.end_date >= (datetime.date.today() - datetime.timedelta(days=1)): 
             return 'in-progress'
 
         return 'forgotten'
