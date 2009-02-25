@@ -653,19 +653,8 @@ class Task(ClueModel):
         return (self.state == Task.STATES.DEFINED)
 
     def archive(self, archiver):
-        tasklog = TaskLog()
-        tasklog.task = self
-        tasklog.time_on_task = 0
-        tasklog.summary = 'Archived'
-        tasklog.date = datetime.datetime.now()
-        tasklog.iteration = self.user_story.iteration
-        tasklog.owner = archiver
-        tasklog.old_remaining = self.remaining
-        tasklog.save()
-
         self.state = Task.STATES.ARCHIVED
-        self.remaining = 0
-        self.save()
+        self.save(archiver, 'Archived', 0)
 
     def remaining_for_date(self, date):
         # find the oldest tasklog that is newer than date and check
@@ -688,6 +677,25 @@ class Task(ClueModel):
 
     def get_container_model(self):
         return self.user_story
+
+    def save(self, owner=None, summary=None, time_on_task=None):
+        if self.state == Task.STATES.ARCHIVED
+            self.remaining = 0
+
+        if self.id:
+            old = Task.objects.get(id=self.id)
+            if old.remaining != self.remaining:
+                tasklog = TaskLog()
+                tasklog.task = self
+                tasklog.time_on_task = time_on_task
+                tasklog.summary = summary
+                tasklog.date = datetime.datetime.now()
+                tasklog.iteration = self.user_story.iteration
+                tasklog.owner = owner
+                tasklog.old_remaining = old.remaining
+                tasklog.save()
+
+        super(Task, self).save()
 
     class Meta:
         permissions = (

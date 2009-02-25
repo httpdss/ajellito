@@ -41,13 +41,13 @@ try:
     print 'Agilito is present'
 except ImportError:
     print 'You need to have agilito installed'
-    print 'Agilito is available at http://air.googlecode.com/'
+    print 'Agilito is available at http://agilito.googlecode.com/'
     reply = None
     while not reply in ['y', 'n']:
         reply = raw_input('Do you want me to install it into your project (y/n)?')
         reply = reply.lower()[:1]
     if reply == 'y':
-        os.system('svn checkout https://air.googlecode.com/svn/trunk/agilito agilito')
+        os.system('svn checkout https://agilito.googlecode.com/svn/trunk/agilito agilito')
 
     rerun()
 
@@ -74,7 +74,7 @@ except ImportError:
         reply = raw_input('Do you want me to install it into your project (y/n)?')
         reply = reply.lower()[:1]
     if reply == 'y':
-        os.system('svn checkout https://air.googlecode.com/svn/trunk/queryutils queryutils')
+        os.system('svn checkout https://agilito.googlecode.com/svn/trunk/queryutils queryutils')
 
     rerun()
 
