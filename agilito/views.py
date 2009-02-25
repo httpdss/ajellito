@@ -158,6 +158,7 @@ def add_attachment(request, project_id, userstory_id, instance=None):
             print "form invalid: \n", form
     else:
         url = request.GET.get('last_page', story.get_absolute_url())
+        url = '/agilito/redirect.html#' + url
         form = UserStoryAttachmentForm(initial={'http_referer' : url},
                                        instance=instance)
     context = AgilitoContext(request, {'form': form,
@@ -211,6 +212,7 @@ def impediment_create(request, project_id, iteration_id, instance=None):
     else:
 
         url = '/%s/iteration/%s/' % (it.project.id, it.id)
+        url = '/agilito/redirect.html#' + url
         form = ImpedimentForm(iteration=it, initial={'http_referer' : url}, instance=instance)
 
     context = AgilitoContext(request, {'form': form})
@@ -235,6 +237,7 @@ def userstory_create(request, project_id, iteration_id=None, instance=None):
         if not (iteration_id is None):
             fallback_url = Iteration.objects.get(id=iteration_id).get_absolute_url()
         url = request.GET.get('last_page', fallback_url)
+        url = '/agilito/redirect.html#' + url
         form = UserStoryForm(initial={'http_referer' : url},
                              instance=instance,
                              project=Project.objects.get(id=project_id))
@@ -411,6 +414,7 @@ def task_create(request, project_id, userstory_id, instance=None):
             return HttpResponseRedirect(form.cleaned_data['http_referer'])
     else:
         url = request.GET.get('last_page', story.get_absolute_url())
+        url = '/agilito/redirect.html#' + url
         initial = {'http_referer' : url,
                    'actuals': getattr(instance, 'actuals', 0)}
         form = TaskForm(initial=initial, instance=instance,
@@ -472,6 +476,7 @@ def testcase_create(request, project_id, userstory_id, instance=None):
             return HttpResponseRedirect(form.cleaned_data['http_referer'])
     else:
         url = request.GET.get('last_page', story.get_absolute_url())
+        url = '/agilito/redirect.html#' + url
         form = testcase_form_factory(instance=instance,
                                      initial={'http_referer' : url},
                                      project=story.project)
@@ -530,6 +535,7 @@ def testresult_create(request, project_id, userstory_id, testcase_id, instance=N
             instance = TestResult(test_case=testcase, tester=request.user,
                                   date=datetime.datetime.today(), result=0)
         url = request.GET.get('last_page', testcase.get_absolute_url())
+        url = '/agilito/redirect.html#' + url
         form = TestResultForm(initial={'http_referer' : url},
                               instance=instance,
                               project=testcase.user_story.project)

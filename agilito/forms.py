@@ -66,8 +66,6 @@ class ImpedimentForm(HiddenHttpRefererForm):
         else:
             self.fields['state'] = forms.ChoiceField(choices=[('reopen', 'Reopen')], initial='reopen')
 
-        print self.fields['tasks'].widget
-
     def clean_state(self):
         state = self.cleaned_data['state']
         if not state in ('open', 'resolved', 'reopen'):
