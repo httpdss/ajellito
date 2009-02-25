@@ -268,6 +268,7 @@ class Iteration(ClueModel):
     def burndown_data(self):
         burndown = []
         today = datetime.date.today()
+        tomorrow = datetime.date.today() + datetime.timedelta(days=1)
         rr = list(rrule(DAILY, cache=True,
                         dtstart=self.start_date, until=self.end_date,
                         byweekday=(MO,TU,WE,TH,FR)))
@@ -279,6 +280,11 @@ class Iteration(ClueModel):
             if a_date > today:
                 data['remaining'] = None
                 data['remaining_storypoints'] = None
+            elif a_date == today:
+                # you will generally want to see the numbers update
+                # during the day, so act as if it's tomorrow
+                data['remaining'] = self.remaining_hours(tomorrow)
+                data['remaining_storypoints'] = self.remaining_storypoints(tomorrow)
             else:
                 data['remaining'] = self.remaining_hours(a_date)
                 data['remaining_storypoints'] = self.remaining_storypoints(a_date)
@@ -679,12 +685,20 @@ class Task(ClueModel):
         return self.user_story
 
     def save(self, owner=None, summary=None, time_on_task=None):
-        if self.state == Task.STATES.ARCHIVED
+        if self.state == Task.STATES.ARCHIVED:
             self.remaining = 0
 
-        if self.id:
+        if not self.id is None:
             old = Task.objects.get(id=self.id)
             if old.remaining != self.remaining:
+                if time_on_task is None:
+                    if old.remaining is None or self.remaining is None:
+                        time_on_task = 0
+                    else:
+                        time_on_task = old.remaining - self.remaining
+                if time_on_task < 0:
+                    time_on_task = 0
+
                 tasklog = TaskLog()
                 tasklog.task = self
                 tasklog.time_on_task = time_on_task
