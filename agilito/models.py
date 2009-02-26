@@ -149,11 +149,11 @@ class Project(ClueModel):
     def baseline_story(self):
         data = []
         for story in self.userstory_set.exclude(state=UserStory.STATES.ARCHIVED).all():
-            est = story.estimated
-            if not est:
+            hours = story.actuals or story.estimated
+            if not hours:
                 continue
 
-            data.append((story.id, float(est)))
+            data.append((story.id, float(hours)))
 
         avg = sum(d[1] for d in data)/len(data)
 
@@ -164,17 +164,17 @@ class Project(ClueModel):
         if baseline is None:
             baseline = self.baseline_story()
 
-        factor = float(size) / float(baseline.estimated)
+        factor = float(size) / float(baseline.actuals or baseline.estimated)
 
         sizes = [s[0] for s in UserStory.SIZES.choices()]
         
         suggestions = {}
         for story in self.userstory_set.exclude(state=UserStory.STATES.ARCHIVED).all():
-            est = float(story.estimated)
-            if not est:
+            hours = float(story.actuals or story.estimated)
+            if not hours:
                 continue
 
-            suggestions[story.id] = UserStory.SIZES.choices()[self.closest(int(factor * est), sizes)]
+            suggestions[story.id] = UserStory.SIZES.choices()[self.closest(int(factor * hours), sizes)]
 
         return suggestions
 
