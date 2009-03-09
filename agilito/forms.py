@@ -1,12 +1,14 @@
 import types
+import re
 import datetime
 from datetime import date
 from dateutil.relativedelta import relativedelta
 from operator import attrgetter
 from itertools import groupby
 from django import forms
+from django.contrib.auth.models import User
 from agilito.models import UserStory, Task, TestCase, TaskLog, TestResult,\
-    UserProfile, UserStoryAttachment, Impediment
+    UserProfile, UserStoryAttachment, Impediment, Iteration
 
 from agilito.widgets import HierarchicRadioSelect, TaskHierarchy
 from agilito.fields import GroupedChoiceField
@@ -42,6 +44,171 @@ class UserStoryAttachmentForm(HiddenHttpRefererForm):
     class Meta:
         model = UserStoryAttachment
         exclude = ('user_story',)
+
+class IterationImportForm(forms.Form):
+    data = forms.CharField(widget=forms.widgets.Textarea(attrs={'class': 'mceNoEditor'}))
+    new_iteration = forms.BooleanField(label='Create new iteration', required=False)
+    new_stories = forms.BooleanField(label='Create new stories', required=False)
+
+    def __init__(self, project_id, *args, **kwargs):
+        super(IterationImportForm, self).__init__(*args, **kwargs)
+        self.project_id = project_id
+
+    def clean_data(self):
+        sheet = self.cleaned_data['data']
+        rows = []
+        rownum = []
+        for rn, row in enumerate(sheet.split('\n')):
+            r = row.replace('\r', '').split('\t')
+            if not len(filter(lambda x: x != '' and not x is None, r)) == 0:
+                rows.append(r)
+                rownum.append(rn + 1)
+
+        # headers cannot have empty slots
+        rows[0] = filter(lambda x: x, rows[0])
+        iterationheader = rows[0]
+        # validate iteration header
+        for i, s in enumerate(['id', 'name', 'start', 'end']):
+            if rows[0][i].lower() != s:
+                raise forms.ValidationError('unexpected header "%s", expected "%s"' % (rows[0][i], s))
+
+        for i, cell in enumerate(rows[1]):
+            if cell and i >= len(rows[0]):
+                raise forms.ValidationError('Unexpected "%s" in iteration data' % cell)
+
+        if not rows[1][0] and not rows[1][1]:
+            raise forms.ValidationError('You must specify at least an iteration id or name')
+
+        if not rows[1][0] and not rows[1][2] and not rows[1][3]:
+            raise forms.ValidationError('You are creating a new iteration, please specify start and end date')
+
+        if rows[1][0]:
+            try:
+                id = int(rows[1][0])
+            except ValueError:
+                raise forms.ValidationError('unexpected iteration ID "%s" (must be numeric)' % rows[1][0])
+
+            try:
+                iteration = Iteration.objects.get(project__id=self.project_id, id=id)
+            except Iteration.DoesNotExist:
+                raise forms.ValidationError('Iteration %d does not exist' % id)
+        else:
+            try:
+                iteration = Iteration.objects.get(project__id=self.project_id, name=rows[1][1])
+                raise forms.ValidationError('An iteration with the same name exists')
+            except:
+                pass
+
+        for cell in rows[1][2:4]:
+            if cell:
+                if not re.match('[0-9]{4}-[0-9]{1,2}-[0-9]{1,2}$', cell):
+                    raise forms.ValidationError('unexpected date "%s"' % cell)
+
+        # iteration is OK
+        iteration = {}
+        for i, s in enumerate(iterationheader):
+            iteration[s.lower()] = rows[1][i]
+
+        # headers cannot have empty slots
+        rows[2] = filter(lambda x: x, rows[2])
+        sprintheader = rows[2]
+        # validate sprint header
+        for i, s in enumerate(['id', 'story', 'task', 'estimate', 'owner', 'tags']):
+            try:
+                if rows[2][i].lower() != s:
+                    raise forms.ValidationError('unexpected header "%s", expected "%s"' % (rows[2][i], s))
+            except IndexError:
+                if i <= 3:
+                    raise forms.ValidationError('missing header, expected "%s"' % s)
+
+        stories = {}
+        story_order = []
+        for rn, rowdata in enumerate(rows[3:]):
+            rn = 'row %d: ' % rownum[rn + 3]
+            
+            for i, cell in enumerate(rowdata):
+                if cell and i >= len(rows[2]):
+                    raise forms.ValidationError(rn + 'unexpected "%s" in sprint data' % cell)
+
+            row = {}
+            for i, s in enumerate(sprintheader):
+                row[s.lower()] = rowdata[i]
+
+            if not row['id'] and not row['story']:
+                raise forms.ValidationError(rn + 'you must specify at least a story id or name')
+
+            if not row['task']:
+                raise forms.ValidationError(rn + 'you must specify a task name')
+
+            if row['id']:
+                try:
+                    id = int(row['id'])
+                except ValueError:
+                    raise forms.ValidationError(rn + 'unexpected story ID "%s" (must be numeric)' % row['id'])
+
+                try:
+                    story = UserStory.objects.get(id=id)
+                except UserStory.DoesNotExist:
+                    raise forms.ValidationError(rn + 'story %d does not exist' % id)
+                key = id
+
+            else:
+                key = row['story']
+                id = None
+
+            if not stories.has_key(key):
+                story_order.append(key)
+                stories[key] = {'id': id, 'name': row['story'], 'tasks': []}
+
+            if stories[key]['name'] and row['story'] and stories[key]['name'] != row['story']:
+                raise forms.ValidationError(rn + 'conflicting names for same story' % id)
+            
+            if not row['estimate']:
+                raise forms.ValidationError(rn + 'you must specify a task estimate')
+            try:
+                est = float(row['estimate'])
+            except ValueError:
+                raise forms.ValidationError(rn + 'unexpected task estimate "%s" (must be numeric)' % row['estimate'])
+
+            if row.has_key('owner') and row['owner']:
+                username = (row['owner'].split('/')[0]).strip()
+                try:
+                    owner = User.objects.get(username=username)
+                except User.DoesNotExist:
+                    raise forms.ValidationError(rn + 'user %s does not exist' % username)
+                row['owner'] = username
+            else:
+                row['owner'] = None
+
+            if row.has_key('tags') and row['tags']:
+                row['tags'] = [t.strip() for t in row['tags'].split('/')]
+            else:
+                row['tags'] = []
+
+            stories[key]['tasks'].append((row['task'], row['estimate'], row['owner'], row['tags']))
+
+        return (iteration, [stories[key] for key in story_order])
+
+    def clean(self):
+        try:
+            for field in self.fields.keys():
+                self.cleaned_data[field]
+        except KeyError:
+            return self.cleaned_data
+
+        it, stories = self.cleaned_data['data']
+        ni = self.cleaned_data['new_iteration']
+        ns = self.cleaned_data['new_stories']
+
+        if not ni and not it['id']:
+            raise forms.ValidationError('You are creating a new iteration. Please check the appropriate checkbox to confirm.')
+
+        if not ns:
+            for st in stories:
+                if not st['id']:
+                    raise forms.ValidationError('You are creating a new story. Please check the appropriate checkbox to confirm.')
+
+        return self.cleaned_data
 
 class ImpedimentForm(HiddenHttpRefererForm):
     tasks = forms.MultipleChoiceField(widget=TableSelectMultiple(item_attrs=('id', 'name'), grouper=('user_story', 'name')))

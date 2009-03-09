@@ -70,6 +70,8 @@ There are no iterations in this project.
 <a id="create-user-story" class="action-link add-object" 
     href="{% url story_from_iteration project_id=current_project.id,iteration_id=current_iteration.id %}?last_page={{last_page}}">Add User Story</a>
 {% endif %}
+<a id="import-iteration" class="action-link add-object" 
+    href="{% url agilito.views.iteration_import current_project.id %}">Import iteration</a>
 {% endblock %}
 
 {% block content %}

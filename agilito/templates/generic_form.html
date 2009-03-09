@@ -1,4 +1,7 @@
 <table class="formfields">
+    {% if form.non_field_errors  %}
+        {{ form.non_field_errors }}
+    {% endif %}
     {% for field in form %}
         {% if field.is_hidden %}
             {{ field }}

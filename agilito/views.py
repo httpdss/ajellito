@@ -50,7 +50,7 @@ from agilito.models import Project, Iteration, UserStory, Task, TestCase,\
 from agilito.forms import UserStoryForm, UserStoryShortForm, gen_TaskLogForm,\
     TaskForm, TestCaseAddForm, TestCaseEditForm, testcase_form_factory,\
     TestResultForm, UserStoryAttachmentForm, ImpedimentForm, \
-    UserStoryMoveForm
+    UserStoryMoveForm, IterationImportForm
 
 from agilito.tools import restricted
 
@@ -675,6 +675,63 @@ def _iteration_get_burndown_data(it):
         data['y2_max'] = None
 
     return data
+
+@restricted
+def iteration_import(request, project_id):
+    project = Project.objects.get(id=project_id)
+
+    highest_rank = UserStory.objects.exclude(rank=None).order_by('-rank')
+    if highest_rank.count() == 0:
+        rank = 1
+    else:
+        rank = highest_rank[0].rank + 1
+
+    if request.method == 'POST':
+        form = IterationImportForm(project_id, request.POST)
+        if form.is_valid():
+            iteration, stories = form.cleaned_data['data']
+
+            if not iteration['id']:
+                it = Iteration()
+                it.project = project
+                it.start_date = iteration['start']
+                it.end_date = iteration['end']
+                it.name = iteration['name']
+                it.save()
+            else:
+                it = Iteration.objects.get(project=project, id=iteration['id'])
+
+            for story in stories:
+                if story['id']:
+                    st = UserStory.objects.get(project=project, iteration=it, id=story['id'])
+                else:
+                    st = UserStory()
+                    st.project = project
+                    st.iteration = it
+                    st.rank = rank
+                    rank += 1
+                st.name = story['name']
+                st.save()
+
+                for task, estimate, owner, tags in story['tasks']:
+                    t = Task()
+                    t.user_story = st
+                    t.name = task
+                    t.estimate = estimate
+                    t.remaining = estimate
+                    if owner:
+                        t.owner = User.objects.get(username=owner)
+                    if len(tags) != 0:
+                        t.tags = ', '.join('"%s"' % tg.replace('"', "'") for tg in tags)
+                    t.save()
+
+            url = reverse('iteration_status_with_id', args=[project_id, it.id])
+            return HttpResponseRedirect(url)
+    else:
+        form = IterationImportForm(project_id, initial={'data': 'ID\tName\tStart\tEnd\n\nID\tStory\tTask\tEstimate\tOwner\tTags'})
+
+    context = AgilitoContext(request, {'form': form}, current_project=project_id)
+    return render_to_response('iteration_import.html', context_instance=context)
 
 @restricted
 def iteration_status(request, project_id, iteration_id=None, template='iteration_status.html'):
