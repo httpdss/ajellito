@@ -15,6 +15,7 @@
 &y2_max={{ y2_max }}&
 &show_y2=true&
 &y2_lines=3&
+&y2_label_steps={{ y2_max }}&
 &bg_colour=#ffffff&
 &tool_tip=%23key%23+for+%23x_legend%23+%23x_label%23%3A+%23val%23%3Cbr%3EDifference%3A+%23tip%23&
 &tool_tips_set={{ ideal_tips|join:"," }}&

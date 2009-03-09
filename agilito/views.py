@@ -270,7 +270,10 @@ def userstory_move(request, project_id, userstory_id):
                     state = UserStory.STATES.FAILED
 
                 story.copy_to_iteration(data['iteration'], data['copy_tasks'], state, archiver)
-            return render_to_response('close_window.html')
+
+            url = request.GET.get('last_page', story.get_absolute_url())
+            url = '/agilito/redirect.html#' + url
+            return HttpResponseRedirect(url)
     else:
         form = UserStoryMoveForm(instance=instance, project=project)
 
