@@ -764,7 +764,7 @@ def iteration_status(request, project_id, iteration_id=None, template='iteration
         for i in open_impediments:
             stories = {}
             for t in i.tasks.all():
-                if not t.user_story.state in [UserStory.STATES.COMPLETED, UserStory.STATES.ARCHIVED]:
+                if not t.user_story.state in [UserStory.STATES.ACCEPTED, UserStory.STATES.ARCHIVED]:
                     stories[t.user_story.id] = t.user_story.size or 1
             risk = sum(stories.values())
             i.blocked = '%.0f%%' % (float(risk) / total)
@@ -935,7 +935,7 @@ def product_backlog_chart(request, project_id, iteration_id):
 
             # story is completed before the current day; it counts as
             # completed as of now
-            if st.state == UserStory.STATES.COMPLETED and not st.closed is None and st.closed < day:
+            if st.state == UserStory.STATES.ACCEPTED and not st.closed is None and st.closed < day:
                 completed[x] += size
                 continue
 
@@ -982,7 +982,7 @@ def product_backlog_chart(request, project_id, iteration_id):
         t.set_rotation(45)
         t.set_horizontalalignment('right')
         t.set_fontsize(6)
-    matplotlib.pyplot.legend( (p1[0], p2[0]), ('Open', 'Completed'), 'best' )
+    matplotlib.pyplot.legend( (p1[0], p2[0]), ('Open', 'Accepted'), 'best' )
     matplotlib.pyplot.grid(color='#999999')
 
     matplotlib.pyplot.axhline(linewidth=2, color='k', zorder=-1)
