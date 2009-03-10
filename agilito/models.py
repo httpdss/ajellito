@@ -518,7 +518,6 @@ class UserStory(ClueModel):
         self.iteration=iteration
         self.state = UserStory.STATES.DEFINED
         self.created = datetime.datetime.now()
-        self.closed = None
         self.save()
 
         if copy_tasks:
@@ -543,7 +542,6 @@ class UserStory(ClueModel):
             task.archive(archiver)
 
         self.state = UserStory.STATES.ARCHIVED
-        self.closed = datetime.date.today()
         self.save()
 
     def get_container_model(self):
@@ -581,6 +579,11 @@ class UserStory(ClueModel):
             cursor.execute("""
                 update agilito_userstory set rank = rank + 1 where project_id=%s and not rank is null and rank >= %s
                 """, (self.project_id, self.rank))
+
+        if self.state in [UserStory.STATES.ARCHIVED, UserStory.STATES.ACCEPTED, UserStory.STATES.FAILED]:
+            self.closed = datetime.date.today()
+        else:
+            self.closed = None
 
         super(UserStory, self).save()
 
