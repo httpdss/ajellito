@@ -823,6 +823,7 @@ def iteration_status(request, project_id, iteration_id=None, template='iteration
                           'burndown_chart_small_url': burndown_chart_small_url,
                           'open_impediments': open_impediments,
                           'resolved_impediments': resolved_impediments,
+                          'flash': getattr(settings, 'ITERATION_STATUS_FLASH_CHART', True),
                           }
     else:
         inner_context = {}

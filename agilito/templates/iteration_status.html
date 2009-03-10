@@ -127,6 +127,7 @@ There are no iterations in this project.
 </div>
 
 
+{% if flash %}
 <object align="right" classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000" codebase="http://fpdownload.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=8,0,0,0" 
 width="320" height="240" id="ie_chart" align="middle">
 <param name="allowScriptAccess" value="sameDomain" />
@@ -170,6 +171,9 @@ else {
 }
 </SCRIPT>
 </object>
+{% else %}
+   <IMG SRC="{{ burndown_chart_small_url }}" style="float: right; align=right;" ALT="Burndown" />
+{% endif %}
 
 <div id="us-resume">
     <span>Start date: 
