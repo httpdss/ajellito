@@ -672,7 +672,7 @@ def _iteration_get_burndown_data(it):
     if len(data['remaining_storypoints']) > 0:
         data['y2_max'] = max(data['remaining_storypoints'])
     else:
-        data['y2_max'] = None
+        data['y2_max'] = 0
 
     return data
 
