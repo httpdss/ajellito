@@ -28,80 +28,43 @@ def rerun(msg = None):
     print 'Please re-run the installer'
     sys.exit()
 
-try:
-    import django
-    print 'django is present'
-except ImportError:
-    print 'You need to have django installed'
-    print 'django is available at http://www.djangoproject.com/'
-    rerun()
+required_apps = ['django.contrib.admin', 'django.contrib.humanize', 'django.contrib.markup', 'accounts' ]
+def verify(name, url=None, svn=False):
+    global required_apps
 
-try:
-    import agilito
-    print 'Agilito is present'
-except ImportError:
-    print 'You need to have agilito installed'
-    print 'Agilito is available at http://agilito.googlecode.com/'
-    reply = None
-    while not reply in ['y', 'n']:
-        reply = raw_input('Do you want me to install it into your project (y/n)?')
-        reply = reply.lower()[:1]
-    if reply == 'y':
-        os.system('svn checkout https://agilito.googlecode.com/svn/trunk/agilito agilito')
+    if svn:
+        required_apps.append(name)
+    try:
+        __import__(name)
+        print '%s is present' % name
+    except ImportError, e:
+        if str(e).find('DJANGO_SETTINGS_MODULE') >= 0:
+            return
 
-    rerun()
+        print 'You need to have %s installed' % name
+        if url:
+            print '%s is available at %s' % (name, url)
+        if url and svn:
+            reply = None
+            while not reply in ['y', 'n']:
+                reply = raw_input('Do you want me to retrieve %s and install it into your project? ' % name)
+                reply = reply.lower()[:1]
+            if reply == 'y':
+                os.system('svn checkout %s %s' % (url, name))
+
+        rerun()
+
+verify('django', 'http://www.djangoproject.com/')
+verify('pyExcelerator', 'http://sourceforge.net/projects/pyexcelerator')
+verify('matplotlib', 'http://matplotlib.sourceforge.net/')
+verify('agilito', 'https://agilito.googlecode.com/svn/trunk/agilito', True)
 
 if fresh:
     print 'Installing default url redirector'
     shutil.copyfile('agilito/install/urls.py', 'urls.py')
     
-try:
-    import pyExcelerator
-    print 'pyExcelerator is present'
-except ImportError:
-    print 'You need to have pyExcelerator installed'
-    print 'pyExcelerator is available at http://sourceforge.net/projects/pyexcelerator'
-    rerun()
-
-try:
-    import queryutils
-    print 'queryutils is present'
-except ImportError:
-    print 'You need to have queryutils installed'
-    print 'queryutils is available at http://trac.ifpeople.net/products/browser/queryutils'
-    reply = None
-    while not reply in ['y', 'n']:
-        reply = raw_input('Do you want me to install it into your project (y/n)?')
-        reply = reply.lower()[:1]
-    if reply == 'y':
-        os.system('svn checkout https://agilito.googlecode.com/svn/trunk/queryutils queryutils')
-
-    rerun()
-
-try:
-    import matplotlib
-    print 'matplotlib is present'
-except ImportError:
-    print 'You need to have matplotlib installed'
-    print 'matplotlib is available at http://matplotlib.sourceforge.net/'
-    rerun()
-
-
-try:
-    import tagging
-    print 'tagging is present'
-except ImportError, e:
-    if str(e).find('DJANGO_SETTINGS_MODULE') < 0:
-        print 'You need to have django-tagging installed'
-        print 'Django-tagging is available at http://django-tagging.googlecode.com/'
-        reply = None
-        while not reply in ['y', 'n']:
-            reply = raw_input('Do you want me to install it into your project (y/n)?')
-            reply = reply.lower()[:1]
-        if reply == 'y':
-            os.system('svn checkout http://django-tagging.googlecode.com/svn/trunk/tagging tagging')
-
-        rerun()
+verify('queryutils', 'https://agilito.googlecode.com/svn/trunk/queryutils', True)
+verify('tagging', 'http://django-tagging.googlecode.com/svn/trunk/tagging', True)
 
 try:
     import accounts
@@ -123,8 +86,6 @@ except ImportError:
     rerun()
 
 import settings
-required_apps = [   'django.contrib.admin', 'django.contrib.humanize', 'django.contrib.markup',
-                    'agilito', 'queryutils', 'accounts', 'tagging']
 
 apps_installed = True
 for app in required_apps:
