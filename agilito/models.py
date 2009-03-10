@@ -155,6 +155,9 @@ class Project(ClueModel):
 
             data.append((story.id, float(hours)))
 
+        if len(data) == 0:
+            return None
+
         avg = sum(d[1] for d in data)/len(data)
 
         baseline = self.closest(avg, [d[1] for d in data])
@@ -163,6 +166,9 @@ class Project(ClueModel):
     def suggest_sizes(self, baseline=None, size=5): # UserStory.SIZES.M): but needs forward declaration
         if baseline is None:
             baseline = self.baseline_story()
+
+        if baseline is None:
+            return {}
 
         factor = float(size) / float(baseline.actuals or baseline.estimated)
 
