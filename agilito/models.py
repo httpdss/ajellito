@@ -694,7 +694,7 @@ class Task(ClueModel):
     def get_container_model(self):
         return self.user_story
 
-    def save(self, tasklog=None)
+    def save(self, tasklog=None):
         if self.state == Task.STATES.ARCHIVED:
             self.remaining = 0
 
