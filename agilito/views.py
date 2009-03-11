@@ -1305,8 +1305,7 @@ def timelog(request, cmd, instance=None):
             if tasklog.id is None:
                 # creating
                 tasklog.owner = request.user
-                tasklog.iteration = tasklog.task.user_story.iteration
-                tasklog.old_remaining = tasklog.task.remaining
+
             state = int(form.cleaned_data['state'])
             if state == Task.STATES.DEFINED:
                 state = Task.STATES.IN_PROGRESS
@@ -1315,9 +1314,8 @@ def timelog(request, cmd, instance=None):
             else:
                 tasklog.task.remaining = form.cleaned_data['remaining']
             tasklog.task.state = state
-            tasklog.task.save()
+            tasklog.task.save(tasklog=tasklog)
 
-            tasklog.save()
             story = tasklog.task.user_story
             if not story.task_set.exclude(state=Task.STATES.COMPLETED).count():
                 # all the storie's tasks are Complete

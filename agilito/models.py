@@ -694,28 +694,28 @@ class Task(ClueModel):
     def get_container_model(self):
         return self.user_story
 
-    def save(self, owner=None, summary=None, time_on_task=None):
+    def save(self, tasklog=None)
         if self.state == Task.STATES.ARCHIVED:
             self.remaining = 0
 
         if not self.id is None:
             old = Task.objects.get(id=self.id)
-            if old.remaining != self.remaining:
-                if time_on_task is None:
-                    if old.remaining is None or self.remaining is None:
-                        time_on_task = 0
-                    else:
-                        time_on_task = old.remaining - self.remaining
-                if time_on_task < 0:
-                    time_on_task = 0
+            if (old.remaining != self.remaining) or tasklog:
+                if tasklog is None:
+                    tasklog = TaskLog()
 
-                tasklog = TaskLog()
+                if tasklog.time_on_task is None:
+                    if old.remaining is None or self.remaining is None:
+                        tasklog.time_on_task = 0
+                    else:
+                        tasklog.time_on_task = old.remaining - self.remaining
+                if tasklog.time_on_task < 0:
+                    tasklog.time_on_task = 0
+
                 tasklog.task = self
-                tasklog.time_on_task = time_on_task
-                tasklog.summary = summary
-                tasklog.date = datetime.datetime.now()
+                tasklog.summary = (tasklog.summary or 'update')
+                tasklog.date = (tasklog.date or datetime.datetime.now())
                 tasklog.iteration = self.user_story.iteration
-                tasklog.owner = owner
                 tasklog.old_remaining = old.remaining
                 tasklog.save()
 
