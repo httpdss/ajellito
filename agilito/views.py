@@ -401,7 +401,7 @@ def task_create(request, project_id, userstory_id, instance=None):
                     task.remaining = 0  # maybe you want to set the task complete
                                         # but not log hours.
 
-            task.save(request.user, 'task updated')
+            task.save(user=request.user)
 
             # this code has changed compared to what is in the timelog
             story = task.user_story
