@@ -11,7 +11,6 @@
 
 
 {% block main_nav %}
-<ul id="main_nav">
 {% if object.iteration %}
     <li><a href="{% url agilito.views.backlog current_project.id %}">Backlog</a></li>
     {% if current_project.iteration_set.all %}
@@ -30,8 +29,6 @@
     {% if current_project.iteration_set.all %}
     <li><a href="{% url agilito.views.iteration_hours current_project.id%}">Hours</a></li>
     {% endif %}
-    <div class="visualClear"></div>
-</ul>
 {% endblock %}
 
 
@@ -82,10 +79,8 @@ Planned :
 </p>
 </div>
 
-<div id="description" class="description">{{object.description|safe}}</div>
 <!--Object's attachments-->
-
-
+<div id="attachments">
 <h4>Attachments :</h4>
 <a class="action-link add-object" href="attachment/add/?last_page={{last_page}}">add an attachment</a>
 
@@ -94,23 +89,20 @@ Planned :
 <thead>
     <tr>
         <th>Name</th>
-        <th>Description</th>
     </tr>
 </thead>
 <tbody>
 {% for attach in object.userstoryattachment_set.all %}
     <tr class="{% cycle even,odd %}">
-        <td class=""> 
-            <a href="{{attach.attachment.url}}"> 
+        <td>
+            <a id="att_name" href="{{attach.attachment.url}}"> 
                 {{attach.name}}
             </a>
         </td>
         <td class="">
-            {{attach.description|safe}}
-        </td>
-        <td class="">
             <a id="att_dwld" href="{{attach.attachment.url}}"> 
-                <img src="/agilito/down.png" alt="download this file" />
+                <img src="/resources/save.png" alt="download this file" />
+
             </a>
         </td>
         <td class="">
@@ -125,8 +117,10 @@ Planned :
 {% else%}
 <p>No attachments for this user story</p>
 {% endif %}
+</div>
+<div id="description" class="description">{{object.description|safe}}</div>
 
-
+<br class="visualClear"/>
 <!-- Related items -->
 
 <h3>Related to US{{ object.id }}</h3>

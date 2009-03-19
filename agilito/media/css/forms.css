@@ -65,6 +65,11 @@ font-size:80%;
 
 }
 
+
+/*Time log styles*/
+
+
+
 td {
     vertical-align: top;
     text-align: left 
@@ -138,6 +143,16 @@ padding:0;
 float:none;
 display:block;
 text-align:left;
+}
+
+/* login styles */
+
+#login-form{
+margin:15% auto;
+width:30em;
+background:#FFF;
+padding:0.5em 1em;
+border-top:2px solid #900;
 }
 /* #content input[type=submit] { outline: 1px solid red } */
 

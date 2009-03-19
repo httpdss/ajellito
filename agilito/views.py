@@ -354,7 +354,7 @@ def backlog(request, project_id):
     context = AgilitoContext(request, { 'full_backlog' : full_backlog, 'user_stories' : user_stories, 'size':size }, 
                             current_project=project_id)
 
-    return render_to_response('product_backlog.html', context_instance=context)
+    return render_to_response('backlog.html', context_instance=context)
 
 
 
@@ -791,6 +791,7 @@ def iteration_status(request, project_id, iteration_id=None, template='iteration
         gc_url = data['google_chart']
         data_url = reverse('agilito.views.iteration_burndown_data',
                            args=[project_id, latest_iteration.id])
+
         cards_url = reverse('agilito.views.iteration_cards',
                            args=[project_id, latest_iteration.id])
         status_table_url = reverse('agilito.views.iteration_status_table',

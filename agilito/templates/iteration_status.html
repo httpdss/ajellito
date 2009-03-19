@@ -52,17 +52,14 @@ There are no iterations in this project.
 {% endblock %}
 
 {% block main_nav %}
-<ul id="main_nav">
     <li><a href="{% url agilito.views.backlog current_project.id %}">Backlog</a></li>
     {% if current_project.iteration_set.all %}
-    <li class="selected"><a href="{% url agilito.views.iteration_status current_project.id %}">Iteration</a></li>
+    <li class="selected"><a href="{% url agilito.views.iteration_status current_project.id %}">Iteration </a></li>
     {% endif %}
     <li><a href="{% url agilito.views.timelog "" %}">Log</a></li>
     {% if current_project.iteration_set.all %}
     <li><a href="{% url agilito.views.iteration_hours current_project.id%}">Hours</a></li>
     {% endif %}
-    <div class="visualClear"></div>
-</ul>
 {% endblock %}
 
 {% block actions%}
@@ -257,6 +254,7 @@ else {
                 {{us.test_failed|default_if_none:"-"}}
             {%endif%}
         </td>
+
         <td id="add_task_us_{{us.id}}" class="">
             {% if not us.is_archived %}
                 <a href="{% url agilito.views.task_create current_project.id,us.id %}?last_page={{last_page}}"><img src="/agilito/add_.png" alt="add task" title="add task" width="16" height="16" /></a>

@@ -63,33 +63,54 @@ margin: 0.25em;
 text-align:center;
 }
 #head {
+position:relative;
 background:#FFF;
 padding:0px;
 border-bottom:2px solid #EBEBEB;
 }
 #head h1{
-margin:0;
-padding:5px;
-margin:10px 0;
-width:15em;
-float:left;
 }
-#head h1 span{
-display:none;
+#project-selection{
+position:relative;
+}
+#project-selection h1{
+margin:0;
+padding:0.5em;
+font-size:120%;
+border-bottom:1px solid #EBEBEB;
+}
+#project-selection .selected{
+margin-left:0.5em;
+border-left:1px solid #EEE;
+padding:0 0.5em;
+}
+#project-list{
+position:absolute;
+background:#FFF;
+margin:0;
+padding:0.5em;
+list-style:none;
+border-width:medium 1px 1px medium ;
+border-color:transparent #EBEBEB #EBEBEB transparent;
+border-style: none solid solid none;
+z-index:5000;
+width:15em;
 }
 #head #actions{
-background:#EBEBEB;
-padding:5px 20px;
+background:#FFE;
+padding: 0 0.5em;
 clear:both;
 }
-
+#head #actions a{
+line-height:2;
+}
 
 #main_nav {
-border: 1px solid #999;
-border-bottom:8px solid #063;
+border-bottom:2px solid #900;
 list-style:none;
 padding:0px;
 margin:0;
+background:#FFE;
 clear:both;
 }
 #main_nav li{
@@ -98,30 +119,35 @@ margin:0;
 }
 #main_nav li a{
 display:block;
-padding:5px 15px;
-border-right:1px solid #999;
+padding:0.25em 1em;
+border-right:1px solid #EBEBEB;
 color:#000;
 text-decoration:none;
 }
 #main_nav li a:hover{
-text-decoration:underline;
-background:#9e9
+text-decoration:none;
+background:#F9EFEF;
 }
 #main_nav li.selected a{
-background:#063;
+background:#900;
 color:#FFF;
 
 }
 
 #session {
-float:right;
+position:absolute;
+top:0;
+right:0;
 list-style:none;
-clear:right;
-margin:5px 15px;
+padding:0;
+z-index:4000;
+margin:0;
+text-align:right;
+border-bottom:1px solid #5BB26B;
 
 }
-#session li {
-float:left;
+#session span, #session strong {
+
 margin:0 5px;
 padding:0.25em;
 font-size:80%;
@@ -129,9 +155,7 @@ font-size:80%;
 #session #project-selection{
 padding:0;
 }
-#session select{
-width:10em;
-}
+
 #iteration-selection{
 width:auto;
 border:none;
@@ -143,10 +167,12 @@ font-size:80%;
 font-weight:normal;
 }
 #searchbox{
-float:right;
-margin:10px 15px;
+float:right !important;
+margin:2px !important;
 }
-
+#searchbox form{
+margin:0;
+}
 #searchbox #searchfilter{
 font-size:80%;
 width:auto;
@@ -161,7 +187,24 @@ width:8em;
 margin:0 auto;
 padding:0 0.5em;
 }
+#attachments{
+float:right;
+background:#FFE;
+padding:0.5em;
+}
+#attachments h4{
+margin-top:0;
+}
+#attachments td, #attachments p {
+font-size:smaller;
+margin:0.25em;
+}
+#att_name{
+background:url(/resources/attach.png) no-repeat;
+background-position:center left;
+padding-left:24px;
 
+}
 /* User story list styles*/
 
 #us-heading{}
@@ -271,7 +314,7 @@ padding:5px;
 clear:both;
 margin-top:50px;
 padding:5px;
-border-top:2px solid #063;
+border-top:2px solid #900;
 text-align:center;
 background:#EBEBEB;
 }
@@ -318,7 +361,7 @@ padding-bottom:0.25em;
 
 /*User story details styles and layout*/
 #us-head {
-border-bottom:1px solid #999;
+border-bottom:1px solid #5BB26B;
 clear:both;
 }
 #us-head.blocked{
@@ -349,9 +392,15 @@ a.action-link { padding-left: 20px;
                 background: no-repeat center left;
                 font-size: smaller;
 }
+<<<<<<< .mine
+a.action-link.edit { background-image: url("/resources/pencil.png") }
+a.action-link.delete { background-image: url("/resources/delete.png") }
+a.action-link.add-task { background-image: url("/resources/add.png") }
+=======
 a.action-link.edit { background-image: url("/agilito/pencil.png") }
 a.action-link.delete { background-image: url("/agilito/delete.png") }
 a.action-link.add-object { background-image: url("/agilito/add_.png") }
+>>>>>>> .r181
 
 /* Iteration Hours styles */
 .hours-resume {
