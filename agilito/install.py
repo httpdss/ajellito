@@ -22,6 +22,7 @@ if not os.path.exists(os.path.join(installdir, 'manage.py')):
 sys.path.append(installdir)
 os.chdir(installdir)
 
+complete = True
 def rerun(msg = None):
     print
     if msg: print msg
@@ -30,13 +31,14 @@ def rerun(msg = None):
 
 required_apps = ['django.contrib.admin', 'django.contrib.humanize', 'django.contrib.markup', 'accounts' ]
 def verify(name, url=None, svn=False):
-    global required_apps
+    global required_apps, complete
 
     if svn:
         required_apps.append(name)
     try:
         __import__(name)
         print '%s is present' % name
+        return True
     except ImportError, e:
         if str(e).find('DJANGO_SETTINGS_MODULE') >= 0:
             return
@@ -52,9 +54,12 @@ def verify(name, url=None, svn=False):
             if reply == 'y':
                 os.system('svn checkout %s %s' % (url, name))
 
-        rerun()
+        complete = False
+        return False
 
-verify('django', 'http://www.djangoproject.com/')
+if not verify('django', 'http://www.djangoproject.com/'):
+    rerun()
+
 verify('pyExcelerator', 'http://sourceforge.net/projects/pyexcelerator')
 verify('matplotlib', 'http://matplotlib.sourceforge.net/')
 verify('agilito', 'https://agilito.googlecode.com/svn/trunk/agilito', True)
@@ -83,7 +88,7 @@ except ImportError:
         shutil.copyfile('agilito/install/accounts/login.html', 'accounts/templates/login.html')
         shutil.copyfile('agilito/install/accounts/logout.html', 'accounts/templates/logout.html')
 
-    rerun()
+    complete = False
 
 import settings
 
@@ -93,7 +98,7 @@ for app in required_apps:
         apps_installed = False
         print "Please add '%(app)s' to your INSTALLED_APPS in your settings.py" % locals()
 if not apps_installed:
-    rerun()
+    complete = False
 
 if not 'CARD_INFO' in dir(settings):
     print """Please add the following to %(installdir)s/settings.py:
@@ -103,11 +108,14 @@ CARD_INFO = {
     'template': '%(installdir)s/agilito/templates/template.odt'
 }
 """ % locals()
-    rerun()
+    complete = False
 
 if not 'LOGIN_REDIRECT_URL' in dir(settings) or settings.LOGIN_REDIRECT_URL != '/':
     print 'Please set LOGIN_REDIRECT_URL to "/" in %(installdir)s/settings.py' % locals()
-    rerun()
+    complete = False
 
-print
-print "You should be good to go. Edit your settings.py a and run 'python manage.py syncdb'"
+if complete:
+    print
+    print "You should be good to go. Edit your settings.py a and run 'python manage.py syncdb'"
+else:
+    rerun()
