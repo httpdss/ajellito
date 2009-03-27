@@ -4,7 +4,13 @@ import datetime
 import ODTLabels
 import types
 import settings
-import pyExcelerator
+
+try:
+    import pyExcelerator
+    EXCEL_ENABLED = True
+except ImportError:
+    EXCEL_ENABLED = False
+
 import decimal
 
 from django.core.xheaders import populate_xheaders
@@ -14,9 +20,13 @@ import cStringIO
 import formatter
 import htmllib
 
-import matplotlib
-matplotlib.use('Agg')
-import matplotlib.pyplot
+try:
+    import matplotlib
+    matplotlib.use('Agg')
+    import matplotlib.pyplot
+    MATPLOTLIB_ENABLED = False
+except ImportError:
+    MATPLOTLIB_ENABLED = False
 
 from dateutil.rrule import rrule, WEEKLY, DAILY, MO, TU, WE, TH, FR
 
@@ -337,6 +347,8 @@ def userstory_delete(request, project_id, userstory_id):
 def backlog(request, project_id):
     """
     """
+    global EXCEL_ENABLED
+
     project = Project.objects.get(id=project_id)
     user_stories = project.backlog()
 
@@ -349,15 +361,20 @@ def backlog(request, project_id):
             us.suggested_size = None
 
     size = sum(i.size for i in user_stories if i.size)
-    full_backlog = reverse('agilito.views.product_backlog', args=[project_id])
+
+    if EXCEL_ENABLED:
+        full_backlog = reverse('agilito.views.product_backlog', args=[project_id])
+    else:
+        full_backlog = None
 
     context = AgilitoContext(request, { 'full_backlog' : full_backlog, 'user_stories' : user_stories, 'size':size }, 
                             current_project=project_id)
 
-    return render_to_response('backlog.html', context_instance=context)
-
-
-
+    if MATPLOTLIB_ENABLED:
+        inner_context = {'product_backlog_chart': reverse('agilito.views.product_backlog_chart', args=[project_id, ""])}
+    else:
+        inner_context = {'product_backlog_chart': None}
+    return render_to_response('product_backlog.html', inner_context, context_instance=context)
 
 @restricted
 def userstory_detail(request, project_id, userstory_id):
@@ -794,12 +811,24 @@ def iteration_status(request, project_id, iteration_id=None, template='iteration
 
         cards_url = reverse('agilito.views.iteration_cards',
                            args=[project_id, latest_iteration.id])
-        status_table_url = reverse('agilito.views.iteration_status_table',
-                           args=[project_id, latest_iteration.id])
-        burndown_chart_url = reverse('agilito.views.iteration_burndown_chart',
-                           args=[project_id, latest_iteration.id, 'large'])
-        burndown_chart_small_url = reverse('agilito.views.iteration_burndown_chart',
-                           args=[project_id, latest_iteration.id, 'small'])
+
+        if EXCEL_ENABLED:
+            status_table_url = reverse('agilito.views.iteration_status_table',
+                                        args=[project_id, latest_iteration.id])
+        else:
+            status_table_url = None
+
+        if MATPLOTLIB_ENABLED:
+            burndown_chart_url = reverse('agilito.views.iteration_burndown_chart',
+                            args=[project_id, latest_iteration.id, 'large'])
+            burndown_chart_small_url = reverse('agilito.views.iteration_burndown_chart',
+                            args=[project_id, latest_iteration.id, 'small'])
+            pbc = reverse('agilito.views.product_backlog_chart', args=[project_id, latest_iteration.id])
+        else:
+            burndown_chart_url = None
+            burndown_chart_small_url = None
+            pbc = None
+
         port = request.META['SERVER_PORT']
         if not port:
             port = '80'
@@ -825,6 +854,7 @@ def iteration_status(request, project_id, iteration_id=None, template='iteration
                           'open_impediments': open_impediments,
                           'resolved_impediments': resolved_impediments,
                           'flash': getattr(settings, 'ITERATION_STATUS_FLASH_CHART', True),
+                          'product_backlog_chart': pbc,
                           }
     else:
         inner_context = {}

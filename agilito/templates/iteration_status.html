@@ -163,13 +163,17 @@ else if (window.ActiveXObject) {
 if (flash_installed) {
    document.write('<embed align="right" src="/agilito/open-flash-chart.swf?data={{ data_url }}" quality="high" bgcolor="#FFFFFF" width="320" height="240" name="chart" align="middle" allowScriptAccess="sameDomain" type="application/x-shockwave-flash" pluginspage="http://www.macromedia.com/go/getflashplayer" id="chart"/>');
 }
+{% if burndown_chart_small_url %}
 else {
    document.write('<IMG SRC="{{ burndown_chart_small_url }}" style="align=right;" ALT="Burndown">');
 }
+{% endif %}
 </SCRIPT>
 </object>
 {% else %}
-   <IMG SRC="{{ burndown_chart_small_url }}" style="float: right; align=right;" ALT="Burndown" />
+    {% if burndown_chart_small_url %}
+        <IMG SRC="{{ burndown_chart_small_url }}" style="float: right; align=right;" ALT="Burndown" />
+    {% endif %}
 {% endif %}
 
 <div id="us-resume">
@@ -387,9 +391,18 @@ else {
 <h3>Downloads</h3>
 <ul>
 <li><a href="{{ cards_url }}">task cards</a></li>
-<li><a href="{{ status_table_url }}">task status</a></li>
+
+{% if status_table_url %}
+    <li><a href="{{ status_table_url }}">task status</a></li>
+{% endif %}
+
+{%if burndown_chart_url %}
 <li><a target="_burndown" href="{{ burndown_chart_url }}">Burndown chart</a></li>
-<li><a target="_chart" href="{% url agilito.views.product_backlog_chart current_project.id,current_iteration.id %}">Backlog evolution since start of iteration</a></li>
+{% endif %}
+
+{% if product_backlog_chart %}
+<li><a target="_chart" href="{{ product_backlog_chart }}">Backlog evolution since start of iteration</a></li>
+{% endif %}
 <li><a onclick="popup(this, 'taskboard'); return false" href="{% url agilito.views.taskboard current_project.id,current_iteration.id %}">Task board</a></li>
 </ul>
 

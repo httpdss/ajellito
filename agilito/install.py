@@ -30,7 +30,7 @@ def rerun(msg = None):
     sys.exit()
 
 required_apps = ['django.contrib.admin', 'django.contrib.humanize', 'django.contrib.markup', 'accounts' ]
-def verify(name, url=None, svn=False):
+def verify(name, url=None, svn=False, optional=False):
     global required_apps, complete
 
     if svn:
@@ -43,7 +43,11 @@ def verify(name, url=None, svn=False):
         if str(e).find('DJANGO_SETTINGS_MODULE') >= 0:
             return
 
-        print 'You need to have %s installed' % name
+        if optional:
+            print 'If you install %s you will get additional features in Agilito' % name
+        else:
+            print 'You need to have %s installed' % name
+
         if url:
             print '%s is available at %s' % (name, url)
         if url and svn:
@@ -54,14 +58,14 @@ def verify(name, url=None, svn=False):
             if reply == 'y':
                 os.system('svn checkout %s %s' % (url, name))
 
-        complete = False
+        complete = complete and optional
         return False
 
 if not verify('django', 'http://www.djangoproject.com/'):
     rerun()
 
-verify('pyExcelerator', 'http://sourceforge.net/projects/pyexcelerator')
-verify('matplotlib', 'http://matplotlib.sourceforge.net/')
+verify('pyExcelerator', 'http://sourceforge.net/projects/pyexcelerator', optional=True)
+verify('matplotlib', 'http://matplotlib.sourceforge.net/', optional=True)
 verify('agilito', 'https://agilito.googlecode.com/svn/trunk/agilito', True)
 
 if fresh:
