@@ -50,7 +50,7 @@ $(window).ready(function(){
     {% if current_project.iteration_set.all %}
     <li><a href="{% url agilito.views.iteration_status current_project.id %}">Iteration</a></li>
     {% endif %}
-    <li class="selected"><a href="{% url agilito.views.timelog "" %}">Log</a></li>
+    <li class="selected"><a href="{% url agilito.views.timelog %}">Log</a></li>
     {% if current_project.iteration_set.all %}
     <li><a href="{% url agilito.views.iteration_hours current_project.id%}">Hours</a></li>
     {% endif %}

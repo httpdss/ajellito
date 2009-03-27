@@ -1293,11 +1293,16 @@ def _parseTimelogCmd(spec):
     return (None, (key, id))
 
 @login_required
-def timelog(request, cmd, instance=None):
+def timelog(request, task_id=None, instance=None):
 
-    message, cmd = _parseTimelogCmd(cmd)
+    message = None
+    if not task_id is None:
+        try:
+            task_id = int(task_id)
+        except ValueError:
+            message = 'Invalid task ID'
 
-    TaskLogForm = gen_TaskLogForm(request.user, cmd)
+    TaskLogForm = gen_TaskLogForm(request.user)
 
     if message is None and request.method == 'POST':
         form = TaskLogForm(request.POST, instance=instance)
@@ -1329,13 +1334,16 @@ def timelog(request, cmd, instance=None):
     else:
         form = TaskLogForm(instance=instance)
 
-    if cmd is None or cmd[0] != 'task':
-        selectedTask = ''
+    if task_id is None:
+        selectedTask = 'current_project=project_id'
+        project_id = None
     else:
-        selectedTask = str(cmd[1])
+        project_id = Task.objects.get(id=task_id).user_story.project.id
+        selectedTask = str(task_id)
     context = AgilitoContext(request, {'form': form,
                                       'message': message,
-                                      'selectedTask': selectedTask})
+                                      'selectedTask': selectedTask},
+                                    current_project=project_id)
     
     return render_to_response('timelog.html', context_instance=context)
 

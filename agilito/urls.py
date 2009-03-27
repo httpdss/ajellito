@@ -59,7 +59,8 @@ urlpatterns = patterns('agilito.views',
     (r'^(?P<project_id>\d+)/search/', 'search'),
     (r'^json/task/[ra]?(?P<task_id>\d+)/$', 'task_json'),
 
-    (r'^log/(?P<cmd>.*)$', 'timelog'), # XXX fixme: should take a project_id
+    (r'^log/$', 'timelog'), # XXX fixme: should take a project_id
+    (r'^log/task/(?P<task_id>.*)$', 'timelog'), # XXX fixme: should take a project_id
     (r'^close/$', 'close_window'), # XXX fixme: should take a project_id
 
     url(r'^csv/', 'csv_log_all_projects', name='timelogs_for_all_projects'),
