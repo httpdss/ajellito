@@ -1292,9 +1292,8 @@ def _parseTimelogCmd(spec):
 
     return (None, (key, id))
 
-@login_required
-def timelog(request, task_id=None, instance=None):
-
+@restricted
+def timelog(request, project_id, task_id=None, instance=None):
     message = None
     if not task_id is None:
         try:
@@ -1346,6 +1345,10 @@ def timelog(request, task_id=None, instance=None):
                                     current_project=project_id)
     
     return render_to_response('timelog.html', context_instance=context)
+
+@restricted
+def timelog_task(request, project_id, task_id):
+    return timelog(request, project_id, task_id)
 
 def dec2str(dec):
     if dec is None:
