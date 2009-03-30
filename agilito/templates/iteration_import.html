@@ -1,0 +1,15 @@
+{% extends "master.html" %}
+
+{% block title %}Import iteration into {{ project }}{% endblock %}
+{% block content %}
+
+<h2><small>Import iteration into</small><br /> {{ project }}</h2>
+{% if form.is_multipart %}
+    <form enctype="multipart/form-data" method="post">
+{% else %}
+    <form method="post">
+{% endif %}
+{% include "generic_form.html" %}
+<input type="submit" class="save" value="Save"/>
+</form>
+{% endblock %}
