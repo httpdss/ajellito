@@ -37,9 +37,9 @@
     <script type="text/javascript" src="/agilito/treeTable/src/javascripts/jquery.treeTable.js"></script>
     <script type="text/javascript">
     $(document).ready(function(){
-        $("#project-list").toggle()
-        $("#project-selection .selected").click(function(){
-            $("#project-list").toggle()
+        target = "/"
+        $("#project-selection select").change(function(){
+            window.location= target+$(this).find(":selected").attr("value")+"/backlog"
         })    
         $("#iteration-selection").change(function(){
             window.location= $(this).find(":selected").attr("value")
@@ -52,27 +52,23 @@
 </head>
 
 <body>
-{% block page %}
 <div id="wrapper">
-
     <!-- div id="notice"><p>Beware of the warecode!, this is app is in active development.</p></div -->
     <div id="head">
-        <div id="session">
 
-            {% if not user.is_anonymous %}
-                <strong>{{user}}</strong>
-                <span><a href="/accounts/changepassword">Change password</a></span>
-                {% if perms.agilito.is_staff %}
-                <span><a href="/admin/"> Administration </a></span>
-                {% endif %}
-                <span><a href="/accounts/logout/">Sign out</a></span>
-            {% endif %}
-            {% if user.is_anonymous %}
-                <span><a href="/accounts/login/">Log in</a></span>
-            {% endif %}
+        {% if current_project %}
 
-        </div>
+        <form action="{% url agilito.views.search current_project.id %}" id="searchbox" method="GET">
+            <input size="20" type="text" name="query" value="{{ query|escape }}"/>
+            <select name="model">
+                <option value="User Story">User Stories</option>
+                <option value="Task">Tasks</option>
+                <option value="Test Case">Test Cases</option>
+            </select>
 
+            <input type="submit" value="Search">
+        </form>
+        {% endif %}
 
         <h1>
             <a href="/{{ current_project.id }}/backlog"> <img src="/agilito/logo.png" alt="Hogeschool van Arnhem en Nijmegeb"/><span>Agilito: the scrum donkey</span>
@@ -83,59 +79,54 @@
 
         <ul id="session">
             {% if project_list and current_project %}
-            <div id="project-selection">
-                <h1><a href="/{{current_project.id}}/backlog">{{current_project.name}}</a><a class="selected" href="#"><img src="/resources/dropdown.png" alt="Select Another Project"></a>
-                </h1>
-                <ul id="project-list">
+            <li id="project-selection">
+                <select>
                 {% for project in project_list %}
 
-                    {% ifnotequal project.id current_project.id %}
-                    <li><a href="/{{project.id}}/backlog">{{project.name}}</a></li>
-                    {%endifnotequal%}    
+                    <option {% ifequal project.id current_project.id %} selected="selected" {%endifequal%} 
+                                value="{{project.id}}">{{project.name}}</option>
+   
                 {% endfor %}
-                </ul>
-            </div>
+
+                </select>
+            </li>
 
             {% endif %}
 
+            {% if not user.is_anonymous %}
+            <li>{{user}}</li>
+            <li><a href="/accounts/changepassword">Change password</li>
+            <li><a href="/accounts/logout/">Sign out</a></li>
+            {% endif %}
 
+            {% if user.is_anonymous %}
+            <li><a href="/accounts/login/">Log in</a></li>
+            {% endif %}
 
+            {% if perms.agilito.is_staff %}
+            <li><a href="/admin/"> Administration </a></li>
+            {% endif %}
 
+            <div class="visualClear"></div>
+        </ul>
         {% if current_project %}
-
+        {% block main_nav %}
 
         <ul id="main_nav">
-        {% block main_nav %}
         {% if current_project %}
             <li><a href="{% url agilito.views.backlog current_project.id %}">Backlog</a></li>
             {% if current_project.iteration_set.all %}
-            <li><a href="{% url agilito.views.iteration_status current_project.id %}">Iteration </a></li>
+            <li><a href="{% url agilito.views.iteration_status current_project.id %}">Iteration</a></li>
             {% endif %}
             <li><a href="{% url agilito.views.timelog current_project.id %}">Log</a></li>
             {% if current_project.iteration_set.all %}
             <li><a href="{% url agilito.views.iteration_hours current_project.id%}">Hours</a></li>
             {% endif %}
         {% endif %}
-        {% endblock %}  
-
-      {% if current_project %}
-        <li id="searchbox">
-        <form action="{% url agilito.views.search current_project.id %}" method="GET">
-            <input size="20" type="text" name="query" value="{{ query|escape }}"/>
-            <select name="model">
-                <option value="User Story">User Stories</option>
-                <option value="Task">Tasks</option>
-                <option value="Test Case">Test Cases</option>
-            </select>
-
-            <input type="submit" value="Search">
-        </form>
-        </li>
-        {% endif %}
             <div class="visualClear"></div>
         </ul>
 
-
+        {% endblock %}
         {% endif %}
         <div id="actions">
         {% block actions%} {% endblock %}
@@ -155,10 +146,6 @@ t: 678-608-3408 | <a href="http://getsatisfaction.com/ifpeople/products/ifpeople
 
     </div -->
     </div>
-
-
-    </div>
-{% endblock %}
 </body>
 </html>
 

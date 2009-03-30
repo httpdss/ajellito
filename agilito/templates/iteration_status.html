@@ -52,14 +52,17 @@ There are no iterations in this project.
 {% endblock %}
 
 {% block main_nav %}
+<ul id="main_nav">
     <li><a href="{% url agilito.views.backlog current_project.id %}">Backlog</a></li>
     {% if current_project.iteration_set.all %}
-    <li class="selected"><a href="{% url agilito.views.iteration_status current_project.id %}">Iteration </a></li>
+    <li class="selected"><a href="{% url agilito.views.iteration_status current_project.id %}">Iteration</a></li>
     {% endif %}
     <li><a href="{% url agilito.views.timelog current_project.id %}">Log</a></li>
     {% if current_project.iteration_set.all %}
     <li><a href="{% url agilito.views.iteration_hours current_project.id%}">Hours</a></li>
     {% endif %}
+    <div class="visualClear"></div>
+</ul>
 {% endblock %}
 
 {% block actions%}

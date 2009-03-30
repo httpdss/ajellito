@@ -24,7 +24,7 @@ try:
     import matplotlib
     matplotlib.use('Agg')
     import matplotlib.pyplot
-    MATPLOTLIB_ENABLED = False
+    MATPLOTLIB_ENABLED = True
 except ImportError:
     MATPLOTLIB_ENABLED = False
 
