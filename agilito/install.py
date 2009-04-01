@@ -66,13 +66,13 @@ if not verify('django', 'http://www.djangoproject.com/'):
 
 verify('pyExcelerator', 'http://sourceforge.net/projects/pyexcelerator', optional=True)
 verify('matplotlib', 'http://matplotlib.sourceforge.net/', optional=True)
-verify('agilito', 'https://agilito.googlecode.com/svn/trunk/agilito', True)
+verify('agilito', 'http://agilito.googlecode.com/svn/trunk/agilito', True)
 
 if fresh:
     print 'Installing default url redirector'
     shutil.copyfile('agilito/install/urls.py', 'urls.py')
     
-verify('queryutils', 'https://agilito.googlecode.com/svn/trunk/queryutils', True)
+verify('queryutils', 'http://agilito.googlecode.com/svn/trunk/queryutils', True)
 verify('tagging', 'http://django-tagging.googlecode.com/svn/trunk/tagging', True)
 
 try:
