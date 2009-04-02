@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import sys, os, shutil
+from distutils.sysconfig import get_python_lib
 
 if len(sys.argv) > 1:
     projectname = sys.argv[1]
@@ -13,7 +14,13 @@ complete = True
 fresh = not os.path.exists(installdir)
 
 if fresh:
-    os.system('django-admin startproject %(projectname)s' % locals())
+    ver = sys.version_info
+    libdir = 'lib/python%d.%d/site-packages' % (ver[0], ver[1])
+    if not os.path.exists(libdir):
+        libdir = get_python_lib()
+    django_admin = os.path.join(libdir, 'django/bin/django-admin.py')
+    py = sys.executable
+    os.system('%(py)s %(django_admin)s startproject %(projectname)s' % locals())
 
 if not os.path.exists(os.path.join(installdir, 'manage.py')):
     print '%(installdir)s is not a django project' % locals()
