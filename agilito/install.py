@@ -14,11 +14,18 @@ complete = True
 fresh = not os.path.exists(installdir)
 
 if fresh:
-    ver = sys.version_info
-    libdir = 'lib/python%d.%d/site-packages' % (ver[0], ver[1])
-    if not os.path.exists(libdir):
-        libdir = get_python_lib()
-    django_admin = os.path.join(libdir, 'django/bin/django-admin.py')
+    da = 'django/bin/django-admin.py'
+    django_admin = None
+    for d in sys.path:
+        candidate = os.path.join(d, da)
+        print candidate
+        if os.path.exists(candidate):
+            django_admin = candidate
+            break
+    if django_admin is None:
+        print 'I cannot find django-admin.py'
+        sys.exit()
+
     py = sys.executable
     os.system('%(py)s %(django_admin)s startproject %(projectname)s' % locals())
 
