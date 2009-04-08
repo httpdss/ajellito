@@ -116,8 +116,10 @@ There are no iterations in this project.
 {% endfor %}
 </tbody>
 </table>
+
+<a href="{% url agilito.views.hours_export current_project.id,current_iteration.id %}">hours export</a>
 {% else%}
-There is no members on this project
+There are no members on this project
 {% endif%}
 
 {% else %}

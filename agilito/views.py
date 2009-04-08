@@ -1319,6 +1319,95 @@ def iteration_status_table(request, project_id, iteration_id):
     return response
 
 @restricted
+def iteration_export(request, project_id, iteration_id):
+    it = Iteration.objects.get(id=iteration_id, project__id=project_id)
+
+    style = pyExcelerator.XFStyle()
+    defaultFont = style.font
+    defaultPattern = style.pattern
+
+    bold = pyExcelerator.Font()
+    bold.bold = True
+
+    wb = pyExcelerator.Workbook()
+    ws = wb.add_sheet('Burndown')
+
+    style.font = bold
+    for c, h in enumerate(['ID', 'Name', 'Start', 'End']):
+        ws.write(0, c, h, style)
+
+    for c, d in enumerate([it.id, it.name, str(it.start_date), str(it.end_date)]):
+        ws.write(1, c, d)
+
+    for c, h in enumerate(['ID', 'Story', 'Task', 'Estimate', 'Owner', 'Tags']):
+        ws.write(2, c, h, style)
+
+    for r, t in enumerate(Task.objects.filter(user_story__iteration=it).exclude(state=Task.STATES.ARCHIVED)):
+        for c, d in enumerate([t.id, t.user_story.name, t.name, float(t.estimate or 0), t.owner.username, t.tags]):
+            ws.write(r+3, c, d)
+
+    response = HttpResponse(mimetype='application/application/vnd.ms-excel')
+    response['Content-Disposition'] = 'attachment; filename=iteration.xls'
+
+    wb.save(response)
+
+    return response
+
+@restricted
+def hours_export(request, project_id, iteration_id):
+    it = Iteration.objects.get(id=iteration_id, project__id=project_id)
+    users = []
+    user_col = {}
+
+    style = pyExcelerator.XFStyle()
+    defaultFont = style.font
+    defaultPattern = style.pattern
+
+    bold = pyExcelerator.Font()
+    bold.bold = True
+
+    wb = pyExcelerator.Workbook()
+    ws = wb.add_sheet('Burndown')
+
+    style.font = bold
+    for c, h in enumerate(['ID', 'Name', 'Start', 'End']):
+        ws.write(0, c, h, style)
+
+    for c, d in enumerate([it.id, it.name, str(it.start_date), str(it.end_date)]):
+        ws.write(1, c, d)
+
+    for c, h in enumerate(['ID', 'Story', 'Task', 'Estimate']): # add users later
+        ws.write(2, c, h, style)
+
+    tasks = 0
+    for r, t in enumerate(Task.objects.filter(user_story__iteration=it).exclude(state=Task.STATES.ARCHIVED)):
+        tasks += 1
+        for c, d in enumerate([t.id, t.user_story.name, t.name]):
+            ws.write(r+3, c, d)
+
+        u = t.owner.username
+        if not u in users:
+            users.append(u)
+            user_col[u] = len(users) + 3
+
+        ws.write(r+3, user_col[u], float(t.estimate or 0))
+
+    for u in users:
+        ws.write(2, user_col[u], u, style)
+
+    c1 = _excel_column(5)
+    c2 = _excel_column(4 + len(users))
+    for r in range(3, tasks + 3):
+        ws.write(r, 3, pyExcelerator.Formula("SUM(%s%d:%s%d)" % (c1, r+1, c2, r+1)))
+        
+    response = HttpResponse(mimetype='application/application/vnd.ms-excel')
+    response['Content-Disposition'] = 'attachment; filename=iteration.xls'
+
+    wb.save(response)
+
+    return response
+
+@restricted
 def iteration_burndown(request, project_id, iteration_id):
     it = Iteration.objects.get(id=iteration_id, project__id=project_id)
     ctx = AgilitoContext(request, {'current_iteration': it}, current_project=project_id)

@@ -397,6 +397,7 @@ else {
 
 {% if status_table_url %}
     <li><a href="{{ status_table_url }}">task status</a></li>
+    <li><a href="{% url agilito.views.iteration_export current_project.id,current_iteration.id %}">iteration export</a></li>
 {% endif %}
 
 {%if burndown_chart_url %}
