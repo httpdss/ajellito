@@ -1085,6 +1085,10 @@ def iteration_burndown_chart(request, project_id, iteration_id, name):
         layer.set_xticks(range(1, len(x) + 1))
         layer.set_xticklabels(x)
         layer.set_ylim(0, float(y_max))
+
+        # workaround: twinx doesn't sync the axes unless you do this
+        layer.set_xlim(layers[0][0].get_xlim())
+
         if small:
             for l in layer.get_xticklabels():
                 l.set_rotation(45)
