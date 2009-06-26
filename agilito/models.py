@@ -670,7 +670,7 @@ class Task(ClueModel):
 
     def archive(self, archiver):
         self.state = Task.STATES.ARCHIVED
-        self.save(archiver, 'Archived', 0)
+        self.save(user=archiver)
 
     def remaining_for_date(self, date):
         # find the oldest tasklog that is newer than date and check
