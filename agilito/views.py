@@ -1148,14 +1148,16 @@ def product_backlog(request, project_id):
 
     stories = UserStory.objects.filter(project__id=project_id).order_by('rank').order_by('id')
     wb = pyExcelerator.Workbook()
-    ws = wb.add_sheet('Product Backlog')
+    active = wb.add_sheet('Active Product Backlog')
+    full = wb.add_sheet('Product Backlog')
 
     style = pyExcelerator.XFStyle()
     style.font = pyExcelerator.Font()
     style.font.bold = True
 
-    for c, header in enumerate(['Story', 'Rank', 'Name', 'Description', 'State', 'Iteration', 'Size', 'Suggested size']):
-        ws.write(0, c, header, style)
+    for ws in [active, full]:
+        for c, header in enumerate(['Story', 'Rank', 'Name', 'Description', 'State', 'Iteration', 'Size', 'Suggested size']):
+            ws.write(0, c, header, style)
 
     suggested_size = Project.objects.get(id=project_id).suggest_sizes()
 
@@ -1165,43 +1167,54 @@ def product_backlog(request, project_id):
         else:
             us.suggested_size = None
 
-    for r, story in enumerate(stories):
-        ws.write(r+1, 0, story.id)
+    active_story_states = [ UserStory.STATES.DEFINED,
+                            UserStory.STATES.SPECIFIED,
+                            UserStory.STATES.IN_PROGRESS,
+                            UserStory.STATES.COMPLETED,
+                            UserStory.STATES.ACCEPTED]
+    row = [0, 0]
+    for story in stories:
+        for ws, write, shn in [(full, True, 1), (active, story.state in active_story_states, 0)]:
+            if not write:
+                continue
 
-        if not story.rank is None:
-            ws.write(r+1, 1, story.rank)
+            row[shn] += 1
+            ws.write(row[shn], 0, story.id)
 
-        ws.write(r+1, 2, story.name)
-
-        if not story.description is None:
-            try:
-                desc = unicode(story.description).decode('utf-8')
-            except:
-                v_a = story.description.encode('ascii', 'ignore')
-                desc = unicode(v_a).decode('utf-8')
-
-            f = cStringIO.StringIO()
-            wr = formatter.DumbWriter(f)
-            fmt = formatter.AbstractFormatter(wr)
-            p = htmllib.HTMLParser(fmt)
-            p.feed(desc)
-            p.close()
-
-            ws.write(r+1, 3, f.getvalue())
-
-        ws.write(r+1, 4, statename[story.state])
-
-        if not story.iteration is None:
-            ws.write(r+1, 5, story.iteration.name)
-
-        if story.size:
-            ws.write(r+1, 6, UserStory.SIZES.label(story.size))
-
-        if story.suggested_size:
-            ws.write(r+1, 7, story.suggested_size)
+            if not story.rank is None:
+                ws.write(row[shn], 1, story.rank)
+    
+            ws.write(row[shn], 2, story.name)
+    
+            if not story.description is None:
+                try:
+                    desc = unicode(story.description).decode('utf-8')
+                except:
+                    v_a = story.description.encode('ascii', 'ignore')
+                    desc = unicode(v_a).decode('utf-8')
+    
+                f = cStringIO.StringIO()
+                wr = formatter.DumbWriter(f)
+                fmt = formatter.AbstractFormatter(wr)
+                p = htmllib.HTMLParser(fmt)
+                p.feed(desc)
+                p.close()
+    
+                ws.write(row[shn], 3, f.getvalue())
+    
+            ws.write(row[shn], 4, statename[story.state])
+    
+            if not story.iteration is None:
+                ws.write(row[shn], 5, story.iteration.name)
+    
+            if story.size:
+                ws.write(row[shn], 6, UserStory.SIZES.label(story.size))
+    
+            if story.suggested_size:
+                ws.write(row[shn], 7, story.suggested_size)
 
     response = HttpResponse(mimetype='application/application/vnd.ms-excel')
-    response['Content-Disposition'] = 'attachment; filename=burndown.xls'
+    response['Content-Disposition'] = 'attachment; filename=backlog.xls'
 
     wb.save(response)
 
