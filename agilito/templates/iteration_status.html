@@ -1,5 +1,11 @@
 {% extends "master.html" %}
 
+{% block link %}
+<link rel="alternate" type="application/rss+xml"
+    title="Iteration backlog for {{current_iteration.name}} ({{current_project.name}})"
+    href="/feeds/iteration/{{current_project.id}}/{{current_iteration.id}}/" />
+{% endblock %}
+
 {% block js %}
 <script type="text/javascript">
 $(window).ready(function(){
@@ -264,7 +270,7 @@ else {
 
         <td id="add_task_us_{{us.id}}" class="">
             {% if not us.is_archived %}
-                <a href="{% url agilito.views.task_create current_project.id,us.id %}?last_page={{last_page}}"><img src="/agilito/add_.png" alt="add task" title="add task" width="16" height="16" /></a>
+                <a href="{% url agilito.views.task_create current_project.id,us.id %}?last_page={{last_page}}"><img src="/agilito/add.png" alt="add task" title="add task" width="16" height="16" /></a>
             {% endif %}
         </td>
         <td id="edit_us_{{us.id}}" class=""><a href="{% url agilito.views.userstory_edit current_project.id,us.id %}?last_page={{last_page}}"><img src="/agilito/pencil.png" alt="edit" title="edit" width="16" height="16" /></a></td>
@@ -408,6 +414,7 @@ else {
 <li><a target="_chart" href="{{ product_backlog_chart }}">Backlog evolution since start of iteration</a></li>
 {% endif %}
 <li><a onclick="popup(this, 'taskboard'); return false" href="{% url agilito.views.taskboard current_project.id,current_iteration.id %}">Task board</a></li>
+<li><a href="/feeds/iteration/{{current_project.id}}/{{current_iteration.id}}/"><img border="0" src="/agilito/feed-icon-14x14.png" /></a></li>
 </ul>
 
 {% else %}

@@ -1,11 +1,17 @@
 from django.conf.urls.defaults import *
 from django.contrib import admin
+from agilito.feeds import Backlog, Iteration
 
 admin.autodiscover()
 
 import os
 
 media_root = os.path.join(os.path.dirname(__file__), 'media')
+
+feeds = {
+    'backlog': Backlog,
+    'iteration': Iteration,
+    }
 
 urlpatterns = patterns('agilito.views',
     (r'^$', 'index'),
@@ -77,5 +83,7 @@ urlpatterns += patterns('',
     (r'^agilito/(?P<path>.*)$', 'django.views.static.serve', {'document_root': media_root}),
     (r'^xmlrpc/', 'agilito.xmlrpc.xmlrpc.view', {'module':'agilito.xmlrpc'}),
     (r'^(rsd.xml)$', 'django.views.static.serve', {'document_root': media_root}),
+
+    (r'^feeds/(?P<url>.*)/$', 'agilito.feeds.feed', {'feed_dict': feeds}),
 )
 

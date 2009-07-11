@@ -2,6 +2,12 @@
 {% load humanize %}
 
 
+{% block link %}
+<link rel="alternate" type="application/rss+xml"
+    title="Product backlog for {{current_project.name}}"
+    href="/feeds/backlog/{{current_project.id}}/" />
+{% endblock %}
+
 {% block title %} User Stories in the Backlog {% endblock %}
 
 {% if current_project %}
@@ -120,8 +126,9 @@ No user stories in the backlog.
     <a href="{{ full_backlog }}">Full backlog in Excel format</a><br/>
 {% endif %}
 {% if product_backlog_chart %}
-<a target="_chart" href="{{ product_backlog_chart }}">Backlog evolution since start of project</a>
+<a target="_chart" href="{{ product_backlog_chart }}">Backlog evolution since start of project</a><br/>
 {% endif %}
+<a href="/feeds/backlog/{{current_project.id}}/"><img border="0" src="/agilito/feed-icon-14x14.png" /></a>
 </p>
 {% endblock %}
 
