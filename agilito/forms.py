@@ -249,7 +249,7 @@ class ImpedimentForm(HiddenHttpRefererForm):
         fields = 'name', 'description', 'state', 'tasks'
 
 class UserStoryForm(HiddenHttpRefererForm):
-    tags = TagField(widget=AutoCompleteTagInput(model=Task), required=False)
+    tags = TagField(widget=AutoCompleteTagInput(model=UserStory), required=False)
 
     def __init__(self,*args, **kwargs):
         try:
