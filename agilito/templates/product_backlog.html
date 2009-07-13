@@ -99,7 +99,13 @@
     <tr class="{% cycle even,odd %} {{ object.backlog_state }}">
         <td class="rank">{{object.rank}}</td>
         <td class="id">US{{object.id}}</td>
-        <td class="name"><a href="{{object.get_absolute_url}}">{{object.name}}</a></td>
+        <td class="name"><a href="{{object.get_absolute_url}}">{{object.name}}</a>
+            <ul class="tags">
+                {% for tag in object.taglist %}
+                    <li><span class="small">{{ tag }}</span></li>
+                {% endfor %}
+            </ul>
+        </td>
         <td class="size">{{object.size_label|default_if_none:"-"}}</td>
         <td class="size">{{object.suggested_size|default_if_none:"-"}}</td>
         <td class="state">{{object.state_label|default_if_none:"-"}}/{{ object.backlog_state }}</td>

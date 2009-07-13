@@ -422,6 +422,13 @@ class UserStory(ClueModel):
     created = models.DateField(default=datetime.datetime.now())
     closed = models.DateField(null=True)
 
+    # alter table agilito_userstory add column tags varchar(255) NOT NULL default ''
+    tags = TagField()
+
+    @property
+    def taglist(self):
+        return parse_tag_input(self.tags)
+
     def __unicode__(self):
         return u'US%s: %s' % (self.id, self.name)
 

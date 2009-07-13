@@ -249,6 +249,8 @@ class ImpedimentForm(HiddenHttpRefererForm):
         fields = 'name', 'description', 'state', 'tasks'
 
 class UserStoryForm(HiddenHttpRefererForm):
+    tags = TagField(widget=AutoCompleteTagInput(model=Task), required=False)
+
     def __init__(self,*args, **kwargs):
         try:
             project = kwargs.pop('project')
@@ -278,7 +280,7 @@ class UserStoryForm(HiddenHttpRefererForm):
 
     class Meta:
         model = UserStory
-        fields = 'name', 'description', 'rank', 'size', 'planned', 'state', 'iteration'
+        fields = 'name', 'description', 'rank', 'size', 'planned', 'state', 'iteration', 'tags'
 
 class UserStoryMoveForm(forms.ModelForm):
     copy_tasks = forms.BooleanField(label='Copy tasks', required=False)
