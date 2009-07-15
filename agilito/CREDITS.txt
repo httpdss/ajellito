@@ -7,4 +7,13 @@ John Lenton         <john@except.com.ar>
 Alejandro Peralta   <alep@except.com.ar>
 Francisco Herrero   <francisco.herrero@gmail.com>
 Matías Iturburu     <maturburu@gmail.com>
+Emiliano Heyns     <emiliano.heyns@gmail.com>
 
+Requirements definition, testing, and ScrumMastering: 
+
+Christopher Johnson     <cjj@ifpeople.net>
+Gerry Kirk     <gerry@ifpeople.net>
+
+Initial project sponsorship: 
+
+ifPeople, www.ifpeople.net
