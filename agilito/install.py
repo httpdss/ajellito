@@ -138,8 +138,6 @@ def alter(table, spec):
 
     column = spec.split()[0]
 
-    print 'Testing for %s.%s' % (table, column)
-
     cursor.execute("select count(*) from information_schema.columns where table_name = '%s' and column_name = '%s'" % (table, column))
 
     exists = cursor.fetchone()[0]
@@ -147,19 +145,18 @@ def alter(table, spec):
     if exists:
         return
 
-    print 'Adding %s.%s' % (table, column)
-    cursor.execute('alter table %s add column %s' % (table, spec))
+    print '    alter table %s add column %s;' % (table, spec)
 
-print 'If you have set up your database connection in setting.py, I can attempt to update the tables for you.'
-reply = raw_input('Do you want this? ')
-while (reply + ' ').lower()[0] not in ['y', 'n']:
-    reply = raw_input('Do you want this? ')
-if reply[0].lower() == 'y':
-    project = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    sys.path.append(project)
-    os.chdir(project)
+project = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(project)
+os.chdir(project)
 
-    os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
+os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
+
+try:
+    import settings
+    print
+    print 'Your database: %s / %s' % (settings.DATABASE_ENGINE, settings.DATABASE_NAME)
 
     from django.db import connection
     cursor = connection.cursor()
@@ -169,6 +166,8 @@ if reply[0].lower() == 'y':
     alter('agilito_userstory',  "closed date")
     alter('agilito_task',       "tags varchar(255) NOT NULL default ''")
     alter('agilito_userstory',  "tags varchar(255) NOT NULL default ''")
+except:
+    print 'Cannot connect to your database, no upgrade inspection'
 
 if complete:
     print
