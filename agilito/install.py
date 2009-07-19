@@ -132,6 +132,44 @@ if not 'LOGIN_REDIRECT_URL' in dir(settings) or settings.LOGIN_REDIRECT_URL != '
     print 'Please set LOGIN_REDIRECT_URL to "/" in %(installdir)s/settings.py' % locals()
     complete = False
 
+################ upgrade database
+def alter(table, spec):
+    global cursor
+
+    column = spec.split()[0]
+
+    print 'Testing for %s.%s' % (table, column)
+
+    cursor.execute("select count(*) from information_schema.columns where table_name = '%s' and column_name = '%s'" % (table, column))
+
+    exists = cursor.fetchone()[0]
+
+    if exists:
+        return
+
+    print 'Adding %s.%s' % (table, column)
+    cursor.execute('alter table %s add column %s' % (table, spec))
+
+print 'If you have set up your database connection in setting.py, I can attempt to update the tables for you.'
+reply = raw_input('Do you want this? ')
+while (reply + ' ').lower()[0] not in ['y', 'n']:
+    reply = raw_input('Do you want this? ')
+if reply[0].lower() == 'y':
+    project = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    sys.path.append(project)
+    os.chdir(project)
+
+    os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
+
+    from django.db import connection
+    cursor = connection.cursor()
+
+    alter('agilito_userstory',  'size smallint')
+    alter('agilito_userstory',  "created date NOT NULL default 'now'")
+    alter('agilito_userstory',  "closed date")
+    alter('agilito_task',       "tags varchar(255) NOT NULL default ''")
+    alter('agilito_userstory',  "tags varchar(255) NOT NULL default ''")
+
 if complete:
     print
     print "You should be good to go. Edit your settings.py a and run 'python manage.py syncdb'"
