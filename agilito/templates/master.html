@@ -40,7 +40,13 @@
     $(document).ready(function(){
         target = "/"
         $("#project-selection select").change(function(){
-            window.location= target+$(this).find(":selected").attr("value")+"/backlog"
+            var location = window.location.href.split('/');
+            if (location.length >=5) {
+                location = '/' + location[4];
+            } else {
+                location = '/backlog';
+            }
+            window.location= target+$(this).find(":selected").attr("value")+location;
         })    
         $("#iteration-selection").change(function(){
             window.location= $(this).find(":selected").attr("value")
