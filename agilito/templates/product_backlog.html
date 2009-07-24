@@ -1,142 +1,118 @@
 {% extends "master.html" %}
+
 {% load humanize %}
+
+{% block sidebar %}
+    <div id="rightmenu">
+        <a href="{% url story_from_backlog current_project.id %}?last_page={{last_page}}">
+            <span class="action-link add-object">Add User Story</span>
+        </a>
+
+        {% if full_backlog %}
+            <a href="{{ full_backlog }}?last_page={{last_page}}">Backlog in Excel format</a>
+        {% endif %}
+
+        {% if product_backlog_chart %}
+            <a target="_chart" href="{{ product_backlog_chart }}?last_page={{last_page}}">Backlog evolution</a>
+        {% endif %}
+    </div>
+{% endblock %}
 
 
 {% block link %}
-<link rel="alternate" type="application/rss+xml"
-    title="Product backlog for {{current_project.name}}"
-    href="/feeds/backlog/{{current_project.id}}/" />
+    <link rel="alternate" type="application/rss+xml"
+        title="Product backlog for {{current_project.name}}"
+        href="/feeds/backlog/{{current_project.id}}/" />
 {% endblock %}
 
 {% block title %} User Stories in the Backlog {% endblock %}
 
 {% if current_project %}
+    {% block select_tab %} "backlog" {% endblock %}
 
-{% block main_nav %}
-<ul id="main_nav">
-    <li class="selected"><a href="{% url agilito.views.backlog current_project.id %}">Backlog</a></li>
-    {% if current_project.iteration_set.all %}
-    <li><a href="{% url agilito.views.iteration_status current_project.id %}">Iteration</a></li>
-    {% endif %}
-    <li><a href="{% url agilito.views.timelog current_project.id %}">Log</a></li>
-    {% if current_project.iteration_set.all %}
-    <li><a href="{% url agilito.views.iteration_hours current_project.id%}">Hours</a></li>
-    {% endif %}
-    <div class="visualClear"></div>
-</ul>
-{% endblock %}
+    {% block content %}
+        <h2>
+            {% if current_project %}
+                {{ current_project.name }} &raquo;
+                {% if current_project.release %}
+                    Release: {{current_project.release.name}} &raquo;
+                {% endif %}
+            {% endif %}
+    
+            Backlog
+        </h2>
 
-{% block actions %}
-<a id="create-user-story" class="action-link add-object"  href="{% url story_from_backlog current_project.id %}?last_page={{last_page}}">Add User Story</a>
-{% endblock %}
-
-
-
-
-
-{% block content %}
-<ul class="breadcrumbs">
-{% if current_project %}
-<li id="iteration">{{ current_project.name }} &gt; </li> 
-{% endif %}
-
-<li id="iteration">Backlog</li> 
-
-<li class="visualClear" />
-</ul>
-
-
-<div id="us-head"> 
-    <h2>
-    Backlog
-    </h2>
-{% if current_project.release %}
-<span>Release:
-{{current_project.release.name}}
-</span>
-{% endif %}
-    <div class="visualClear"></div>
-</div>
-
-{% if user_stories %}
-<div id="us-resume">
-<span>Number of US in Backlog: <strong>{{ user_stories.count }}</strong> </span> 
-</div>
-{% endif %}
-{% if user_stories %}
-
-
-<table cellspacing="0" cellpadding="2" id="user-story-list">
-<thead>
-    <tr>
-        <th>Rank</th>
-        <th>Id</th>
-        <th>Name</th>
-        <th>Size</th>
-        <th>Suggested size</th>
-        <th>State</th>
-        <th><!-- add task --></th>
-        <th><!-- edit --></th>
-        <th><!-- move --></th>
-        <th><!-- delete --></th>
-    </tr>
-</thead>
-
-<tbody>
-<tr class="totals">
-    <td><!-- rank --></td>
-    <td><!-- id --></td>
-    <td><!-- name --></td>
-    <td class="total size">{{ size }}</td>
-    <td><!-- suggested size --></td>
-    <td><!-- state --></td>
-    <td><!-- add task --></td>
-    <td><!-- edit --></td>
-    <td><!-- move --></td>
-    <td><!-- delete --></td>
-</tr>
-{% for object in user_stories %}
-    <tr class="{% cycle even,odd %} {{ object.backlog_state }}">
-        <td class="rank">{{object.rank}}</td>
-        <td class="id">US{{object.id}}</td>
-        <td class="name"><a href="{{object.get_absolute_url}}">{{object.name}}</a>
-            <ul class="tags">
-                {% for tag in object.taglist %}
-                    <li><span class="small">{{ tag }}</span></li>
-                {% endfor %}
-            </ul>
-        </td>
-        <td class="size">{{object.size_label|default_if_none:"-"}}</td>
-        <td class="size">{{object.suggested_size|default_if_none:"-"}}</td>
-        <td class="state">{{object.state_label|default_if_none:"-"}}/{{ object.backlog_state }}</td>
-        <td id="add_task_us_{{object.id}}" class=""><a href="{% url agilito.views.task_create current_project.id,object.id %}?last_page={{last_page}}"><img src="/agilito/add_.png" alt="add task" title="add task" width="16" height="16" /></a></td>
-        <td id="edit_us_{{object.id}}" class=""><a href="{% url agilito.views.userstory_edit current_project.id,object.id %}?last_page={{last_page}}"><img src="/agilito/pencil.png" alt="edit" title="edit" width="16" height="16" /></a></td>
-        <td id="move_us_{{us.id}}" class="">
-            <a href="{% url agilito.views.userstory_move current_project.id,object.id %}?last_page={{last_page}}"
-            onclick="popup(this, 'us-move'); return false"><img
-            src="/agilito/bullet_go.png" alt="move" title="move" width="16" height="16" /></a>
-        </td>
-        <td id="delete_us_{{object.id}}" class=""><a href="{% url agilito.views.userstory_delete current_project.id,object.id %}?last_page={{last_page}}"><img src="/agilito/delete.png" alt="delete" title="delete" width="16" height="16" /></a></td>
-    </tr>
-{%endfor%}
-</tbody>
-</table>
-</dd>
-{% else %}
-No user stories in the backlog.
-{% endif %}
-</dl>
-
-<p>
-{% if full_backlog %}
-    <a href="{{ full_backlog }}">Full backlog in Excel format</a><br/>
-{% endif %}
-{% if product_backlog_chart %}
-<a target="_chart" href="{{ product_backlog_chart }}">Backlog evolution since start of project</a><br/>
-{% endif %}
-<a href="/feeds/backlog/{{current_project.id}}/"><img border="0" src="/agilito/feed-icon-14x14.png" /></a>
-</p>
-{% endblock %}
-
-
+        {% if user_stories %}
+            <div id="us-resume">
+                <span>Number of US in Backlog: <strong>{{ user_stories.count }}</strong> </span> 
+            </div>
+        {% endif %}
+    
+        {% if user_stories %}
+            <table cellspacing="0" cellpadding="2" id="user-story-list">
+                <thead>
+                    <tr>
+                        <th>Rank</th>
+                        <th>Id</th>
+                        <th>Name</th>
+                        <th>Size</th>
+                        <th>Suggested size</th>
+                        <th>State</th>
+                        <th><!-- edit --></th>
+                        <th><!-- move --></th>
+                        <th><!-- delete --></th>
+                    </tr>
+                </thead>
+    
+                <tbody>
+                    <tr class="totals">
+                        <td><!-- rank --></td>
+                        <td><!-- id --></td>
+                        <td><!-- name --></td>
+                        <td class="total size">{{ size }}</td>
+                        <td><!-- suggested size --></td>
+                        <td><!-- state --></td>
+                        <td><!-- edit --></td>
+                        <td><!-- move --></td>
+                        <td><!-- delete --></td>
+                    </tr>
+    
+                    {% for object in user_stories %}
+                        <tr class="{% cycle even,odd %}">
+                            <td class="rank">{{object.rank}}</td>
+                            <td class="id">US{{object.id}}</td>
+                            <td class="name"><a href="{{object.get_absolute_url}}">{{object.name}}</a>
+                                <ul class="tags">
+                                    {% for tag in object.taglist %}
+                                        <li><span class="small">{{ tag }}</span></li>
+                                    {% endfor %}
+                                </ul>
+                            </td>
+                            <td class="size">{{object.size_label|default_if_none:"-"}}</td>
+                            <td class="size">{{object.suggested_size|default_if_none:"-"}}</td>
+                            <td class="state">
+                                <img src="/agilito/backlog-state/{{ object.backlog_state }}.png"
+                                    title="{{ object.backlog_state }}" alt="{{ object.backlog_state }}" />
+                            </td>
+                            <td id="edit_us_{{object.id}}" class="">
+                                <a href="{% url agilito.views.userstory_edit current_project.id,object.id %}?last_page={{last_page}}">
+                                <img src="/agilito/pencil.png" alt="edit" title="edit" width="16" height="16" /></a>
+                            </td>
+                            <td id="move_us_{{us.id}}" class="">
+                                <a href="{% url agilito.views.userstory_move current_project.id,object.id %}?last_page={{last_page}}"
+                                    onclick="popup(this, 'us-move'); return false">
+                                <img src="/agilito/bullet_go.png" alt="move" title="move" width="16" height="16" /></a>
+                            </td>
+                            <td id="delete_us_{{object.id}}" class="">
+                                <a href="{% url agilito.views.userstory_delete current_project.id,object.id %}?last_page={{last_page}}">
+                                <img src="/agilito/delete.png" alt="delete" title="delete" width="16" height="16" /></a>
+                            </td>
+                        </tr>
+                    {%endfor%}
+                </tbody>
+            </table>
+        {% else %}
+            No user stories in the backlog.
+        {% endif %}
+    {% endblock %}
 {% endif %}

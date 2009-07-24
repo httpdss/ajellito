@@ -1,0 +1,180 @@
+
+td {
+    vertical-align: top;
+    text-align: left 
+}
+
+#iteration-data {
+    float: left;
+}
+#iteration-data table {
+    width: 28em;
+}
+
+#burndown {
+    border-left: 1px solid #808080;
+    float: right;
+}
+
+.action-link {
+    padding-left: 20px;
+    background: no-repeat top left;
+}
+.action-link.edit { background-image: url("/agilito/pencil.png") }
+.action-link.delete { background-image: url("/agilito/delete.png") }
+.action-link.add-object { background-image: url("/agilito/add_.png") }
+
+/* tag display */
+ul.tags {
+    margin: 0;
+    padding: 0;
+    /* list-style-type: none: */
+    display: inline;
+}
+ul.tags li {
+    display: inline;
+    list-style-type: none;
+}
+ul.tags span.big {
+    padding-right: 1em;
+}
+ul.tags span.small {
+    padding-left: 0.5em;
+    font-size: x-small;
+    font-style: italic;
+}
+
+/* taskboard */
+#taskboard {
+    border-width: 2px 2px 2px 2px;
+    border-spacing: 0px;
+    border-style: solid solid solid solid;
+    border-color: blue blue blue blue;
+    border-collapse: separate;
+    background-color: white;
+}
+#taskboard th {
+    border-width: 1px 1px 1px 1px;
+    padding: 4px 4px 4px 4px;
+    border-style: dotted dotted dotted dotted;
+    border-color: blue blue blue blue;
+    background-color: white;
+    -moz-border-radius: 0px 0px 0px 0px;
+}
+#taskboard td {
+    border-width: 1px 1px 1px 1px;
+    padding: 4px 4px 4px 4px;
+    border-style: dotted dotted dotted dotted;
+    border-color: blue blue blue blue;
+    background-color: white;
+    -moz-border-radius: 0px 0px 0px 0px;
+}
+#taskboard ul {
+    border: 1px solid gray;
+    margin: 2px;
+    padding: 2px;
+    /* display: inline; */
+    display: compact;
+}
+#taskboard li {
+    list-style-type: none;
+}
+#taskboard .task li {
+    display: inline;
+}
+#taskboard .task li.name {
+    display: block;
+}
+#taskboard li.name span {
+    font-weight: bold;
+}
+#taskboard li.id span {
+    font-style: italic;
+}
+
+/* timelog screen */
+form p, #timelog > li {
+    clear:left;
+    width:30em;
+    padding:0.25em;
+    margin:0 0 0.5em;
+}
+
+#timelog .required-text {
+    float: right;
+}
+
+#timelog .form-label, #timelog .form-entry {
+    vertical-align: top;
+}
+#timelog .form-label span {
+    float: right;
+}
+
+#timelog > li > ul { 
+    padding: 4px;
+    font-size: smaller;
+    display: inline-block;
+}
+#timelog ul, #timelog dd { 
+    padding: 0; 
+    margin: 0; 
+}
+#timelog dl { 
+    padding: 0; 
+    margin-bottom: 2px 
+}
+#timelog dl label { 
+    float: none; 
+    display: block; 
+    width: auto; 
+    text-align: left 
+}
+#timelog-wrapper ul { 
+    list-style-type: none
+}
+
+#timelog dt { 
+    background: url(../add.png) no-repeat; 
+    padding:5px 30px;
+    cursor:pointer;
+}
+#timelog dt.shown { 
+    background-image: url(../remove.png) 
+}
+#timelog dl.level1 {
+    padding-left:10px;
+}
+#timelog dl.level1 dd {
+    overflow:auto;
+}
+#timelog dd li {
+    width:auto;
+}
+#timelog dl.level2 {
+    margin-left:10px;
+    border:1px solid #EBEBEB;
+}
+
+#timelog dl.level2 dd {
+    height:auto;
+}
+
+#timelog > li:first-child { 
+    float: right
+}
+#timelog > li:first-child .required-text {
+    padding:0;
+}
+#timelog > li:first-child label {
+    float:none;
+    display:block;
+    text-align:left;
+}
+/* #content input[type=submit] { outline: 1px solid red } */
+
+#timelog-layout td {
+    vertical-align: top;
+    text-align: left;
+}
+

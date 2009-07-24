@@ -13,12 +13,6 @@ $(window).ready(function(){
     $("#impediment-list").treeTable();
 });
 
-function popup(link, id)
-{
-    window.open(link.href, id, "width=800, height=600, location=1, menubar=1, resizable=1, scrollbars=1");
-    return false;
-}
-
 function highlightTag(ids)
 {
     $("tr.userstory").each(function() {
@@ -46,385 +40,368 @@ function highlightTag(ids)
 
 </script>
 {% endblock %}
+
 {% load humanize %}
 {% load markup %}
 
 {% block title %}
-{% if current_iteration %}
-{{current_iteration.name}}
-{% else %}
-There are no iterations in this project.
-{% endif %}
+    {% if current_iteration %}
+        {{current_iteration.name}}
+    {% else %}
+        There are no iterations in this project.
+    {% endif %}
 {% endblock %}
 
-{% block main_nav %}
-<ul id="main_nav">
-    <li><a href="{% url agilito.views.backlog current_project.id %}">Backlog</a></li>
-    {% if current_project.iteration_set.all %}
-    <li class="selected"><a href="{% url agilito.views.iteration_status current_project.id %}">Iteration</a></li>
-    {% endif %}
-    <li><a href="{% url agilito.views.timelog current_project.id %}">Log</a></li>
-    {% if current_project.iteration_set.all %}
-    <li><a href="{% url agilito.views.iteration_hours current_project.id%}">Hours</a></li>
-    {% endif %}
-    <div class="visualClear"></div>
-</ul>
-{% endblock %}
+{% block select_tab %} "iteration" {% endblock %}
 
-{% block actions%}
-{% if current_iteration %}
-<a id="create-user-story" class="action-link add-object" 
-    href="{% url story_from_iteration project_id=current_project.id,iteration_id=current_iteration.id %}?last_page={{last_page}}">Add User Story</a>
-{% endif %}
-<a id="import-iteration" class="action-link add-object" 
-    href="{% url agilito.views.iteration_import current_project.id %}">Import iteration</a>
+{% block sidebar %}
+    <div id="rightmenu">
+        {% if current_iteration %}
+            <a href="{% url story_from_iteration project_id=current_project.id,iteration_id=current_iteration.id %}?last_page={{last_page}}">
+                <span class="action-link add-object">Add User Story</span>
+            </a>
+        {% endif %}
+
+        <a href="{% url agilito.views.impediment_create project_id=current_project.id,iteration_id=current_iteration.id %}?last_page={{last_page}}">
+            <span class="action-link add-object">Report impediment</span>
+        </a>
+
+        <a href="{% url agilito.views.iteration_import current_project.id %}?last_page={{last_page}}">
+            <span class="action-link add-object">Import iteration</span>
+        </a>
+
+        <a href="{{ cards_url }}">Task cards</a>
+
+        {% if status_table_url %}
+            <a href="{{ status_table_url }}">Task status</strong></a>
+
+            <a href="{% url agilito.views.iteration_export current_project.id,current_iteration.id %}">Iteration export</a>
+        {% endif %}
+
+        {%if burndown_chart_url %}
+            <a target="_burndown" href="{{ burndown_chart_url }}">Burndown chart</a>
+        {% endif %}
+
+        {% if product_backlog_chart %}
+            <a target="_chart" href="{{ product_backlog_chart }}">Backlog evolution</a>
+        {% endif %}
+
+        <a onclick="popup(this, 'taskboard'); return false" href="{% url agilito.views.taskboard current_project.id,current_iteration.id %}">Task board</a>
+
+        <!-- a href="/feeds/iteration/{{current_project.id}}/{{current_iteration.id}}/"><img border="0" src="/agilito/feed-icon-14x14.png" /></a -->
+    </div>
 {% endblock %}
 
 {% block content %}
+    {% if current_iteration %}
+    <div>
+        <div id="iteration-data"> 
+            <table>
+                <tr>
+                    <td colspan="2">
+                        {{ current_project.name }} &raquo;
+                        {% if current_project.iteration_set.all %}
+                            {% with current_project.iteration_set.all as itset %}
+                                {% ifnotequal itset.count 1 %}
+                                        <select id="iteration-selection" style="width:10em">
+                                            {%for iteration in itset %}
+                                                <option {% ifequal iteration.id current_iteration.id %} selected="selected" {%endifequal%}
+                                                    value="{{iteration.get_absolute_url}}">{{ iteration.name }}</option>
+                                            {%endfor%}
+                                        </select>
+                                {% else %}
+                                        {% with itset.0 as iteration %}
+                                            {{ iteration.name }}
+                                        {% endwith %}
+                                {% endifnotequal %}
+                            {% endwith %}
+                        {% endif %}
+                        {% if current_iteration.release.name %}<span> &raquo; Release: {{current_iteration.release.name}}</span>{% endif %}
 
-{% if current_iteration %}
+                        <p/>
+                        <span>Start date: <strong>{{current_iteration.start_date|naturalday}}</strong> </span> |
+                        <span>End date : <strong>{{current_iteration.end_date|naturalday}}</strong> </span>
+                        <div class="description">{{current_iteration.description|safe}}</div>
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>Accepted</td>
+                    <td>{{current_iteration.us_accepted_percentage|floatformat:0 }} %</td>
+                </tr>
 
-<ul class="breadcrumbs">
-{% if current_iteration.project %}
-<li id="iteration">{{ current_iteration.project.name }} &gt; </li> 
-{% endif %}
-<li id="iteration"> <a class="dropdown" href="#"> {{ current_iteration.name }} <img src="/agilito/arrow_down_small.png" /></a>
-    {%if current_iteration.project.iteration_set.all %}
-        <div class="dropdown_menu">
-        {%for iteration in current_iteration.project.iteration_set.all %}
-        <a href="{{iteration.get_absolute_url}}">{{iteration.name}}</a>
-        {% endfor %}
+                <tr>
+                    <td>Stories</td>
+                    <td>
+                        {% if user_stories %}
+                            {{ user_stories.count }} 
+                        {% endif %}
+                    </td>
+                </tr>
+
+                {% regroup tags|dictsort:"tag" by tag as grouped_tags %}
+                <tr>
+                    <td>Tags</td>
+                    <td>
+                        <ul class="tags">
+                            {% for tag in grouped_tags %}
+                                <li id="tag-{{tag.grouper|slugify}}" class="big task-tag">
+                                    <a href="#" onclick="{% for elt in tag.list %}highlightTag('tag-{{tag.grouper|slugify}},{{ elt.data }}');{% endfor %}return false">{{ tag.grouper }}</a>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </td>
+                </tr>
+            </table>
         </div>
-    {%endif%}
+
+        <div id="burndown">
+            {% if flash %}
+                <object align="right" classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000"
+                        codebase="http://fpdownload.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=8,0,0,0" 
+                        width="320" height="240" id="ie_chart" align="middle">
+                    <param name="allowScriptAccess" value="sameDomain" />
+                    <param name="movie" value="/agilito/open-flash-chart.swf?data={{ data_url }}" />
+                    <param name="quality" value="high" />
+                    <param name="bgcolor" value="#FFFFFF" />
     
-</li> 
-<li class="visualClear" />
-
-</ul>
-
-
-<div id="us-head"> 
-
-    {% if current_project.iteration_set.all %}
-    {% with current_project.iteration_set.all as itset %}
-    {% ifnotequal itset.count 1 %}
-    <h2>
-    <select id="iteration-selection" style="width:10em">
-        {%for iteration in itset %}
-        <option {% ifequal iteration.id current_iteration.id %} selected="selected" {%endifequal%}
-            value="{{iteration.get_absolute_url}}">{{ iteration.name }}</option>
-        {%endfor%}
-    </select>
-    </h2>
-    {% else %}
-    <h2>
-        {% with itset.0 as iteration %}
-            {{ iteration.name }}
-        {% endwith %}
-    </h2>
-    {% endifnotequal %}
-    {% endwith %}
-    {% endif %}
-<span>Release:
-{{current_iteration.release.name}}
-</span>
-
-    <div class="visualClear"></div>
-</div>
-
-
-{% if flash %}
-<object align="right" classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000" codebase="http://fpdownload.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=8,0,0,0" 
-width="320" height="240" id="ie_chart" align="middle">
-<param name="allowScriptAccess" value="sameDomain" />
-<param name="movie" value="/agilito/open-flash-chart.swf?data={{ data_url }}" />
-<param name="quality" value="high" />
-<param name="bgcolor" value="#FFFFFF" />
-
-<SCRIPT LANGUAGE="JavaScript">
-flash_versions = 10;
-flash_installed = 0;
-flash_version = '0.0';
-// Netscape style plugin detection
-if (navigator.plugins && navigator.plugins.length) {
-    for (x = 0; x <navigator.plugins.length; x++) {
-        if (navigator.plugins[x].name.indexOf('Shockwave Flash') != -1) {
-            flash_version = navigator.plugins[x].description.split('Shockwave Flash ')[1];
-            flash_installed = 1;
-            break;
-        }
-    }
-}
-// ActiveX style plugin detection
-else if (window.ActiveXObject) {
-    for (x = 2; x <= flash_versions; x++) {
-        try {
-            oFlash = eval("new ActiveXObject('ShockwaveFlash.ShockwaveFlash." + x + "');");
-            if (oFlash) {
-                flash_installed = 1;
-                flash_version = x + '.0';
-            }
-        }
-        catch(e) { }
-    }
-}
-
-if (flash_installed) {
-   document.write('<embed align="right" src="/agilito/open-flash-chart.swf?data={{ data_url }}" quality="high" bgcolor="#FFFFFF" width="320" height="240" name="chart" align="middle" allowScriptAccess="sameDomain" type="application/x-shockwave-flash" pluginspage="http://www.macromedia.com/go/getflashplayer" id="chart"/>');
-}
-{% if burndown_chart_small_url %}
-else {
-   document.write('<IMG SRC="{{ burndown_chart_small_url }}" style="align=right;" ALT="Burndown">');
-}
-{% endif %}
-</SCRIPT>
-</object>
-{% else %}
-    {% if burndown_chart_small_url %}
-        <IMG SRC="{{ burndown_chart_small_url }}" style="float: right; align=right;" ALT="Burndown" />
-    {% endif %}
-{% endif %}
-
-<div id="us-resume">
-    <span>Start date: 
-    <strong>{{current_iteration.start_date|naturalday}}</strong>
-    </span> |
-    <span>End date :
-    <strong>{{current_iteration.end_date|naturalday}}</strong>
-    </span>
-</div>
-<div class="description">{{current_iteration.description|safe}}</div>
-
-<dl id="resume">
-<dt>Accepted</dt>
-<dd>{{current_iteration.us_accepted_percentage|floatformat:0 }} %</dd>
-
-
-<dt>User Stories in iteration</dt>
-<dd>
-{% if user_stories %}
-{{ user_stories.count }} 
-</dd>
-
-{% regroup tags|dictsort:"tag" by tag as grouped_tags %}
-<dt>Tags</dt>
-<dd><ul class="tags">
-{% for tag in grouped_tags %}
-<li id="tag-{{tag.grouper|slugify}}" class="big task-tag">
-    <a href="#" onclick="{% for elt in tag.list %}highlightTag('tag-{{tag.grouper|slugify}},{{ elt.data }}');{% endfor %}return false">{{ tag.grouper }}</a>
-</li>
-{% endfor %}
-</ul></dd>
-</dl>
-
-<table id="user-story-list" cellspacing="0" cellpadding="2">
-<thead>
-    <tr>
-        <th>Rank</th>
-        <th>Id</th>
-        <th>Name</th>
-        <th>State</th>
-        <th>Plan</th>
-        <th>Tasks</th>
-        <th>To-Do</th>
-        <th>Failures</th>
-        <th></th>
-        <th></th>
-        <th></th>
-        <th></th>
-    </tr>
-</thead>
-
-<tbody>
-    <tr class="totals">
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td class="total">{{planned}}</td>
-        <td class="total">{{estimated}}</td>
-        <td class="total">{{remaining}}</td>
-        <td class="total">{{failures}}</td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-    </tr> 
-
-{% for us in user_stories %}
-    <tr id="us-{{us.id}}" class="userstory {% cycle even,odd %} {%if us.is_blocked%}blocked{% endif %}">
-        <td class="rank">{{us.relative_rank}}</td>
-        <td class="id"><a href="{{us.get_absolute_url}}">US{{us.id}}</a></td>
-        <td class="name{% if us.is_archived %} archived{% endif %}"><a href="{{us.get_absolute_url}}">{{us.name}}</a></td>
-        <td class="state {{ us.get_state_display|slugify }}">{{us.get_state_display}}</td>
-        <td class="planned">{{us.planned|default_if_none:"-"}}</td>
-        <td class="estimated">{{us.estimated|default_if_none:"-"}}</td>
-        <td class="todo">{{us.remaining|default_if_none:"-"}}</td>
-        <td class="failures {% if us.test_failed %} fail {% endif %}">
-            {% if us.test_failed %}
-<a href="{{us.get_absolute_url}}#test-cases">{{us.test_failed|default_if_none:"-"}}</a>
+                    <SCRIPT LANGUAGE="JavaScript">
+                        flash_versions = 10;
+                        flash_installed = 0;
+                        flash_version = '0.0';
+                        // Netscape style plugin detection
+                        if (navigator.plugins && navigator.plugins.length) {
+                            for (x = 0; x <navigator.plugins.length; x++) {
+                                if (navigator.plugins[x].name.indexOf('Shockwave Flash') != -1) {
+                                    flash_version = navigator.plugins[x].description.split('Shockwave Flash ')[1];
+                                    flash_installed = 1;
+                                    break;
+                                }
+                            }
+    
+                        } else if (window.ActiveXObject) { // ActiveX style plugin detection
+                            for (x = 2; x <= flash_versions; x++) {
+                                try {
+                                    oFlash = eval("new ActiveXObject('ShockwaveFlash.ShockwaveFlash." + x + "');");
+                                    if (oFlash) {
+                                        flash_installed = 1;
+                                        flash_version = x + '.0';
+                                    }
+                                } catch(e) { }
+                            }
+                        }
+    
+                        if (flash_installed) {
+                            document.write('<embed align="right" src="/agilito/open-flash-chart.swf?data={{ data_url }}" quality="high" bgcolor="#FFFFFF" width="320" height="240" name="chart" align="middle" allowScriptAccess="sameDomain" type="application/x-shockwave-flash" pluginspage="http://www.macromedia.com/go/getflashplayer" id="chart"/>');
+                        }
+    
+                        {% if burndown_chart_small_url %}
+                        else {
+                            document.write('<IMG SRC="{{ burndown_chart_small_url }}" style="align=right;" ALT="Burndown">');
+                        }
+                        {% endif %}
+                    </SCRIPT>
+                </object>
+    
             {% else %}
-                {{us.test_failed|default_if_none:"-"}}
-            {%endif%}
-        </td>
+                {% if burndown_chart_small_url %}
+                    <IMG SRC="{{ burndown_chart_small_url }}" ALT="Burndown" />
+                {% endif %}
+            {% endif %}
+        </div>
+    <div>
 
-        <td id="add_task_us_{{us.id}}" class="">
-            {% if not us.is_archived %}
-                <a href="{% url agilito.views.task_create current_project.id,us.id %}?last_page={{last_page}}"><img src="/agilito/add.png" alt="add task" title="add task" width="16" height="16" /></a>
-            {% endif %}
-        </td>
-        <td id="edit_us_{{us.id}}" class=""><a href="{% url agilito.views.userstory_edit current_project.id,us.id %}?last_page={{last_page}}"><img src="/agilito/pencil.png" alt="edit" title="edit" width="16" height="16" /></a></td>
-        <td id="delete_us_{{us.id}}" class="">
-            {% if not us.is_archived %}
-                <a href="{% url agilito.views.userstory_delete current_project.id,us.id %}?last_page={{last_page}}"><img src="/agilito/delete.png" alt="delete" title="delete" width="16" height="16" /></a>
-            {% endif %}
-        </td>
-        <td id="move_us_{{us.id}}" class="">
-            <a href="{% url agilito.views.userstory_move current_project.id,us.id %}?last_page={{last_page}}"
-            onclick="popup(this, 'us-move'); return false"><img
-            src="/agilito/bullet_go.png" alt="move" title="move" width="16" height="16" /></a>
-        </td>
-    </tr> 
-    {% for ta in us.tasks %}
-        <tr id="ta-{{ta.id}}" class="task child-of-us-{{us.id}} {% cycle even,odd %} {%if ta.is_blocked%}blocked{% endif %}">
-            <td></td><!-- rank -->
-            <td class="id"><a href="{{ta.get_absolute_url}}">TA{{ta.id}}</a></td>
-            <td class="name"><a href="{{ta.get_absolute_url}}">{{ta.name}}</a>
-                <ul class="tags">
-                    {% for tag in ta.taglist %}
-                        <li><span class="small">{{ tag }}</span></li>
+    <div style="clear: both"/>
+    {% endif %}
+
+    <table id="user-story-list" cellspacing="0" cellpadding="2">
+        <thead>
+            <tr>
+                <th>Rank</th>
+                <th>Id</th>
+                <th>Name</th>
+                <th>State</th>
+                <th>Plan</th>
+                <th>Tasks</th>
+                <th>To-Do</th>
+                <th>Failures</th>
+                <th></th>
+                <th></th>
+                <th></th>
+                <th></th>
+            </tr>
+        </thead>
+    
+        <tbody>
+            <tr class="totals">
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td class="total">{{planned}}</td>
+                <td class="total">{{estimated}}</td>
+                <td class="total">{{remaining}}</td>
+                <td class="total">{{failures}}</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr> 
+    
+            {% for us in user_stories %}
+                <tr id="us-{{us.id}}" class="userstory {% cycle even,odd %} {%if us.is_blocked%}blocked{% endif %}">
+                    <td class="rank">{{us.relative_rank}}</td>
+                    <td class="id"><a href="{{us.get_absolute_url}}">US{{us.id}}</a></td>
+                    <td class="name{% if us.is_archived %} archived{% endif %}"><a href="{{us.get_absolute_url}}">{{us.name}}</a></td>
+                    <td class="state {{ us.get_state_display|slugify }}">{{us.get_state_display}}</td>
+                    <td class="planned">{{us.planned|default_if_none:"-"}}</td>
+                    <td class="estimated">{{us.estimated|default_if_none:"-"}}</td>
+                    <td class="todo">{{us.remaining|default_if_none:"-"}}</td>
+                    <td class="failures {% if us.test_failed %} fail {% endif %}">
+                        {% if us.test_failed %}
+                            <a href="{{us.get_absolute_url}}#test-cases">{{us.test_failed|default_if_none:"-"}}</a>
+                        {% else %}
+                            {{us.test_failed|default_if_none:"-"}}
+                        {%endif%}
+                    </td>
+    
+                    <td id="add_task_us_{{us.id}}" class="">
+                        {% if not us.is_archived %}
+                            <a href="{% url agilito.views.task_create current_project.id,us.id %}?last_page={{last_page}}"><img
+                                src="/agilito/add.png" alt="add task" title="add task" width="16" height="16" /></a>
+                        {% endif %}
+                    </td>
+
+                    <td id="edit_us_{{us.id}}" class="">
+                        <a href="{% url agilito.views.userstory_edit current_project.id,us.id %}?last_page={{last_page}}"><img
+                            src="/agilito/pencil.png" alt="edit" title="edit" width="16" height="16" /></a>
+                    </td>
+
+                    <td id="delete_us_{{us.id}}" class="">
+                        {% if not us.is_archived %}
+                            <a href="{% url agilito.views.userstory_delete current_project.id,us.id %}?last_page={{last_page}}"><img
+                                src="/agilito/delete.png" alt="delete" title="delete" width="16" height="16" /></a>
+                        {% endif %}
+                    </td>
+
+                    <td id="move_us_{{us.id}}" class="">
+                        <a href="{% url agilito.views.userstory_move current_project.id,us.id %}?last_page={{last_page}}"
+                            onclick="popup(this, 'us-move'); return false"><img
+                            src="/agilito/bullet_go.png" alt="move" title="move" width="16" height="16" /></a>
+                    </td>
+                </tr> 
+
+                {% for ta in us.tasks %}
+                    <tr id="ta-{{ta.id}}" class="task child child-of-us-{{us.id}} {% cycle even,odd %} {%if ta.is_blocked%}blocked{% endif %}">
+                        <td></td><!-- rank -->
+                        <td class="id"><a href="{{ta.get_absolute_url}}">TA{{ta.id}}</a></td>
+                        <td class="name"><a href="{{ta.get_absolute_url}}">{{ta.name}}</a>
+                            <ul class="tags">
+                                {% for tag in ta.taglist %}
+                                    <li><span class="small">{{ tag }}</span></li>
+                                {% endfor %}
+                            </ul>
+                        </td>
+                        <td class="state {{ ta.get_state_display|slugify }}">{{ta.get_state_display}}</td>
+                        <td>{{ta.owner|default_if_none:""}}</td>
+                        <td>{{ta.estimate|default_if_none:"-"}}</td>
+                        <td>{{ta.remaining|default_if_none:"-"}}</td>
+                        <td></td><!-- failures -->
+                        <td>
+                            {% if not ta.is_archived %}
+                                <a href="{% url agilito.views.timelog_task current_project.id,ta.id %}?last_page={{last_page}}"
+                                    onclick="popup(this, 'timelog'); return false"><img
+                                    src="/agilito/log.png" alt="log" title="log" width="16" height="16" /></a>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if not ta.is_archived %}
+                                <a id="task_edit_{{task.id}}"
+                                    onclick="popup(this, 'taskedit'); return false"
+                                    href="{% url agilito.views.task_edit current_project.id,us.id,ta.id %}?last_page={{last_page}}"><img
+                                    src="/agilito/pencil.png" alt="edit"
+                                    title="edit" width="16" height="16" /></a>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if not ta.is_archived %}
+                                <a id="task_del_{{task.id}}"
+                                    onclick="popup(this, 'taskdel'); return false"
+                                    href="{% url agilito.views.task_delete current_project.id,us.id,ta.id %}?last_page={{last_page}}"><img
+                                    src="/agilito/delete.png" alt="delete" title="delete" width="16" height="16" /></a>
+                            {% endif %}
+                        </td>
+                        <td></td>
+                    </tr> 
+                {% endfor %}
+            {% endfor %}
+        </tbody>
+    </table>
+    
+    {% if open_impediments or resolved_impediments %}
+        <h3>Impediments</h3>
+        <table id="impediment-list" cellspacing="0" cellpadding="2">
+            <thead>
+                <tr>
+                    <th>Id</th>
+                    <th>Tasks</th>
+                    <th>Risk</th>
+                    <th>Name</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% if open_impediments %}
+                    {% for impediment in open_impediments %}
+                        <tr "class="{% cycle even,odd %}" id="impediment-{{ impediment.id }}">
+                            <td><a onclick="popup(this, 'impediment'); return false"
+                                href="{{ impediment.get_absolute_url }}?last_page={{last_page}}">IM{{ impediment.id }}</a></td>
+                            <td>{{ impediment.tasks.all.count }}</a></td>
+                            <td>{{ impediment.blocked }}</a></td>
+                            <td><a onclick="popup(this, 'impediment'); return false"
+                                href="{{ impediment.get_absolute_url }}?last_page={{last_page}}">{{ impediment.name }}</a></td>
+                        </tr>
+
+                        {% for task in impediment.tasks.all %}
+                            <tr id="impediment-{{ impediment.id }}-task-{{ task.id }}" class="child {% cycle even,odd %} child-of-impediment-{{ impediment.id }}">
+                                <td>TA{{ task.id }}</td>
+                                <td>&nbsp;</td>
+                                <td>&nbsp;</td>
+                                <td>{{ task.name }}</td>
+                            </tr>
+                        {% endfor %}
                     {% endfor %}
-                </ul>
-            </td>
-            <td class="state {{ ta.get_state_display|slugify }}">{{ta.get_state_display}}</td>
-            <td>{{ta.owner|default_if_none:""}}</td>
-            <td>{{ta.estimate|default_if_none:"-"}}</td>
-            <td>{{ta.remaining|default_if_none:"-"}}</td>
-            <td></td><!-- failures -->
-            <td>
-                {% if not ta.is_archived %}
-                    <a href="{% url agilito.views.timelog_task current_project.id,ta.id %}?last_page={{last_page}}"
-                        onclick="popup(this, 'timelog'); return false"><img src="/agilito/log.png" alt="log" title="log" width="16" height="16" /></a>
                 {% endif %}
-            </td>
-            <td>
-                {% if not ta.is_archived %}
-                    <a id="task_edit_{{task.id}}"
-                        onclick="popup(this, 'taskedit'); return false"
-                        href="{% url agilito.views.task_edit current_project.id,us.id,ta.id %}?last_page={{last_page}}"><img
-                        src="/agilito/pencil.png" alt="edit"
-                        title="edit" width="16" height="16" /></a>
-                {% endif %}
-            </td>
-            <td>
-                {% if not ta.is_archived %}
-                    <a id="task_del_{{task.id}}"
-                        onclick="popup(this, 'taskdel'); return false"
-                        href="{% url agilito.views.task_delete current_project.id,us.id,ta.id %}?last_page={{last_page}}"><img
-                        src="/agilito/delete.png" alt="delete" title="delete" width="16" height="16" /></a>
-                {% endif %}
-            </td>
-            <td></td>
-        </tr> 
-    {% endfor %}
-{% endfor %}
-</tbody>
-</table>
+    
+                {% if resolved_impediments %}
+                    <tr id="resolved-impediments">
+                        <td>&nbsp;</td>
+                        <td>{{ resolved_impediments.count }}</a></td>
+                        <td>&nbsp;</td>
+                        <td>Resolved</td>
+                    </tr>
+    
+                    {% for impediment in resolved_impediments %}
+                        <tr id="impediment-{{ impediment.id }}" class="child-of-resolved-impediments">
+                            <td><a onclick="popup(this, 'impediment'); return false"
+                                href="{{ impediment.get_absolute_url }}?last_page={{last_page}}">IM{{ impediment.id }}</a></td>
+                            <td>{{ impediment.tasks.all.count }}</a></td>
+                            <td>&nbsp;</td>
+                            <td><a onclick="popup(this, 'impediment'); return false"
+                                href="{{ impediment.get_absolute_url }}?last_page={{last_page}}">{{ impediment.name }}</a></td>
+                        </tr>
 
-<h3>Impediments</h3>
-<div>
-<a id="add-impediment" class="action-link add-object" 
-    href="{% url agilito.views.impediment_create project_id=current_project.id,iteration_id=current_iteration.id %}?last_page={{last_page}}">New Impediment</a></div>
-
-{% if open_impediments or resolved_impediments %}
-<table id="impediment-list" cellspacing="0" cellpadding="2">
-<thead>
-    <tr>
-        <th>Id</th>
-        <th>Tasks</th>
-        <th>Risk</th>
-        <th>Name</th>
-    </tr>
-</thead>
-<tbody>
-    {% if open_impediments %}
-    {% for impediment in open_impediments %}
-        <tr id="impediment-{{ impediment.id }}">
-            <td><a onclick="popup(this, 'impediment'); return false" href="{{ impediment.get_absolute_url }}?last_page={{last_page}}">IM{{ impediment.id }}</a></td>
-            <td>{{ impediment.tasks.all.count }}</a></td>
-            <td>{{ impediment.blocked }}</a></td>
-            <td><a onclick="popup(this, 'impediment'); return false" href="{{ impediment.get_absolute_url }}?last_page={{last_page}}">{{ impediment.name }}</a></td>
-        </tr>
-        {% for task in impediment.tasks.all %}
-            <tr id="impediment-{{ impediment.id }}-task-{{ task.id }}" class="child-of-impediment-{{ impediment.id }}">
-                <td>TA{{ task.id }}</td>
-                <td>&nbsp;</td>
-                <td>&nbsp;</td>
-                <td>{{ task.name }}</td>
-            </tr>
-        {% endfor %}
-    {% endfor %}
+                        {% for task in impediment.tasks.all %}
+                            <tr id="impediment-{{ impediment.id }}-task-{{ task.id }}" class="child-of-impediment-{{ impediment.id }}">
+                                <td>TA{{ task.id }}</td>
+                                <td>&nbsp;</td>
+                                <td>&nbsp;</td>
+                                <td>{{ task.name }}</td>
+                            </tr>
+                        {% endfor %}
+                    {% endfor %}
+                {% endif %}
+            </tbody>
+        </table>
     {% endif %}
-
-    {% if resolved_impediments %}
-    <tr id="resolved-impediments">
-        <td>&nbsp;</td>
-        <td>{{ resolved_impediments.count }}</a></td>
-        <td>&nbsp;</td>
-        <td>Resolved</td>
-    </tr>
-
-    {% for impediment in resolved_impediments %}
-        <tr id="impediment-{{ impediment.id }}" class="child-of-resolved-impediments">
-            <td><a onclick="popup(this, 'impediment'); return false" href="{{ impediment.get_absolute_url }}?last_page={{last_page}}">IM{{ impediment.id }}</a></td>
-            <td>{{ impediment.tasks.all.count }}</a></td>
-            <td>&nbsp;</td>
-            <td><a onclick="popup(this, 'impediment'); return false" href="{{ impediment.get_absolute_url }}?last_page={{last_page}}">{{ impediment.name }}</a></td>
-        </tr>
-        {% for task in impediment.tasks.all %}
-            <tr id="impediment-{{ impediment.id }}-task-{{ task.id }}" class="child-of-impediment-{{ impediment.id }}">
-                <td>TA{{ task.id }}</td>
-                <td>&nbsp;</td>
-                <td>&nbsp;</td>
-                <td>{{ task.name }}</td>
-            </tr>
-        {% endfor %}
-    {% endfor %}
-    {% endif %}
-</tbody>
-</table>
-{% endif %}
-
-<p/>
-
-<h3>Downloads</h3>
-<ul>
-<li><a href="{{ cards_url }}">task cards</a></li>
-
-{% if status_table_url %}
-    <li><a href="{{ status_table_url }}">task status</a></li>
-    <li><a href="{% url agilito.views.iteration_export current_project.id,current_iteration.id %}">iteration export</a></li>
-{% endif %}
-
-{%if burndown_chart_url %}
-<li><a target="_burndown" href="{{ burndown_chart_url }}">Burndown chart</a></li>
-{% endif %}
-
-{% if product_backlog_chart %}
-<li><a target="_chart" href="{{ product_backlog_chart }}">Backlog evolution since start of iteration</a></li>
-{% endif %}
-<li><a onclick="popup(this, 'taskboard'); return false" href="{% url agilito.views.taskboard current_project.id,current_iteration.id %}">Task board</a></li>
-<li><a href="/feeds/iteration/{{current_project.id}}/{{current_iteration.id}}/"><img border="0" src="/agilito/feed-icon-14x14.png" /></a></li>
-</ul>
-
-{% else %}
-No user stories for this Iteration
-{% endif %}
-{% else %}
-There are no iterations in this project.
-{% endif %}
-
 {% endblock %}
-
-
-
