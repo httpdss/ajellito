@@ -192,7 +192,7 @@ class Project(ClueModel):
             cursor.execute('select min(rank) from agilito_userstory where project_id = %s', (self.id,))
             prank = cursor.fetchone()[0]
         else:
-            cursor.execute('select rank from agilito_userstory where project_id = %s and id = %s', (self.id, parentid))
+            cursor.execute('select rank + 1 from agilito_userstory where project_id = %s and id = %s', (self.id, parentid))
             prank = cursor.fetchone()[0]
             if prank is None:
                 cursor.execute('select max(rank) + 1 from agilito_userstory where project_id = %s and not rank is NULL', (self.id,))
