@@ -25,6 +25,37 @@
         href="/feeds/backlog/{{current_project.id}}/" />
 {% endblock %}
 
+{% block js %}
+    <script type="text/javascript" src="/agilito/js/jquery.tablednd_0_5.js"></script>
+
+    <script type="text/javascript">
+        $(document).ready(function() {
+            $("#user-story-list").tableDnD({
+                onDragClass: "dragging",
+
+                onDrop: function(table, row) {
+                    var rows = table.tBodies[0].rows;
+
+                    var pred = null;
+                    for (var i=0; i<rows.length; i++) {
+                        if (row.id == rows[i].id) {
+                            break;
+                        }
+                        pred = rows[i].id;
+                    }
+                    if (!pred) {
+                        pred = 'us-top';
+                    }
+
+                    var goto = window.location.href + '/reorder/' + row.id.substring(3) + '/' + pred.substring(3) + '/';
+                    goto = goto.substring(0, 8) + goto.substring(8).replace(/\/+/g, '/');
+                    window.location = goto;
+                }
+            });
+        });
+    </script>
+{% endblock %}
+
 {% block title %} User Stories in the Backlog {% endblock %}
 
 {% if current_project %}
@@ -51,7 +82,7 @@
         {% if user_stories %}
             <table cellspacing="0" cellpadding="2" id="user-story-list">
                 <thead>
-                    <tr>
+                    <tr class="nodrop nodrag">
                         <th>Rank</th>
                         <th>Id</th>
                         <th>Name</th>
@@ -65,7 +96,7 @@
                 </thead>
     
                 <tbody>
-                    <tr class="totals">
+                    <tr class="totals nodrop nodrag">
                         <td><!-- rank --></td>
                         <td><!-- id --></td>
                         <td><!-- name --></td>
@@ -78,7 +109,7 @@
                     </tr>
     
                     {% for object in user_stories %}
-                        <tr class="{% cycle even,odd %}">
+                        <tr id="us-{{object.id}}" class="{% cycle even,odd %}">
                             <td class="rank">{{object.rank}}</td>
                             <td class="id">US{{object.id}}</td>
                             <td class="name"><a href="{{object.get_absolute_url}}">{{object.name}}</a>

@@ -1140,6 +1140,16 @@ def _excel_column(n):
         return _excel_column(div)+chr(65+n%26)
 
 @restricted
+def story_reorder(request, project_id, story, parent):
+    project = Project.objects.get(id=project_id)
+    if parent == 'top':
+        parent = None
+
+    project.reorder_story(story, parent)
+
+    return HttpResponseRedirect(project.get_absolute_url())
+
+@restricted
 def product_backlog(request, project_id):
     statename = {}
 

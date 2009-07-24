@@ -184,6 +184,32 @@ class Project(ClueModel):
 
         return suggestions
 
+    def reorder_story(self, storyid, parentid):
+        from django.db import connection, transaction
+        cursor = connection.cursor()
+
+        if parentid is None:
+            cursor.execute('select min(rank) from agilito_userstory where project_id = %s', (self.id,))
+            prank = cursor.fetchone()[0]
+        else:
+            cursor.execute('select rank from agilito_userstory where project_id = %s and id = %s', (self.id, parentid))
+            prank = cursor.fetchone()[0]
+            if prank is None:
+                cursor.execute('select max(rank) + 1 from agilito_userstory where project_id = %s and not rank is NULL', (self.id,))
+                prank = cursor.fetchone()[0]
+
+        if prank is None:
+            cursor.execute('update agilito_userstory set rank = 1 where project_id = %s and id = %s', (self.id, storyid))
+        else:
+            cursor.execute('update agilito_userstory set rank = rank + 1 where project_id = %s and rank >= %s', (self.id, prank))
+            cursor.execute('update agilito_userstory set rank = %s where project_id = %s and id = %s', (prank, self.id, storyid))
+
+        cursor.execute('select id from agilito_userstory where project_id = %s and not rank is NULL order by rank', (self.id, ))
+        ids = [r[0] for r in cursor.fetchall()]
+        for rank, id in enumerate(ids):
+            cursor.execute('update agilito_userstory set rank = %s where id = %s', (rank + 1, id))
+        transaction.commit_unless_managed()
+
 class Release(ClueModel):
     project = models.ForeignKey(Project)
     
@@ -581,7 +607,7 @@ class UserStory(ClueModel):
         ordering = ('rank', 'id')
 
     def save(self):
-        from django.db import connection
+        from django.db import connection, transaction
         cursor = connection.cursor()
         if not self.id is None:
             cursor.execute('select rank from agilito_userstory where id=%s', (self.id,))
@@ -592,6 +618,7 @@ class UserStory(ClueModel):
             cursor.execute("""
                 update agilito_userstory set rank = rank + 1 where project_id=%s and not rank is null and rank >= %s
                 """, (self.project_id, self.rank))
+        transaction.commit_unless_managed()
 
         if self.state in [UserStory.STATES.ARCHIVED, UserStory.STATES.ACCEPTED, UserStory.STATES.FAILED]:
             self.closed = datetime.date.today()
