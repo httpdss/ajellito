@@ -157,7 +157,13 @@ def cached(f):
 
         if v is None or v[0] != pv:
             v = f(*args, **kwargs)
-            cache.set(key, (pv, v), 1000000)
+            midnight = datetime.datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+            delta = datetime.datetime.now() - midnight
+            # 86400 = # seconds in a day, this resets the cached entry
+            # at midnight. There's a number of things that are
+            # day-dependant, like the burndown, even if nothing's
+            # saved
+            cache.set(key, (pv, v), 86400 - delta.seconds)
         else:
             v = v[1]
 
@@ -1128,6 +1134,7 @@ def product_backlog_chart(request, project_id, iteration_id):
     return response
 
 @restricted
+@cached
 def iteration_burndown_chart(request, project_id, iteration_id, name):
     it = Iteration.objects.get(id=iteration_id, project__id=project_id)
 
