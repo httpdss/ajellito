@@ -4,6 +4,13 @@ import datetime
 import ODTLabels
 import types
 import settings
+from django.core.cache import cache
+
+try:
+    settings.CACHE_BACKEND
+    CACHE_ENABLED = True
+except AttributeError:
+    CACHE_ENABLED = False
 
 try:
     import pyExcelerator
@@ -97,6 +104,64 @@ from agilito.forms import UserStoryForm, UserStoryShortForm, gen_TaskLogForm,\
     UserStoryMoveForm, IterationImportForm
 
 from agilito.tools import restricted
+from django.db.models.signals import post_save, post_delete
+
+def invalidate_cache(sender, instance, **kwargs):
+    id = None
+
+    if isinstance(instance, Project):
+        id = instance.id
+    elif isinstance(instance, Iteration):
+        id = instance.project.id
+    elif isinstance(instance, UserStory):
+        id = instance.project.id
+    elif isinstance(instance, Task):
+        id = instance.user_story.project.id
+    elif isinstance(instance, TestCase):
+        id = instance.user_story.project.id
+    elif isinstance(instance, TaskLog):
+        id = instance.task.user_story.project.id
+    elif isinstance(instance, TestResult):
+        id = instance.test_case.user_story.project.id
+    elif isinstance(instance, UserStoryAttachment):
+        id = instance.user_story.project.id
+    elif isinstance(instance, Impediment):
+        id = self.tasks.all()[0].user_story.project.id
+
+    if not id is None:
+        Project.touch_cache(id)
+
+if CACHE_ENABLED:
+    post_save.connect(invalidate_cache, weak=False)
+    post_delete.connect(invalidate_cache, weak=False)
+
+def cached(f):
+    def f_cached(*args, **kwargs):
+        global CACHE_ENABLED
+
+        if not CACHE_ENABLED:
+            return f(*args, **kwargs)
+
+        params = f.func_code.co_varnames[:f.func_code.co_argcount]
+        vardict = dict(zip(params, ['<None>' for d in params]))
+        vardict.update(dict(zip(f.func_code.co_varnames, args)))
+        vardict.update(kwargs)
+        vardict['request'] = ''
+
+        pv = Project.cache_id(vardict['project_id'])
+
+        key = ':'.join([f.__name__] + [str(vardict[v]) for v in params])
+        v = cache.get(key)
+
+        if v is None or v[0] != pv:
+            v = f(*args, **kwargs)
+            cache.set(key, (pv, v), 1000000)
+        else:
+            v = v[1]
+
+        return v
+
+    return f_cached
 
 class UserHasNoProjectException(Exception):
     pass
@@ -378,6 +443,7 @@ def userstory_delete(request, project_id, userstory_id):
                                        extra_context={'deleted_objects': delobjs})
 
 @restricted
+@cached
 def backlog(request, project_id):
     """
     """
@@ -785,6 +851,7 @@ def iteration_import(request, project_id):
     return render_to_response('iteration_import.html', context_instance=context)
 
 @restricted
+@cached
 def iteration_status(request, project_id, iteration_id=None, template='iteration_status.html'):
     if iteration_id is None:
         latest_iteration = _get_iteration(project_id)

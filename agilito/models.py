@@ -2,13 +2,15 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.utils.translation import ugettext_lazy as _
 from django.db.models import Q
+from django.core.cache import cache
+import settings
 
 from tagging.fields import TagField
 import tagging
 from tagging.utils import parse_tag_input
 
 from dateutil.rrule import rrule, DAILY, MO, TU, WE, TH, FR
-import datetime
+import datetime, time
 import math
 
 # We are using our own search application here!
@@ -130,6 +132,19 @@ class Project(ClueModel):
     def get_current_project(klass):
         return klass.objects.all()[0]
 
+    @classmethod
+    def touch_cache(klass, id):
+        v = str(time.time())
+        cache.set('project-cache-version-%s' % id, v)
+        return v
+
+    @classmethod
+    def cache_id(klass, id):
+        v = cache.get('project-cache-version-%s' % id)
+        if not v:
+            return Project.touch_cache(id)
+        return v
+
     def backlog(self):
         return UserStory.objects.filter(project=self).exclude(
             state=UserStory.STATES.ARCHIVED).exclude(
@@ -213,7 +228,6 @@ class Project(ClueModel):
 class Release(ClueModel):
     project = models.ForeignKey(Project)
     
-
     def __unicode__(self):
         return u'RE%s: %s' % (self.id, self.name)
 
@@ -882,7 +896,6 @@ class TaskLog(models.Model):
     iteration = models.ForeignKey('Iteration', null=True)
     owner = models.ForeignKey(User)
     old_remaining = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True)
-
 
     def __unicode__(self):
         return 'Task Log: [%s, %s, %s, %s, %s]' % (self.iteration, self.date, 

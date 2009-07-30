@@ -1,4 +1,13 @@
-import unittest
+import unittest, os, sys
+
+os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
+
+projectdir = os.path.abspath(os.path.dirname(__file__))
+while projectdir != '/' and not os.path.exists(os.path.join(projectdir, 'settings.py')):
+    projectdir = os.path.dirname(projectdir)
+if projectdir != '/':
+    sys.path.append(projectdir)
+
 from django.test import _doctest as doctest
 from django.test.testcases import OutputChecker, DocTestRunner
 
@@ -21,3 +30,4 @@ def suite():
                                            checker=doctestOutputChecker,
                                            runner=DocTestRunner))
     return suite
+
