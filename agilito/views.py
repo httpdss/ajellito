@@ -148,7 +148,10 @@ def cached(f):
         vardict = dict(zip(params, ['<None>' for d in params]))
         vardict.update(dict(zip(f.func_code.co_varnames, args)))
         vardict.update(kwargs)
-        vardict['request'] = ''
+        # replace request with per-user(/group) caching. current
+        # assumption is that only staff gets to see stuff others don't
+        u = args[0].user
+        vardict['request'] = u.is_staff or u.is_superuser
 
         pv = Project.cache_id(vardict['project_id'])
 
