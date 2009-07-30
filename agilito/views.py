@@ -107,28 +107,30 @@ from agilito.tools import restricted
 from django.db.models.signals import post_save, post_delete
 
 def invalidate_cache(sender, instance, **kwargs):
-    id = None
+    ids = []
 
     if isinstance(instance, Project):
-        id = instance.id
+        ids = [instance.id]
     elif isinstance(instance, Iteration):
-        id = instance.project.id
+        ids = [instance.project.id]
     elif isinstance(instance, UserStory):
-        id = instance.project.id
+        ids = [instance.project.id]
     elif isinstance(instance, Task):
-        id = instance.user_story.project.id
+        ids = [instance.user_story.project.id]
     elif isinstance(instance, TestCase):
-        id = instance.user_story.project.id
+        ids = [instance.user_story.project.id]
     elif isinstance(instance, TaskLog):
-        id = instance.task.user_story.project.id
+        ids = [instance.task.user_story.project.id]
     elif isinstance(instance, TestResult):
-        id = instance.test_case.user_story.project.id
+        ids = [instance.test_case.user_story.project.id]
     elif isinstance(instance, UserStoryAttachment):
-        id = instance.user_story.project.id
+        ids = [instance.user_story.project.id]
     elif isinstance(instance, Impediment):
-        id = self.tasks.all()[0].user_story.project.id
+        ids = [instance.tasks.all()[0].user_story.project.id]
+    elif isinstance(instance, User):
+        ids = [p.id for p in instance.project_set.all()]
 
-    if not id is None:
+    for id in ids:
         Project.touch_cache(id)
 
 if CACHE_ENABLED:
