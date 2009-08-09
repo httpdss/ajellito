@@ -30,6 +30,20 @@
     <script type="text/javascript" src="/agilito/js/jquery.uitablefilter.js"></script>
 
     <script type="text/javascript">
+        function select_states() {
+            var states = [];
+            {% for state in states %}
+                if ($("#story_state_{{state.state}}").is(':checked')) {
+                    states.push('{{state.state}}');
+                }
+            {% endfor %}
+            states = states.join('+');
+            if (states != '') {
+                states += '/';
+            }
+            window.location = '{{default_backlog}}' + states;
+        }
+
         $(document).ready(function() {
             $("#user-story-list").tableDnD({
                 onDragClass: "dragging",
@@ -59,6 +73,10 @@
             $("#filter").keyup(function() {
                 $.uiTableFilter( pbl, this.value );
             })
+
+            {% for state in states %}
+                $("#story_state_{{state.state}}").change(select_states);
+            {% endfor %}
         });
     </script>
 {% endblock %}
@@ -83,6 +101,27 @@
         {% if user_stories %}
             <div id="us-resume">
                 <span>Number of US in Backlog: <strong>{{ user_stories.count }}</strong> </span> 
+                {% if velocity.sprint_length %}
+                    <div>Velocity: {{ velocity.actual }} vs. {{ velocity.estimated }} (avg sprint length {{ velocity.sprint_length|floatformat:0 }} days)</div>
+                {% endif %}
+                {% if accuracy %}
+                    <div>Sizing accuracy: {{ accuracy|floatformat:0 }}%</div>
+                {% endif %}
+                <div>
+                    <form name="states">
+                        {% for state in states %}
+                            <input type="checkbox"
+                                id="story_state_{{state.state}}"
+                                name="story_state_{{state.state}}"
+                                value="{{ state.state }}"
+                                {% if state.selected %}
+                                    checked="checked"
+                                {% endif %}
+                                />&nbsp;<label class="inline"
+                                    for="story_state_{{state.state}}">{{state.name}}</label>
+                        {% endfor %}
+                    </form>
+                </div>
             </div>
         {% endif %}
     

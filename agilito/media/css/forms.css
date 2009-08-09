@@ -9,6 +9,12 @@ label {
     padding:0 5px;
 }
 
+label.inline {
+    float: none;
+    text-align: default;
+    padding: 0;
+}
+
 select {
     width:15em;
 }

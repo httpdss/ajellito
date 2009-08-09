@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 from django.utils.translation import ugettext_lazy as _
 from django.db.models import Q
 from django.core.cache import cache
+from django.db.models.signals import post_save, post_delete
 import settings
 
 from tagging.fields import TagField
@@ -12,6 +13,60 @@ from tagging.utils import parse_tag_input
 from dateutil.rrule import rrule, DAILY, MO, TU, WE, TH, FR
 import datetime, time
 import math
+
+try:
+    settings.CACHE_BACKEND
+    CACHE_ENABLED = True
+except AttributeError:
+    CACHE_ENABLED = False
+
+def invalidate_cache(sender, instance, **kwargs):
+    ids = []
+
+    if isinstance(instance, User):
+        ids = [p.id for p in instance.project_set.all()]
+    elif hasattr(instance, 'project'):
+        ids = [instance.project.id]
+
+    for id in ids:
+        Project.touch_cache(id)
+
+if CACHE_ENABLED:
+    post_save.connect(invalidate_cache, weak=False)
+    post_delete.connect(invalidate_cache, weak=False)
+
+def cached(f):
+    def f_cached(*args, **kwargs):
+        global CACHE_ENABLED
+
+        self = args[0]
+        if not CACHE_ENABLED or not hasattr(self, 'project_id'):
+            return f(*args, **kwargs)
+
+        params = f.func_code.co_varnames[:f.func_code.co_argcount]
+        vardict = dict(zip(params, ['<None>' for d in params]))
+        vardict.update(dict(zip(f.func_code.co_varnames, args)))
+        vardict.update(kwargs)
+        # replace 'self' with module:class:id:method 
+        obj = '%s.%s.%s(%s' % (self.__class__.__module__, self.__class__.__name__, f.__name__, str(self.id))
+        vardict['self'] = obj
+
+        pv = Project.cache_id(self.project_id)
+
+        key = ','.join([str(vardict[v]) for v in params]) + ')'
+        v = cache.get(key)
+
+        if v is None or v[0] != pv:
+            v = f(*args, **kwargs)
+            midnight = datetime.datetime.now().replace(hour=23, minute=59, second=59, microsecond=0)
+            delta = datetime.datetime.now() - midnight
+            cache.set(key, (pv, v), delta.seconds)
+        else:
+            v = v[1]
+
+        return v
+
+    return f_cached
 
 # We are using our own search application here!
 from queryutils.queryutils import SearchEqualOp, SearchQueryGenerator
@@ -116,6 +171,23 @@ class ClueModel(models.Model):
 class Project(ClueModel):
     project_members = models.ManyToManyField(User, null=True, blank=True)
 
+    @property
+    def project(self):
+        return self
+
+    @cached
+    def velocity(self):
+        vs = filter(lambda x: not x is None, [it.velocity() for it in self.iteration_set.all()])
+
+        sprints = len(vs)
+        if sprints == 0:
+            return {'actual':None, 'estimated':None, 'sprint_length':None}
+
+        pv = {}
+        for key in ['actual', 'estimated', 'sprint_length']:
+            pv[key] = float(sum(v[key] for v in vs)) / sprints
+        return pv
+
     def __unicode__(self):
         return u'P%s: %s' % (self.id, self.name)
 
@@ -145,7 +217,10 @@ class Project(ClueModel):
             return Project.touch_cache(id)
         return v
 
-    def backlog(self):
+    def backlog(self, states=None):
+        if states:
+            return UserStory.objects.filter(project=self, state__in=states).order_by('rank')
+
         return UserStory.objects.filter(project=self).exclude(
             state=UserStory.STATES.ARCHIVED).exclude(
             state=UserStory.STATES.ACCEPTED).exclude(
@@ -161,9 +236,9 @@ class Project(ClueModel):
                 d = math.fabs(v - c)
         return sel
 
-    def baseline_story(self):
+    def baseline_story(self, stories):
         data = []
-        for story in self.userstory_set.exclude(state=UserStory.STATES.ARCHIVED).all():
+        for story in stories:
             hours = story.actuals or story.estimated
             if not hours:
                 continue
@@ -178,9 +253,14 @@ class Project(ClueModel):
         baseline = self.closest(avg, [d[1] for d in data])
         return UserStory.objects.get(id=data[baseline][0])
 
-    def suggest_sizes(self, baseline=None, size=5): # UserStory.SIZES.M): but needs forward declaration
+    @cached
+    def suggest_sizes(self, baseline=None, size=5, only_sized=False): # UserStory.SIZES.M): but needs forward declaration
+        stories = list(self.userstory_set.exclude(state=UserStory.STATES.ARCHIVED).all())
+        if only_sized:
+            stories = filter(lambda s: s.size and s.size != UserStory.SIZES.TOO_LARGE, stories)
+
         if baseline is None:
-            baseline = self.baseline_story()
+            baseline = self.baseline_story(stories)
 
         if baseline is None:
             return {}
@@ -190,14 +270,23 @@ class Project(ClueModel):
         sizes = [s[0] for s in UserStory.SIZES.choices()]
         
         suggestions = {}
-        for story in self.userstory_set.exclude(state=UserStory.STATES.ARCHIVED).all():
+        for story in stories:
             hours = float(story.actuals or story.estimated)
             if not hours:
                 continue
 
-            suggestions[story.id] = UserStory.SIZES.choices()[self.closest(int(factor * hours), sizes)]
+            suggestions[story.id] = list(UserStory.SIZES.choices()[self.closest(int(factor * hours), sizes)]) + [story.size]
 
         return suggestions
+
+    @cached
+    def size_estimation_accuracy(self):
+        sugg = self.suggest_sizes(only_sized = True).values()
+
+        try:
+            return (float(sum(s[0] for s in sugg)) / sum(s[2] for s in sugg)) * 100
+        except ZeroDivisionError:
+            return None
 
     def reorder_story(self, storyid, parentid):
         from django.db import connection, transaction
@@ -224,6 +313,9 @@ class Project(ClueModel):
         for rank, id in enumerate(ids):
             cursor.execute('update agilito_userstory set rank = %s where id = %s', (rank + 1, id))
         transaction.commit_unless_managed()
+        # database updates must touch the cache unless they're being done in a 'save' method,
+        # which touches the cache using a signal
+        Project.touch_cache(self.id)
 
 class Release(ClueModel):
     project = models.ForeignKey(Project)
@@ -256,17 +348,39 @@ class Iteration(ClueModel):
                                                 
     @property
     def us_accepted(self):
-        return sum(us.planned or 0 for us in self.userstory_set.filter(Q(state=UserStory.STATES.ACCEPTED)))
+        return sum(us.planned or 1 for us in self.userstory_set.filter(Q(state=UserStory.STATES.ACCEPTED)))
     
     @property
     def us_accepted_percentage(self):
-        total = sum(us.planned or 0 for us in self.userstory_set.all())
+        total = sum(us.planned or 1 for us in self.userstory_set.all())
         accepted = self.us_accepted
         if total <> 0:
             return (float(accepted)/float(total))*100 
         else:
             return 0
 
+    @cached
+    def velocity(self):
+        if self.end_date > datetime.date.today():
+            return None
+
+        d = self.total_days()
+        if d == 0:
+            return None
+
+        s = [(us.size or 0, us.state==UserStory.STATES.ACCEPTED) for us in self.userstory_set.all()]
+
+        v = {}
+        v['estimated'] = sum(e[0] for e in s)
+        if v['estimated'] == 0:
+            return None
+
+        v['sprint_length'] = d
+        v['actual'] = sum(a[0] for a in filter(lambda x: x[1], s))
+
+        return v
+
+    @cached
     def day_number(self, date):
         """
         Return the day of the iteration we're on.
@@ -277,6 +391,7 @@ class Iteration(ClueModel):
                      dtstart=self.start_date, until=until,
                      byweekday=(MO,TU,WE,TH,FR)).count()
 
+    @cached
     def total_days(self):
         return self.day_number(self.end_date + datetime.timedelta(1))
 
@@ -311,6 +426,7 @@ class Iteration(ClueModel):
         tasklogs = self.tasklog_set.filter(owner__id=userid)
         return sum(tl.time_on_task or 0 for tl in tasklogs)
 
+    @cached
     def burndown_data(self):
         burndown = []
         today = datetime.date.today()
@@ -465,6 +581,9 @@ class UserStory(ClueModel):
     # alter table agilito_userstory add column tags varchar(255) NOT NULL default ''
     tags = TagField()
 
+    copied_from = models.ForeignKey('UserStory', null=True)
+    generation = models.SmallIntegerField(default=1)
+
     @property
     def taglist(self):
         return parse_tag_input(self.tags)
@@ -482,14 +601,11 @@ class UserStory(ClueModel):
 
     @property
     def backlog_state(self):
-        if self.iteration is None:
-            return 'unplanned'
-
-        if self.iteration.end_date < datetime.date.today():
-            return 'forgotten'
-
         if self.state == UserStory.STATES.ARCHIVED:
             return 'archived'
+
+        if self.iteration is None:
+            return 'unplanned'
 
         if self.state == UserStory.STATES.ACCEPTED:
             return 'accepted'
@@ -500,11 +616,14 @@ class UserStory(ClueModel):
         if self.iteration.start_date > datetime.date.today():
             return 'planned'
 
+        if self.iteration.end_date < datetime.date.today():
+            return 'forgotten'
+
         # allow for one day of leeway
         if self.iteration.end_date >= (datetime.date.today() - datetime.timedelta(days=1)): 
             return 'in-progress'
 
-        return 'forgotten'
+        return 'unknown'
 
     @property
     def is_blocked(self):
@@ -571,6 +690,8 @@ class UserStory(ClueModel):
         self.iteration=iteration
         self.state = UserStory.STATES.DEFINED
         self.created = datetime.datetime.now()
+        self.copied_from = UserStory.objects.get(id=id)
+        self.generation = self.copied_from.generation + 1
         self.save()
 
         if copy_tasks:
@@ -623,15 +744,17 @@ class UserStory(ClueModel):
     def save(self):
         from django.db import connection, transaction
         cursor = connection.cursor()
+        project_id = self.project.id
         if not self.id is None:
             cursor.execute('select rank from agilito_userstory where id=%s', (self.id,))
             rank = cursor.fetchone()[0]
             if not rank is None:
-                cursor.execute('update agilito_userstory set rank = rank - 1 where project_id=%s and rank > %s', (self.project_id,rank))
+                cursor.execute('update agilito_userstory set rank = rank - 1 where project_id=%s and rank > %s', (project_id,rank))
         if not self.rank is None:
             cursor.execute("""
                 update agilito_userstory set rank = rank + 1 where project_id=%s and not rank is null and rank >= %s
-                """, (self.project_id, self.rank))
+                """, (project_id, self.rank))
+        # no need to touch the cache -- the save-signal will do it for us
         transaction.commit_unless_managed()
 
         if self.state in [UserStory.STATES.ARCHIVED, UserStory.STATES.ACCEPTED, UserStory.STATES.FAILED]:
@@ -693,6 +816,10 @@ class Task(ClueModel):
 
     # alter table agilito_task add column tags varchar(255) NOT NULL default ''
     tags = TagField()
+
+    @property
+    def project(self):
+        return self.user_story.project
 
     @property
     def taglist(self):
@@ -877,6 +1004,10 @@ class Impediment(models.Model):
         it = self.tasks.all()[0].user_story.iteration
 
         return PERMLINK_PREFIX + 'impediment_edit', (), {'project_id': it.project.id, 'iteration_id': it.id, 'impediment_id': self.id }
+
+    @property
+    def project(self):
+        return self.tasks.all()[0].user_story.project
 
     class Meta:
         ordering = ('-opened',)        

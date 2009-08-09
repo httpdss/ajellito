@@ -104,38 +104,6 @@ from agilito.forms import UserStoryForm, UserStoryShortForm, gen_TaskLogForm,\
     UserStoryMoveForm, IterationImportForm
 
 from agilito.tools import restricted
-from django.db.models.signals import post_save, post_delete
-
-def invalidate_cache(sender, instance, **kwargs):
-    ids = []
-
-    if isinstance(instance, Project):
-        ids = [instance.id]
-    elif isinstance(instance, Iteration):
-        ids = [instance.project.id]
-    elif isinstance(instance, UserStory):
-        ids = [instance.project.id]
-    elif isinstance(instance, Task):
-        ids = [instance.user_story.project.id]
-    elif isinstance(instance, TestCase):
-        ids = [instance.user_story.project.id]
-    elif isinstance(instance, TaskLog):
-        ids = [instance.task.user_story.project.id]
-    elif isinstance(instance, TestResult):
-        ids = [instance.test_case.user_story.project.id]
-    elif isinstance(instance, UserStoryAttachment):
-        ids = [instance.user_story.project.id]
-    elif isinstance(instance, Impediment):
-        ids = [instance.tasks.all()[0].user_story.project.id]
-    elif isinstance(instance, User):
-        ids = [p.id for p in instance.project_set.all()]
-
-    for id in ids:
-        Project.touch_cache(id)
-
-if CACHE_ENABLED:
-    post_save.connect(invalidate_cache, weak=False)
-    post_delete.connect(invalidate_cache, weak=False)
 
 def cached(f):
     def f_cached(*args, **kwargs):
@@ -144,29 +112,22 @@ def cached(f):
         if not CACHE_ENABLED:
             return f(*args, **kwargs)
 
-        params = f.func_code.co_varnames[:f.func_code.co_argcount]
-        vardict = dict(zip(params, ['<None>' for d in params]))
-        vardict.update(dict(zip(f.func_code.co_varnames, args)))
+        params = f.func_code.co_varnames[1:f.func_code.co_argcount]
+        vardict = dict(zip(params, ['<default>' for d in params]))
+        vardict.update(dict(zip(params, args[1:])))
         vardict.update(kwargs)
-        # replace request with per-user(/group) caching. current
-        # assumption is that only staff gets to see stuff others don't
-        u = args[0].user
-        vardict['request'] = u.is_staff or u.is_superuser
+        u = args[0].user # request.user
 
         pv = Project.cache_id(vardict['project_id'])
 
-        key = ':'.join([f.__name__] + [str(vardict[v]) for v in params])
+        key = 'agilito.views.%s(%s)' % (f.__name__, ','.join([str(vardict[v]) for v in params]))
         v = cache.get(key)
 
         if v is None or v[0] != pv:
             v = f(*args, **kwargs)
-            midnight = datetime.datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+            midnight = datetime.datetime.now().replace(hour=23, minute=59, second=59, microsecond=0)
             delta = datetime.datetime.now() - midnight
-            # 86400 = # seconds in a day, this resets the cached entry
-            # at midnight. There's a number of things that are
-            # day-dependant, like the burndown, even if nothing's
-            # saved
-            cache.set(key, (pv, v), 86400 - delta.seconds)
+            cache.set(key, (pv, v), delta.seconds)
         else:
             v = v[1]
 
@@ -454,16 +415,21 @@ def userstory_delete(request, project_id, userstory_id):
                                        extra_context={'deleted_objects': delobjs})
 
 @restricted
-@cached
-def backlog(request, project_id):
+def backlog(request, project_id, states=None):
     """
     """
     global EXCEL_ENABLED
 
     project = Project.objects.get(id=project_id)
-    user_stories = project.backlog()
 
     suggested_size = project.suggest_sizes()
+
+    if not states:
+        states_filter = [UserStory.STATES.DEFINED]
+    else:
+        states_filter = [int(s) for s in states.split('+')]
+
+    user_stories = project.backlog(states_filter)
 
     for us in user_stories:
         if suggested_size.has_key(us.id):
@@ -474,17 +440,34 @@ def backlog(request, project_id):
     size = sum(i.size for i in user_stories if i.size)
 
     if EXCEL_ENABLED:
-        full_backlog = reverse('agilito.views.product_backlog', args=[project_id])
+        args = [project_id]
+        if states:
+            args.append(states)
+        full_backlog = reverse('agilito.views.product_backlog', args=args)
     else:
         full_backlog = None
 
-    context = AgilitoContext(request, { 'full_backlog' : full_backlog, 'user_stories' : user_stories, 'size':size }, 
-                            current_project=project_id)
+    states_options = []
+    for state, name in UserStory.STATES.choices():
+        states_options.append({ 'state':    state,
+                                'name':     name,
+                                'selected': state in states_filter,
+                                })
+    v = project.velocity()
+    inner_context = {   'full_backlog'  : full_backlog,
+                        'user_stories'  : user_stories,
+                        'size'          : size,
+                        'velocity'      : v, 
+                        'accuracy'      : project.size_estimation_accuracy(),
+                        'states'        : states_options,
+                        'default_backlog': reverse('agilito.views.backlog', args=[project_id]),
+                    }
+    context = AgilitoContext(request, { }, current_project=project_id)
 
     if MATPLOTLIB_ENABLED:
-        inner_context = {'product_backlog_chart': reverse('agilito.views.product_backlog_chart', args=[project_id, ""])}
+        inner_context['product_backlog_chart'] = reverse('agilito.views.product_backlog_chart', args=[project_id, ""])
     else:
-        inner_context = {'product_backlog_chart': None}
+        inner_context['product_backlog_chart'] = None
     return render_to_response('product_backlog.html', inner_context, context_instance=context)
 
 @restricted
@@ -862,7 +845,6 @@ def iteration_import(request, project_id):
     return render_to_response('iteration_import.html', context_instance=context)
 
 @restricted
-@cached
 def iteration_status(request, project_id, iteration_id=None, template='iteration_status.html'):
     if iteration_id is None:
         latest_iteration = _get_iteration(project_id)
@@ -949,6 +931,9 @@ def iteration_status(request, project_id, iteration_id=None, template='iteration
                                                   data_url))
         gc_url = data['google_chart']
 
+        v = latest_iteration.velocity()
+        if v is None:
+            v = (None, None)
         inner_context = { 'current_iteration' : latest_iteration,
                           'user_stories' : user_stories,
                           'tags': tags,
@@ -967,6 +952,7 @@ def iteration_status(request, project_id, iteration_id=None, template='iteration
                           'resolved_impediments': resolved_impediments,
                           'flash': getattr(settings, 'ITERATION_STATUS_FLASH_CHART', True),
                           'product_backlog_chart': pbc,
+                          'velocity': v,
                           }
     else:
         inner_context = {}
@@ -1190,6 +1176,7 @@ def iteration_burndown_chart(request, project_id, iteration_id, name):
     return response
 
 @restricted
+@cached
 def iteration_cards(request, project_id, iteration_id):
     it = Iteration.objects.get(id=iteration_id, project__id=project_id)
     tasks = it.task_cards()
@@ -1229,8 +1216,14 @@ def story_reorder(request, project_id, story, parent):
     return HttpResponseRedirect(project.get_absolute_url())
 
 @restricted
-def product_backlog(request, project_id):
+@cached
+def product_backlog(request, project_id, states=None):
     statename = {}
+
+    if not states:
+        states_filter = [UserStory.STATES.DEFINED]
+    else:
+        states_filter = [int(s) for s in states.split('+')]
 
     for state, name in UserStory.STATES.choices():
         statename[state] = name
@@ -1256,14 +1249,9 @@ def product_backlog(request, project_id):
         else:
             us.suggested_size = None
 
-    active_story_states = [ UserStory.STATES.DEFINED,
-                            UserStory.STATES.SPECIFIED,
-                            UserStory.STATES.IN_PROGRESS,
-                            UserStory.STATES.COMPLETED,
-                            UserStory.STATES.ACCEPTED]
     row = [0, 0]
     for story in stories:
-        for ws, write, shn in [(full, True, 1), (active, story.state in active_story_states, 0)]:
+        for ws, write, shn in [(full, True, 1), (active, story.state in states_filter, 0)]:
             if not write:
                 continue
 
@@ -1310,6 +1298,7 @@ def product_backlog(request, project_id):
     return response
 
 @restricted
+@cached
 def iteration_status_table(request, project_id, iteration_id):
     it = Iteration.objects.get(id=iteration_id, project__id=project_id)
 
@@ -1425,6 +1414,7 @@ def iteration_status_table(request, project_id, iteration_id):
     return response
 
 @restricted
+@cached
 def iteration_export(request, project_id, iteration_id):
     it = Iteration.objects.get(id=iteration_id, project__id=project_id)
 
@@ -1460,6 +1450,7 @@ def iteration_export(request, project_id, iteration_id):
     return response
 
 @restricted
+@cached
 def hours_export(request, project_id, iteration_id):
     it = Iteration.objects.get(id=iteration_id, project__id=project_id)
     users = []

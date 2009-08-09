@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import sys, os, shutil
+import sys, os, shutil, re
 from distutils.sysconfig import get_python_lib
 
 if len(sys.argv) > 1:
@@ -133,19 +133,18 @@ if not 'LOGIN_REDIRECT_URL' in dir(settings) or settings.LOGIN_REDIRECT_URL != '
     complete = False
 
 ################ upgrade database
-def alter(table, spec):
-    global cursor
-
+def alter(table, spec, other, intro, cursor):
     column = spec.split()[0]
 
-    cursor.execute("select count(*) from information_schema.columns where table_name = '%s' and column_name = '%s'" % (table, column))
-
-    exists = cursor.fetchone()[0]
-
-    if exists:
+    if column in [str(col[0]) for col in intro.get_table_description(cursor, table)]:
         return
 
     print '    alter table %s add column %s;' % (table, spec)
+
+    if other:
+        for stmt in other.split(';'):
+            stmt = re.sub(r'\s+', ' ', stmt).strip()
+            print '    %s;' % stmt
 
 project = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(project)
@@ -155,17 +154,27 @@ os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
 
 try:
     import settings
+    from django.db import connection, backend
+
+    cursor = connection.cursor()
+    intro = backend.DatabaseIntrospection(connection)
+
     print
     print 'Your database: %s / %s' % (settings.DATABASE_ENGINE, settings.DATABASE_NAME)
 
-    from django.db import connection
-    cursor = connection.cursor()
-
-    alter('agilito_userstory',  'size smallint')
-    alter('agilito_userstory',  "created date NOT NULL default 'now'")
-    alter('agilito_userstory',  "closed date")
-    alter('agilito_task',       "tags varchar(255) NOT NULL default ''")
-    alter('agilito_userstory',  "tags varchar(255) NOT NULL default ''")
+    alter('agilito_userstory',  'size smallint', '', intro, cursor)
+    alter('agilito_userstory',  "created date NOT NULL default 'now'", '', intro, cursor)
+    alter('agilito_userstory',  "closed date", '', intro, cursor)
+    alter('agilito_task',       "tags varchar(255) NOT NULL default ''", '', intro, cursor)
+    alter('agilito_userstory',  "tags varchar(255) NOT NULL default ''", '', intro, cursor)
+    alter('agilito_userstory',  "copied_from_id int", """
+            alter table agilito_userstory
+                add constraint foreign key (copied_from) references agilito_userstory(id)
+            """, intro, cursor)
+    alter('agilito_userstory',  "generation int", """
+            alter table agilito_userstory drop column generation;
+            alter table agilito_userstory add column generation int not null default 1
+            """, intro, cursor)
 except:
     print 'Cannot connect to your database, no upgrade inspection'
 

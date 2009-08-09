@@ -139,6 +139,13 @@ function highlightTag(ids)
                     </td>
                 </tr>
 
+                {% if velocity.estimated %}
+                    <tr>
+                        <td>Velocity</td>
+                        <td>{{ velocity.actual }} vs {{ velocity.estimated }}</td>
+                    </tr>
+                {% endif %}
+
                 {% regroup tags|dictsort:"tag" by tag as grouped_tags %}
                 <tr>
                     <td>Tags</td>
