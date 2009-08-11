@@ -425,7 +425,7 @@ def backlog(request, project_id, states=None):
     suggested_size = project.suggest_sizes()
 
     if not states:
-        states_filter = [UserStory.STATES.DEFINED]
+        states_filter = [UserStory.STATES.DEFINED, UserStory.STATES.SPECIFIED, UserStory.STATES.RELEASE]
     else:
         states_filter = [int(s) for s in states.split('+')]
 
@@ -1221,14 +1221,14 @@ def product_backlog(request, project_id, states=None):
     statename = {}
 
     if not states:
-        states_filter = [UserStory.STATES.DEFINED]
+        states_filter = [UserStory.STATES.DEFINED, UserStory.STATES.SPECIFIED, UserStory.STATES.RELEASE]
     else:
         states_filter = [int(s) for s in states.split('+')]
 
     for state, name in UserStory.STATES.choices():
         statename[state] = name
 
-    stories = UserStory.objects.filter(project__id=project_id).order_by('rank').order_by('id')
+    stories = UserStory.objects.reset().filter(project__id=project_id).order_by('rank').order_by('id')
     wb = pyExcelerator.Workbook()
     active = wb.add_sheet('Active Product Backlog')
     full = wb.add_sheet('Product Backlog')

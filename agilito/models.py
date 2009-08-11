@@ -620,6 +620,9 @@ class UserStory(ClueModel):
         if self.state == UserStory.STATES.ARCHIVED:
             return 'archived'
 
+        if self.state == UserStory.STATES.DEFINED:
+            return 'needs-work'
+
         if self.iteration is None:
             return 'unplanned'
 
