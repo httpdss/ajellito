@@ -448,7 +448,7 @@ def backlog(request, project_id, states=None):
         full_backlog = None
 
     states_options = []
-    for state, name in UserStory.STATES.choices():
+    for state, name in UserStory.STATES.choices(True):
         states_options.append({ 'state':    state,
                                 'name':     name,
                                 'selected': state in states_filter,
@@ -1333,7 +1333,7 @@ def iteration_status_table(request, project_id, iteration_id):
 
     today = datetime.date.today()
     days = [d.date() for d in filter(lambda d: d.date()<=today, days)]
-    for r, t in enumerate(Task.objects.filter(user_story__iteration=it).exclude(state=Task.STATES.ARCHIVED)):
+    for r, t in enumerate(Task.objects.filter(user_story__iteration=it)):
         us = t.user_story
 
         if t.estimate is None:
@@ -1438,7 +1438,7 @@ def iteration_export(request, project_id, iteration_id):
     for c, h in enumerate(['ID', 'Story', 'Task', 'Estimate', 'Owner', 'Tags']):
         ws.write(2, c, h, style)
 
-    for r, t in enumerate(Task.objects.filter(user_story__iteration=it).exclude(state=Task.STATES.ARCHIVED)):
+    for r, t in enumerate(Task.objects.filter(user_story__iteration=it)):
         for c, d in enumerate([t.id, t.user_story.name, t.name, float(t.estimate or 0), t.owner.username, t.tags]):
             ws.write(r+3, c, d)
 
@@ -1477,7 +1477,7 @@ def hours_export(request, project_id, iteration_id):
         ws.write(2, c, h, style)
 
     tasks = 0
-    for r, t in enumerate(Task.objects.filter(user_story__iteration=it).exclude(state=Task.STATES.ARCHIVED)):
+    for r, t in enumerate(Task.objects.filter(user_story__iteration=it)):
         tasks += 1
         for c, d in enumerate([t.id, t.user_story.name, t.name]):
             ws.write(r+3, c, d)

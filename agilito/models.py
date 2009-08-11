@@ -12,7 +12,7 @@ from tagging.utils import parse_tag_input
 
 from dateutil.rrule import rrule, DAILY, MO, TU, WE, TH, FR
 import datetime, time
-import math
+import math, re
 
 try:
     settings.CACHE_BACKEND
@@ -83,27 +83,38 @@ def _if_is_none_else(item,  rv_case_none,  fun_case_not_none=None):
 class FieldChoices:
     def __init__(self, *args, **kwargs):
         self.__choices = []
+        self.__hidden_choices = []
+        self.keys = []
 
-        for c in args:
-            k = c[1].replace(' ', '_').upper()
-            setattr(self, k, c[0])
-            self.__choices.append(c)
+        for v, l in args:
+            k = re.sub('[^_A-Za-z0-9]', '', l.replace(' ', '_'))
+
+            self.addkey(k, v, l)
 
         for k in kwargs.keys():
-            k = k.upper()
-            if hasattr(self, k):
-                raise Exception('Duplicate key %s' % k)
+            v, l = kwargs[k]
+            self.addkey(k, v, l)
 
-            setattr(self, k, kwargs[k][0])
-            self.__choices.append(kwargs[k])
+        self.keys = [v[0] for v in self.__choices]
 
-    def choices(self):
+    def addkey(self, k, v, l):
+        if hasattr(self, k):
+            raise Exception('Duplicate key "%s" for (%s, %s)' % (k, v, l))
+        if l.startswith('#'):
+            self.__hidden_choices.append((v, l[1:]))
+        else:
+            self.__choices.append((v, l))
+        setattr(self, k.upper(), v)
+
+    def choices(self, include_hidden = False):
+        if include_hidden:
+            return self.__choices + self.__hidden_choices
         return self.__choices
 
     def label(self, value):
         if value is None:
             return None
-        return filter(lambda x: x[0] == value, self.__choices)[0][1]
+        return filter(lambda x: x[0] == value, self.__choices + self.__hidden_choices)[0][1]
 
 class NoProjectException(Exception):
     pass
@@ -217,14 +228,8 @@ class Project(ClueModel):
             return Project.touch_cache(id)
         return v
 
-    def backlog(self, states=None):
-        if states:
-            return UserStory.objects.filter(project=self, state__in=states).order_by('rank')
-
-        return UserStory.objects.filter(project=self).exclude(
-            state=UserStory.STATES.ARCHIVED).exclude(
-            state=UserStory.STATES.ACCEPTED).exclude(
-            state=UserStory.STATES.FAILED).order_by('rank')
+    def backlog(self, states):
+        return UserStory.objects.reset().filter(project=self, state__in=states).order_by('rank')
 
     def closest(self, v, choices):
         sel = 0
@@ -255,7 +260,7 @@ class Project(ClueModel):
 
     @cached
     def suggest_sizes(self, baseline=None, size=5, only_sized=False): # UserStory.SIZES.M): but needs forward declaration
-        stories = list(self.userstory_set.exclude(state=UserStory.STATES.ARCHIVED).all())
+        stories = list(self.userstory_set.all())
         if only_sized:
             stories = filter(lambda s: s.size and s.size != UserStory.SIZES.TOO_LARGE, stories)
 
@@ -407,7 +412,7 @@ class Iteration(ClueModel):
 
     def remaining_hours(self, date):
         return sum(t.remaining_for_date(date)
-                   for t in Task.objects.filter(user_story__iteration=self).exclude(state=Task.STATES.ARCHIVED))
+                   for t in Task.objects.filter(user_story__iteration=self))
 
     def remaining_storypoints(self, date):
         is_start = ((date - self.start_date).days == 0)
@@ -415,10 +420,10 @@ class Iteration(ClueModel):
 
     def total_estimated(self):
         return sum(t.estimate or 0
-                   for t in Task.objects.filter(user_story__iteration=self).exclude(state=Task.STATES.ARCHIVED))
+                   for t in Task.objects.filter(user_story__iteration=self))
 
     def user_estimated(self, userid):    
-        tasks = Task.objects.filter(owner__id=userid, user_story__iteration__pk=self.id).exclude(state=Task.STATES.ARCHIVED)
+        tasks = Task.objects.filter(owner__id=userid, user_story__iteration__pk=self.id)
 
         return sum(t.estimate or 0 for t in tasks)
 
@@ -468,7 +473,7 @@ class Iteration(ClueModel):
 
     def task_cards(self):
         cards = []
-        for t in Task.objects.filter(user_story__iteration=self).exclude(state=Task.STATES.ARCHIVED):
+        for t in Task.objects.filter(user_story__iteration=self):
             card = {}
             card['TaskID'] = t.id
             card['TaskName'] = t.name
@@ -490,7 +495,7 @@ class Iteration(ClueModel):
 
     @property
     def estimated_without_owner(self):
-        tasks = Task.objects.filter(owner=None, user_story__iteration__pk=self.id).exclude(state=Task.STATES.ARCHIVED)
+        tasks = Task.objects.filter(owner=None, user_story__iteration__pk=self.id):
 
         return sum(tl.estimate or 0 for tl in tasks)
 
@@ -542,15 +547,24 @@ class UserStoryAttachment(ClueModel):
             ('view', 'Can view the user stories.'),
         )
 
+class UserStoryManager(models.Manager):
+    def get_query_set(self):
+        return super(UserStoryManager, self).get_query_set().filter(state__in=UserStory.STATES.keys)
+
+    def reset(self):
+        return super(UserStoryManager, self).get_query_set()
+
 class UserStory(ClueModel):
     STATES = FieldChoices(
-                (1, 'Archived'),
                 (10, 'Defined'),
                 (15, 'Specified'),
                 (20, 'In Progress'),
                 (30, 'Completed'),
                 (40, 'Accepted'),
-                (50, 'Failed'))
+                (50, 'Failed'),
+                (1, '#Archived'),
+                (2, '#Release'),
+                )
 
     SIZES = FieldChoices(
                 (1,  'XXS'),
@@ -561,6 +575,8 @@ class UserStory(ClueModel):
                 (13, 'XL'),
                 (21, 'XXL'),
                 (1000,  'Too large'))
+
+    objects = UserStoryManager()
 
     project = models.ForeignKey(Project)
 
@@ -789,9 +805,16 @@ class UserProfile(models.Model):
         verbose_name = _(u'User Profile')
         verbose_name_plural = _(u'User Profiles')
 
+class TaskManager(models.Manager):
+    def get_query_set(self):
+        return super(TaskManager, self).get_query_set().filter(state__in=Task.STATES.keys)
+
+    def reset(self):
+        return super(TaskManager, self).get_query_set()
+
 class Task(ClueModel):
     STATES = FieldChoices(
-                (1, 'Archived'),
+                (1, '#Archived'),
                 (10, 'Defined'),
                 (20, 'In Progress'),
                 (30, 'Completed'))
@@ -803,6 +826,8 @@ class Task(ClueModel):
                 (30, 'Development'),
                 (40, 'Testing'),
                 (99, 'Other'))
+
+    objects = TaskManager()
 
     estimate = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True)
     remaining = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True)
