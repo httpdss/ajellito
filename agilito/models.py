@@ -620,17 +620,17 @@ class UserStory(ClueModel):
         if self.state == UserStory.STATES.ARCHIVED:
             return 'archived'
 
-        if self.state == UserStory.STATES.DEFINED:
-            return 'needs-work'
-
-        if self.iteration is None:
-            return 'unplanned'
-
         if self.state == UserStory.STATES.ACCEPTED:
             return 'accepted'
 
         if self.state == UserStory.STATES.FAILED:
             return 'failed'
+
+        if self.state == UserStory.STATES.DEFINED and self.iteration is None:
+            return 'needs-work'
+
+        if self.iteration is None:
+            return 'unplanned'
 
         if self.iteration.start_date > datetime.date.today():
             return 'planned'
