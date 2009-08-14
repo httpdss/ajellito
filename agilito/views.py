@@ -121,15 +121,19 @@ def cached(f):
         pv = Project.cache_id(vardict['project_id'])
 
         key = 'agilito.views.%s(%s)' % (f.__name__, ','.join([str(vardict[v]) for v in params]))
-        v = cache.get(key)
 
-        if v is None or v[0] != pv:
-            v = f(*args, **kwargs)
-            midnight = datetime.datetime.now().replace(hour=23, minute=59, second=59, microsecond=0)
-            delta = datetime.datetime.now() - midnight
-            cache.set(key, (pv, v), delta.seconds)
-        else:
-            v = v[1]
+        v = cache.get(key + '#version')
+        if v == pv:
+            v = cache.get(key + '#value')
+            if not v is None:
+                return v
+
+        v = f(*args, **kwargs)
+        midnight = datetime.datetime.now().replace(hour=23, minute=59, second=59, microsecond=0)
+        delta = datetime.datetime.now() - midnight
+
+        cache.set(key + '#version', pv, delta.seconds)
+        cache.set(key + '#value', v, delta.seconds)
 
         return v
 
@@ -422,22 +426,22 @@ def backlog(request, project_id, states=None):
 
     project = Project.objects.get(id=project_id)
 
-    suggested_size = project.suggest_sizes()
-
     if not states:
-        states_filter = [UserStory.STATES.DEFINED, UserStory.STATES.SPECIFIED, UserStory.STATES.RELEASE]
+        states_filter = [UserStory.STATES.DEFINED, UserStory.STATES.SPECIFIED]
     else:
         states_filter = [int(s) for s in states.split('+')]
 
     user_stories = project.backlog(states_filter)
 
+    user_stories_count = 0
+    size = 0
     for us in user_stories:
-        if suggested_size.has_key(us.id):
-            us.suggested_size = suggested_size[us.id][1]
-        else:
-            us.suggested_size = None
+        if us.whatami != 'UserStory': continue
 
-    size = sum(i.size for i in user_stories if i.size)
+        user_stories_count += 1
+
+        if not us.size: continue
+        size += us.size
 
     if EXCEL_ENABLED:
         args = [project_id]
@@ -455,7 +459,8 @@ def backlog(request, project_id, states=None):
                                 })
     v = project.velocity()
     inner_context = {   'full_backlog'  : full_backlog,
-                        'user_stories'  : user_stories,
+                        'backlog'       : user_stories,
+                        'user_stories'  : user_stories_count,
                         'size'          : size,
                         'velocity'      : v, 
                         'accuracy'      : project.size_estimation_accuracy(),
@@ -1206,12 +1211,23 @@ def _excel_column(n):
         return _excel_column(div)+chr(65+n%26)
 
 @restricted
-def story_reorder(request, project_id, story, parent):
+def backlog_reorder(request, project_id, target, pred):
     project = Project.objects.get(id=project_id)
-    if parent == 'top':
-        parent = None
+    if pred == 'first':
+        newrank = 'min'
+    else:
+        newrank = pred.split('_')[2]
+        if newrank == '':
+            newrank = 'max'
+        else:
+            newrank = int(newrank)
 
-    project.reorder_story(story, parent)
+    tpe, id, rank = target.split('_')
+    if tpe == 'us':
+        table = 'userstory'
+    elif tpe == 're':
+        table = 'release'
+    project.reorder_backlog(table, int(id), newrank)
 
     return HttpResponseRedirect(project.get_absolute_url())
 
@@ -1221,7 +1237,7 @@ def product_backlog(request, project_id, states=None):
     statename = {}
 
     if not states:
-        states_filter = [UserStory.STATES.DEFINED, UserStory.STATES.SPECIFIED, UserStory.STATES.RELEASE]
+        states_filter = [UserStory.STATES.DEFINED, UserStory.STATES.SPECIFIED]
     else:
         states_filter = [int(s) for s in states.split('+')]
 

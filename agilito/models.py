@@ -54,15 +54,18 @@ def cached(f):
         pv = Project.cache_id(self.project_id)
 
         key = ','.join([str(vardict[v]) for v in params]) + ')'
-        v = cache.get(key)
+        v = cache.get(key + '#version')
+        if v == pv:
+            v = cache.get(key + '#value')
+            if not v is None:
+                return v
 
-        if v is None or v[0] != pv:
-            v = f(*args, **kwargs)
-            midnight = datetime.datetime.now().replace(hour=23, minute=59, second=59, microsecond=0)
-            delta = datetime.datetime.now() - midnight
-            cache.set(key, (pv, v), delta.seconds)
-        else:
-            v = v[1]
+        v = f(*args, **kwargs)
+        midnight = datetime.datetime.now().replace(hour=23, minute=59, second=59, microsecond=0)
+        delta = datetime.datetime.now() - midnight
+
+        cache.set(key + '#version', pv, delta.seconds)
+        cache.set(key + '#value', v, delta.seconds)
 
         return v
 
@@ -124,6 +127,10 @@ PERMLINK_PREFIX = __name__.rsplit('.', 1)[0] + '.views.'
 class ClueModel(models.Model):
     name = models.CharField(max_length=200)
     description = models.TextField(blank=True)
+
+    @property
+    def whatami(self):
+        return self.__class__.__name__
 
     class Meta:
         # mondo weird way of doing this, heh
@@ -228,8 +235,34 @@ class Project(ClueModel):
             return Project.touch_cache(id)
         return v
 
+    @cached
     def backlog(self, states):
-        return UserStory.objects.reset().filter(project=self, state__in=states).order_by('rank')
+        stories = list(UserStory.objects.reset().filter(project=self, state__in=states))
+        releases = list(Release.objects.filter(project=self))
+
+        suggested_size = self.suggest_sizes()
+        for us in stories:
+            if suggested_size.has_key(us.id):
+                us.suggested_size = suggested_size[us.id][1]
+            else:
+                us.suggested_size = None
+
+        pbl = []
+        norank = []
+        while stories and releases:
+            if stories[0].rank is None:
+                norank.append(stories.pop(0))
+            elif stories[0].rank < releases[0].rank:
+                pbl.append(stories.pop(0))
+            elif pbl == []: # don't start the PBL with an empty release
+                releases.pop(0) 
+            else:
+                pbl.append(releases.pop(0))
+
+        pbl.extend(releases)
+        pbl.extend(stories)
+        pbl.extend(norank)
+        return pbl
 
     def closest(self, v, choices):
         sel = 0
@@ -293,38 +326,59 @@ class Project(ClueModel):
         except ZeroDivisionError:
             return None
 
-    def reorder_story(self, storyid, parentid):
+    def reorder_backlog(self, table, id, rank):
         from django.db import connection, transaction
         cursor = connection.cursor()
 
-        if parentid is None:
-            cursor.execute('select min(rank) from agilito_userstory where project_id = %s', (self.id,))
-            prank = cursor.fetchone()[0]
-        else:
-            cursor.execute('select rank + 1 from agilito_userstory where project_id = %s and id = %s', (self.id, parentid))
-            prank = cursor.fetchone()[0]
-            if prank is None:
-                cursor.execute('select max(rank) + 1 from agilito_userstory where project_id = %s and not rank is NULL', (self.id,))
-                prank = cursor.fetchone()[0]
+        if rank in ['min', 'max']:
+            ranks = []
+            for t in ['userstory', 'release']:
+                cursor.execute('select %s(rank) from agilito_%s where project_id = %%s' % (rank, t), (self.id,))
+                r = cursor.fetchone()[0]
+                if r: ranks.append(r)
 
-        if prank is None:
-            cursor.execute('update agilito_userstory set rank = 1 where project_id = %s and id = %s', (self.id, storyid))
-        else:
-            cursor.execute('update agilito_userstory set rank = rank + 1 where project_id = %s and rank >= %s', (self.id, prank))
-            cursor.execute('update agilito_userstory set rank = %s where project_id = %s and id = %s', (prank, self.id, storyid))
+            if ranks == []:
+                rank = 1
+            elif rank == 'min':
+                rank = min(ranks) - 1
+            else:
+                rank = max(ranks) + 1
 
-        cursor.execute('select id from agilito_userstory where project_id = %s and not rank is NULL order by rank', (self.id, ))
-        ids = [r[0] for r in cursor.fetchall()]
-        for rank, id in enumerate(ids):
-            cursor.execute('update agilito_userstory set rank = %s where id = %s', (rank + 1, id))
+        for t in ['userstory', 'release']:
+            cursor.execute('update agilito_%s set rank = rank + 1 where project_id = %%s and rank >= %%s' % t, (self.id, rank))
+        cursor.execute('update agilito_%s set rank = %%s where project_id = %%s and id = %%s' % table, (rank, self.id, id))
+
+        # compact ranks
+        cursor.execute("""
+            select 1 as relorder, 'userstory' as tbl, id, rank from agilito_userstory
+                where us.project_id = %s and not rank is NULL
+            union
+
+            select 0, 'release', id, rank from agilito_userstory
+                where us.project_id = %s and not rank is NULL
+            
+            order by rank, relorder""", (self.id, self.id))
+
+        objs = [(r[1], r[2]) for r in cursor.fetchall()]
+        for rank, obj in enumerate(ids):
+            tbl, id = obj
+            cursor.execute('update agilito_%s set rank = %%s where id = %%s' % tbl, (rank + 1, id))
         transaction.commit_unless_managed()
         # database updates must touch the cache unless they're being done in a 'save' method,
         # which touches the cache using a signal
         Project.touch_cache(self.id)
 
+def toprank():
+    from django.db import connection, transaction
+    c = connection.cursor()
+    c.execute('select max(rank) + 1 from agilito_userstory')
+    return c.fetchone()[0] or 1
+
 class Release(ClueModel):
     project = models.ForeignKey(Project)
-    
+    rank = models.IntegerField(default=toprank)
+    deadline = models.DateField(null=True)
+
     def __unicode__(self):
         return u'RE%s: %s' % (self.id, self.name)
 
@@ -332,9 +386,68 @@ class Release(ClueModel):
         permissions = (
             ('view', 'Can view the project.'),
         )
+        ordering = ('rank',)
 
     def get_container_model(self):
         return self.project
+
+    @models.permalink
+    def get_absolute_url(self):
+        # tempororary
+        return '/admin/agilito/release/%s/' % self.id
+
+    @cached
+    def release_date(self):
+        from django.db import connection, transaction
+        c = connection.cursor()
+
+        c.execute("""
+            select count(*)
+            from agilito_userstory
+            where iteration_id is NULL and size is NULL and rank < %s""", (self.rank,))
+        unknowns = c.fetchone()[0]
+
+        if unknowns > 0:
+            return {'date': None, 'error': 'Release has unsized stories', 'severity': 'error'}
+
+        c.execute("""
+            select sum(size)
+            from agilito_userstory
+            where iteration_id is NULL and not size is NULL and rank < %s""", (self.rank,))
+        unplanned = c.fetchone()[0]
+
+        pv = self.project.velocity()
+        pva = float(pv['actual']) / pv['sprint_length']
+        pve = float(pv['estimated']) / pv['sprint_length']
+        if unplanned > 0 and (v is None or v == 0):
+            return {'date': None, 'error': 'Project has unknown velocity', 'severity': 'error'}
+        else:
+            unplanned = unplanned * pva
+
+        err = None
+        severity = None
+
+        c.execute("""
+            select max(i.end_date)
+            from agilito_userstory us
+            join agilito_iteration i on us.iteration_id = i.id
+            where us.rank < %s""", (self.rank,))
+        sprints_end = c.fetchone()[0]
+        if sprints_end is None:
+            sprints_end = datetime.date.today()
+        elif pve > 1.1 * pva and sprints_end > datetime.date.today():
+            err = 'Sprints based on unproven velocity'
+            severity = 'warning'
+
+        rd = sprints_end + datetime.timedelta(unplanned)
+        if self.deadline and rd > self.deadline:
+            return {'date': rd, 'error': 'Deadline exceeded', 'severity': 'error'}
+
+        return {'date': rd, 'error': err, 'severity': severity}
+
+    def save(self):
+        super(UserStory, self).save()
+        self.project.reorder_backlog('release', self.id, self.rank)
 
 class Iteration(ClueModel):
     start_date = models.DateField()
@@ -366,9 +479,6 @@ class Iteration(ClueModel):
 
     @cached
     def velocity(self):
-        if self.end_date > datetime.date.today():
-            return None
-
         d = self.total_days()
         if d == 0:
             return None
@@ -381,7 +491,11 @@ class Iteration(ClueModel):
             return None
 
         v['sprint_length'] = d
-        v['actual'] = sum(a[0] for a in filter(lambda x: x[1], s))
+
+        if self.end_date > datetime.date.today():
+            v['actual'] = None
+        else:
+            v['actual'] = sum(a[0] for a in filter(lambda x: x[1], s))
 
         return v
 
@@ -495,10 +609,9 @@ class Iteration(ClueModel):
 
     @property
     def estimated_without_owner(self):
-        tasks = Task.objects.filter(owner=None, user_story__iteration__pk=self.id):
+        tasks = Task.objects.filter(owner=None, user_story__iteration__pk=self.id)
 
         return sum(tl.estimate or 0 for tl in tasks)
-
 
     @property
     def users_total_status(self):
@@ -554,6 +667,9 @@ class UserStoryManager(models.Manager):
     def reset(self):
         return super(UserStoryManager, self).get_query_set()
 
+    def get(self, *args, **kwargs):
+        return self.reset().get(*args, **kwargs)
+
 class UserStory(ClueModel):
     STATES = FieldChoices(
                 (10, 'Defined'),
@@ -562,8 +678,7 @@ class UserStory(ClueModel):
                 (30, 'Completed'),
                 (40, 'Accepted'),
                 (50, 'Failed'),
-                (1, '#Archived'),
-                (2, '#Release'),
+                (1, '#Archived')
                 )
 
     SIZES = FieldChoices(
@@ -591,7 +706,7 @@ class UserStory(ClueModel):
 
     # alter table agilito_userstory add column created date NOT NULL default 'now',
     # alter table agilito_userstory add column closed date
-    created = models.DateField(default=datetime.datetime.now())
+    created = models.DateField(default=datetime.datetime.now)
     closed = models.DateField(null=True)
 
     # alter table agilito_userstory add column tags varchar(255) NOT NULL default ''
@@ -761,21 +876,6 @@ class UserStory(ClueModel):
         ordering = ('rank', 'id')
 
     def save(self):
-        from django.db import connection, transaction
-        cursor = connection.cursor()
-        project_id = self.project.id
-        if not self.id is None:
-            cursor.execute('select rank from agilito_userstory where id=%s', (self.id,))
-            rank = cursor.fetchone()[0]
-            if not rank is None:
-                cursor.execute('update agilito_userstory set rank = rank - 1 where project_id=%s and rank > %s', (project_id,rank))
-        if not self.rank is None:
-            cursor.execute("""
-                update agilito_userstory set rank = rank + 1 where project_id=%s and not rank is null and rank >= %s
-                """, (project_id, self.rank))
-        # no need to touch the cache -- the save-signal will do it for us
-        transaction.commit_unless_managed()
-
         if self.state in [UserStory.STATES.ARCHIVED, UserStory.STATES.ACCEPTED, UserStory.STATES.FAILED]:
             self.closed = datetime.date.today()
         else:
@@ -783,6 +883,8 @@ class UserStory(ClueModel):
 
         super(UserStory, self).save()
 
+        if self.rank:
+            self.project.reorder_backlog('userstory', self.id, self.rank)
 
 class UserProfile(models.Model):
     CATEGORIES = FieldChoices(
@@ -814,6 +916,9 @@ class TaskManager(models.Manager):
 
     def reset(self):
         return super(TaskManager, self).get_query_set()
+
+    def get(self, *args, **kwargs):
+        return self.reset().get(*args, **kwargs)
 
 class Task(ClueModel):
     STATES = FieldChoices(
@@ -1022,7 +1127,7 @@ class TestResult(models.Model):
 class Impediment(models.Model):
     name = models.CharField(max_length=200)
     description = models.TextField(blank=True)
-    opened = models.DateField(default=datetime.datetime.now())
+    opened = models.DateField(default=datetime.datetime.now)
     resolved = models.DateTimeField(null=True)
 
     tasks = models.ManyToManyField('Task')

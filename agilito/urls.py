@@ -21,7 +21,7 @@ urlpatterns = patterns('agilito.views',
     (r'^(?P<project_id>\d+)/product_backlog/$', 'product_backlog'),
     url(r'^(?P<project_id>\d+)/product_backlog/(?P<states>\d+([+]\d+)*)/$', 'product_backlog', name='product_backlog_for_states'),
     url(r'^(?P<project_id>\d+)/backlog/userstory/add/$', 'userstory_create', name="story_from_backlog"),
-    (r'^(?P<project_id>\d+)/backlog/reorder/(?P<story>\d+)/(?P<parent>\d+|top)/$', 'story_reorder'),
+    (r'^(?P<project_id>\d+)/backlog/reorder/(?P<target>[^/]+)/(?P<pred>[^/]+)/$', 'backlog_reorder'),
     
     url(r'^(?P<project_id>\d+)/iteration/$', 'iteration_status', name="current_iteration_status"),
     url(r'^(?P<project_id>\d+)/iteration/(?P<iteration_id>\d+)/$', 'iteration_status', name="iteration_status_with_id"),

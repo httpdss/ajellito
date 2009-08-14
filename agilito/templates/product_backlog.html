@@ -51,19 +51,15 @@
                 onDrop: function(table, row) {
                     var rows = table.tBodies[0].rows;
 
-                    var pred = null;
+                    var pred = 'first';
                     for (var i=0; i<rows.length; i++) {
                         if (row.id == rows[i].id) {
                             break;
                         }
                         pred = rows[i].id;
                     }
-                    if (!pred) {
-                        pred = 'us-top';
-                    }
-
-                    var goto = window.location.href + '/reorder/' + row.id.substring(3) + '/' + pred.substring(3) + '/';
-                    goto = goto.substring(0, 8) + goto.substring(8).replace(/\/+/g, '/');
+                    
+                    var goto = window.location.href + '/reorder/' + row.id + '/' + pred + '/';
                     window.location = goto;
                 }
             });
@@ -98,9 +94,9 @@
             Backlog
         </h2>
 
-        {% if user_stories %}
+        {% if backlog %}
             <div id="us-resume">
-                <span>Number of US in Backlog: <strong>{{ user_stories.count }}</strong> </span> 
+                <span>Number of US in Backlog: <strong>{{ user_stories_count }}</strong> </span> 
                 {% if velocity.sprint_length %}
                     <div>Velocity: {{ velocity.actual }} vs. {{ velocity.estimated }} (avg sprint length {{ velocity.sprint_length|floatformat:0 }} days)</div>
                 {% endif %}
@@ -125,7 +121,7 @@
             </div>
         {% endif %}
     
-        {% if user_stories %}
+        {% if backlog %}
             <form id="filter-form">Filter: <input name="filter" id="filter" value="" maxlength="30" size="30" type="text"></form>
             <table cellspacing="0" cellpadding="2" id="user-story-list">
                 <thead>
@@ -155,37 +151,39 @@
                         <td><!-- delete --></td>
                     </tr>
     
-                    {% for object in user_stories %}
-                        <tr id="us-{{object.id}}" class="{% cycle even,odd %}">
-                            <td class="rank">{{object.rank}}</td>
-                            <td class="id">US{{object.id}}</td>
-                            <td class="name"><a href="{{object.get_absolute_url}}">{{object.name}}</a>
-                                <ul class="tags">
-                                    {% for tag in object.taglist %}
-                                        <li><span class="small">{{ tag }}</span></li>
-                                    {% endfor %}
-                                </ul>
-                            </td>
-                            <td class="size">{{object.size_label|default_if_none:"-"}}</td>
-                            <td class="size">{{object.suggested_size|default_if_none:"-"}}</td>
-                            <td class="state">
-                                <img src="/agilito/backlog-state/{{ object.backlog_state }}.png"
-                                    title="{{ object.backlog_state }}" alt="{{ object.backlog_state }}" />
-                            </td>
-                            <td id="edit_us_{{object.id}}" class="">
-                                <a href="{% url agilito.views.userstory_edit current_project.id,object.id %}?last_page={{last_page}}">
-                                <img src="/agilito/pencil.png" alt="edit" title="edit" width="16" height="16" /></a>
-                            </td>
-                            <td id="move_us_{{us.id}}" class="">
-                                <a href="{% url agilito.views.userstory_move current_project.id,object.id %}?last_page={{last_page}}"
-                                    onclick="popup(this, 'us-move'); return false">
-                                <img src="/agilito/bullet_go.png" alt="move" title="move" width="16" height="16" /></a>
-                            </td>
-                            <td id="delete_us_{{object.id}}" class="">
-                                <a href="{% url agilito.views.userstory_delete current_project.id,object.id %}?last_page={{last_page}}">
-                                <img src="/agilito/delete.png" alt="delete" title="delete" width="16" height="16" /></a>
-                            </td>
-                        </tr>
+                    {% for story in backlog %}
+                        {% ifequal story.whatami "UserStory" %}
+                            <tr id="us_{{story.id}}_{{story.rank}}" class="{% cycle even,odd %}">
+                                <td class="rank">{{story.rank}}</td>
+                                <td class="id">US{{story.id}}</td>
+                                <td class="name"><a href="{{story.get_absolute_url}}">{{story.name}}</a>
+                                    <ul class="tags">
+                                        {% for tag in story.taglist %}
+                                            <li><span class="small">{{ tag }}</span></li>
+                                        {% endfor %}
+                                    </ul>
+                                </td>
+                                <td class="size">{{story.size_label|default_if_none:"-"}}</td>
+                                <td class="size">{{story.suggested_size|default_if_none:"-"}}</td>
+                                <td class="state">
+                                    <img src="/agilito/backlog-state/{{ story.backlog_state }}.png"
+                                        title="{{ story.backlog_state }}" alt="{{ story.backlog_state }}" />
+                                </td>
+                                <td id="edit_us_{{story.id}}" class="">
+                                    <a href="{% url agilito.views.userstory_edit current_project.id,story.id %}?last_page={{last_page}}">
+                                    <img src="/agilito/pencil.png" alt="edit" title="edit" width="16" height="16" /></a>
+                                </td>
+                                <td id="move_us_{{us.id}}" class="">
+                                    <a href="{% url agilito.views.userstory_move current_project.id,story.id %}?last_page={{last_page}}"
+                                        onclick="popup(this, 'us-move'); return false">
+                                    <img src="/agilito/bullet_go.png" alt="move" title="move" width="16" height="16" /></a>
+                                </td>
+                                <td id="delete_us_{{story.id}}" class="">
+                                    <a href="{% url agilito.views.userstory_delete current_project.id,story.id %}?last_page={{last_page}}">
+                                    <img src="/agilito/delete.png" alt="delete" title="delete" width="16" height="16" /></a>
+                                </td>
+                            </tr>
+                        {% endifequal %}
                     {%endfor%}
                 </tbody>
             </table>
