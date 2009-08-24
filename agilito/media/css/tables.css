@@ -67,8 +67,26 @@ tr.child.odd td {
 td.actuals, td.size,td.estimated, td.progress, td.todo, td.actuals, td.failures, td.rank {
     text-align:center;
 }
+td.size select {
+    width: auto;
+}
 
 table .dragging td {
 	background-color: #237ADD;
     color: white;
+}
+
+table .release td {
+	background-color: green;
+	color: #FFFFFF;
+    font-size: larger;
+    padding: 2px;
+}
+table .release.warning td {
+	background-color: orange;
+	color: #FFFFFF;
+}
+table .release.error td {
+	background-color: red;
+	color: #FFFFFF;
 }

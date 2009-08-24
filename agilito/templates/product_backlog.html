@@ -1,6 +1,7 @@
 {% extends "master.html" %}
 
 {% load humanize %}
+{% load agilito_utils %}
 
 {% block sidebar %}
     <div id="rightmenu">
@@ -15,6 +16,7 @@
         {% if product_backlog_chart %}
             <a target="_chart" href="{{ product_backlog_chart }}?last_page={{last_page}}">Backlog evolution</a>
         {% endif %}
+        <a id="save-changes" style="display: none" href="#" onclick="savechanges(); return false;">Save changes</a>
     </div>
 {% endblock %}
 
@@ -37,30 +39,207 @@
                     states.push('{{state.state}}');
                 }
             {% endfor %}
-            states = states.join('+');
+            states = states.join(':');
             if (states != '') {
                 states += '/';
             }
             window.location = '{{default_backlog}}' + states;
         }
 
+        var marked = {};
+        var resize = {};
+        var reorder_queue = [];
+        var last_order = '';
+        {% for obj in backlog %}
+            {% ifequal obj.whatami "UserStory" %}
+                marked['{{obj.id}}'] = false;
+                resize['{{obj.id}}'] = ["{{obj.size|default_if_none:"null"}}", "{{obj.size|default_if_none:"null"}}"];
+                last_order += ':us_{{obj.id}}';
+            {% endifequal %}
+            {% ifequal obj.whatami "Release" %}
+                last_order += ':re_{{obj.id}}';
+            {% endifequal %}
+        {% endfor %}
+
+        function isDirty(checkValid)
+        {
+            if (reorder_queue.length != 0) {
+                return true;
+            }
+            for (story in marked) {
+                if (marked[story]) {
+                    if (!checkValid) { return true; }
+                    if ($('#selected-iteration').val() != 'new') { return true; }
+                    return ($('#iterationname').val() != '' && $('#iterationstarts').val() != '' && $('#iterationends').val() != '');
+                }
+            }
+            for (story in resize) {
+                if (resize[story][0] != resize[story][1]) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        function iterationDetails(it)
+        {
+            if (it[it.selectedIndex].value == 'new') {
+                $("#new-iteration").show();
+            } else {
+                $("#new-iteration").hide();
+            }
+
+            showSave();
+        }
+
+        window.onbeforeunload = askConfirm;
+        function askConfirm()
+        {
+            if (isDirty(false)) {
+                return "You have unsaved changes.";
+            }
+        }
+
+        function showSave()
+        {
+            if (isDirty(true)) {
+                $("#save-changes").show();
+            } else {
+                $("#save-changes").hide();
+            }
+        }
+
+        function savechanges()
+        {
+            var queue = reorder_queue.slice();
+
+            it = {
+                'command':  'set-iteration',
+                'id':       $('#selected-iteration').val(),
+                'name':     $('#iterationname').val(),
+                'starts':   $('#iterationstarts').val(),
+                'ends':     $('#iterationends').val()
+            };
+            for (story in marked) {
+                if (marked[story]) {
+                    if (it != null) {
+                        queue.push(it);
+                        it = null;
+                    }
+                    queue.push({
+                        'command':  'assign-story',
+                        'id':       story
+                    });
+                }
+            }
+            for (story in resize) {
+                if (resize[story][0] != resize[story][1]) {
+                    queue.push({
+                        'command':  'set-size',
+                        'id':       story,
+                        'size':     resize[story][1]
+                    });
+                }
+            }
+
+            $('#command-queue').val(JSON.stringify(queue));
+
+            reorder_queue = [];
+            marked = {}
+            resize = {}
+            document.queuesubmit.submit();
+        }
+
+        function showIteration()
+        {
+            for (story in marked) {
+                if (marked[story]) {
+                    $("#iteration-form").show();
+                    return;
+                }
+            }
+            $("#iteration-form").hide();
+        }
+
+        function mark(cb, story)
+        {
+            marked[story] = cb.checked;
+            showSave();
+            showIteration();
+        }
+
+        function setsize(sel, story)
+        {
+            resize[story][1] = sel[sel.selectedIndex].value;
+            showSave();
+        }
+
+        function backlogClass(c) {
+            if (c.substring(0, 3) == 're_') { return 'Release'; }
+            if (c.substring(0, 3) == 'us_') { return 'UserStory'; }
+            return null;
+        }
+
         $(document).ready(function() {
+            $("#iteration-form").hide();
+
+            $(".storysize").bind("dblclick", function() {
+                var id = this.id.substring("toggle-size-".length);
+
+                var sel = $('#s' + id);
+                sel.toggle();
+
+                if (!sel.is(':visible')) {
+                    resize[id][1] = resize[id][0];
+                    sel.val(resize[id][0]);
+                    showSave();
+                }
+            });
+
+            $("#iterationstarts").datepicker({ dateFormat: 'yy-mm-dd' });
+            $("#iterationends").datepicker({ dateFormat: 'yy-mm-dd' });
+
             $("#user-story-list").tableDnD({
                 onDragClass: "dragging",
 
                 onDrop: function(table, row) {
                     var rows = table.tBodies[0].rows;
 
-                    var pred = 'first';
+                    var pred = '___first';
+                    var pred_found = false;
+                    var prefix;
+                    var id;
+                    var new_order = '';
                     for (var i=0; i<rows.length; i++) {
-                        if (row.id == rows[i].id) {
-                            break;
+                        id = rows[i].id;
+                        if (backlogClass(id) == null) {
+                            continue;
                         }
-                        pred = rows[i].id;
+
+                        if (row.id == id) {
+                            pred_found = true;
+                        }
+                        if (!pred_found) {
+                            pred = id;
+                        }
+
+                        new_order += ':' + id;
                     }
-                    
-                    var goto = window.location.href + '/reorder/' + row.id + '/' + pred + '/';
-                    window.location = goto;
+
+                    //var goto = window.location.href + '/reorder/' + row.id + '/' + pred + '/';
+                    //window.location = goto;
+
+                    if (new_order != last_order) {
+                        last_order = new_order;
+                        reorder_queue.push({
+                            'command':  'rank',
+                            'target':   {'class': backlogClass(row.id), 'id': row.id.substring(3)},
+                            'after':   {'class': backlogClass(pred), 'id': pred.substring(3)}
+                        })
+                    }
+
+                    showSave();
                 }
             });
 
@@ -96,7 +275,7 @@
 
         {% if backlog %}
             <div id="us-resume">
-                <span>Number of US in Backlog: <strong>{{ user_stories_count }}</strong> </span> 
+                <span>Number of US in Backlog: <strong>{{ user_stories }}</strong> </span> 
                 {% if velocity.sprint_length %}
                     <div>Velocity: {{ velocity.actual }} vs. {{ velocity.estimated }} (avg sprint length {{ velocity.sprint_length|floatformat:0 }} days)</div>
                 {% endif %}
@@ -123,13 +302,28 @@
     
         {% if backlog %}
             <form id="filter-form">Filter: <input name="filter" id="filter" value="" maxlength="30" size="30" type="text"></form>
+            <form id="iteration-form">
+                Assign marked stories to
+                    <select onchange="iterationDetails(this)" id="selected-iteration" class="resize">
+                        <option value="new">New iteration</option>
+                        {% for it in iterations %}
+                            <option value="{{it.id}}">{{it.name}}</option>
+                        {% endfor %}
+                    </select>
+                <span id="new-iteration">
+                    Name: <input onchange="showSave()" id="iterationname" name="iterationname" id="filter" value="{{newiteration.name}}" maxlength="40" size="40" type="text">
+                    Starts: <input onchange="showSave()" id="iterationstarts" name="iterationstarts" id="filter" value="{{newiteration.starts}}" maxlength="10" size="10" type="text">
+                    Ends: <input onchange="showSave()" id="iterationends" name="iterationends" id="filter" value="{{newiteration.ends}}" maxlength="10" size="10" type="text">
+                </span>
+            </form>
             <table cellspacing="0" cellpadding="2" id="user-story-list">
                 <thead>
                     <tr class="nodrop nodrag">
+                        <th>Mark</th>
                         <th>Rank</th>
                         <th>Id</th>
                         <th>Name</th>
-                        <th>Size</th>
+                        <th>Size ({{ size }} total)</th>
                         <th>Suggested size</th>
                         <th>State</th>
                         <th><!-- edit --></th>
@@ -139,21 +333,14 @@
                 </thead>
     
                 <tbody>
-                    <tr class="totals nodrop nodrag">
-                        <td><!-- rank --></td>
-                        <td><!-- id --></td>
-                        <td><!-- name --></td>
-                        <td class="total size">{{ size }}</td>
-                        <td><!-- suggested size --></td>
-                        <td><!-- state --></td>
-                        <td><!-- edit --></td>
-                        <td><!-- move --></td>
-                        <td><!-- delete --></td>
-                    </tr>
-    
                     {% for story in backlog %}
                         {% ifequal story.whatami "UserStory" %}
-                            <tr id="us_{{story.id}}_{{story.rank}}" class="{% cycle even,odd %}">
+                            <tr id="us_{{story.id}}" class="{% cycle even,odd %}">
+                                <td class="mark">
+                                    {% if not story.iteration %}
+                                        <input type=checkbox name="mark" value="{{story.id}}" onclick="mark(this, {{story.id}});"/>
+                                    {% endif %}
+                                </td>
                                 <td class="rank">{{story.rank}}</td>
                                 <td class="id">US{{story.id}}</td>
                                 <td class="name"><a href="{{story.get_absolute_url}}">{{story.name}}</a>
@@ -163,8 +350,19 @@
                                         {% endfor %}
                                     </ul>
                                 </td>
-                                <td class="size">{{story.size_label|default_if_none:"-"}}</td>
-                                <td class="size">{{story.suggested_size|default_if_none:"-"}}</td>
+                                <td class="size">
+                                    {% if story.size %}
+                                        <span class="storysize" id="toggle-size-{{story.id}}">{{story.size|storysize}}</span>
+                                    {% endif %}
+                                    <select {% if story.size %}style="display:none"{% endif %} onchange="setsize(this, {{story.id}}); return false" class="resize" id="s{{story.id}}">
+                                        {% for size in sizes %}
+                                            <option
+                                                value="{{size|default_if_none:"null"}}"
+                                                {% ifequal size story.size %}selected="selected"{% endifequal %}>{{size|storysize}}</option>
+                                        {% endfor %}
+                                    </select>
+                                </td>
+                                <td class="size">{{story.suggested_size|storysize}}</td>
                                 <td class="state">
                                     <img src="/agilito/backlog-state/{{ story.backlog_state }}.png"
                                         title="{{ story.backlog_state }}" alt="{{ story.backlog_state }}" />
@@ -184,9 +382,24 @@
                                 </td>
                             </tr>
                         {% endifequal %}
+                        {% ifequal story.whatami "Release" %}
+                            {% with story.release_date as release_date %}
+                                <tr id="re_{{story.id}}" class="release {{release_date.severity}}">
+                                    <td><span class="release-state"/></td>
+                                    <td colspan="9">
+                                        {{story.name}}{%if story.deadline %}, deadline: {{story.deadline}}{% endif %}{% if release_date.date or release_date.error %}, projected release date: {{release_date.date|default_if_none:"unknown"}}{% endif %}{% if release_date.error %} ({{release_date.error}}){% endif %}
+                                    </td>
+                                </tr>
+                            {% endwith %}
+                        {% endifequal %}
                     {%endfor%}
                 </tbody>
             </table>
+            </form>
+            <form style="display:none" name="queuesubmit" id="queuesubmit" action="{% url backlog_save current_project.id %}?last_page={{last_page}}" method="POST">
+                <textarea name="command-queue" id="command-queue" class="mceNoEditor"></textarea>
+                <input type="submit" class="save" value="Save"/>
+            </form>
         {% else %}
             No user stories in the backlog.
         {% endif %}

@@ -129,11 +129,8 @@ def cached(f):
                 return v
 
         v = f(*args, **kwargs)
-        midnight = datetime.datetime.now().replace(hour=23, minute=59, second=59, microsecond=0)
-        delta = datetime.datetime.now() - midnight
-
-        cache.set(key + '#version', pv, delta.seconds)
-        cache.set(key + '#value', v, delta.seconds)
+        cache.set(key + '#version', pv, 1000000)
+        cache.set(key + '#value', v, 1000000)
 
         return v
 
@@ -429,9 +426,22 @@ def backlog(request, project_id, states=None):
     if not states:
         states_filter = [UserStory.STATES.DEFINED, UserStory.STATES.SPECIFIED]
     else:
-        states_filter = [int(s) for s in states.split('+')]
+        states_filter = [int(s) for s in states.split(':')]
 
     user_stories = project.backlog(states_filter)
+
+    iterations = Iteration.objects.filter(project__id=project_id, end_date__gte=datetime.date.today())
+
+    newiteration = {}
+    if iterations.count() != 0:
+        newiteration['starts'] = iterations[iterations.count() - 1].end_date
+    else:
+        newiteration['starts'] = datetime.date.today()
+
+    if newiteration['starts'].weekday() > 4: # weekend
+        newiteration['starts'] += datetime.timedelta(days= 7 - newiteration['starts'].weekday())
+
+    sizes = [None] + UserStory.SIZES.values()
 
     user_stories_count = 0
     size = 0
@@ -458,6 +468,16 @@ def backlog(request, project_id, states=None):
                                 'selected': state in states_filter,
                                 })
     v = project.velocity()
+
+    if not v['sprint_length']:
+        newiteration['ends'] = None
+    else:
+        newiteration['ends'] = newiteration['starts'] + datetime.timedelta(days=v['sprint_length'] * 7.0 / 5)
+        if newiteration['ends'].weekday() > 4: # weekend
+            newiteration['ends'] += datetime.timedelta(days= 7 - newiteration['ends'].weekday())
+
+    newiteration['name'] = 'New Iteration created @ %s' % datetime.date.today()
+
     inner_context = {   'full_backlog'  : full_backlog,
                         'backlog'       : user_stories,
                         'user_stories'  : user_stories_count,
@@ -466,6 +486,9 @@ def backlog(request, project_id, states=None):
                         'accuracy'      : project.size_estimation_accuracy(),
                         'states'        : states_options,
                         'default_backlog': reverse('agilito.views.backlog', args=[project_id]),
+                        'sizes'         : sizes,
+                        'iterations'    : iterations,
+                        'newiteration'  : newiteration
                     }
     context = AgilitoContext(request, { }, current_project=project_id)
 
@@ -1210,26 +1233,82 @@ def _excel_column(n):
     else:
         return _excel_column(div)+chr(65+n%26)
 
-@restricted
-def backlog_reorder(request, project_id, target, pred):
-    project = Project.objects.get(id=project_id)
-    if pred == 'first':
-        newrank = 'min'
+def backlog_cmd_set_iteration(context, cmd):
+    if cmd['id'] != 'new':
+        it = Iteration.objects.get(id=int(cmd['id']))
     else:
-        newrank = pred.split('_')[2]
-        if newrank == '':
-            newrank = 'max'
+        it = Iteration()
+        it.project = context['project']
+        it.name = cmd['name']
+        it.start_date = cmd['starts']
+        it.end_date = cmd['ends']
+        it.save()
+
+    context['iteration'] = it
+
+def backlog_cmd_assign_story(context, cmd):
+    story = UserStory.objects.get(id=int(cmd['id']))
+    story.iteration = context['iteration']
+    story.save()
+
+def backlog_cmd_set_size(context, cmd):
+    if cmd['size'] == 'null':
+        size = None
+    else:
+        size = int(cmd['size'])
+
+    story = UserStory.objects.get(id=int(cmd['id']))
+    story.size = size
+    story.save()
+
+def backlog_cmd_rank(context, cmd):
+    def getObject(desc):
+        if desc['class'] == 'Release':
+            return Release.objects.get(id=int(cmd['id']))
+        elif cmd['class'] == 'UserStory':
+            return UserStory.objects.get(id=int(cmd['id']))
         else:
-            newrank = int(newrank)
+            return None
 
-    tpe, id, rank = target.split('_')
-    if tpe == 'us':
-        table = 'userstory'
-    elif tpe == 're':
-        table = 'release'
-    project.reorder_backlog(table, int(id), newrank)
+    target = cmd['target']
+    after = cmd['after']
+    if after['class'] == 'Release':
+        after = Release.objects.get(id=int(after['id']))
+    elif after['class'] == 'UserStory':
+        after = UserStory.objects.get(id=int(after['id']))
+    else:
+        after = None
 
-    return HttpResponseRedirect(project.get_absolute_url())
+    if after is None:
+        newrank = 'min'
+    elif after.rank is None:
+        newrank = 'max'
+    else:
+        newrank = after.rank + 1
+
+    context['project'].reorder_backlog(target['class'].lower(), int(target['id']), newrank)
+    context['compact'] = True
+
+backlog_command_execute = {
+        'set-iteration' : backlog_cmd_set_iteration,
+        'assign-story'  : backlog_cmd_assign_story,
+        'assign-story'  : backlog_cmd_assign_story,
+        'set-size'      : backlog_cmd_set_size,
+        'rank'          : backlog_cmd_rank,
+    }
+@restricted
+def backlog_save(request, project_id):
+    project = Project.objects.get(id=project_id)
+
+    if request.method == 'POST':
+        context = {'project': project, 'compact': False}
+        for cmd in simplejson.loads(request.POST['command-queue']):
+            backlog_command_execute[cmd['command']](context, cmd)
+        if context['compact']:
+            project.compact_ranks()
+
+    url = request.GET.get('last_page', project.get_absolute_url())
+    return HttpResponseRedirect(url)
 
 @restricted
 @cached
@@ -1239,7 +1318,7 @@ def product_backlog(request, project_id, states=None):
     if not states:
         states_filter = [UserStory.STATES.DEFINED, UserStory.STATES.SPECIFIED]
     else:
-        states_filter = [int(s) for s in states.split('+')]
+        states_filter = [int(s) for s in states.split(':')]
 
     for state, name in UserStory.STATES.choices():
         statename[state] = name
@@ -1261,7 +1340,7 @@ def product_backlog(request, project_id, states=None):
 
     for us in stories:
         if suggested_size.has_key(us.id):
-            us.suggested_size = suggested_size[us.id][1]
+            us.suggested_size = UserStory.SIZES.label(suggested_size[us.id])
         else:
             us.suggested_size = None
 

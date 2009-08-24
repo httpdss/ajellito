@@ -61,11 +61,8 @@ def cached(f):
                 return v
 
         v = f(*args, **kwargs)
-        midnight = datetime.datetime.now().replace(hour=23, minute=59, second=59, microsecond=0)
-        delta = datetime.datetime.now() - midnight
-
-        cache.set(key + '#version', pv, delta.seconds)
-        cache.set(key + '#value', v, delta.seconds)
+        cache.set(key + '#version', pv, 1000000)
+        cache.set(key + '#value', v, 1000000)
 
         return v
 
@@ -113,6 +110,9 @@ class FieldChoices:
         if include_hidden:
             return self.__choices + self.__hidden_choices
         return self.__choices
+
+    def values(self, include_hidden = False):
+        return [c[0] for c in self.choices(include_hidden)]
 
     def label(self, value):
         if value is None:
@@ -203,7 +203,7 @@ class Project(ClueModel):
 
         pv = {}
         for key in ['actual', 'estimated', 'sprint_length']:
-            pv[key] = float(sum(v[key] for v in vs)) / sprints
+            pv[key] = float(sum(v[key] for v in vs if not v[key] is None)) / sprints
         return pv
 
     def __unicode__(self):
@@ -224,8 +224,12 @@ class Project(ClueModel):
 
     @classmethod
     def touch_cache(klass, id):
+        now = datetime.datetime.now()
+        midnight = now.replace(hour=23, minute=59, second=59, microsecond=0)
+        delta = midnight - now
+
         v = str(time.time())
-        cache.set('project-cache-version-%s' % id, v)
+        cache.set('project-cache-version-%s' % id, v, delta.seconds)
         return v
 
     @classmethod
@@ -243,7 +247,7 @@ class Project(ClueModel):
         suggested_size = self.suggest_sizes()
         for us in stories:
             if suggested_size.has_key(us.id):
-                us.suggested_size = suggested_size[us.id][1]
+                us.suggested_size = suggested_size[us.id]
             else:
                 us.suggested_size = None
 
@@ -292,10 +296,11 @@ class Project(ClueModel):
         return UserStory.objects.get(id=data[baseline][0])
 
     @cached
-    def suggest_sizes(self, baseline=None, size=5, only_sized=False): # UserStory.SIZES.M): but needs forward declaration
-        stories = list(self.userstory_set.all())
+    def suggest_sizes(self, baseline=None, size=5, only_sized=False, include_original=False): # UserStory.SIZES.M): but needs forward declaration
         if only_sized:
-            stories = filter(lambda s: s.size and s.size != UserStory.SIZES.TOO_LARGE, stories)
+            stories = self.userstory_set.exclude(size=None).exclude(size=UserStory.SIZES.INFINITY)
+        else:
+            stories = list(self.userstory_set.all())
 
         if baseline is None:
             baseline = self.baseline_story(stories)
@@ -305,7 +310,7 @@ class Project(ClueModel):
 
         factor = float(size) / float(baseline.actuals or baseline.estimated)
 
-        sizes = [s[0] for s in UserStory.SIZES.choices()]
+        sizes = [s for s in UserStory.SIZES.values() if s != UserStory.SIZES.INFINITY]
         
         suggestions = {}
         for story in stories:
@@ -313,20 +318,25 @@ class Project(ClueModel):
             if not hours:
                 continue
 
-            suggestions[story.id] = list(UserStory.SIZES.choices()[self.closest(int(factor * hours), sizes)]) + [story.size]
+            suggestions[story.id] = UserStory.SIZES.values()[self.closest(int(factor * hours), sizes)]
+            if include_original:
+                suggestions[story.id] = (suggestions[story.id], story.size)
 
         return suggestions
 
     @cached
     def size_estimation_accuracy(self):
-        sugg = self.suggest_sizes(only_sized = True).values()
+        sugg = self.suggest_sizes(only_sized = True, include_original = True).values()
 
         try:
-            return (float(sum(s[0] for s in sugg)) / sum(s[2] for s in sugg)) * 100
+            return (float(sum(s[0] for s in sugg)) / sum(s[1] for s in sugg)) * 100
         except ZeroDivisionError:
             return None
 
     def reorder_backlog(self, table, id, rank):
+        if rank is None:
+            return
+
         from django.db import connection, transaction
         cursor = connection.cursor()
 
@@ -347,20 +357,27 @@ class Project(ClueModel):
         for t in ['userstory', 'release']:
             cursor.execute('update agilito_%s set rank = rank + 1 where project_id = %%s and rank >= %%s' % t, (self.id, rank))
         cursor.execute('update agilito_%s set rank = %%s where project_id = %%s and id = %%s' % table, (rank, self.id, id))
+        transaction.commit_unless_managed()
+        # database updates must touch the cache unless they're being done in a 'save' method,
+        # which touches the cache using a signal
+        Project.touch_cache(self.id)
 
-        # compact ranks
+    def compact_ranks(self):
+        from django.db import connection, transaction
+        cursor = connection.cursor()
+
         cursor.execute("""
             select 1 as relorder, 'userstory' as tbl, id, rank from agilito_userstory
-                where us.project_id = %s and not rank is NULL
+                where project_id = %s and not rank is NULL
             union
 
             select 0, 'release', id, rank from agilito_userstory
-                where us.project_id = %s and not rank is NULL
+                where project_id = %s and not rank is NULL
             
             order by rank, relorder""", (self.id, self.id))
 
         objs = [(r[1], r[2]) for r in cursor.fetchall()]
-        for rank, obj in enumerate(ids):
+        for rank, obj in enumerate(objs):
             tbl, id = obj
             cursor.execute('update agilito_%s set rank = %%s where id = %%s' % tbl, (rank + 1, id))
         transaction.commit_unless_managed()
@@ -398,31 +415,36 @@ class Release(ClueModel):
 
     @cached
     def release_date(self):
+
         from django.db import connection, transaction
         c = connection.cursor()
 
         c.execute("""
             select count(*)
             from agilito_userstory
-            where iteration_id is NULL and size is NULL and rank < %s""", (self.rank,))
+            where project_id = %s and iteration_id is NULL and size is NULL and rank < %s""", (self.project.id, self.rank,))
         unknowns = c.fetchone()[0]
 
         if unknowns > 0:
-            return {'date': None, 'error': 'Release has unsized stories', 'severity': 'error'}
+            return {'date': None, 'error': 'release has unsized stories', 'severity': 'error'}
 
         c.execute("""
             select sum(size)
             from agilito_userstory
-            where iteration_id is NULL and not size is NULL and rank < %s""", (self.rank,))
+            where project_id = %s and iteration_id is NULL and not size is NULL and rank < %s""", (self.project.id, self.rank,))
         unplanned = c.fetchone()[0]
+        if unplanned is None:
+            unplanned = 0
 
         pv = self.project.velocity()
         pva = float(pv['actual']) / pv['sprint_length']
         pve = float(pv['estimated']) / pv['sprint_length']
-        if unplanned > 0 and (v is None or v == 0):
-            return {'date': None, 'error': 'Project has unknown velocity', 'severity': 'error'}
+
+        if unplanned > 0 and (pv['actual'] is None or pv['actual'] == 0):
+            return {'date': None, 'error': 'project has unknown velocity', 'severity': 'error'}
         else:
-            unplanned = unplanned * pva
+            # correct for weekdays
+            unplanned = unplanned * pva * (7.0/5)
 
         err = None
         severity = None
@@ -431,22 +453,23 @@ class Release(ClueModel):
             select max(i.end_date)
             from agilito_userstory us
             join agilito_iteration i on us.iteration_id = i.id
-            where us.rank < %s""", (self.rank,))
+            where us.project_id = %s and us.rank < %s""", (self.project.id, self.rank,))
         sprints_end = c.fetchone()[0]
         if sprints_end is None:
             sprints_end = datetime.date.today()
         elif pve > 1.1 * pva and sprints_end > datetime.date.today():
-            err = 'Sprints based on unproven velocity'
+            err = 'sprints based on unproven velocity'
             severity = 'warning'
 
         rd = sprints_end + datetime.timedelta(unplanned)
+        print rd
         if self.deadline and rd > self.deadline:
-            return {'date': rd, 'error': 'Deadline exceeded', 'severity': 'error'}
+            return {'date': rd, 'error': 'deadline exceeded', 'severity': 'error'}
 
         return {'date': rd, 'error': err, 'severity': severity}
 
     def save(self):
-        super(UserStory, self).save()
+        super(Release, self).save()
         self.project.reorder_backlog('release', self.id, self.rank)
 
 class Iteration(ClueModel):
@@ -689,7 +712,7 @@ class UserStory(ClueModel):
                 (8,  'L'),
                 (13, 'XL'),
                 (21, 'XXL'),
-                (1000,  'Too large'))
+                (1000,  'Infinity'))
 
     objects = UserStoryManager()
 
