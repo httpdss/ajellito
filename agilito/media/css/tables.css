@@ -67,7 +67,7 @@ tr.child.odd td {
 td.actuals, td.size,td.estimated, td.progress, td.todo, td.actuals, td.failures, td.rank {
     text-align:center;
 }
-td.size select {
+select.resize {
     width: auto;
 }
 
