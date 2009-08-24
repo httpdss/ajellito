@@ -135,6 +135,8 @@ if not 'LOGIN_REDIRECT_URL' in dir(settings) or settings.LOGIN_REDIRECT_URL != '
 ################ upgrade database
 if not verify('django_extensions'):
     print 'If you install django_extensions (http://code.google.com/p/django-command-extensions) I can inspect the database for changes against the models'
+elif not 'django_extensions' in settings.INSTALLED_APPS:
+    print 'django_extensions is not included in INSTALLED_APPS'
 else:
     os.system('python manage.py sqldiff agilito')
 
