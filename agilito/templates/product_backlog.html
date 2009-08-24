@@ -337,7 +337,9 @@
                         {% ifequal story.whatami "UserStory" %}
                             <tr id="us_{{story.id}}" class="{% cycle even,odd %}">
                                 <td class="mark">
-                                    {% if not story.iteration %}
+                                    {% if story.iteration %}
+                                        {{story.iteration.name}}
+                                    {% else %}
                                         <input type=checkbox name="mark" value="{{story.id}}" onclick="mark(this, {{story.id}});"/>
                                     {% endif %}
                                 </td>
