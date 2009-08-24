@@ -9,6 +9,14 @@
             <span class="action-link add-object">Add User Story</span>
         </a>
 
+        <a href="{% url iteration_create current_project.id %}?last_page={{last_page}}">
+            <span class="action-link add-object">Add Iteration</span>
+        </a>
+
+        <a href="{% url release_create current_project.id %}?last_page={{last_page}}">
+            <span class="action-link add-object">Add Release</span>
+        </a>
+
         {% if full_backlog %}
             <a href="{{ full_backlog }}?last_page={{last_page}}">Backlog in Excel format</a>
         {% endif %}
@@ -369,29 +377,41 @@
                                     <img src="/agilito/backlog-state/{{ story.backlog_state }}.png"
                                         title="{{ story.backlog_state }}" alt="{{ story.backlog_state }}" />
                                 </td>
-                                <td id="edit_us_{{story.id}}" class="">
+                                <td id="edit_us_{{story.id}}" class="edit-button">
                                     <a href="{% url agilito.views.userstory_edit current_project.id,story.id %}?last_page={{last_page}}">
                                     <img src="/agilito/pencil.png" alt="edit" title="edit" width="16" height="16" /></a>
                                 </td>
-                                <td id="move_us_{{us.id}}" class="">
+                                <td id="move_us_{{us.id}}" class="edit-button">
                                     <a href="{% url agilito.views.userstory_move current_project.id,story.id %}?last_page={{last_page}}"
                                         onclick="popup(this, 'us-move'); return false">
                                     <img src="/agilito/bullet_go.png" alt="move" title="move" width="16" height="16" /></a>
                                 </td>
-                                <td id="delete_us_{{story.id}}" class="">
+                                <td id="delete_us_{{story.id}}" class="edit-button">
                                     <a href="{% url agilito.views.userstory_delete current_project.id,story.id %}?last_page={{last_page}}">
                                     <img src="/agilito/delete.png" alt="delete" title="delete" width="16" height="16" /></a>
                                 </td>
                             </tr>
                         {% endifequal %}
                         {% ifequal story.whatami "Release" %}
-                            {% with story.release_date as release_date %}
-                                <tr id="re_{{story.id}}" class="release {{release_date.severity}}">
-                                    <td><span class="release-state"/></td>
-                                    <td colspan="9">
-                                        {{story.name}}{%if story.deadline %}, deadline: {{story.deadline}}{% endif %}{% if release_date.date or release_date.error %}, projected release date: {{release_date.date|default_if_none:"unknown"}}{% endif %}{% if release_date.error %} ({{release_date.error}}){% endif %}
-                                    </td>
-                                </tr>
+                            {% with story as release %}
+                                {% with release.release_date as release_date %}
+                                    <tr id="re_{{release.id}}" class="release {{release_date.severity}}">
+                                        <td><span class="release-state"/></td>
+                                        <td colspan="6">
+                                            {{release.name}}{%if release.deadline %}, deadline: {{release.deadline}}{% endif %}{% if release_date.date or release_date.error %}, projected release date: {{release_date.date|default_if_none:"unknown"}}{% endif %}{% if release_date.error %} ({{release_date.error}}){% endif %}
+                                        </td>
+
+                                        <td id="edit_re_{{release.id}}" class="edit-button">
+                                            <a href="{% url agilito.views.release_edit current_project.id,release.id %}?last_page={{last_page}}">
+                                                <img src="/agilito/pencil.png" alt="edit" title="edit" width="16" height="16" /></a>
+                                            </td>
+                                        <td><!-- move --></td>
+                                        <td id="delete_re_{{release.id}}" class="edit-button">
+                                            <a href="{% url agilito.views.release_delete current_project.id,release.id %}?last_page={{last_page}}">
+                                                <img src="/agilito/delete.png" alt="delete" title="delete" width="16" height="16" /></a>
+                                        </td>
+                                    </tr>
+                                {% endwith %}
                             {% endwith %}
                         {% endifequal %}
                     {%endfor%}

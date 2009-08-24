@@ -8,7 +8,7 @@ from itertools import groupby
 from django import forms
 from django.contrib.auth.models import User
 from agilito.models import UserStory, Task, TestCase, TaskLog, TestResult,\
-    UserProfile, UserStoryAttachment, Impediment, Iteration
+    UserProfile, UserStoryAttachment, Impediment, Iteration, Release
 
 from agilito.widgets import HierarchicRadioSelect, TaskHierarchy
 from agilito.fields import GroupedChoiceField
@@ -23,6 +23,25 @@ class UserProfileForm(forms.ModelForm):
 
 class HiddenHttpRefererForm(forms.ModelForm):
     http_referer = forms.CharField(widget=forms.HiddenInput, required=False)
+
+class IterationForm(HiddenHttpRefererForm):
+    def __init__(self, *args, **kwargs):
+        project = kwargs.pop('project')
+        super(IterationForm, self).__init__(*args, **kwargs)
+        self.fields['start_date'].widget.attrs['class'] = 'show-datepicker'
+        self.fields['end_date'].widget.attrs['class'] = 'show-datepicker'
+
+    class Meta:
+        model = Iteration
+
+class ReleaseForm(HiddenHttpRefererForm):
+    def __init__(self, *args, **kwargs):
+        project = kwargs.pop('project')
+        super(ReleaseForm, self).__init__(*args, **kwargs)
+        self.fields['deadline'].widget.attrs['class'] = 'show-datepicker'
+
+    class Meta:
+        model = Release
 
 class UserStoryAttachmentForm(HiddenHttpRefererForm):
 

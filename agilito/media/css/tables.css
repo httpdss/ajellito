@@ -6,6 +6,10 @@ table#user-story-list .state {
     text-align: center;
 }
 
+table#user-story-list .edit-button {
+    text-align: center;
+}
+
 thead th {
     vertical-align:top;
     padding-left:0.5em;
@@ -90,3 +94,5 @@ table .release.error td {
 	background-color: red;
 	color: #FFFFFF;
 }
+
+

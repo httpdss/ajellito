@@ -394,7 +394,7 @@ def toprank():
 class Release(ClueModel):
     project = models.ForeignKey(Project)
     rank = models.IntegerField(default=toprank)
-    deadline = models.DateField(null=True)
+    deadline = models.DateField(null=True, blank=True)
 
     def __unicode__(self):
         return u'RE%s: %s' % (self.id, self.name)
@@ -410,8 +410,7 @@ class Release(ClueModel):
 
     @models.permalink
     def get_absolute_url(self):
-        # tempororary
-        return '/admin/agilito/release/%s/' % self.id
+        return 'release_edit', (), {'project_id': self.project.id, 'release_id': self.id }      
 
     @cached
     def release_date(self):

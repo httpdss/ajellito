@@ -70,6 +70,12 @@ function highlightTag(ids)
             <span class="action-link add-object">Import iteration</span>
         </a>
 
+        {% if current_iteration %}
+            <a href="{% url agilito.views.iteration_delete current_project.id, current_iteration.id %}?last_page={{last_page}}">
+                <span class="action-link delete">Delete this iteration</span>
+            </a>
+        {% endif %}
+
         <a href="{{ cards_url }}">Task cards</a>
 
         {% if status_table_url %}

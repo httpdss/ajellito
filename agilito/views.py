@@ -97,11 +97,11 @@ from urllib import quote, urlencode
 
 from agilito.models import Project, Iteration, UserStory, Task, TestCase,\
     TaskLog, UserProfile, User, TestResult, UserStoryAttachment, \
-    Impediment
+    Impediment, Release
 from agilito.forms import UserStoryForm, UserStoryShortForm, gen_TaskLogForm,\
     TaskForm, TestCaseAddForm, TestCaseEditForm, testcase_form_factory,\
     TestResultForm, UserStoryAttachmentForm, ImpedimentForm, \
-    UserStoryMoveForm, IterationImportForm
+    UserStoryMoveForm, IterationImportForm, ReleaseForm, IterationForm
 
 from agilito.tools import restricted
 
@@ -306,6 +306,69 @@ def impediment_edit(request, project_id, iteration_id, impediment_id):
     return impediment_create(request, project_id, iteration_id, instance)
 
 @restricted
+def release_create(request, project_id, instance=None):
+    if request.method == 'POST':
+        form = ReleaseForm(request.POST, instance=instance, project=Project.objects.get(id=project_id))
+        form.save()
+        return HttpResponseRedirect(form.cleaned_data['http_referer'])
+    else:
+        url = request.GET.get('last_page', '/%s/backlog/' % project_id)
+        form = ReleaseForm(initial={'http_referer' : url}, project=Project.objects.get(id=project_id), instance=instance)
+
+    context = AgilitoContext(request, {'form': form}, current_project=project_id)
+    return render_to_response('generic_action.html', context_instance=context)
+
+@restricted
+def release_edit(request, project_id, release_id):
+    instance = Release.objects.get(id=release_id)
+    return release_create(request, project_id, instance)
+
+@restricted
+def release_delete(request, project_id, release_id):
+    release = Release.objects.get(id=release_id, project__id = project_id)
+
+    # set the url to return to after deletion
+    url = request.GET.get('last_page', reverse('agilito.views.product_backlog', args=[project_id]))
+
+    return create_update.delete_object(request, object_id=release_id,
+                                       model=Release,
+                                       template_name='userstory_delete.html',
+                                       post_delete_redirect=url)
+
+@restricted
+def iteration_create(request, project_id, instance=None):
+    if request.method == 'POST':
+        form = IterationForm(request.POST, instance=instance, project=Project.objects.get(id=project_id))
+        form.save()
+        return HttpResponseRedirect(form.cleaned_data['http_referer'])
+    else:
+        url = request.GET.get('last_page', '/%s/backlog/' % project_id)
+        form = IterationForm(initial={'http_referer' : url}, instance=instance, project=Project.objects.get(id=project_id))
+
+    context = AgilitoContext(request, {'form': form}, current_project=project_id)
+    return render_to_response('generic_action.html', context_instance=context)
+
+@restricted
+def iteration_edit(request, project_id, iteration_id):
+    instance = Iteration.objects.get(id=iteration_id)
+    return iteration_create(request, project_id, instance)
+
+@restricted
+def iteration_delete(request, project_id, iteration_id):
+    iteration = Iteration.objects.get(id=iteration_id, project__id = project_id)
+
+    # set the url to return to after deletion
+    url = request.GET.get('last_page', reverse('agilito.views.product_backlog', args=[project_id]))
+
+    delobjs = list(iteration.userstory_set.all())
+
+    return create_update.delete_object(request, object_id=iteration_id,
+                                       model=Iteration,
+                                       template_name='userstory_delete.html',
+                                       post_delete_redirect=url,
+                                       extra_context={"title": "Are you sure you want to delete this iteration? This iteration has these stories attached", 'deleted_objects': delobjs})
+
+@restricted
 def userstory_create(request, project_id, iteration_id=None, instance=None):
     if request.method == 'POST':
         form = UserStoryForm(request.POST, instance=instance, project=Project.objects.get(id=project_id))
@@ -324,8 +387,7 @@ def userstory_create(request, project_id, iteration_id=None, instance=None):
                              instance=instance,
                              project=Project.objects.get(id=project_id))
 
-    context = AgilitoContext(request, {'form': form},
-                            current_project=project_id)
+    context = AgilitoContext(request, {'form': form}, current_project=project_id)
     return render_to_response('userstory_edit.html', context_instance=context)
 
 @restricted

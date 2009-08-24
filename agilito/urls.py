@@ -22,10 +22,18 @@ urlpatterns = patterns('agilito.views',
     url(r'^(?P<project_id>\d+)/product_backlog/(?P<states>\d+(:\d+)*)/$', 'product_backlog', name='product_backlog_for_states'),
     url(r'^(?P<project_id>\d+)/backlog/userstory/add/$', 'userstory_create', name="story_from_backlog"),
     url(r'^(?P<project_id>\d+)/backlog/save/$', 'backlog_save', name="backlog_save"),
+
+    url(r'^(?P<project_id>\d+)/release/add/$', 'release_create', name="release_create"),
+    url(r'^(?P<project_id>\d+)/release/(?P<release_id>\d+)/edit/$', 'release_edit', name='release_edit'),
+    (r'^(?P<project_id>\d+)/release/(?P<release_id>\d+)/delete/$', 'release_delete'),
     
     url(r'^(?P<project_id>\d+)/iteration/$', 'iteration_status', name="current_iteration_status"),
     url(r'^(?P<project_id>\d+)/iteration/(?P<iteration_id>\d+)/$', 'iteration_status', name="iteration_status_with_id"),
     (r'^(?P<project_id>\d+)/iteration/import/$', 'iteration_import'),
+    url(r'^(?P<project_id>\d+)/iteration/add/$', 'iteration_create', name="iteration_create"),
+    url(r'^(?P<project_id>\d+)/iteration/(?P<iteration_id>\d+)/edit/$', 'iteration_edit', name='iteration_edit'),
+    (r'^(?P<project_id>\d+)/iteration/(?P<iteration_id>\d+)/delete/$', 'iteration_delete'),
+
     url(r'^(?P<project_id>\d+)/taskboard/(?P<iteration_id>\d+)/$', 'taskboard', name="taskboard"),
     url(r'^(?P<project_id>\d+)/iteration/(?P<iteration_id>\d+)/userstory/add/$', 'userstory_create', name="story_from_iteration"),
     
