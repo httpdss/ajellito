@@ -415,23 +415,34 @@ class Release(ClueModel):
 
     @cached
     def release_date(self):
-
         from django.db import connection, transaction
         c = connection.cursor()
 
+        end_states = ','.join(str(s) for s in UserStory.ENDSTATES)
+
+        # unsized
         c.execute("""
             select count(*)
             from agilito_userstory
-            where project_id = %s and iteration_id is NULL and size is NULL and rank < %s""", (self.project.id, self.rank,))
-        unknowns = c.fetchone()[0]
+            where project_id = %%s
+            and iteration_id is NULL
+            and size is NULL
+            and not state in (%s)
+            and rank < %%s""" % end_states, (self.project.id, self.rank))
+        unsized = c.fetchone()[0]
 
-        if unknowns > 0:
+        if unsized > 0:
             return {'date': None, 'error': 'release has unsized stories', 'severity': 'error'}
 
+        # unplanned
         c.execute("""
             select sum(size)
             from agilito_userstory
-            where project_id = %s and iteration_id is NULL and not size is NULL and rank < %s""", (self.project.id, self.rank,))
+            where project_id = %%s
+            and iteration_id is NULL
+            and not size is NULL
+            and not state in (%s)
+            and rank < %%s""" % end_states, (self.project.id, self.rank))
         unplanned = c.fetchone()[0]
         if unplanned is None:
             unplanned = 0
@@ -449,11 +460,14 @@ class Release(ClueModel):
         err = None
         severity = None
 
+        # planned but unfinished
         c.execute("""
             select max(i.end_date)
             from agilito_userstory us
             join agilito_iteration i on us.iteration_id = i.id
-            where us.project_id = %s and us.rank < %s""", (self.project.id, self.rank,))
+            where us.project_id = %%s
+            and not state in (%s)
+            and us.rank < %%s""" % end_states, (self.project.id, self.rank))
         sprints_end = c.fetchone()[0]
         if sprints_end is None:
             sprints_end = datetime.date.today()
@@ -703,6 +717,7 @@ class UserStory(ClueModel):
                 (50, 'Failed'),
                 (1, '#Archived')
                 )
+    ENDSTATES = (STATES.ACCEPTED, STATES.FAILED, STATES.ARCHIVED)
 
     SIZES = FieldChoices(
                 (1,  'XXS'),
