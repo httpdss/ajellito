@@ -424,6 +424,21 @@
             </form>
         {% else %}
             No user stories in the backlog.
+            <div>
+                <form name="states">
+                    {% for state in states %}
+                        <input type="checkbox"
+                            id="story_state_{{state.state}}"
+                            name="story_state_{{state.state}}"
+                            value="{{ state.state }}"
+                            {% if state.selected %}
+                                checked="checked"
+                            {% endif %}
+                            />&nbsp;<label class="inline"
+                                for="story_state_{{state.state}}">{{state.name}}</label>
+                    {% endfor %}
+                </form>
+            </div>
         {% endif %}
     {% endblock %}
 {% endif %}
