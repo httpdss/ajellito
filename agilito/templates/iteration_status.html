@@ -60,11 +60,11 @@ function highlightTag(ids)
             <a href="{% url story_from_iteration project_id=current_project.id,iteration_id=current_iteration.id %}?last_page={{last_page}}">
                 <span class="action-link add-object">Add User Story</span>
             </a>
-        {% endif %}
 
-        <a href="{% url agilito.views.impediment_create project_id=current_project.id,iteration_id=current_iteration.id %}?last_page={{last_page}}">
-            <span class="action-link add-object">Report impediment</span>
-        </a>
+            <a href="{% url agilito.views.impediment_create project_id=current_project.id,iteration_id=current_iteration.id %}?last_page={{last_page}}">
+                <span class="action-link add-object">Report impediment</span>
+            </a>
+        {% endif %}
 
         <a href="{% url agilito.views.iteration_import current_project.id %}?last_page={{last_page}}">
             <span class="action-link add-object">Import iteration</span>
@@ -74,25 +74,25 @@ function highlightTag(ids)
             <a href="{% url agilito.views.iteration_delete current_project.id, current_iteration.id %}?last_page={{last_page}}">
                 <span class="action-link delete">Delete this iteration</span>
             </a>
+
+            <a href="{{ cards_url }}">Task cards</a>
+
+            {% if status_table_url %}
+                <a href="{{ status_table_url }}">Task status</strong></a>
+
+                <a href="{% url agilito.views.iteration_export current_project.id,current_iteration.id %}">Iteration export</a>
+            {% endif %}
+
+            {%if burndown_chart_url %}
+                <a target="_burndown" href="{{ burndown_chart_url }}">Burndown chart</a>
+            {% endif %}
+
+            {% if product_backlog_chart %}
+                <a target="_chart" href="{{ product_backlog_chart }}">Backlog evolution</a>
+            {% endif %}
+
+            <a onclick="popup(this, 'taskboard'); return false" href="{% url agilito.views.taskboard current_project.id,current_iteration.id %}">Task board</a>
         {% endif %}
-
-        <a href="{{ cards_url }}">Task cards</a>
-
-        {% if status_table_url %}
-            <a href="{{ status_table_url }}">Task status</strong></a>
-
-            <a href="{% url agilito.views.iteration_export current_project.id,current_iteration.id %}">Iteration export</a>
-        {% endif %}
-
-        {%if burndown_chart_url %}
-            <a target="_burndown" href="{{ burndown_chart_url }}">Burndown chart</a>
-        {% endif %}
-
-        {% if product_backlog_chart %}
-            <a target="_chart" href="{{ product_backlog_chart }}">Backlog evolution</a>
-        {% endif %}
-
-        <a onclick="popup(this, 'taskboard'); return false" href="{% url agilito.views.taskboard current_project.id,current_iteration.id %}">Task board</a>
 
         <!-- a href="/feeds/iteration/{{current_project.id}}/{{current_iteration.id}}/"><img border="0" src="/agilito/feed-icon-14x14.png" /></a -->
     </div>
