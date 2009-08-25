@@ -44,54 +44,6 @@ ul.tags span.small {
     font-style: italic;
 }
 
-/* taskboard */
-#taskboard {
-    border-width: 2px 2px 2px 2px;
-    border-spacing: 0px;
-    border-style: solid solid solid solid;
-    border-color: blue blue blue blue;
-    border-collapse: separate;
-    background-color: white;
-}
-#taskboard th {
-    border-width: 1px 1px 1px 1px;
-    padding: 4px 4px 4px 4px;
-    border-style: dotted dotted dotted dotted;
-    border-color: blue blue blue blue;
-    background-color: white;
-    -moz-border-radius: 0px 0px 0px 0px;
-}
-#taskboard td {
-    border-width: 1px 1px 1px 1px;
-    padding: 4px 4px 4px 4px;
-    border-style: dotted dotted dotted dotted;
-    border-color: blue blue blue blue;
-    background-color: white;
-    -moz-border-radius: 0px 0px 0px 0px;
-}
-#taskboard ul {
-    border: 1px solid gray;
-    margin: 2px;
-    padding: 2px;
-    /* display: inline; */
-    display: compact;
-}
-#taskboard li {
-    list-style-type: none;
-}
-#taskboard .task li {
-    display: inline;
-}
-#taskboard .task li.name {
-    display: block;
-}
-#taskboard li.name span {
-    font-weight: bold;
-}
-#taskboard li.id span {
-    font-style: italic;
-}
-
 /* timelog screen */
 form p, #timelog > li {
     clear:left;
@@ -176,5 +128,20 @@ form p, #timelog > li {
 #timelog-layout td {
     vertical-align: top;
     text-align: left;
+}
+
+/* blocked items in iteration */
+.blocked td{
+    background:#f99 !important;
+}
+.blocked .name{
+    background:#f99 url(/agilito/blocked.png) no-repeat !important;
+    background-position: left center !important;
+    padding-left:20px;
+}
+#us-head.blocked{
+    background:#f99 url(/agilito/blocked-big.png) no-repeat !important;
+    background-position: left center !important;
+    padding-left:32px;
 }
 
