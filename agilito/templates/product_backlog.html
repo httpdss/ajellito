@@ -40,6 +40,13 @@
     <script type="text/javascript" src="/agilito/js/jquery.uitablefilter.js"></script>
 
     <script type="text/javascript">
+        function reset_states()
+        {
+            {% for state in states %}
+                $('#story_state_{{state.state}}').attr('checked', {% if state.selected %} true {% else %} false {% endif %});
+            {% endfor %}
+        }
+
         function select_states() {
             var states = [];
             {% for state in states %}
@@ -51,6 +58,8 @@
             if (states != '') {
                 states += '/';
             }
+
+            reset_states();
             window.location = '{{default_backlog}}' + states;
         }
 
@@ -190,6 +199,8 @@
         }
 
         $(document).ready(function() {
+            reset_states();
+
             $("#iteration-form").hide();
 
             $(".storysize").bind("dblclick", function() {
@@ -256,10 +267,6 @@
             $("#filter").keyup(function() {
                 $.uiTableFilter( pbl, this.value );
             })
-
-            {% for state in states %}
-                $("#story_state_{{state.state}}").change(select_states);
-            {% endfor %}
         });
     </script>
 {% endblock %}
@@ -290,21 +297,18 @@
                 {% if accuracy %}
                     <div>Sizing accuracy: {{ accuracy|floatformat:0 }}%</div>
                 {% endif %}
+        {% else %}
+            No user stories in the backlog.
+        {% endif %}
                 <div>
                     <form name="states">
                         {% for state in states %}
-                            <input type="checkbox"
-                                id="story_state_{{state.state}}"
-                                name="story_state_{{state.state}}"
-                                value="{{ state.state }}"
-                                {% if state.selected %}
-                                    checked="checked"
-                                {% endif %}
-                                />&nbsp;<label class="inline"
-                                    for="story_state_{{state.state}}">{{state.name}}</label>
+                            <input type="checkbox" id="story_state_{{state.state}}" name="story_state_{{state.state}}" value="{{ state.state }}"/>&nbsp;<label class="inline" for="story_state_{{state.state}}">{{state.name}}</label>
                         {% endfor %}
+                        <input onclick="select_states(); return false" type="image" src="/agilito/go.png" alt="Submit Form">
                     </form>
                 </div>
+        {% if backlog %}
             </div>
         {% endif %}
     
@@ -422,23 +426,6 @@
                 <textarea name="command-queue" id="command-queue" class="mceNoEditor"></textarea>
                 <input type="submit" class="save" value="Save"/>
             </form>
-        {% else %}
-            No user stories in the backlog.
-            <div>
-                <form name="states">
-                    {% for state in states %}
-                        <input type="checkbox"
-                            id="story_state_{{state.state}}"
-                            name="story_state_{{state.state}}"
-                            value="{{ state.state }}"
-                            {% if state.selected %}
-                                checked="checked"
-                            {% endif %}
-                            />&nbsp;<label class="inline"
-                                for="story_state_{{state.state}}">{{state.name}}</label>
-                    {% endfor %}
-                </form>
-            </div>
         {% endif %}
     {% endblock %}
 {% endif %}
