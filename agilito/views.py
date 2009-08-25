@@ -532,7 +532,7 @@ def backlog(request, project_id, states=None):
     v = project.velocity()
 
     if not v['sprint_length']:
-        newiteration['ends'] = None
+        newiteration['ends'] = ''
     else:
         newiteration['ends'] = newiteration['starts'] + datetime.timedelta(days=v['sprint_length'] * 7.0 / 5)
         if newiteration['ends'].weekday() > 4: # weekend
