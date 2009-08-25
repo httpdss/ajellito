@@ -1382,7 +1382,7 @@ def product_backlog(request, project_id, states=None):
     else:
         states_filter = [int(s) for s in states.split(':')]
 
-    for state, name in UserStory.STATES.choices():
+    for state, name in UserStory.STATES.choices(include_hidden = True):
         statename[state] = name
 
     stories = UserStory.objects.reset().filter(project__id=project_id).order_by('rank').order_by('id')
