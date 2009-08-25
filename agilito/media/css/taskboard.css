@@ -1,0 +1,46 @@
+#taskboard {
+    border-width: 2px 2px 2px 2px;
+    border-spacing: 0px;
+    border-style: solid solid solid solid;
+    border-color: blue blue blue blue;
+    border-collapse: separate;
+    background-color: white;
+}
+#taskboard th {
+    border-width: 1px 1px 1px 1px;
+    padding: 4px 4px 4px 4px;
+    border-style: dotted dotted dotted dotted;
+    border-color: blue blue blue blue;
+    background-color: white;
+    -moz-border-radius: 0px 0px 0px 0px;
+}
+#taskboard td {
+    border-width: 1px 1px 1px 1px;
+    padding: 4px 4px 4px 4px;
+    border-style: dotted dotted dotted dotted;
+    border-color: blue blue blue blue;
+    background-color: white;
+    -moz-border-radius: 0px 0px 0px 0px;
+}
+#taskboard ul {
+    border: 1px solid gray;
+    margin: 2px;
+    padding: 2px;
+    /* display: inline; */
+    display: compact;
+}
+#taskboard li {
+    list-style-type: none;
+}
+#taskboard .task li {
+    display: inline;
+}
+#taskboard .task li.name {
+    display: block;
+}
+#taskboard li.name span {
+    font-weight: bold;
+}
+#taskboard li.id span {
+    font-style: italic;
+}
