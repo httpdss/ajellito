@@ -57,6 +57,10 @@ function highlightTag(ids)
 {% block sidebar %}
     <div id="rightmenu">
         {% if current_iteration %}
+            <a href="{% url agilito.views.iteration_edit current_project.id, current_iteration.id %}?last_page={{last_page}}">
+                <span class="action-link edit">Edit this iteration</span>
+            </a>
+
             <a href="{% url story_from_iteration project_id=current_project.id,iteration_id=current_iteration.id %}?last_page={{last_page}}">
                 <span class="action-link add-object">Add User Story</span>
             </a>
