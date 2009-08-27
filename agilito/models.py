@@ -417,6 +417,13 @@ class Release(ClueModel):
         from django.db import connection, transaction
         c = connection.cursor()
 
+        status = {
+            'date': None,
+            'achieved': False,
+            'error': None,
+            'severity': None
+        }
+
         end_states = ','.join(str(s) for s in UserStory.ENDSTATES)
 
         # unsized
@@ -431,7 +438,9 @@ class Release(ClueModel):
         unsized = c.fetchone()[0]
 
         if unsized > 0:
-            return {'date': None, 'error': 'release has unsized stories', 'severity': 'error'}
+            status['error'] = 'release has unsized stories'
+            status['severity'] = 'error'
+            return status
 
         # unplanned
         c.execute("""
@@ -451,35 +460,36 @@ class Release(ClueModel):
         pve = float(pv['estimated']) / pv['sprint_length']
 
         if unplanned > 0 and (pv['actual'] is None or pv['actual'] == 0):
-            return {'date': None, 'error': 'project has unknown velocity', 'severity': 'error'}
+            status['error'] = 'project has unknown velocity'
+            status['severity'] = 'error'
+            return status
         else:
             # correct for weekdays
             unplanned = unplanned * pva * (7.0/5)
 
-        err = None
-        severity = None
-
         # planned but unfinished
         c.execute("""
-            select max(i.end_date)
+            select max(i.end_date), max(us.id)
             from agilito_userstory us
-            join agilito_iteration i on us.iteration_id = i.id
-            where us.project_id = %%s
-            and not state in (%s)
-            and us.rank < %%s""" % end_states, (self.project.id, self.rank))
-        sprints_end = c.fetchone()[0]
-        if sprints_end is None:
+            left join agilito_iteration i on us.iteration_id = i.id and not state in (%s) and us.rank < %%s
+            where us.project_id = %%s""" % end_states, (self.project.id, self.rank))
+        sprints_end, unfinished = c.fetchone()[0]
+        if sprints_end is None: # no sprints defined
             sprints_end = datetime.date.today()
-        elif pve > 1.1 * pva and sprints_end > datetime.date.today():
-            err = 'sprints based on unproven velocity'
-            severity = 'warning'
+        elif not unfinished is None and pve > 1.1 * pva and sprints_end > datetime.date.today():
+            status['error'] = 'sprints based on unproven velocity'
+            status['severity'] = 'warning'
+        else:
+            status['achieved'] = unfinished is None
 
         rd = sprints_end + datetime.timedelta(unplanned)
-        print rd
+        status['date'] = rd
         if self.deadline and rd > self.deadline:
-            return {'date': rd, 'error': 'deadline exceeded', 'severity': 'error'}
+            status['error'] = 'deadline exceeded'
+            status['severity'] = 'error'
+            return status
 
-        return {'date': rd, 'error': err, 'severity': severity}
+        return status
 
     def save(self):
         super(Release, self).save()

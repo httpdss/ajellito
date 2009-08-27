@@ -486,7 +486,7 @@ def backlog(request, project_id, states=None):
     project = Project.objects.get(id=project_id)
 
     if not states:
-        states_filter = [UserStory.STATES.DEFINED, UserStory.STATES.SPECIFIED]
+        states_filter = [s for s in UserStory.STATES.values(include_hidden=True) if not s in UserStory.ENDSTATES]
     else:
         states_filter = [int(s) for s in states.split(':')]
 
@@ -496,7 +496,7 @@ def backlog(request, project_id, states=None):
 
     newiteration = {}
     if iterations.count() != 0:
-        newiteration['starts'] = iterations[iterations.count() - 1].end_date
+        newiteration['starts'] = iterations[iterations.count() - 1].end_date + datetime.timedelta(days=1)
     else:
         newiteration['starts'] = datetime.date.today()
 
