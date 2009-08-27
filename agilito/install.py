@@ -44,11 +44,12 @@ def rerun(msg = None):
     sys.exit()
 
 required_apps = ['django.contrib.admin', 'django.contrib.humanize', 'django.contrib.markup', 'accounts' ]
-def verify(name, url=None, svn=False, optional=False):
+def verify(name, url, svn=False, app=True, optional=False):
     global required_apps, complete
 
-    if svn:
+    if not optional and app:
         required_apps.append(name)
+
     try:
         __import__(name)
         print '%s is present' % name
@@ -75,19 +76,20 @@ def verify(name, url=None, svn=False, optional=False):
         complete = complete and optional
         return False
 
-if not verify('django', 'http://www.djangoproject.com/'):
+if not verify('django', 'http://www.djangoproject.com/', app=False):
     rerun()
 
 verify('pyExcelerator', 'http://sourceforge.net/projects/pyexcelerator', optional=True)
 verify('matplotlib', 'http://matplotlib.sourceforge.net/', optional=True)
-verify('agilito', 'http://agilito.googlecode.com/svn/trunk/agilito', True)
+verify('agilito', 'http://agilito.googlecode.com/svn/trunk/agilito', svn=True)
 
 if fresh:
     print 'Installing default url redirector'
     shutil.copyfile('agilito/install/urls.py', 'urls.py')
     
-verify('queryutils', 'http://agilito.googlecode.com/svn/trunk/queryutils', True)
-verify('tagging', 'http://django-tagging.googlecode.com/svn/trunk/tagging', True)
+verify('queryutils', 'http://agilito.googlecode.com/svn/trunk/queryutils', svn=True)
+verify('tagging', 'http://django-tagging.googlecode.com/svn/trunk/tagging', svn=True)
+verify('threadedcomments', 'http://code.google.com/p/django-threadedcomments/')
 
 try:
     import accounts
@@ -133,7 +135,7 @@ if not 'LOGIN_REDIRECT_URL' in dir(settings) or settings.LOGIN_REDIRECT_URL != '
     complete = False
 
 ################ upgrade database
-if not verify('django_extensions'):
+if not verify('django_extensions', 'http://code.google.com/p/django-command-extensions', optional=True):
     print 'If you install django_extensions (http://code.google.com/p/django-command-extensions) I can inspect the database for changes against the models'
 elif not 'django_extensions' in settings.INSTALLED_APPS:
     print 'django_extensions is not included in INSTALLED_APPS'
