@@ -923,8 +923,9 @@ class UserStory(ClueModel):
         ordering = ('rank', 'id')
 
     def save(self):
-        if self.state in [UserStory.STATES.ARCHIVED, UserStory.STATES.ACCEPTED, UserStory.STATES.FAILED]:
-            self.closed = datetime.date.today()
+        if self.state in UserStory.ENDSTATES:
+            if self.closed is None:
+                self.closed = datetime.date.today()
         else:
             self.closed = None
 
