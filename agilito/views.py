@@ -965,10 +965,10 @@ def iteration_status(request, project_id, iteration_id=None, template='iteration
             join agilito_task t on it.task_id = t.id
             join agilito_userstory s on t.user_story_id = s.id
             where s.iteration_id=%s and i.resolved is NULL
-            and not s.state = %s
-        """, (latest_iteration.id,UserStory.STATES.ARCHIVED))
+            and not s.state = %s and not t.state = %s
+        """, (latest_iteration.id,UserStory.STATES.ARCHIVED, Task.STATES.ARCHIVED))
         impediments = [i[0] for i in c.fetchall()]
-        impediments = Impediment.objects.in_bulk(impediments)
+        impediments = Impediment.objects.in_bulk(impediments).values()
 
         open_impediments = [i for i in impediments if i.resolved is None]
         resolved_impediments = [i for i in impediments if not i.resolved is None]
