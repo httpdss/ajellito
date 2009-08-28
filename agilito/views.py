@@ -958,16 +958,15 @@ def iteration_status(request, project_id, iteration_id=None, template='iteration
 
         from django.db import connection, transaction
         c = connection.cursor()
-        end_states = ','.join(str(s) for s in UserStory.ENDSTATES)
         c.execute("""
             select distinct i.id
             from agilito_impediment i
             join agilito_impediment_tasks it on it.impediment_id = i.id
             join agilito_task t on it.task_id = t.id
             join agilito_userstory s on t.user_story_id = s.id
-            where s.iteration_id=%%s and i.resolved is NULL
-            and not s.state in (%(end_states)s)
-        """ % locals(), (latest_iteration.id,))
+            where s.iteration_id=%s and i.resolved is NULL
+            and not s.state = %s
+        """, (latest_iteration.id,UserStory.STATES.ARCHIVED))
         impediments = [i[0] for i in c.fetchall()]
         impediments = Impediment.objects.in_bulk(impediments)
 
