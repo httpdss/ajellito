@@ -948,16 +948,31 @@ def iteration_status(request, project_id, iteration_id=None, template='iteration
     if latest_iteration is not None:
 
         user_stories = latest_iteration.userstory_set.all().order_by('rank')
-        planned = sum(i.planned for i in user_stories if i.planned)        
+        planned = sum(i.planned for i in user_stories if i.planned)
         todo = sum(i.remaining for i in user_stories)
-        estimated = sum(i.estimated for i in user_stories)            
+        estimated = sum(i.estimated for i in user_stories)
         actuals = sum(i.actuals for i in user_stories)
         failures = sum(i.test_failed for i in user_stories)
 
         total = float(sum(u.size or 1 for u in user_stories)) / 100.0
 
-        open_impediments = Impediment.objects.filter(tasks__user_story__iteration=latest_iteration, resolved=None).order_by('opened').distinct()
-        resolved_impediments = Impediment.objects.filter(tasks__user_story__iteration=latest_iteration).exclude(resolved=None).order_by('opened').distinct()
+        from django.db import connection, transaction
+        c = connection.cursor()
+        end_states = ','.join(str(s) for s in UserStory.ENDSTATES)
+        c.execute("""
+            select distinct i.id
+            from agilito_impediment i
+            join agilito_impediment_tasks it on it.impediment_id = i.id
+            join agilito_task t on it.task_id = t.id
+            join agilito_userstory s on t.user_story_id = s.id
+            where s.iteration_id=%%s and i.resolved is NULL
+            and not s.state in (%(end_states)s)
+        """ % locals(), (latest_iteration.id,))
+        impediments = [i[0] for i in c.fetchall()]
+        impediments = Impediment.objects.in_bulk(impediments)
+
+        open_impediments = [i for i in impediments if i.resolved is None]
+        resolved_impediments = [i for i in impediments if not i.resolved is None]
 
         dn = latest_iteration.day_number(datetime.date.today())
         td = latest_iteration.total_days()
@@ -968,7 +983,10 @@ def iteration_status(request, project_id, iteration_id=None, template='iteration
                 if not t.user_story.state in [UserStory.STATES.ACCEPTED, UserStory.STATES.ARCHIVED]:
                     stories[t.user_story.id] = t.user_story.size or 1
             risk = sum(stories.values())
-            i.blocked = '%.0f%%' % (float(risk) / total)
+            if total == 0:
+                i.blocked = '0%'
+            else:
+                i.blocked = '%.0f%%' % (float(risk) / total)
 
         tags = defaultdict(list)
         tasks = Task.objects.filter(user_story__iteration=latest_iteration)
