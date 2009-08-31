@@ -640,7 +640,17 @@ class Iteration(ClueModel):
             card['TaskDescription'] = t.description
             card['TaskEstimate'] = _if_is_none_else(t.estimate, '?')
             card['TaskRemaining'] = _if_is_none_else(t.remaining, '?')
-            card['TaskOwner'] = _if_is_none_else(t.owner, 'Unassigned', lambda u: u.username)
+
+            if not t.owner:
+                owner = 'Unassigned'
+            elif t.owner.first_name or t.owner.last_name:
+                owner = ' '.join([n for n in [t.owner.first_name, t.owner.last_name] if n])
+            elif t.owner.email:
+                owner = t.owner.email
+            else:
+                owner = t.owner.username
+            card['TaskOwner'] = owner
+
             card['TaskTags'] = t.tags.replace('"', '')
 
             us = t.user_story
