@@ -9,7 +9,7 @@
 {% block js %}
 <script type="text/javascript">
 $(window).ready(function(){
-    $("#user-story-list").treeTable({treeColumn: 1});
+    $("#user-story-list").treeTable({initialState: "expanded", treeColumn: 1});
     $("#impediment-list").treeTable();
 });
 
@@ -152,7 +152,7 @@ function highlightTag(ids)
                 {% if velocity.estimated %}
                     <tr>
                         <td>Velocity</td>
-                        <td>{{ velocity.actual }} vs {{ velocity.estimated }}</td>
+                        <td>{{ velocity.actual|default_if_none:"unknown" }} vs {{ velocity.estimated }}</td>
                     </tr>
                 {% endif %}
 
