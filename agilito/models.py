@@ -388,8 +388,11 @@ class Project(ClueModel):
 def toprank():
     from django.db import connection, transaction
     c = connection.cursor()
-    c.execute('select max(rank) + 1 from agilito_userstory')
-    return c.fetchone()[0] or 1
+    c.execute("""select coalesce(max(rank), 0) + 1 as rank from agilito_userstory
+                 union
+                 select coalesce(max(rank), 0) + 1 from agilito_release
+                 order by rank desc""")
+    return c.fetchone()[0]
 
 class Release(ClueModel):
     project = models.ForeignKey(Project)

@@ -54,59 +54,11 @@ function highlightTag(ids)
 
 {% block select_tab %} "iteration" {% endblock %}
 
-{% block sidebar %}
-    <div id="rightmenu">
-        {% if current_iteration %}
-            <a href="{% url agilito.views.iteration_edit current_project.id, current_iteration.id %}?last_page={{last_page}}">
-                <span class="action-link edit">Edit this iteration</span>
-            </a>
-
-            <a href="{% url story_from_iteration project_id=current_project.id,iteration_id=current_iteration.id %}?last_page={{last_page}}">
-                <span class="action-link add-object">Add User Story</span>
-            </a>
-
-            <a href="{% url agilito.views.impediment_create project_id=current_project.id,iteration_id=current_iteration.id %}?last_page={{last_page}}">
-                <span class="action-link add-object">Report impediment</span>
-            </a>
-        {% endif %}
-
-        <a href="{% url agilito.views.iteration_import current_project.id %}?last_page={{last_page}}">
-            <span class="action-link add-object">Import iteration</span>
-        </a>
-
-        {% if current_iteration %}
-            <a href="{% url agilito.views.iteration_delete current_project.id, current_iteration.id %}?last_page={{last_page}}">
-                <span class="action-link delete">Delete this iteration</span>
-            </a>
-
-            <a href="{{ cards_url }}">Task cards</a>
-
-            {% if status_table_url %}
-                <a href="{{ status_table_url }}">Task status</strong></a>
-
-                <a href="{% url agilito.views.iteration_export current_project.id,current_iteration.id %}">Iteration export</a>
-            {% endif %}
-
-            {%if burndown_chart_url %}
-                <a target="_burndown" href="{{ burndown_chart_url }}">Burndown chart</a>
-            {% endif %}
-
-            {% if product_backlog_chart %}
-                <a target="_chart" href="{{ product_backlog_chart }}">Backlog evolution</a>
-            {% endif %}
-
-            <a onclick="popup(this, 'taskboard'); return false" href="{% url agilito.views.taskboard current_project.id,current_iteration.id %}">Task board</a>
-        {% endif %}
-
-        <!-- a href="/feeds/iteration/{{current_project.id}}/{{current_iteration.id}}/"><img border="0" src="/agilito/feed-icon-14x14.png" /></a -->
-    </div>
-{% endblock %}
-
 {% block content %}
     {% if current_iteration %}
     <div>
         <div id="iteration-data"> 
-            <table>
+            <table summary="Iteration data">
                 <tr>
                     <td colspan="2">
                         {{ current_project.name }} &raquo;
@@ -128,7 +80,7 @@ function highlightTag(ids)
                         {% endif %}
                         {% if current_iteration.release.name %}<span> &raquo; Release: {{current_iteration.release.name}}</span>{% endif %}
 
-                        <p/>
+                        <p>&nbsp;</p>
                         <span>Start date: <strong>{{current_iteration.start_date|naturalday}}</strong> </span> |
                         <span>End date : <strong>{{current_iteration.end_date|naturalday}}</strong> </span>
                         <div class="description">{{current_iteration.description|safe}}</div>
@@ -212,26 +164,26 @@ function highlightTag(ids)
                             document.write('<embed align="right" src="/agilito/open-flash-chart.swf?data={{ data_url }}" quality="high" bgcolor="#FFFFFF" width="320" height="240" name="chart" align="middle" allowScriptAccess="sameDomain" type="application/x-shockwave-flash" pluginspage="http://www.macromedia.com/go/getflashplayer" id="chart"/>');
                         }
     
-                        {% if burndown_chart_small_url %}
+                        {% if burndown_chart %}
                         else {
-                            document.write('<IMG SRC="{{ burndown_chart_small_url }}" style="align=right;" ALT="Burndown">');
+                            document.write('<IMG SRC="{{ burndown_chart }}" style="align=right;" ALT="Burndown">');
                         }
                         {% endif %}
                     </SCRIPT>
                 </object>
     
             {% else %}
-                {% if burndown_chart_small_url %}
-                    <IMG SRC="{{ burndown_chart_small_url }}" ALT="Burndown" />
+                {% if burndown_chart %}
+                    <IMG SRC="{{ burndown_chart }}" ALT="Burndown" />
                 {% endif %}
             {% endif %}
         </div>
-    <div>
+    </div>
 
     <div style="clear: both"/>
     {% endif %}
 
-    <table id="user-story-list" cellspacing="0" cellpadding="2">
+    <table summary="stories and tasks" id="user-story-list" cellspacing="0" cellpadding="2">
         <thead>
             <tr>
                 <th>Rank</th>
@@ -333,7 +285,7 @@ function highlightTag(ids)
                         </td>
                         <td>
                             {% if not ta.is_archived %}
-                                <a id="task_edit_{{task.id}}"
+                                <a id="task_edit_{{ta.id}}"
                                     onclick="popup(this, 'taskedit'); return false"
                                     href="{% url agilito.views.task_edit current_project.id,us.id,ta.id %}?last_page={{last_page}}"><img
                                     src="/agilito/pencil.png" alt="edit"
@@ -342,7 +294,7 @@ function highlightTag(ids)
                         </td>
                         <td>
                             {% if not ta.is_archived %}
-                                <a id="task_del_{{task.id}}"
+                                <a id="task_del_{{ta.id}}"
                                     onclick="popup(this, 'taskdel'); return false"
                                     href="{% url agilito.views.task_delete current_project.id,us.id,ta.id %}?last_page={{last_page}}"><img
                                     src="/agilito/delete.png" alt="delete" title="delete" width="16" height="16" /></a>

@@ -174,15 +174,26 @@
 	<div class="content">
 		<div id="articles">
 			<div id="right">
-                {% block sidebar %}
-                    {% comment %}
-				        <div id="rightmenu">
+                {% if sidebar and sidebar.enabled %}
+                    <div id="rightmenu">
+                        {% for entry in sidebar.flattened %}
+                            <a href="{{entry.url}}"
+                                {% for k, v in entry.properties.items %}
+                                    {{k}}="{{v}}"
+                                {% endfor %}
+                                {% if entry.popup %}
+                                    onclick="popup(this, '{{entry.popup}}'); return false"
+                                {% endif %}
+                            >{{entry.label}}</a>
+                        {% endfor %}
+                        {% block sidebar %} {% endblock %}
+                        {% comment %}
 					        <a href="#">e-Marketing</a>
                             <a href="#">Search Engine Optimization</a>
                             <a href="#">CMS Reports</a>
                             <a href="#">Statistics</a>
-				        </div>
-                    {% endcomment %}
+                        {% endcomment %}
+			        </div>
 				
                     {% comment %}
 				        <div class="rightarticle">
@@ -208,7 +219,7 @@
 					        <a href="#">CMS Reports</a>
 				        </div>
                     {% endcomment %}
-                {% endblock %}
+                {% endif %}
 			</div>
 
 			<div id="left">

@@ -11,14 +11,6 @@
 
 {% block select_tab %} "hours" {% endblock %}
 
-{% block sidebar %}
-    {% if current_iteration %}
-        <div id="rightmenu">
-            <a href="{% url agilito.views.hours_export current_project.id,current_iteration.id %}">hours export</a>
-        </div>
-    {% endif %}
-{% endblock %}
-
 {% block content %}
     {% if current_iteration %}
         <table>

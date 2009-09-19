@@ -3,32 +3,6 @@
 {% load humanize %}
 {% load agilito_utils %}
 
-{% block sidebar %}
-    <div id="rightmenu">
-        <a href="{% url story_from_backlog current_project.id %}?last_page={{last_page}}">
-            <span class="action-link add-object">Add User Story</span>
-        </a>
-
-        <a href="{% url iteration_create current_project.id %}?last_page={{last_page}}">
-            <span class="action-link add-object">Add Iteration</span>
-        </a>
-
-        <a href="{% url release_create current_project.id %}?last_page={{last_page}}">
-            <span class="action-link add-object">Add Release</span>
-        </a>
-
-        {% if full_backlog %}
-            <a href="{{ full_backlog }}?last_page={{last_page}}">Backlog in Excel format</a>
-        {% endif %}
-
-        {% if product_backlog_chart %}
-            <a target="_chart" href="{{ product_backlog_chart }}?last_page={{last_page}}">Backlog evolution</a>
-        {% endif %}
-        <a id="save-changes" style="display: none" href="#" onclick="savechanges(); return false;">Save changes</a>
-    </div>
-{% endblock %}
-
-
 {% block link %}
     <link rel="alternate" type="application/rss+xml"
         title="Product backlog for {{current_project.name}}"
@@ -200,6 +174,7 @@
 
         $(document).ready(function() {
             reset_states();
+            showSave();
 
             $("#iteration-form").hide();
 
@@ -301,11 +276,11 @@
             No user stories in the backlog.
         {% endif %}
                 <div>
-                    <form name="states">
+                    <form name="states" action="#">
                         {% for state in states %}
-                            <input type="checkbox" id="story_state_{{state.state}}" name="story_state_{{state.state}}" value="{{ state.state }}"/>&nbsp;<label class="inline" for="story_state_{{state.state}}">{{state.name}}</label>
+                            <input type="checkbox" id="story_state_{{state.state}}" name="story_state_{{state.state}}" value="{{ state.state }}" />&nbsp;<label class="inline" for="story_state_{{state.state}}">{{state.name}}</label>
                         {% endfor %}
-                        <input onclick="select_states(); return false" type="image" src="/agilito/bullet_go.png" alt="Submit Form">
+                        <input onclick="select_states(); return false" type="image" src="/agilito/bullet_go.png" alt="Submit Form" />
                     </form>
                 </div>
         {% if backlog %}
@@ -313,8 +288,8 @@
         {% endif %}
     
         {% if backlog %}
-            <form id="filter-form">Filter: <input name="filter" id="filter" value="" maxlength="30" size="30" type="text"></form>
-            <form id="iteration-form">
+            <form id="filter-form" action="#">Filter: <input name="filter" id="filter" value="" maxlength="30" size="30" type="text" /></form>
+            <form id="iteration-form" action="#">
                 Assign marked stories to
                     <select onchange="iterationDetails(this)" id="selected-iteration" class="resize">
                         <option value="new">New iteration</option>
@@ -323,12 +298,12 @@
                         {% endfor %}
                     </select>
                 <span id="new-iteration">
-                    Name: <input onchange="showSave()" id="iterationname" name="iterationname" id="filter" value="{{newiteration.name}}" maxlength="40" size="40" type="text">
-                    Starts: <input onchange="showSave()" id="iterationstarts" name="iterationstarts" id="filter" value="{{newiteration.starts}}" maxlength="10" size="10" type="text">
-                    Ends: <input onchange="showSave()" id="iterationends" name="iterationends" id="filter" value="{{newiteration.ends}}" maxlength="10" size="10" type="text">
+                    Name: <input onchange="showSave()" id="iterationname" name="iterationname" value="{{newiteration.name}}" maxlength="40" size="40" type="text" />
+                    Starts: <input onchange="showSave()" id="iterationstarts" name="iterationstarts" value="{{newiteration.starts}}" maxlength="10" size="10" type="text" />
+                    Ends: <input onchange="showSave()" id="iterationends" name="iterationends" value="{{newiteration.ends}}" maxlength="10" size="10" type="text" />
                 </span>
             </form>
-            <table cellspacing="0" cellpadding="2" id="user-story-list">
+            <table summary="product backlog" cellspacing="0" cellpadding="2" id="user-story-list">
                 <thead>
                     <tr class="nodrop nodrag">
                         <th>Mark</th>
@@ -352,7 +327,7 @@
                                     {% if story.iteration %}
                                         {{story.iteration.name}}
                                     {% else %}
-                                        <input type=checkbox name="mark" value="{{story.id}}" onclick="mark(this, {{story.id}});"/>
+                                        <input type=checkbox name="mark" value="{{story.id}}" onclick="mark(this, {{story.id}});" />
                                     {% endif %}
                                 </td>
                                 <td class="rank">{{story.rank}}</td>
@@ -385,7 +360,7 @@
                                     <a href="{% url agilito.views.userstory_edit current_project.id,story.id %}?last_page={{last_page}}">
                                     <img src="/agilito/pencil.png" alt="edit" title="edit" width="16" height="16" /></a>
                                 </td>
-                                <td id="move_us_{{us.id}}" class="edit-button">
+                                <td id="move_us_{{story.id}}" class="edit-button">
                                     <a href="{% url agilito.views.userstory_move current_project.id,story.id %}?last_page={{last_page}}"
                                         onclick="popup(this, 'us-move'); return false">
                                     <img src="/agilito/bullet_go.png" alt="move" title="move" width="16" height="16" /></a>
@@ -421,10 +396,9 @@
                     {%endfor%}
                 </tbody>
             </table>
-            </form>
-            <form style="display:none" name="queuesubmit" id="queuesubmit" action="{% url backlog_save current_project.id %}?last_page={{last_page}}" method="POST">
+            <form style="display:none" name="queuesubmit" id="queuesubmit" action="{% url backlog_save current_project.id %}?last_page={{last_page}}" method="post">
                 <textarea name="command-queue" id="command-queue" class="mceNoEditor"></textarea>
-                <input type="submit" class="save" value="Save"/>
+                <input type="submit" class="save" value="Save" />
             </form>
         {% endif %}
     {% endblock %}

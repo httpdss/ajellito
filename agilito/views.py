@@ -22,6 +22,7 @@ import decimal
 
 from django.core.xheaders import populate_xheaders
 from django.utils.translation import ugettext
+from django.utils.datastructures import SortedDict
 
 import cStringIO
 import formatter
@@ -138,6 +139,38 @@ def cached(f):
 
 class UserHasNoProjectException(Exception):
     pass
+
+class SideBar(SortedDict):
+    def __init__(self, request):
+        super(SideBar, self).__init__(self)
+        self.request = request
+
+    def add(self, section, label, url, redirect=False, popup="", props=None):
+        if not self.has_key(section):
+            self[section] = []
+
+        if redirect:
+            if isinstance(redirect, basestring):
+                url = '%s?last_page=%s' % (url, redirect)
+            else:
+                url = '%s?last_page=%s' % (url, self.request.path)
+
+        entry = {'url': url, 'label': label, 'properties': props}
+        if popup:
+            entry['popup'] = popup
+
+        self[section].append(entry)
+
+    def enabled(self):
+        return (len(self) > 0)
+
+    def flattened(self):
+        f = []
+
+        for v in self.values():
+            f.extend(v)
+
+        return f
 
 class AgilitoContext(RequestContext):
     """
@@ -515,14 +548,6 @@ def backlog(request, project_id, states=None):
         if not us.size: continue
         size += us.size
 
-    if EXCEL_ENABLED:
-        args = [project_id]
-        if states:
-            args.append(states)
-        full_backlog = reverse('agilito.views.product_backlog', args=args)
-    else:
-        full_backlog = None
-
     states_options = []
     for state, name in UserStory.STATES.choices(True):
         states_options.append({ 'state':    state,
@@ -540,7 +565,42 @@ def backlog(request, project_id, states=None):
 
     newiteration['name'] = 'New Iteration created @ %s' % datetime.date.today()
 
-    inner_context = {   'full_backlog'  : full_backlog,
+    sidebar = SideBar(request)
+
+    sidebar.add('Actions', 'Add User Story',
+        reverse('story_from_backlog', args=[project_id]),
+        redirect=True,
+        props={'class': "add-object"})
+
+    sidebar.add('Actions', 'Add Iteration',
+        reverse('iteration_create', args=[project_id]),
+        redirect=True,
+        props={'class': "add-object"})
+
+    sidebar.add('Actions', 'Add Release',
+        reverse('release_create', args=[project_id]),
+        redirect=True,
+        props={'class': "add-object"})
+
+    if EXCEL_ENABLED:
+        args = [project_id]
+        if states:
+            args.append(states)
+
+        sidebar.add('Reports', 'Backlog in Excel format',
+            reverse('agilito.views.product_backlog', args=args))
+
+    if MATPLOTLIB_ENABLED:
+        sidebar.add('Reports', 'Backlog Evolution',
+            reverse('agilito.views.product_backlog_chart',
+                    args=[project_id, ""]),
+            popup="chart")
+
+    sidebar.add('Backlog changed', 'Save Changes',
+        '#',
+        props={'id': 'save-changes', 'onclick': "savechanges(); return false;"})
+
+    inner_context = {   'sidebar'       : sidebar,
                         'backlog'       : user_stories,
                         'user_stories'  : user_stories_count,
                         'size'          : size,
@@ -554,10 +614,6 @@ def backlog(request, project_id, states=None):
                     }
     context = AgilitoContext(request, { }, current_project=project_id)
 
-    if MATPLOTLIB_ENABLED:
-        inner_context['product_backlog_chart'] = reverse('agilito.views.product_backlog_chart', args=[project_id, ""])
-    else:
-        inner_context['product_backlog_chart'] = None
     return render_to_response('product_backlog.html', inner_context, context_instance=context)
 
 @restricted
@@ -946,7 +1002,6 @@ def iteration_status(request, project_id, iteration_id=None, template='iteration
             raise Http404
 
     if latest_iteration is not None:
-
         user_stories = latest_iteration.userstory_set.all().order_by('rank')
         planned = sum(i.planned for i in user_stories if i.planned)
         todo = sum(i.remaining for i in user_stories)
@@ -1004,31 +1059,8 @@ def iteration_status(request, project_id, iteration_id=None, template='iteration
                 tags[tag].append(ta)
         tags = [{'tag': tag, 'data': ','.join(tags[tag])} for tag in tags.keys()]
 
-        data = _iteration_get_burndown_data(latest_iteration)
-
-        gc_url = data['google_chart']
         data_url = reverse('agilito.views.iteration_burndown_data',
                            args=[project_id, latest_iteration.id])
-
-        cards_url = reverse('agilito.views.iteration_cards',
-                           args=[project_id, latest_iteration.id])
-
-        if EXCEL_ENABLED:
-            status_table_url = reverse('agilito.views.iteration_status_table',
-                                        args=[project_id, latest_iteration.id])
-        else:
-            status_table_url = None
-
-        if MATPLOTLIB_ENABLED:
-            burndown_chart_url = reverse('agilito.views.iteration_burndown_chart',
-                            args=[project_id, latest_iteration.id, 'large'])
-            burndown_chart_small_url = reverse('agilito.views.iteration_burndown_chart',
-                            args=[project_id, latest_iteration.id, 'small'])
-            pbc = reverse('agilito.views.product_backlog_chart', args=[project_id, latest_iteration.id])
-        else:
-            burndown_chart_url = None
-            burndown_chart_small_url = None
-            pbc = None
 
         port = request.META['SERVER_PORT']
         if not port:
@@ -1036,29 +1068,85 @@ def iteration_status(request, project_id, iteration_id=None, template='iteration
         data_url = quote_plus('http://%s:%s%s' % (request.META['SERVER_NAME'],
                                                   port,
                                                   data_url))
-        gc_url = data['google_chart']
-
         v = latest_iteration.velocity()
         if v is None:
             v = (None, None)
+
+        sidebar = SideBar(request)
+        sidebar.add('Actions', 'Edit this iteration',
+            reverse('agilito.views.iteration_edit', args=[project_id, latest_iteration.id]),
+            redirect=True,
+            props={'class': "edit-object"})
+
+        sidebar.add('Actions', 'Add User Story',
+            reverse('story_from_iteration',
+                    args=[project_id, latest_iteration.id]),
+            redirect=True,
+            props={'class': "add-object"})
+
+        sidebar.add('Actions', 'Report Impediment',
+            reverse('agilito.views.impediment_create',
+                    args=[project_id, latest_iteration.id]),
+            redirect=True,
+            props={'class': "add-object"})
+
+        sidebar.add('Actions', 'Import Iteration',
+            reverse('agilito.views.iteration_import',
+                    args=[project_id]),
+            redirect=True,
+            props={'class': "add-object"})
+
+        sidebar.add('Actions', 'Delete this iteration',
+            reverse('agilito.views.iteration_delete', args=[project_id, latest_iteration.id]),
+            redirect='/%s/iteration/' % project_id,
+            props={'class': "delete-object"})
+
+        sidebar.add('Reports', 'Task Cards',
+            reverse('agilito.views.iteration_cards',
+                    args=[project_id, latest_iteration.id]))
+
+        if EXCEL_ENABLED:
+            sidebar.add('Reports', 'Task Status',
+                reverse('agilito.views.iteration_status_table',
+                        args=[project_id, latest_iteration.id]))
+
+            sidebar.add('Reports', 'Iteration Export',
+                reverse('agilito.views.iteration_export',
+                        args=[project_id, latest_iteration.id]))
+
+        if MATPLOTLIB_ENABLED:
+            sidebar.add('Reports', 'Burndown Chart',
+                reverse('agilito.views.iteration_burndown_chart',
+                        args=[project_id, latest_iteration.id, 'large']))
+
+            sidebar.add('Reports', 'Backlog Evolution',
+                reverse('agilito.views.product_backlog_chart',
+                        args=[project_id, latest_iteration.id]))
+
+            burndown_chart = reverse('agilito.views.iteration_burndown_chart',
+                                    args=[project_id, latest_iteration.id, 'small'])
+        else:
+            burndown_chart = None
+
+        sidebar.add('Reports', 'Task Board',
+            reverse('agilito.views.taskboard',
+                        args=[project_id, latest_iteration.id]),
+            popup="taskboard")
+
         inner_context = { 'current_iteration' : latest_iteration,
                           'user_stories' : user_stories,
                           'tags': tags,
                           'planned' : planned,
                           'remaining' : todo,
                           'data_url': data_url,
-                          'google_chart': gc_url,
                           'estimated' : estimated,
                           'actuals' : actuals,
                           'failures' : failures,
-                          'cards_url': cards_url,
-                          'status_table_url': status_table_url,
-                          'burndown_chart_url': burndown_chart_url,
-                          'burndown_chart_small_url': burndown_chart_small_url,
+                          'burndown_chart': burndown_chart,
+                          'sidebar': sidebar,
                           'open_impediments': open_impediments,
                           'resolved_impediments': resolved_impediments,
                           'flash': getattr(settings, 'ITERATION_STATUS_FLASH_CHART', True),
-                          'product_backlog_chart': pbc,
                           'velocity': v,
                           }
     else:
@@ -1084,6 +1172,10 @@ def iteration_hours(request, project_id, iteration_id=None):
             raise Http404
 
     if latest_iteration is not None:
+        sidebar = SideBar(request)
+
+        sidebar.add('Reports', 'Export Hours', reverse('agilito.views.hours_export', args=[project_id, latest_iteration.id]))
+
         rows = latest_iteration.users_total_status
         user_stories = latest_iteration.userstory_set.all().order_by('rank')
         planned = sum(i.planned for i in user_stories if i.planned)         
@@ -1094,6 +1186,7 @@ def iteration_hours(request, project_id, iteration_id=None):
             'estimated_total': sum(u['estimated'] for u in rows),
             'progress_total': sum(u['progress'] or 0 for u in rows),
             'planned': planned,
+            'sidebar': sidebar,
         }
     else:
         inner_context = {}
