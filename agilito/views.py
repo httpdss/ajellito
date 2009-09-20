@@ -164,6 +164,11 @@ class SideBar(SortedDict):
     def enabled(self):
         return (len(self) > 0)
 
+    def ifenabled(self):
+        if self.enabled():
+            return self
+        return None
+
     def flattened(self):
         f = []
 
@@ -600,7 +605,7 @@ def backlog(request, project_id, states=None):
         '#',
         props={'id': 'save-changes', 'onclick': "savechanges(); return false;"})
 
-    inner_context = {   'sidebar'       : sidebar,
+    inner_context = {   'sidebar'       : sidebar.ifenabled(),
                         'backlog'       : user_stories,
                         'user_stories'  : user_stories_count,
                         'size'          : size,
@@ -1143,7 +1148,7 @@ def iteration_status(request, project_id, iteration_id=None, template='iteration
                           'actuals' : actuals,
                           'failures' : failures,
                           'burndown_chart': burndown_chart,
-                          'sidebar': sidebar,
+                          'sidebar': sidebar.ifenabled(),
                           'open_impediments': open_impediments,
                           'resolved_impediments': resolved_impediments,
                           'flash': getattr(settings, 'ITERATION_STATUS_FLASH_CHART', True),
@@ -1186,7 +1191,7 @@ def iteration_hours(request, project_id, iteration_id=None):
             'estimated_total': sum(u['estimated'] for u in rows),
             'progress_total': sum(u['progress'] or 0 for u in rows),
             'planned': planned,
-            'sidebar': sidebar,
+            'sidebar': sidebar.ifenabled(),
         }
     else:
         inner_context = {}

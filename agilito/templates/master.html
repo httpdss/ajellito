@@ -174,7 +174,7 @@
 	<div class="content">
 		<div id="articles">
 			<div id="right">
-                {% if sidebar and sidebar.enabled %}
+                {% if sidebar %}
                     <div id="rightmenu">
                         {% for entry in sidebar.flattened %}
                             <a href="{{entry.url}}"
