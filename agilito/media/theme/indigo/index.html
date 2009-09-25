@@ -72,6 +72,23 @@
                     $("#navtab-" + selected_tab).addClass("selected");
                 }
 
+                var $div = $('#searchbox');
+                var height = $div.height();
+                $div.hide().css({ height : 0 });
+
+                $('a.searchlink').click(function () {
+                    if ($div.is(':visible')) {
+                            $div.hide();
+                            $('a.searchlink').removeClass('selected');
+
+                    } else {
+                        $div.show();
+                        $('a.searchlink').addClass('selected');
+                    }
+        
+                    return false;
+                });
+
                 if (opener) {
                     $('body').addClass('popup');
 
@@ -112,7 +129,7 @@
                             href="{% url agilito.views.iteration_hours current_project.id%}">Hours</a>
                 {% endif %}
 
-                <a id="navtab-search" class="searchlink" href="{% url agilito.views.search current_project.id %}">Search</a>
+                <a id="navtab-search" class="searchlink" href="#">Search</a>
             {% endif %}
 
             {% if user.is_anonymous %}
@@ -178,53 +195,45 @@ background: url(img/quote.gif) no-repeat;
 padding-left: 28px;
 color: #555;</code>
             <p>Eget feugiat est leo tempor quam. Ut quis neque convallis magna consequat molestie.</p>
-            {% endcomment %}
+        {% endcomment %}
         </div>
 
         <div class="sidenav">
-                {% if not user.is_anonymous %}
-                    <h1>Search</h1>
-                    <form action="{% url agilito.views.search current_project.id %}">
-                    <div>
-                        <input type="text" name="query" class="styled" value="{{ query|escape }}" size=40/>
-                        <select name="model">
-                            <option value="User Story">User Stories</option>
-                            <option value="Task">Tasks</option>
-                            <option value="Test Case">Test Cases</option>
-                        </select>
-                        <input type="submit" value="Search" class="button" />
-                    </div>
-                    </form>
-                {% endif %}
+            {% block sidebar %} {% endblock %}
+            {% comment %}
+                <h1>Search</h1>
+                <form action="index.html">
+                <div>
+                    <input type="text" name="search" class="styled" /> <input type="submit" value="submit" class="button" />
+                </div>
+                </form>
 
-                {% if sidebar %}
-                    {% for label, section in sidebar.items %}
-                        <span {% if section.id %} id="{{section.id}}" {% endif %}>
-                        <h1>{{label}}</h1>
-                        <ul>
-                        {% for entry in section %}
-                            <li><a href="{{entry.url}}"
-                                {% for k, v in entry.properties.items %}
-                                    {{k}}="{{v}}"
-                                {% endfor %}
-                                {% if entry.popup %}
-                                    onclick="popup(this, '{{entry.popup}}'); return false"
-                                {% endif %}
-                            >{{entry.label}}</a></li>
-                        {% endfor %}
-                        </ul>
-                        </span>
-                    {% endfor %}
+                <h1>Something</h1>
+                <ul>
+                    <li><a href="index.html">pellentesque</a></li>
+                    <li><a href="index.html">sociis natoque</a></li>
+                    <li><a href="index.html">convallis</a></li>
+                </ul>
 
-                    {% block sidebar %} {% endblock %}
+                <h1>Another thing</h1>
+                <ul>
+                    <li><a href="index.html">consequat molestie</a></li>
+                    <li><a href="index.html">sem justo</a></li>
+                    <li><a href="index.html">semper</a></li>
+                </ul>
 
-                {% endif %}
-
-        </div>
+                <h1>Third and last</h1>
+                <ul>
+                    <li><a href="index.html">sociis natoque</a></li>
+                    <li><a href="index.html">magna sed purus</a></li>
+                    <li><a href="index.html">tincidunt</a></li>
+                </ul>
+            </div>
+        {% endcomment %}
         <div class="clearer"><span></span></div>
     </div>
 </div>
-<!-- div class="footer"/ -->
+<div class="footer"/>
 
 </body>
 

@@ -57,7 +57,7 @@ function highlightTag(ids)
 {% block content %}
     {% if current_iteration %}
     <div>
-        <div id="iteration-data"> 
+        <span id="iteration-data"> 
             <table summary="Iteration data">
                 <tr>
                     <td colspan="2">
@@ -122,9 +122,9 @@ function highlightTag(ids)
                     </td>
                 </tr>
             </table>
-        </div>
+        </span>
 
-        <div id="burndown">
+        <span id="burndown">
             {% if flash %}
                 <object align="right" classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000"
                         codebase="http://fpdownload.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=8,0,0,0" 
@@ -177,10 +177,8 @@ function highlightTag(ids)
                     <IMG SRC="{{ burndown_chart }}" ALT="Burndown" />
                 {% endif %}
             {% endif %}
-        </div>
+        </span>
     </div>
-
-    <div style="clear: both"/>
     {% endif %}
 
     <table summary="stories and tasks" id="user-story-list" cellspacing="0" cellpadding="2">

@@ -141,13 +141,24 @@ class UserHasNoProjectException(Exception):
     pass
 
 class SideBar(SortedDict):
+    class Sub(list):
+        pass
+
     def __init__(self, request):
         super(SideBar, self).__init__(self)
         self.request = request
 
     def add(self, section, label, url, redirect=False, popup="", props=None):
+        if section.find('#') >= 0:
+            sid, section = section.split('#', 2)
+        else:
+            sid = None
+
         if not self.has_key(section):
-            self[section] = []
+            self[section] = SideBar.Sub()
+
+        if sid:
+            self[section].id = sid
 
         if redirect:
             if isinstance(redirect, basestring):
@@ -172,8 +183,19 @@ class SideBar(SortedDict):
     def flattened(self):
         f = []
 
-        for v in self.values():
-            f.extend(v)
+        for k, v in self.items():
+            nv = v[:]
+            if hasattr(self[k], 'id'):
+                id = self[k].id
+                for i in range(len(nv)):
+                    if nv[i]['properties'] is None:
+                        nv[i]['properties'] = {}
+                    if not nv[i]['properties'].has_key('id'):
+                        if i == 0:
+                            nv[i]['properties']['id'] = id
+                        else:
+                            nv[i]['properties']['id'] = ('%s-%d' % (id, i))
+            f.extend(nv)
 
         return f
 
@@ -601,9 +623,9 @@ def backlog(request, project_id, states=None):
                     args=[project_id, ""]),
             popup="chart")
 
-    sidebar.add('Backlog changed', 'Save Changes',
+    sidebar.add('save-changes#Backlog changed', 'Save Changes',
         '#',
-        props={'id': 'save-changes', 'onclick': "savechanges(); return false;"})
+        props={'onclick': "savechanges(); return false;"})
 
     inner_context = {   'sidebar'       : sidebar.ifenabled(),
                         'backlog'       : user_stories,

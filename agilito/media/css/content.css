@@ -1,3 +1,13 @@
+a img {
+    border: 0;
+}
+
+#tasks-select, #tasks-select li, #tasks-select li li, #tasks-select li li li {
+    background: none;
+    clear: none;
+    list-style: none;
+    font: normal 100% "Lucida Sans Unicode",sans-serif;
+}
 
 td {
     vertical-align: top;
