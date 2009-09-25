@@ -88,7 +88,7 @@
 
                 $("#zoombutton").click(function() {
                     $("#zoomable").toggleClass("zoomed");
-                    $.cookie('zoomed', ($("#zoomable").is('.zoomed')).toString())
+                    $.cookie('zoomed', ($("#zoomable").is('.zoomed')).toString(), { path: '/' })
                 });
 
                 if ($.cookie('zoomed') == 'true') {
