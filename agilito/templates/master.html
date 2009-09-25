@@ -6,6 +6,8 @@
 
         <link rel="stylesheet" type="text/css" href="/agilito/theme/indigo/default.css" />
 
+        <link rel="stylesheet" type="text/css" href="/agilito/css/zoomable.css" />
+
         <link rel="stylesheet" type="text/css" href="/agilito/css/content.css" />
         <link rel="stylesheet" type="text/css" href="/agilito/css/tables.css" />
         <link rel="stylesheet" type="text/css" href="/agilito/css/forms.css" />
@@ -41,6 +43,7 @@
         <script type="text/javascript" src="/agilito/jquery-ui/js/jquery-1.3.2.min.js"></script>
         <script type="text/javascript" src="/agilito/jquery-ui/js/jquery-ui-1.7.2.min.js"></script>
         <script type="text/javascript" src="/agilito/js/json2.js"></script>
+        <script type="text/javascript" src="/agilito/js/jquery.cookie.js"></script>
 
         <script type="text/javascript" src="/agilito/js/jquery.clickmenu.js"></script>
         <script type="text/javascript" src="/agilito/treeTable/src/javascripts/jquery.treeTable.js"></script>
@@ -82,6 +85,15 @@
                 }
 
                 $(".show-datepicker").datepicker({ dateFormat: 'yy-mm-dd' });
+
+                $("#zoombutton").click(function() {
+                    $("#zoomable").toggleClass("zoomed");
+                    $.cookie('zoomed', ($("#zoomable").is('.zoomed')).toString())
+                });
+
+                if ($.cookie('zoomed') == 'true') {
+                    $("#zoomable").toggleClass("zoomed");
+                }
             })
         </script>
 
@@ -143,7 +155,15 @@
 
     <div class="main">
         <div class="content">
-            {% block content %} {% endblock %}
+            <div id="zoomable">
+                <div id="notzoomed">
+                    {% block content_header %} {% endblock %}
+                </div>
+                <div id="zoomborder">
+                    <span id="zoombutton"></span>
+                    {% block content %} {% endblock %}
+                </div>
+            </div>
             {% comment %}
             <h1>Porttitor posuere</h1>
             <div class="descr">Jun 13, 2006 by Vulputate</div>

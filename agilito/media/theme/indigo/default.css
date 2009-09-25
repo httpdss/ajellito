@@ -25,6 +25,7 @@ body {
 	color: #466;
 	font: normal 62.5% "Lucida Sans Unicode",sans-serif;
 	margin: 0;
+    height: 100%;
 }
 input {
 	color: #555;

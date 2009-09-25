@@ -17,9 +17,6 @@ td {
 #iteration-data {
     float: left;
 }
-#iteration-data table {
-    width: 28em;
-}
 
 #burndown {
     border-left: 1px solid #808080;
@@ -55,7 +52,7 @@ ul.tags span.small {
 }
 
 /* timelog screen */
-form p, #timelog > li {
+#timelog form p, #timelog > li {
     clear:left;
     width:30em;
     padding:0.25em;

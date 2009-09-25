@@ -54,9 +54,9 @@ function highlightTag(ids)
 
 {% block select_tab %} "iteration" {% endblock %}
 
-{% block content %}
+{% block content_header %}
     {% if current_iteration %}
-    <div>
+    <div id="iteration-header">
         <span id="iteration-data"> 
             <table summary="Iteration data">
                 <tr>
@@ -178,9 +178,13 @@ function highlightTag(ids)
                 {% endif %}
             {% endif %}
         </span>
+
+        <div style="clear: both"></div>
     </div>
     {% endif %}
+{% endblock %}
 
+{% block content %}
     <table summary="stories and tasks" id="user-story-list" cellspacing="0" cellpadding="2">
         <thead>
             <tr>

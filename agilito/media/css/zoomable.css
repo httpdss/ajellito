@@ -1,0 +1,44 @@
+@media screen {
+    #zoomable.zoomed {
+        position: absolute;
+        left: 0;
+        top: 0;
+        height: 100%;
+        width: 100%;
+        background: white;
+        padding: 0;
+        margin: 0;
+    }
+    #zoomable.zoomed #notzoomed {
+        display: none;
+    }
+    #zoomable.zoomed #zoomborder {
+        border: 10px solid white;
+    }
+    #zoombutton {
+        float: right;
+        height: 16px;
+        width: 16px;
+        background: url(../zoom.png) no-repeat;
+    }
+    #zoomable.zoomed #zoombutton {
+        background: url(../unzoom.png) no-repeat;
+    }
+}
+
+@media print {
+    #zoomable {
+        position: absolute;
+        left: 0;
+        top: 0;
+        height: 100%;
+        width: 100%;
+        background: white;
+        margin: 0;
+        padding: 0;
+    }
+
+    #zoomable #notzoomed {
+        display: none;
+    }
+}
