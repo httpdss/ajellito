@@ -1,5 +1,3 @@
-import settings
-
 try:
     import pyExcelerator
     import pyExcelerator.CompoundDoc
@@ -30,6 +28,32 @@ try:
         f.close()
 
     pyExcelerator.CompoundDoc.XlsDoc.save = pyexcelerator_compounddoc_xlsdoc_save
+    EXCEL_ENABLED = True
 
 except ImportError:
-    pass
+    EXCEL_ENABLED = False
+
+import settings
+
+try:
+    settings.CACHE_BACKEND
+    CACHE_ENABLED = True
+except AttributeError:
+    CACHE_ENABLED = False
+
+try:
+    UNRESTRICTED_SIZE = settings.UNRESTRICTED_SIZE
+except AttributeError:
+    UNRESTRICTED_SIZE = False
+
+try:
+    import matplotlib
+    matplotlib.use('Agg')
+    import matplotlib.pyplot
+    MATPLOTLIB_ENABLED = True
+except ImportError:
+    MATPLOTLIB_ENABLED = False
+
+ITERATION_STATUS_FLASH_CHART = getattr(settings, 'ITERATION_STATUS_FLASH_CHART', True)
+
+PRINTABLE_CARDS = settings.CARD_INFO

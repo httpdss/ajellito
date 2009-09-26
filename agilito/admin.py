@@ -47,16 +47,16 @@ class UserStoryAttachmentAdmin(admin.ModelAdmin):
 
 class UserStoryAdmin(admin.ModelAdmin):
     inlines = [UserStoryAttachmentInLine, TestCaseInLine, TaskInLine]
-    list_display = ('id', 'name', 'rank', 'planned', 'iteration', 'state',
+    list_display = ('id', 'name', 'rank', 'size', 'iteration', 'state',
                     'estimated', 'actuals', 'remaining')
     list_display_links = ('id', 'name',)
     list_filter = ('project', 'iteration', 'state', )
-    ordering = ('rank','planned', )
+    ordering = ('rank','size', )
     search_fields = ['name', 'description']
 
     fieldsets = ((None, {'fields': ('name', 'description',
                                    ('project', 'iteration'),
-                                   ('rank', 'state', 'planned', ))}), )
+                                   ('rank', 'state', 'size', ))}), )
 
 class TaskAdmin(admin.ModelAdmin):
     inlines = [ImpedimentInLine]

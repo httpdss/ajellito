@@ -342,16 +342,20 @@
                                     </ul>
                                 </td>
                                 <td class="size">
-                                    {% if story.size %}
-                                        <span class="storysize" id="toggle-size-{{story.id}}">{{story.size|storysize}}</span>
+                                    {% if sizes %}
+                                        {% if story.size %}
+                                            <span class="storysize" id="toggle-size-{{story.id}}">{{story.size|storysize}}</span>
+                                        {% endif %}
+                                        <select {% if story.size %}style="display:none"{% endif %} onchange="setsize(this, {{story.id}}); return false" class="resize" id="s{{story.id}}">
+                                            {% for size in sizes %}
+                                                <option
+                                                    value="{{size|default_if_none:"null"}}"
+                                                    {% ifequal size story.size %}selected="selected"{% endifequal %}>{{size|storysize}}</option>
+                                            {% endfor %}
+                                        </select>
+                                    {% else %}
+                                        {{story.size|storysize}}
                                     {% endif %}
-                                    <select {% if story.size %}style="display:none"{% endif %} onchange="setsize(this, {{story.id}}); return false" class="resize" id="s{{story.id}}">
-                                        {% for size in sizes %}
-                                            <option
-                                                value="{{size|default_if_none:"null"}}"
-                                                {% ifequal size story.size %}selected="selected"{% endifequal %}>{{size|storysize}}</option>
-                                        {% endfor %}
-                                    </select>
                                 </td>
                                 <td class="size">{{story.suggested_size|storysize}}</td>
                                 <td class="state">

@@ -4,7 +4,6 @@ from django.utils.translation import ugettext_lazy as _
 from django.db.models import Q
 from django.core.cache import cache
 from django.db.models.signals import post_save, post_delete
-import settings
 
 from tagging.fields import TagField
 import tagging
@@ -14,11 +13,7 @@ from dateutil.rrule import rrule, DAILY, MO, TU, WE, TH, FR
 import datetime, time
 import math, re
 
-try:
-    settings.CACHE_BACKEND
-    CACHE_ENABLED = True
-except AttributeError:
-    CACHE_ENABLED = False
+from agilito import CACHE_ENABLED, UNRESTRICTED_SIZE
 
 def invalidate_cache(sender, instance, **kwargs):
     ids = []
@@ -297,10 +292,10 @@ class Project(ClueModel):
 
     @cached
     def suggest_sizes(self, baseline=None, size=5, only_sized=False, include_original=False): # UserStory.SIZES.M): but needs forward declaration
-        if only_sized:
+        if only_sized and not UNRESTRICTED_SIZE:
             stories = self.userstory_set.exclude(size=None).exclude(size=UserStory.SIZES.INFINITY)
         else:
-            stories = list(self.userstory_set.all())
+            stories = list(self.userstory_set.exclude(size=None).all())
 
         if baseline is None:
             baseline = self.baseline_story(stories)
@@ -310,7 +305,10 @@ class Project(ClueModel):
 
         factor = float(size) / float(baseline.actuals or baseline.estimated)
 
-        sizes = [s for s in UserStory.SIZES.values() if s != UserStory.SIZES.INFINITY]
+        if UNRESTRICTED_SIZE:
+            sizes = list(set(s.size for s in stories if s.size))
+        else:
+            sizes = [s for s in UserStory.SIZES.values() if s != UserStory.SIZES.INFINITY]
         
         suggestions = {}
         for story in stories:
@@ -318,7 +316,7 @@ class Project(ClueModel):
             if not hours:
                 continue
 
-            suggestions[story.id] = UserStory.SIZES.values()[self.closest(int(factor * hours), sizes)]
+            suggestions[story.id] = sizes[self.closest(int(factor * hours), sizes)]
             if include_original:
                 suggestions[story.id] = (suggestions[story.id], story.size)
 
@@ -515,11 +513,11 @@ class Iteration(ClueModel):
                                                 
     @property
     def us_accepted(self):
-        return sum(us.planned or 1 for us in self.userstory_set.filter(Q(state=UserStory.STATES.ACCEPTED)))
+        return sum(us.size or 0 for us in self.userstory_set.filter(Q(state=UserStory.STATES.ACCEPTED)))
     
     @property
     def us_accepted_percentage(self):
-        total = sum(us.planned or 1 for us in self.userstory_set.all())
+        total = sum(us.size or 0 for us in self.userstory_set.all())
         accepted = self.us_accepted
         if total <> 0:
             return (float(accepted)/float(total))*100 
@@ -579,7 +577,7 @@ class Iteration(ClueModel):
 
     def remaining_storypoints(self, date):
         is_start = ((date - self.start_date).days == 0)
-        return sum(us.size or 1 for us in self.userstory_set.all() if is_start or us.remaining_for_date(date) > 0)
+        return sum(us.size or 0 for us in self.userstory_set.all() if is_start or us.remaining_for_date(date) > 0)
 
     def total_estimated(self):
         return sum(t.estimate or 0
@@ -630,7 +628,7 @@ class Iteration(ClueModel):
             card['StoryName'] = us.name
             card['StoryDescription'] = us.description
             card['StoryRank'] = _if_is_none_else(us.relative_rank, '?')
-            card['StorySize'] = _if_is_none_else(us.size, '?', lambda s: UserStory.SIZES.label(s))
+            card['StorySize'] = us.size_label()
             cards.append(card)
         return cards
 
@@ -755,14 +753,15 @@ class UserStory(ClueModel):
 
     project = models.ForeignKey(Project)
 
-    planned = models.SmallIntegerField(null=True, blank=True)
     iteration = models.ForeignKey(Iteration, null=True, blank=True)
     rank = models.IntegerField(null=True, blank=True)
 
     state = models.SmallIntegerField(choices=STATES.choices(), default=STATES.DEFINED)
 
-    # alter table agilito_userstory add column size smallint
-    size = models.SmallIntegerField(choices=SIZES.choices(), null=True)
+    if UNRESTRICTED_SIZE:
+        size = models.SmallIntegerField(null=True, blank=True)
+    else:
+        size = models.SmallIntegerField(choices=SIZES.choices(), null=True)
 
     # alter table agilito_userstory add column created date NOT NULL default 'now',
     # alter table agilito_userstory add column closed date
@@ -782,9 +781,18 @@ class UserStory(ClueModel):
     def __unicode__(self):
         return u'US%s: %s' % (self.id, self.name)
 
+    @staticmethod
+    def size_label_for(size):
+        if not size:
+            return '?'
+        if UNRESTRICTED_SIZE:
+            return str(size)
+
+        return UserStory.SIZES.label(size)
+
     @property
     def size_label(self):
-        return UserStory.SIZES.label(self.size)
+        return UserStory.size_label_for(self.size)
 
     @property
     def state_label(self):

@@ -3,20 +3,14 @@ import time
 import datetime
 import ODTLabels
 import types
-import settings
 from django.core.cache import cache
 
-try:
-    settings.CACHE_BACKEND
-    CACHE_ENABLED = True
-except AttributeError:
-    CACHE_ENABLED = False
+from agilito import CACHE_ENABLED, EXCEL_ENABLED, UNRESTRICTED_SIZE, MATPLOTLIB_ENABLED, ITERATION_STATUS_FLASH_CHART, PRINTABLE_CARDS
 
-try:
+if EXCEL_ENABLED:
     import pyExcelerator
-    EXCEL_ENABLED = True
-except ImportError:
-    EXCEL_ENABLED = False
+if MATPLOTLIB_ENABLED:
+    import matplotlib.pyplot
 
 import decimal
 
@@ -27,14 +21,6 @@ from django.utils.datastructures import SortedDict
 import cStringIO
 import formatter
 import htmllib
-
-try:
-    import matplotlib
-    matplotlib.use('Agg')
-    import matplotlib.pyplot
-    MATPLOTLIB_ENABLED = True
-except ImportError:
-    MATPLOTLIB_ENABLED = False
 
 from dateutil.rrule import rrule, WEEKLY, DAILY, MO, TU, WE, TH, FR
 
@@ -563,7 +549,10 @@ def backlog(request, project_id, states=None):
     if newiteration['starts'].weekday() > 4: # weekend
         newiteration['starts'] += datetime.timedelta(days= 7 - newiteration['starts'].weekday())
 
-    sizes = [None] + UserStory.SIZES.values()
+    if UNRESTRICTED_SIZE:
+        sizes = None
+    else:
+        sizes = [None] + UserStory.SIZES.values()
 
     user_stories_count = 0
     size = 0
@@ -1030,13 +1019,13 @@ def iteration_status(request, project_id, iteration_id=None, template='iteration
 
     if latest_iteration is not None:
         user_stories = latest_iteration.userstory_set.all().order_by('rank')
-        planned = sum(i.planned for i in user_stories if i.planned)
+        planned = sum(i.size for i in user_stories if i.size)
         todo = sum(i.remaining for i in user_stories)
         estimated = sum(i.estimated for i in user_stories)
         actuals = sum(i.actuals for i in user_stories)
         failures = sum(i.test_failed for i in user_stories)
 
-        total = float(sum(u.size or 1 for u in user_stories)) / 100.0
+        total = float(sum(u.size or 0 for u in user_stories)) / 100.0
 
         from django.db import connection, transaction
         c = connection.cursor()
@@ -1062,7 +1051,7 @@ def iteration_status(request, project_id, iteration_id=None, template='iteration
             stories = {}
             for t in i.tasks.all():
                 if not t.user_story.state in [UserStory.STATES.ACCEPTED, UserStory.STATES.ARCHIVED]:
-                    stories[t.user_story.id] = t.user_story.size or 1
+                    stories[t.user_story.id] = t.user_story.size or 0
             risk = sum(stories.values())
             if total == 0:
                 i.blocked = '0%'
@@ -1173,7 +1162,7 @@ def iteration_status(request, project_id, iteration_id=None, template='iteration
                           'sidebar': sidebar.ifenabled(),
                           'open_impediments': open_impediments,
                           'resolved_impediments': resolved_impediments,
-                          'flash': getattr(settings, 'ITERATION_STATUS_FLASH_CHART', True),
+                          'flash': ITERATION_STATUS_FLASH_CHART,
                           'velocity': v,
                           }
     else:
@@ -1205,7 +1194,7 @@ def iteration_hours(request, project_id, iteration_id=None):
 
         rows = latest_iteration.users_total_status
         user_stories = latest_iteration.userstory_set.all().order_by('rank')
-        planned = sum(i.planned for i in user_stories if i.planned)         
+        planned = sum(i.size for i in user_stories if i.size)         
 
         inner_context = { 
             'current_iteration' : latest_iteration,
@@ -1283,7 +1272,7 @@ def product_backlog_chart(request, project_id, iteration_id):
         added_after = start_date
 
     for st in stories:
-        size = st.size or 1
+        size = st.size or 0
         for x, day in enumerate(days):
             # story didn't exist on day we're looking at now; skip
             if st.created > day:
@@ -1409,9 +1398,9 @@ def iteration_cards(request, project_id, iteration_id):
     tasks = it.task_cards()
     stories = it.story_cards()
 
-    labels = ODTLabels.ODTLabels(settings.CARD_INFO['ini'])
-    labels.setSheetType(settings.CARD_INFO['spec'])
-    labels.setTemplate(settings.CARD_INFO['template'])
+    labels = ODTLabels.ODTLabels(PRINTABLE_CARDS['ini'])
+    labels.setSheetType(PRINTABLE_CARDS['spec'])
+    labels.setTemplate(PRINTABLE_CARDS['template'])
 
     response = HttpResponse(mimetype='application/vnd.oasis.opendocument.text')
     response['Content-Disposition'] = 'attachment; filename=cards.odt'
@@ -1539,7 +1528,7 @@ def product_backlog(request, project_id, states=None):
 
     for us in stories:
         if suggested_size.has_key(us.id):
-            us.suggested_size = UserStory.SIZES.label(suggested_size[us.id])
+            us.suggested_size = UserStory.size_label_for(suggested_size[us.id])
         else:
             us.suggested_size = None
 
@@ -1579,7 +1568,7 @@ def product_backlog(request, project_id, states=None):
                 ws.write(row[shn], 5, story.iteration.name)
     
             if story.size:
-                ws.write(row[shn], 6, UserStory.SIZES.label(story.size))
+                ws.write(row[shn], 6, UserStory.size_label_for(story.size))
     
             if story.suggested_size:
                 ws.write(row[shn], 7, story.suggested_size)

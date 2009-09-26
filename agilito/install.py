@@ -142,6 +142,19 @@ elif not 'django_extensions' in settings.INSTALLED_APPS:
 else:
     os.system('python manage.py sqldiff agilito')
 
+os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
+from django.db import connection, backend
+intro = backend.DatabaseIntrospection(connection)
+cursor = connection.cursor()
+if 'planned' in [str(col[0]) for col in intro.get_table_description(cursor, 'agilito_userstory')]:
+    print
+    print '*** IMPORTANT ***'
+    print '"planned" has been replaced by "size" in table agilito_userstory'
+    print 'If you use "planned" to register unrestricted sizes, you need to upgrade manually:'
+    print '   update agilito_userstory set size=planned'
+    print '   alter table agilito_userstory drop planned'
+    print 'and then set UNRESTRICTED_SIZE to True in your settings'
+
 if complete:
     print
     print "You should be good to go. Edit your settings.py a and run 'python manage.py syncdb'"
