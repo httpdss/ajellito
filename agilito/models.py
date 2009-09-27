@@ -1271,3 +1271,7 @@ class TaskLog(models.Model):
             ('view', 'Can view the task log.'),
         )
 
+if CACHE_ENABLED:
+    for p in Project.objects.all():
+        Project.touch_cache(p.id)
+
