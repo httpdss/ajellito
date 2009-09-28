@@ -376,7 +376,7 @@ class Project(ClueModel):
                 where project_id = %s and not rank is NULL
             union
 
-            select 0, 'release', id, rank from agilito_userstory
+            select 0, 'release', id, rank from agilito_release
                 where project_id = %s and not rank is NULL
             
             order by rank, relorder""", (self.id, self.id))
