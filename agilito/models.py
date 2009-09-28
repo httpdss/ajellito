@@ -8,12 +8,16 @@ from django.db.models.signals import post_save, post_delete
 from tagging.fields import TagField
 import tagging
 from tagging.utils import parse_tag_input
+from decimal import Decimal
 
 from dateutil.rrule import rrule, DAILY, MO, TU, WE, TH, FR
 import datetime, time
 import math, re
 
 from agilito import CACHE_ENABLED, UNRESTRICTED_SIZE
+
+def rounded(v, p):
+    return Decimal(v).quantize(Decimal('1.' + ('0' * p)))
 
 def invalidate_cache(sender, instance, **kwargs):
     ids = []
@@ -569,7 +573,7 @@ class Iteration(ClueModel):
         estimated = self.total_estimated()
         ndays = self.total_days()
         elapsed = self.day_number(date)
-        return estimated - estimated * elapsed / ndays
+        return rounded(estimated - estimated * elapsed / ndays, 2)
 
     def remaining_hours(self, date):
         return sum(t.remaining_for_date(date)
@@ -772,7 +776,7 @@ class UserStory(ClueModel):
     tags = TagField()
 
     copied_from = models.ForeignKey('UserStory', null=True)
-    generation = models.SmallIntegerField(default=1)
+    #generation = models.SmallIntegerField(default=1)
 
     @property
     def taglist(self):
@@ -893,7 +897,7 @@ class UserStory(ClueModel):
         self.state = UserStory.STATES.DEFINED
         self.created = datetime.datetime.now()
         self.copied_from = UserStory.objects.get(id=id)
-        self.generation = self.copied_from.generation + 1
+        #self.generation = self.copied_from.generation + 1
         self.save()
 
         if copy_tasks:

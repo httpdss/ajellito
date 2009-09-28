@@ -85,6 +85,8 @@ from urllib import quote, urlencode
 from agilito.models import Project, Iteration, UserStory, Task, TestCase,\
     TaskLog, UserProfile, User, TestResult, UserStoryAttachment, \
     Impediment, Release
+from agilito.models import rounded
+
 from agilito.forms import UserStoryForm, UserStoryShortForm, gen_TaskLogForm,\
     TaskForm, TestCaseAddForm, TestCaseEditForm, testcase_form_factory,\
     TestResultForm, UserStoryAttachmentForm, ImpedimentForm, \
@@ -935,7 +937,7 @@ def _iteration_get_burndown_data(it):
             if v is not None:
                 data[k].append(v)
         if row['remaining'] is not None:
-            diff = round(row['ideal'] - row['remaining'], 2)
+            diff = rounded(row['ideal'] - row['remaining'], 2)
             data['ideal_tips'].append(diff)
             data['remaining_tips'].append(-diff)
         else:
