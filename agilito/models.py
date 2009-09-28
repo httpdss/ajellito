@@ -14,7 +14,7 @@ from dateutil.rrule import rrule, DAILY, MO, TU, WE, TH, FR
 import datetime, time
 import math, re
 
-from agilito import CACHE_ENABLED, UNRESTRICTED_SIZE
+from agilito import CACHE_ENABLED, UNRESTRICTED_SIZE, CACHE_PREFIX
 
 def rounded(v, p):
     return Decimal(v).quantize(Decimal('1.' + ('0' * p)))
@@ -55,7 +55,8 @@ def cached(f):
 
         pv = Project.cache_id(self.project_id)
 
-        key = ','.join([str(vardict[v]) for v in params]) + ')'
+        key = CACHE_PREFIX + '.'
+        key += ','.join([str(vardict[v]) for v in params]) + ')'
         v = cache.get(key + '#version')
         if v == pv:
             v = cache.get(key + '#value')
@@ -1272,8 +1273,3 @@ class TaskLog(models.Model):
         permissions = (
             ('view', 'Can view the task log.'),
         )
-
-if CACHE_ENABLED:
-    for p in Project.objects.all():
-        Project.touch_cache(p.id)
-

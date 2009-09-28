@@ -1,3 +1,7 @@
+import time
+import string
+import os
+
 try:
     import pyExcelerator
     import pyExcelerator.CompoundDoc
@@ -57,3 +61,18 @@ except ImportError:
 ITERATION_STATUS_FLASH_CHART = getattr(settings, 'ITERATION_STATUS_FLASH_CHART', True)
 
 PRINTABLE_CARDS = settings.CARD_INFO
+
+
+ALPHABET = ''.join(c for c in string.ascii_uppercase + string.ascii_lowercase + string.digits + string.punctuation if c != '.')
+BASE = len(ALPHABET)
+
+def num_encode(n):
+    s = []
+    while True:
+        n, r = divmod(n, BASE)
+        s.append(ALPHABET[r])
+        if n == 0: break
+    return ''.join(reversed(s))
+
+CACHE_PREFIX = num_encode(os.getpid()) + '.'
+CACHE_PREFIX += '.'.join(str(num_encode(int(p))) for p in str(time.time()).split('.'))

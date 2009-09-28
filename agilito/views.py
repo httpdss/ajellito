@@ -5,7 +5,7 @@ import ODTLabels
 import types
 from django.core.cache import cache
 
-from agilito import CACHE_ENABLED, EXCEL_ENABLED, UNRESTRICTED_SIZE, MATPLOTLIB_ENABLED, ITERATION_STATUS_FLASH_CHART, PRINTABLE_CARDS
+from agilito import CACHE_ENABLED, EXCEL_ENABLED, UNRESTRICTED_SIZE, MATPLOTLIB_ENABLED, ITERATION_STATUS_FLASH_CHART, PRINTABLE_CARDS, CACHE_PREFIX
 
 if EXCEL_ENABLED:
     import pyExcelerator
@@ -109,7 +109,7 @@ def cached(f):
 
         pv = Project.cache_id(vardict['project_id'])
 
-        key = 'agilito.views.%s(%s)' % (f.__name__, ','.join([str(vardict[v]) for v in params]))
+        key = '%s.agilito.views.%s(%s)' % (CACHE_PREFIX, f.__name__, ','.join([str(vardict[v]) for v in params]))
 
         v = cache.get(key + '#version')
         if v == pv:
