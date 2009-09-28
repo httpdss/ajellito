@@ -19,6 +19,9 @@ from agilito import CACHE_ENABLED, UNRESTRICTED_SIZE
 def rounded(v, p):
     return Decimal(v).quantize(Decimal('1.' + ('0' * p)))
 
+def same_date(d1, d2):
+    return ((d1 - d2).days == 0)
+
 def invalidate_cache(sender, instance, **kwargs):
     ids = []
 
@@ -580,7 +583,7 @@ class Iteration(ClueModel):
                    for t in Task.objects.filter(user_story__iteration=self))
 
     def remaining_storypoints(self, date):
-        is_start = ((date - self.start_date).days == 0)
+        is_start = same_date(date, self.start_date)
         return sum(us.size or 0 for us in self.userstory_set.all() if is_start or us.remaining_for_date(date) > 0)
 
     def total_estimated(self):
@@ -607,12 +610,11 @@ class Iteration(ClueModel):
         rr.append(rr[-1] + datetime.timedelta(1))
         for i, a_datetime in enumerate(rr):
             a_date = a_datetime.date()
-            data = dict(day=i,
-                        ideal=self.ideal_hours(a_date))
+            data = dict(day=i, ideal=self.ideal_hours(a_date))
             if a_date > today:
                 data['remaining'] = None
                 data['remaining_storypoints'] = None
-            elif a_date == today:
+            elif same_date(a_date, today):
                 # you will generally want to see the numbers update
                 # during the day, so act as if it's tomorrow
                 data['remaining'] = self.remaining_hours(tomorrow)
@@ -1060,6 +1062,9 @@ class Task(ClueModel):
         self.save(user=archiver)
 
     def remaining_for_date(self, date):
+        if same_date(date, datetime.date.today()):
+            return self.remaining
+
         # find the oldest tasklog that is newer than date and check
         # what the estimate on this task was then
         try:
