@@ -3,6 +3,8 @@
 import sys, os, shutil, re
 from distutils.sysconfig import get_python_lib
 
+os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
+
 if len(sys.argv) > 1:
     projectname = sys.argv[1]
 else:
@@ -44,7 +46,100 @@ def rerun(msg = None):
     sys.exit()
 
 required_apps = ['django.contrib.admin', 'django.contrib.humanize', 'django.contrib.markup', 'accounts' ]
-def verify(name, url, svn=False, app=True, optional=False):
+
+class Project:
+    required = ['django.contrib.admin',
+                'django.contrib.humanize',
+                'django.contrib.markup',
+                'accounts' ]
+    OK = True
+
+    def __init__(self, name, **kwargs):
+        self.name = name
+        self.optional = False
+        self.app = True
+        self.url = None
+        self.subdir = None
+
+        for k, v in kwargs.items():
+            setattr(self, k, v)
+
+    def askDownload(self):
+        return True
+
+    def download(self):
+        print '%s is available at %s' % (self.name, self.url)
+
+    def verify(self):
+        if not self.optional and self.app:
+            Project.required.append(self.name)
+
+        try:
+            __import__(self.name)
+            print '%s is present' % self.name
+            return True
+        except ImportError, e:
+            if str(e).find('DJANGO_SETTINGS_MODULE') >= 0:
+                return True
+
+        if self.optional:
+            print 'If you install %s you will get additional features in Agilito' % self.name
+        else:
+            print 'You need to have %s installed' % self.name
+
+        Project.OK = Project.OK and self.optional
+
+        if self.askDownload():
+            self.download()
+
+class DownloadableProject(Project):
+    def askDownload(self):
+        reply = None
+        while not reply in ['y', 'n']:
+            reply = raw_input('Do you want me to retrieve %s and install it into your project? ' % self.name)
+            reply = reply.lower()[:1]
+        return (reply == 'y')
+
+class SVN(DownloadableProject):
+    def download(self):
+        url = self.url
+        name = self.name
+        if self.subdir:
+            if not self.subdir.startswith('/'):
+                url = url + '/' + self.subdir
+            else:
+                url = url + self.subdir
+        os.system('svn checkout %(url)s %(name)s' % locals())
+        
+class BZR(DownloadableProject):
+    def download(self):
+        url = self.url
+        name = self.name
+        subdir = self.subdir
+
+        shutil.rmtree('_bzrco', True)
+        os.system('bzr export _bzrco %(url)s' % locals())
+        if subdir:
+            shutil.move('_bzrco/%(subdir)s' % locals(), name)
+        else:
+            shutil.move('_bzrco', name)
+        shutil.rmtree('_bzrco', True)
+
+class GIT(DownloadableProject):
+    def download(self):
+        url = self.url
+        name = self.name
+        subdir = self.subdir
+
+        shutil.rmtree('_gitco', True)
+        os.system('git clone %(url)s _gitco' % locals())
+        if subdir:
+            shutil.move('_gitco/%(subdir)s' % locals(), name)
+        else:
+            shutil.move('_gitco', name)
+        shutil.rmtree('_gitco', True)
+
+def verify(name, url, vcs=None, app=True, optional=False):
     global required_apps, complete
 
     if not optional and app:
@@ -65,31 +160,44 @@ def verify(name, url, svn=False, app=True, optional=False):
 
         if url:
             print '%s is available at %s' % (name, url)
-        if url and svn:
+        if url and vcs:
             reply = None
             while not reply in ['y', 'n']:
                 reply = raw_input('Do you want me to retrieve %s and install it into your project? ' % name)
                 reply = reply.lower()[:1]
             if reply == 'y':
-                os.system('svn checkout %s %s' % (url, name))
+                os.system(supported_vcs[vcs] % locals())
 
         complete = complete and optional
         return False
 
-if not verify('django', 'http://www.djangoproject.com/', app=False):
+if not Project('django', url = 'http://www.djangoproject.com/', app=False).verify():
     rerun()
 
-verify('pyExcelerator', 'http://sourceforge.net/projects/pyexcelerator', optional=True)
-verify('matplotlib', 'http://matplotlib.sourceforge.net/', optional=True)
-verify('agilito', 'http://agilito.googlecode.com/svn/trunk/agilito', svn=True)
+Project('pyExcelerator',
+    url = 'http://sourceforge.net/projects/pyexcelerator',
+    optional=True).verify()
+
+Project('matplotlib',
+    url = 'http://matplotlib.sourceforge.net/',
+    optional=True).verify()
+
+if not SVN('agilito', url = 'http://agilito.googlecode.com/svn/trunk/agilito').verify():
+    rerun()
 
 if fresh:
     print 'Installing default url redirector'
     shutil.copyfile('agilito/install/urls.py', 'urls.py')
-    
-verify('queryutils', 'http://agilito.googlecode.com/svn/trunk/queryutils', svn=True)
-verify('tagging', 'http://django-tagging.googlecode.com/svn/trunk/tagging', svn=True)
-verify('threadedcomments', 'http://code.google.com/p/django-threadedcomments/')
+
+SVN('queryutils', url = 'http://agilito.googlecode.com/svn/trunk/queryutils').verify()
+
+SVN('tagging', url = 'http://django-tagging.googlecode.com/svn/trunk/tagging').verify()
+
+Project('threadedcomments',
+    url = 'http://code.google.com/p/django-threadedcomments/').verify()
+
+#BZR('wiki', url = 'lp:django-wikiapp', subdir = 'wiki').verify()
+GIT('wakawaka', url = 'git://github.com/brosner/django-wakawaka.git', subdir = 'src/wakawaka').verify()
 
 try:
     import accounts
@@ -108,17 +216,17 @@ except ImportError:
         shutil.copyfile('agilito/install/accounts/login.html', 'accounts/templates/login.html')
         shutil.copyfile('agilito/install/accounts/logout.html', 'accounts/templates/logout.html')
 
-    complete = False
+    Project.OK = False
 
 import settings
 
 apps_installed = True
-for app in required_apps:
+for app in Project.required:
     if not app in settings.INSTALLED_APPS:
         apps_installed = False
         print "Please add '%(app)s' to your INSTALLED_APPS in your settings.py" % locals()
 if not apps_installed:
-    complete = False
+    Project.OK = False
 
 if not 'CARD_INFO' in dir(settings):
     print """Please add the following to %(installdir)s/settings.py:
@@ -128,11 +236,11 @@ CARD_INFO = {
     'template': '%(installdir)s/agilito/templates/template.odt'
 }
 """ % locals()
-    complete = False
+    Project.OK = False
 
 if not 'LOGIN_REDIRECT_URL' in dir(settings) or settings.LOGIN_REDIRECT_URL != '/':
     print 'Please set LOGIN_REDIRECT_URL to "/" in %(installdir)s/settings.py' % locals()
-    complete = False
+    Project.OK = False
 
 ################ upgrade database
 if not verify('django_extensions', 'http://code.google.com/p/django-command-extensions', optional=True):
@@ -142,7 +250,6 @@ elif not 'django_extensions' in settings.INSTALLED_APPS:
 else:
     os.system('python manage.py sqldiff agilito')
 
-os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
 from django.db import connection, backend
 intro = backend.DatabaseIntrospection(connection)
 cursor = connection.cursor()

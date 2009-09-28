@@ -54,8 +54,6 @@ Planned :
 
 
 <h4>Attachments :</h4>
-<a class="action-link add-object" href="attachment/add/?last_page={{last_page}}">add an attachment</a>
-
 {% if object.userstoryattachment_set.all %}
 <table>
 <thead>
@@ -99,8 +97,6 @@ Planned :
 <h3>Related to US{{ object.id }}</h3>
 
 <h4 id="tasks">Tasks</h4>
-<a class="action-link add-object" href="task/add/?last_page={{last_page}}">add a task</a>
-
   {% if object.task_set.all %}
 
 <table>
@@ -136,8 +132,6 @@ Planned :
 
 
 <h4 id="test-cases">Test Cases</h4>
-
-<a class="action-link add-object" href="testcase/add/?last_page={{last_page}}" >add a test case</a>
 
 {% if object.testcase_set.all %}
 <table>

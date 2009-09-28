@@ -3,15 +3,7 @@
 {% load humanize %}
 
 {% block title %} {{ object.name }} {% endblock %}
-{% block actions %}
-        <span id="edit_testcase_{{object.id}}" class="">
-            <a class="action-link edit" href="{% url agilito.views.testcase_edit current_project.id,current_story.id,object.id %}?last_page={{last_page}}">Edit Test Case</a>
-        </span>
-        <span id="delete_testcase_{{object.id}}" class="">
-            <a class="action-link delete" href="{% url agilito.views.testcase_delete current_project.id,current_story.id,object.id %}?last_page={{last_page}}">Delete</a>
-        </span>
 
-{% endblock %}
 {% block content %}
 <ul class="breadcrumbs">
 <li id="iteration">{{ object.user_story.project.name }} &gt; </li>

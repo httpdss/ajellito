@@ -652,6 +652,19 @@ def userstory_detail(request, project_id, userstory_id):
         redirect=url,
         props={'class': "delete-object"})
 
+    sidebar.add('Actions', 'Add an attachment',
+        reverse('agilito.views.add_attachment', args=[project_id, userstory_id]),
+        redirect=True,
+        props={'class': "add-object"})
+    sidebar.add('Actions', 'Add a task',
+        reverse('agilito.views.task_create', args=[project_id, userstory_id]),
+        redirect=True,
+        props={'class': "add-object"})
+    sidebar.add('Actions', 'Add a test case',
+        reverse('agilito.views.testcase_create', args=[project_id, userstory_id]),
+        redirect=True,
+        props={'class': "add-object"})
+
     context = AgilitoContext(request, {'sidebar': sidebar}, current_project=project_id, current_story=userstory_id)
     queryset = UserStory.objects.filter(project__pk=project_id)
     
@@ -797,7 +810,21 @@ def testcase_edit(request, project_id, userstory_id, testcase_id):
 
 @restricted
 def testcase_detail(request, project_id, userstory_id, testcase_id):
-    context = AgilitoContext(request, current_project=project_id, current_story=userstory_id)
+    sidebar = SideBar(request)
+    sidebar.add('Actions', 'Edit this testcase',
+        reverse('agilito.views.testcase_edit', args=[project_id, userstory_id, testcase_id]),
+        redirect=True,
+        props={'class': "edit-object"})
+    sidebar.add('Actions', 'Delete this testcase',
+        reverse('agilito.views.testcase_delete', args=[project_id, userstory_id, task_id]),
+        redirect=reverse('userstory_detail', args=[project_id, userstory_id]),
+        props={'class': "delete-object"})
+    sidebar.add('Actions', 'Add a test result',
+        reverse('agilito.views.agilito.views.testresult_create', args=[project_id, userstory_id, testcase_id]),
+        redirect=True,
+        props={'class': "add-object"})
+
+    context = AgilitoContext(request, {'sidebar': sidebar}, current_project=project_id, current_story=userstory_id)
     queryset = TestCase.objects.filter(user_story__pk=userstory_id, 
                                        user_story__project__pk=project_id)
 
