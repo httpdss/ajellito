@@ -579,8 +579,7 @@ class Iteration(ClueModel):
         return rounded(estimated - estimated * elapsed / ndays, 2)
 
     def remaining_hours(self, date):
-        return sum(t.remaining_for_date(date)
-                   for t in Task.objects.filter(user_story__iteration=self))
+        return sum(t.remaining_for_date(date) for t in Task.objects.filter(user_story__iteration=self))
 
     def remaining_storypoints(self, date):
         is_start = same_date(date, self.start_date)
@@ -603,7 +602,6 @@ class Iteration(ClueModel):
     def burndown_data(self):
         burndown = []
         today = datetime.date.today()
-        tomorrow = datetime.date.today() + datetime.timedelta(days=1)
         rr = list(rrule(DAILY, cache=True,
                         dtstart=self.start_date, until=self.end_date,
                         byweekday=(MO,TU,WE,TH,FR)))
@@ -614,15 +612,9 @@ class Iteration(ClueModel):
             if a_date > today:
                 data['remaining'] = None
                 data['remaining_storypoints'] = None
-            elif same_date(a_date, today):
-                # you will generally want to see the numbers update
-                # during the day, so act as if it's tomorrow
-                data['remaining'] = self.remaining_hours(tomorrow)
-                data['remaining_storypoints'] = self.remaining_storypoints(tomorrow)
             else:
                 data['remaining'] = self.remaining_hours(a_date)
                 data['remaining_storypoints'] = self.remaining_storypoints(a_date)
-
             burndown.append(data)
         return burndown
 
@@ -1062,8 +1054,9 @@ class Task(ClueModel):
         self.save(user=archiver)
 
     def remaining_for_date(self, date):
-        if same_date(date, datetime.date.today()):
-            return self.remaining
+        # for edits past the sprint end
+        if same_date(date, datetime.date.today()) or date > self.user_story.iteration.end_date:
+            return self.remaining or 0
 
         # find the oldest tasklog that is newer than date and check
         # what the estimate on this task was then
