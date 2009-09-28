@@ -3,15 +3,6 @@
 {% load humanize %}
 
 {% block title %} {{ task.name }} {% endblock %}
-{% block actions%}
-    <span id="edit_task_{{task.id}}" class="">    
-    <a class="action-link edit" href="{% url agilito.views.task_edit current_project.id,current_story.id,task.id %}?last_page={{last_page}}"> Edit Task </a>
-    </span>
-    <span id="delete_task_{{task.id}}" class="">
-        <a class="action-link delete" href="{% url agilito.views.task_delete current_project.id,current_story.id,task.id %}?last_page={{last_page}}">Delete Task</a>
-    </span>
-{% endblock %}
-
 
 {% block content %}
 <ul class="breadcrumbs">

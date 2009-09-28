@@ -636,7 +636,23 @@ def backlog(request, project_id, states=None):
 
 @restricted
 def userstory_detail(request, project_id, userstory_id):
-    context = AgilitoContext(request, current_project=project_id, current_story=userstory_id)
+    sidebar = SideBar(request)
+    sidebar.add('Actions', 'Edit this story',
+        reverse('agilito.views.userstory_edit', args=[project_id, userstory_id]),
+        redirect=True,
+        props={'class': "edit-object"})
+
+    story = UserStory.objects.get(id=userstory_id)
+    if story.iteration:
+        url = reverse('iteration_status_with_id', args=[project_id, story.iteration.id])
+    else:
+        url = '/%s/backlog/' % project_id
+    sidebar.add('Actions', 'Delete this story',
+        reverse('agilito.views.userstory_delete', args=[project_id, userstory_id]),
+        redirect=url,
+        props={'class': "delete-object"})
+
+    context = AgilitoContext(request, {'sidebar': sidebar}, current_project=project_id, current_story=userstory_id)
     queryset = UserStory.objects.filter(project__pk=project_id)
     
     try:
@@ -710,7 +726,17 @@ def task_edit(request, project_id, userstory_id, task_id):
 
 @restricted
 def task_detail(request, project_id, userstory_id, task_id):
-    context = AgilitoContext(request, current_project=project_id, current_story=userstory_id)
+    sidebar = SideBar(request)
+    sidebar.add('Actions', 'Edit this task',
+        reverse('agilito.views.task_edit', args=[project_id, userstory_id, task_id]),
+        redirect=True,
+        props={'class': "edit-object"})
+    sidebar.add('Actions', 'Delete this task',
+        reverse('agilito.views.task_delete', args=[project_id, userstory_id, task_id]),
+        redirect=reverse('userstory_detail', args=[project_id, userstory_id]),
+        props={'class': "delete-object"})
+
+    context = AgilitoContext(request, {'sidebar': sidebar}, current_project=project_id, current_story=userstory_id)
     queryset = Task.objects.filter(user_story__project__pk=project_id, user_story__id=userstory_id)
 
     return object_detail(request, queryset=queryset, template_name='task_detail.html',

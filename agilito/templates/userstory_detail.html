@@ -2,39 +2,6 @@
 {% load markup %}
 {% block title %}{{object.name}}{% endblock %}
 
-{% block actions %}
-<a class="action-link delete" href="delete/?last_page={{last_page}}">Delete</a>
-<a class="action-link edit" href="edit/?last_page={{last_page}}">Edit User Story</a>
-
-{% endblock %}
-
-
-<!-- EEH: needs work -->
-{% block main_nav %}
-<ul id="main_nav">
-{% if object.iteration %}
-    <li><a href="{% url agilito.views.backlog current_project.id %}">Backlog</a></li>
-    {% if current_project.iteration_set.all %}
-    <li class="selected"><a href="{% url agilito.views.iteration_status current_project.id %}">Iteration</a></li>
-    {% endif %}
-    
-{% else %}    
-<li class="selected"><a href="{% url agilito.views.backlog current_project.id %}">Backlog</a></li>
-{% if current_project.iteration_set.all %}
-<li><a href="{% url agilito.views.iteration_status current_project.id %}">Iteration</a></li>
-{% endif %}
-
-
-{% endif %}
-    <li><a href="{% url agilito.views.timelog current_project.id %}">Log</a></li>
-    {% if current_project.iteration_set.all %}
-    <li><a href="{% url agilito.views.iteration_hours current_project.id%}">Hours</a></li>
-    {% endif %}
-    <div class="visualClear"></div>
-</ul>
-{% endblock %}
-
-
 {% block content %}
 <ul class="breadcrumbs">
 <li id="project">{{ object.project.name }} &gt; </li>
