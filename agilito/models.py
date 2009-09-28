@@ -626,7 +626,7 @@ class Iteration(ClueModel):
             card['StoryName'] = us.name
             card['StoryDescription'] = us.description
             card['StoryRank'] = _if_is_none_else(us.relative_rank, '?')
-            card['StorySize'] = us.size_label()
+            card['StorySize'] = us.size_label
             cards.append(card)
         return cards
 
