@@ -694,7 +694,7 @@ class Iteration(ClueModel):
         permissions = (
             ('view', 'Can view the iteration.'),
         )
-        ordering = ('-id',)
+        ordering = ('start_date',)
 
 class UserStoryAttachment(ClueModel):
     attachment = models.FileField(upload_to='attachments/')
