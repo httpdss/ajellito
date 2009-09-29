@@ -721,7 +721,7 @@ def task_create(request, project_id, userstory_id, instance=None):
             story = task.user_story
             total_tasks = story.task_set.all().count()
             if story.task_set.filter(state=Task.STATES.DEFINED).count() == total_tasks:
-                story.state = UserStory.STATES.DEFINED
+                story.state = UserStory.STATES.SPECIFIED
             elif story.task_set.filter(state=Task.STATES.COMPLETED).count() == total_tasks:
                 story.state = UserStory.STATES.COMPLETED
             else:
