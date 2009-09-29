@@ -16,6 +16,7 @@ feeds = {
 urlpatterns = patterns('agilito.views',
     (r'^$', 'index'),
 
+    (r'^(?P<project_id>\d+)/touch/$', 'touch_cache'),
     (r'^(?P<project_id>\d+)/backlog/$', 'backlog'),
     (r'^(?P<project_id>\d+)/backlog/(?P<states>\d+(:\d+)*)/$', 'backlog'),
     (r'^(?P<project_id>\d+)/product_backlog/$', 'product_backlog'),

@@ -235,6 +235,16 @@ class AgilitoContext(RequestContext):
 
 # Views
 
+def touch_cache(request, project_id):
+    response = HttpResponse(mimetype='text/plain')
+    if CACHE_ENABLED:
+        Project.touch_cache(project_id)
+        response.write('Touched cache for project %s\n' % project_id)
+        response.write('CACHE_PREFIX=%s\n' % CACHE_PREFIX)
+    else:
+        response.write('Caching is disabled')
+    return response
+
 def close_window(request):
     return render_to_response('close_window.html', context_instance=Context())
 

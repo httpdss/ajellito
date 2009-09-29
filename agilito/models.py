@@ -232,12 +232,12 @@ class Project(ClueModel):
         delta = midnight - now
 
         v = str(time.time())
-        cache.set('project-cache-version-%s' % id, v, delta.seconds)
+        cache.set('%s.project-cache-version-%s' % (CACHE_PREFIX, id), v, delta.seconds)
         return v
 
     @classmethod
     def cache_id(klass, id):
-        v = cache.get('project-cache-version-%s' % id)
+        v = cache.get('%s.project-cache-version-%s' % (CACHE_PREFIX, id))
         if not v:
             return Project.touch_cache(id)
         return v
