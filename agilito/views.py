@@ -756,7 +756,7 @@ def task_detail(request, project_id, userstory_id, task_id):
         props={'class': "edit-object"})
     sidebar.add('Actions', 'Delete this task',
         reverse('agilito.views.task_delete', args=[project_id, userstory_id, task_id]),
-        redirect=reverse('userstory_detail', args=[project_id, userstory_id]),
+        redirect=reverse('agilito.views.userstory_detail', args=[project_id, userstory_id]),
         props={'class': "delete-object"})
 
     context = AgilitoContext(request, {'sidebar': sidebar}, current_project=project_id, current_story=userstory_id)
