@@ -203,7 +203,7 @@ color: #555;</code>
         </div>
 
         <div class="sidenav">
-                {% if not user.is_anonymous %}
+                {% if not user.is_anonymous and current_project %}
                     <h1>Search</h1>
                     <form action="{% url agilito.views.search current_project.id %}">
                     <div>
