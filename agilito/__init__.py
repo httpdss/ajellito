@@ -60,8 +60,13 @@ except ImportError:
 
 ITERATION_STATUS_FLASH_CHART = getattr(settings, 'ITERATION_STATUS_FLASH_CHART', True)
 
-PRINTABLE_CARDS = settings.CARD_INFO
+class PrintableCards:
+    def __init__(self, selected):
+        self.ini = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'LabelSpecs.ini')
+        self.selected = selected
+        self.template = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'templates/template.odt')
 
+PRINTABLE_CARDS = PrintableCards(settings.PRINTABLE_CARD_STOCK)
 
 ALPHABET = ''.join(c for c in string.ascii_uppercase + string.ascii_lowercase + string.digits + string.punctuation if c != '.')
 BASE = len(ALPHABET)

@@ -1467,9 +1467,9 @@ def iteration_cards(request, project_id, iteration_id):
     tasks = it.task_cards()
     stories = it.story_cards()
 
-    labels = ODTLabels.ODTLabels(PRINTABLE_CARDS['ini'])
-    labels.setSheetType(PRINTABLE_CARDS['spec'])
-    labels.setTemplate(PRINTABLE_CARDS['template'])
+    labels = ODTLabels.ODTLabels(PRINTABLE_CARDS.ini])
+    labels.setSheetType(PRINTABLE_CARDS.selected])
+    labels.setTemplate(PRINTABLE_CARDS.template)
 
     response = HttpResponse(mimetype='application/vnd.oasis.opendocument.text')
     response['Content-Disposition'] = 'attachment; filename=cards.odt'

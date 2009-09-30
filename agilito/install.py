@@ -60,6 +60,7 @@ class Project:
         self.app = True
         self.url = None
         self.subdir = None
+        self.branch = None
 
         for k, v in kwargs.items():
             setattr(self, k, v)
@@ -130,14 +131,23 @@ class GIT(DownloadableProject):
         url = self.url
         name = self.name
         subdir = self.subdir
+        branch = self.branch
+        codir = '_gitco'
 
         shutil.rmtree('_gitco', True)
-        os.system('git clone %(url)s _gitco' % locals())
+        os.system('git clone %(url)s %(codir)s' % locals())
+        if branch:
+            cwd = os.getcwd()
+            os.chdir(codir)
+            print 'Fetching git branch'
+            os.system('git checkout -b %(branch)s origin/%(branch)s' % locals())
+            os.chdir(cwd)
+            
         if subdir:
-            shutil.move('_gitco/%(subdir)s' % locals(), name)
+            shutil.move('%(codir)s/%(subdir)s' % locals(), name)
         else:
-            shutil.move('_gitco', name)
-        shutil.rmtree('_gitco', True)
+            shutil.move(codir, name)
+        shutil.rmtree(codir, True)
 
 def verify(name, url, vcs=None, app=True, optional=False):
     global required_apps, complete
@@ -197,7 +207,7 @@ Project('threadedcomments',
     url = 'http://code.google.com/p/django-threadedcomments/').verify()
 
 #BZR('wiki', url = 'lp:django-wikiapp', subdir = 'wiki').verify()
-GIT('wakawaka', url = 'git://github.com/brosner/django-wakawaka.git', subdir = 'src/wakawaka').verify()
+GIT('wakawaka', url = 'git://github.com/brosner/django-wakawaka.git', branch = 'pinax-group-support', subdir = 'src/wakawaka').verify()
 
 try:
     import accounts
@@ -228,13 +238,9 @@ for app in Project.required:
 if not apps_installed:
     Project.OK = False
 
-if not 'CARD_INFO' in dir(settings):
+if not 'PRINTABLE_CARD_STOCK' in dir(settings):
     print """Please add the following to %(installdir)s/settings.py:
-CARD_INFO = {
-    'ini': '%(installdir)s/agilito/ODTLabels.ini',
-    'spec': 'Buro1 129820',
-    'template': '%(installdir)s/agilito/templates/template.odt'
-}
+PRINTABLE_CARD_STOCK = 'Buro1 129820' # choose appropriate card stock
 """ % locals()
     Project.OK = False
 
