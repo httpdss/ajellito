@@ -77,8 +77,9 @@
 
                 if (opener) {
                     $('body').addClass('popup');
+                    $("#zoomable").addClass("zoomed");
 
-                    var content = $('#left');
+                    var content = $('#zoomable');
                     var h = content.height();
                     var w = content.width();
                     window.resizeTo(w, h + 130);
@@ -92,7 +93,7 @@
                 });
 
                 if ($.cookie('zoomed') == 'true') {
-                    $("#zoomable").toggleClass("zoomed");
+                    $("#zoomable").addClass("zoomed");
                 }
             })
         </script>
