@@ -1468,7 +1468,7 @@ def iteration_cards(request, project_id, iteration_id):
     stories = it.story_cards()
 
     labels = ODTLabels.ODTLabels(PRINTABLE_CARDS.ini)
-    labels.setSheetType(PRINTABLE_CARDS.selected])
+    labels.setSheetType(PRINTABLE_CARDS.selected)
     labels.setTemplate(PRINTABLE_CARDS.template)
 
     response = HttpResponse(mimetype='application/vnd.oasis.opendocument.text')
