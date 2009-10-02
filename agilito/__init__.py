@@ -66,7 +66,10 @@ class PrintableCards:
         self.selected = selected
         self.template = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'templates/template.odt')
 
-PRINTABLE_CARDS = PrintableCards(settings.PRINTABLE_CARD_STOCK)
+try:
+    PRINTABLE_CARDS = PrintableCards(settings.PRINTABLE_CARD_STOCK)
+except AttributeError:
+    PRINTABLE_CARDS = None
 
 ALPHABET = ''.join(c for c in string.ascii_uppercase + string.ascii_lowercase + string.digits + string.punctuation if c != '.')
 BASE = len(ALPHABET)
