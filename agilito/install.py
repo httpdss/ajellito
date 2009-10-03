@@ -12,7 +12,6 @@ else:
 
 installdir = os.path.abspath(projectname)
 
-complete = True
 fresh = not os.path.exists(installdir)
 
 if fresh:
@@ -38,20 +37,11 @@ if not os.path.exists(os.path.join(installdir, 'manage.py')):
 sys.path.append(installdir)
 os.chdir(installdir)
 
-complete = True
-def rerun(msg = None):
-    print
-    if msg: print msg
-    print 'Please re-run the installer'
-    sys.exit()
+class Module:
+    available = []
+    required = []
+    apps = []
 
-required_apps = ['django.contrib.admin', 'django.contrib.humanize', 'django.contrib.markup', 'accounts' ]
-
-class Project:
-    required = ['django.contrib.admin',
-                'django.contrib.humanize',
-                'django.contrib.markup',
-                'accounts' ]
     OK = True
 
     def __init__(self, name, **kwargs):
@@ -61,6 +51,7 @@ class Project:
         self.url = None
         self.subdir = None
         self.branch = None
+        self.app = True
 
         for k, v in kwargs.items():
             setattr(self, k, v)
@@ -72,28 +63,35 @@ class Project:
         print '%s is available at %s' % (self.name, self.url)
 
     def verify(self):
-        if not self.optional and self.app:
-            Project.required.append(self.name)
+        if not self.optional:
+            Module.required.append(self.name)
 
+        present = False
         try:
             __import__(self.name)
-            print '** %s is present' % self.name
-            return True
+            present = True
         except ImportError, e:
             if str(e).find('DJANGO_SETTINGS_MODULE') >= 0:
-                return True
+                present = True
+
+        if present:
+            print '** %s is present' % self.name
+            if self.app:
+                Module.apps.append(self.name)
+            Module.available.append(self.name)
+            return True
 
         if self.optional:
             print 'If you install %s you will get additional features in Agilito' % self.name
         else:
             print 'You need to have %s installed' % self.name
 
-        Project.OK = Project.OK and self.optional
+        Module.OK = Module.OK and self.optional
 
         if self.askDownload():
             self.download()
 
-class DownloadableProject(Project):
+class DownloadableModule(Module):
     def askDownload(self):
         reply = None
         while not reply in ['y', 'n']:
@@ -101,7 +99,7 @@ class DownloadableProject(Project):
             reply = reply.lower()[:1]
         return (reply == 'y')
 
-class SVN(DownloadableProject):
+class SVN(DownloadableModule):
     def download(self):
         url = self.url
         name = self.name
@@ -111,8 +109,16 @@ class SVN(DownloadableProject):
             else:
                 url = url + self.subdir
         os.system('svn checkout %(url)s %(name)s' % locals())
-        
-class BZR(DownloadableProject):
+
+class Accounts(DownloadableModule):
+    def download(self):
+        os.system('python manage.py startapp accounts')
+        shutil.copyfile('agilito/install/accounts/urls.py', 'accounts/urls.py')
+        os.mkdir('accounts/templates')
+        shutil.copyfile('agilito/install/accounts/login.html', 'accounts/templates/login.html')
+        shutil.copyfile('agilito/install/accounts/logout.html', 'accounts/templates/logout.html')
+
+class BZR(DownloadableModule):
     def download(self):
         url = self.url
         name = self.name
@@ -126,7 +132,7 @@ class BZR(DownloadableProject):
             shutil.move('_bzrco', name)
         shutil.rmtree('_bzrco', True)
 
-class GIT(DownloadableProject):
+class GIT(DownloadableModule):
     def download(self):
         url = self.url
         name = self.name
@@ -149,53 +155,23 @@ class GIT(DownloadableProject):
             shutil.move(codir, name)
         shutil.rmtree(codir, True)
 
-def verify(name, url, vcs=None, app=True, optional=False):
-    global required_apps, complete
+Module('django', url = 'http://www.djangoproject.com/', app=False).verify()
+for app in ['admin', 'humanize', 'markup']:
+    Module('django.contrib.' + app).verify()
 
-    if not optional and app:
-        required_apps.append(name)
-
-    try:
-        __import__(name)
-        print '** %s is present' % name
-        return True
-    except ImportError, e:
-        if str(e).find('DJANGO_SETTINGS_MODULE') >= 0:
-            return
-
-        if optional:
-            print 'If you install %s you will get additional features in Agilito' % name
-        else:
-            print 'You need to have %s installed' % name
-
-        if url:
-            print '%s is available at %s' % (name, url)
-        if url and vcs:
-            reply = None
-            while not reply in ['y', 'n']:
-                reply = raw_input('Do you want me to retrieve %s and install it into your project? ' % name)
-                reply = reply.lower()[:1]
-            if reply == 'y':
-                os.system(supported_vcs[vcs] % locals())
-
-        complete = complete and optional
-        return False
-
-if not Project('django', url = 'http://www.djangoproject.com/', app=False).verify():
-    rerun()
-
-Project('pyExcelerator',
+Module('pyExcelerator',
     url = 'http://sourceforge.net/projects/pyexcelerator',
+    app = False,
     optional=True).verify()
 
-Project('matplotlib',
+Module('matplotlib',
     url = 'http://matplotlib.sourceforge.net/',
+    app = False,
     optional=True).verify()
 
-if not SVN('agilito', url = 'http://agilito.googlecode.com/svn/trunk/agilito').verify():
-    rerun()
+SVN('agilito', url = 'http://agilito.googlecode.com/svn/trunk/agilito').verify()
 
-if fresh:
+if 'agilito' in Module.available and fresh:
     print 'Installing default url redirector'
     shutil.copyfile('agilito/install/urls.py', 'urls.py')
 
@@ -203,59 +179,53 @@ SVN('queryutils', url = 'http://agilito.googlecode.com/svn/trunk/queryutils').ve
 
 SVN('tagging', url = 'http://django-tagging.googlecode.com/svn/trunk/tagging').verify()
 
-Project('threadedcomments',
-    url = 'http://code.google.com/p/django-threadedcomments/').verify()
+#Module('threadedcomments', url = 'http://code.google.com/p/django-threadedcomments/').verify()
 
 #BZR('wiki', url = 'lp:django-wikiapp', subdir = 'wiki').verify()
 #GIT('wakawaka', url = 'git://github.com/brosner/django-wakawaka.git', branch = 'pinax-group-support', subdir = 'src/wakawaka').verify()
 
-try:
-    import accounts
-    print '** accounts is present'
-except ImportError:
-    print 'You need to have an accounts module'
+Accounts('accounts').verify()
 
-    reply = None
-    while not reply in ['y', 'n']:
-        reply = raw_input('Do you want me to install the default django version?')
-        reply = reply.lower()[:1]
-    if reply == 'y':
-        os.system('python manage.py startapp accounts')
-        shutil.copyfile('agilito/install/accounts/urls.py', 'accounts/urls.py')
-        os.mkdir('accounts/templates')
-        shutil.copyfile('agilito/install/accounts/login.html', 'accounts/templates/login.html')
-        shutil.copyfile('agilito/install/accounts/logout.html', 'accounts/templates/logout.html')
-
-    Project.OK = False
+Module('django_extensions', url='http://code.google.com/p/django-command-extensions', optional=True).verify()
 
 import settings
 
-apps_installed = True
-for app in Project.required:
+for app in Module.required:
+    if not app in Module.available:
+        print 'Missing required app', app
+        Module.OK = False
+
+for app in Module.apps:
     if not app in settings.INSTALLED_APPS:
-        apps_installed = False
+        Module.OK = False
         print "Please add '%(app)s' to your INSTALLED_APPS in your settings.py" % locals()
-if not apps_installed:
-    Project.OK = False
+
+if not 'django_extensions' in Module.available or not 'django_extensions' in settings.INSTALLED_APPS:
+    print """
+If you install django_extensions
+    (http://code.google.com/p/django-command-extensions)
+I can inspect the database for changes against the models"""
+else:
+    print 'Installer has detected the following changes pending for your database:'
+    os.system('python manage.py sqldiff agilito')
 
 if not 'PRINTABLE_CARD_STOCK' in dir(settings):
     print """Please add the following to %(installdir)s/settings.py:
 PRINTABLE_CARD_STOCK = 'Buro1 129820' # choose appropriate card stock
 """ % locals()
-    Project.OK = False
+    Module.OK = False
 
 if not 'LOGIN_REDIRECT_URL' in dir(settings) or settings.LOGIN_REDIRECT_URL != '/':
     print 'Please set LOGIN_REDIRECT_URL to "/" in %(installdir)s/settings.py' % locals()
-    Project.OK = False
+    Module.OK = False
 
-################ upgrade database
-if not verify('django_extensions', 'http://code.google.com/p/django-command-extensions', optional=True):
-    print 'If you install django_extensions (http://code.google.com/p/django-command-extensions) I can inspect the database for changes against the models'
-elif not 'django_extensions' in settings.INSTALLED_APPS:
-    print 'django_extensions is not included in INSTALLED_APPS'
+if not Module.OK:
+    print
+    print 'Please fix the issues reported and re-run the installer'
+    sys.exit()
 else:
-    print 'Installer has detected the following changes pending for your database:'
-    os.system('python manage.py sqldiff agilito')
+    print
+    print "You should be good to go. Edit your settings.py a and run 'python manage.py syncdb'"
 
 from django.db import connection, backend
 intro = backend.DatabaseIntrospection(connection)
@@ -269,11 +239,6 @@ if 'planned' in [str(col[0]) for col in intro.get_table_description(cursor, 'agi
     print '   alter table agilito_userstory drop planned'
     print 'and then set UNRESTRICTED_SIZE to True in your settings'
 
-if complete:
-    print
-    print "You should be good to go. Edit your settings.py a and run 'python manage.py syncdb'"
-else:
-    rerun()
 
 import socket
 import django
