@@ -77,7 +77,7 @@ class Project:
 
         try:
             __import__(self.name)
-            print '%s is present' % self.name
+            print '** %s is present' % self.name
             return True
         except ImportError, e:
             if str(e).find('DJANGO_SETTINGS_MODULE') >= 0:
@@ -157,7 +157,7 @@ def verify(name, url, vcs=None, app=True, optional=False):
 
     try:
         __import__(name)
-        print '%s is present' % name
+        print '** %s is present' % name
         return True
     except ImportError, e:
         if str(e).find('DJANGO_SETTINGS_MODULE') >= 0:
@@ -207,11 +207,11 @@ Project('threadedcomments',
     url = 'http://code.google.com/p/django-threadedcomments/').verify()
 
 #BZR('wiki', url = 'lp:django-wikiapp', subdir = 'wiki').verify()
-GIT('wakawaka', url = 'git://github.com/brosner/django-wakawaka.git', branch = 'pinax-group-support', subdir = 'src/wakawaka').verify()
+#GIT('wakawaka', url = 'git://github.com/brosner/django-wakawaka.git', branch = 'pinax-group-support', subdir = 'src/wakawaka').verify()
 
 try:
     import accounts
-    print 'accounts is present'
+    print '** accounts is present'
 except ImportError:
     print 'You need to have an accounts module'
 
@@ -254,6 +254,7 @@ if not verify('django_extensions', 'http://code.google.com/p/django-command-exte
 elif not 'django_extensions' in settings.INSTALLED_APPS:
     print 'django_extensions is not included in INSTALLED_APPS'
 else:
+    print 'Installer has detected the following changes pending for your database:'
     os.system('python manage.py sqldiff agilito')
 
 from django.db import connection, backend
@@ -273,3 +274,30 @@ if complete:
     print "You should be good to go. Edit your settings.py a and run 'python manage.py syncdb'"
 else:
     rerun()
+
+import socket
+import django
+fqdn = socket.getfqdn()
+adminmedia = django.__path__[0] + '/contrib/admin/media'
+print """
+You can run Agilito from Apache using the following site config:
+
+
+<VirtualHost *>
+    ServerName %(fqdn)s
+    DocumentRoot "%(installdir)s"
+    <Location />
+        SetHandler python-program
+        PythonHandler django.core.handlers.modpython
+        SetEnv DJANGO_SETTINGS_MODULE settings
+        PythonPath "['%(installdir)s'] + sys.path"
+    </Location>
+    Alias /media/ "%(adminmedia)s"
+    <Location /media/>
+        SetHandler none
+    </Location>
+    Alias /agilito/ "%(installdir)s/agilito/media/"
+    <location /agilito/>
+        SetHandler none
+    </Location>
+</VirtualHost>""" % locals()
