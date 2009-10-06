@@ -7,12 +7,22 @@ function task_details(value) {
     $.getJSON("/json/task/" + value + "/", function(data) {
             $('#story-name').text(data.story);
             $('#task-name').text(data.name);
-            $("#id_estimate").attr("value", data.estimate)
-            $("#id_remaining").attr("value", data.remaining)
-            $("#id_actuals").attr("value", data.actuals)
-            $("#id_state").attr("value", data.state)
-            $("#id_task").attr("value", value)
+            $("#id_estimate").attr("value", data.estimate);
+            $("#id_remaining").attr("value", data.remaining);
+            $("#id_actuals").attr("value", data.actuals);
+            $("#id_state").attr("value", data.state);
+            $("#id_task").attr("value", value);
+
+            $("#id_remaining").data('old', data.remaining);
         });
+}
+
+function remaining_change() {
+    if ($("#id_time_on_task").val() == '') {
+        var $remaining = $("#id_remaining");
+        var tot = parseFloat($remaining.data('old')) - parseFloat($remaining.val());
+        $("#id_time_on_task").val('' + tot);
+    }
 }
 
 $(window).ready(function(){
@@ -40,6 +50,8 @@ $(window).ready(function(){
     if ('{{ selectedTask }}' != '') {
         task_details('{{ selectedTask }}');
     }
+
+    $("#id_remaining").change(remaining_change);
 });
 </script>
 {% endblock %}
