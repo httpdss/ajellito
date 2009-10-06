@@ -141,6 +141,9 @@ ul.tags span.small {
 .blocked td{
     background:#f99 !important;
 }
+.starved td{
+    background:orange !important;
+}
 .blocked .name{
     background:#f99 url(/agilito/blocked.png) no-repeat !important;
     background-position: left center !important;

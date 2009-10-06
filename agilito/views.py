@@ -1092,6 +1092,14 @@ def iteration_status(request, project_id, iteration_id=None, template='iteration
 
         total = float(sum(u.size or 0 for u in user_stories)) / 100.0
 
+        left = latest_iteration.ideal_hours(datetime.date.today())
+        for us in user_stories:
+            if left >= us.remaining:
+                us.is_starved = False
+                left -= us.remaining
+            else:
+                us.is_starved = True
+
         from django.db import connection, transaction
         c = connection.cursor()
         c.execute("""
