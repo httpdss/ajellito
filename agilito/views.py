@@ -1155,12 +1155,17 @@ def iteration_status(request, project_id, iteration_id=None, template='iteration
         data_url = reverse('agilito.views.iteration_burndown_data',
                            args=[project_id, latest_iteration.id])
 
-        port = request.META['SERVER_PORT']
-        if not port:
-            port = '80'
-        data_url = quote_plus('http://%s:%s%s' % (request.META['SERVER_NAME'],
-                                                  port,
-                                                  data_url))
+        try:
+            port = int(request.META['SERVER_PORT'])
+            if port:
+                port = ':%d' % port
+            else:
+                port = ''
+        except ValueError:
+            port = ''
+        site = Site.objects.get_current()
+        data_url = quote_plus('http://%s%s%s' % (site.domain, port, data_url))
+
         v = latest_iteration.velocity()
         if v is None:
             v = (None, None)
