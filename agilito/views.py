@@ -4,6 +4,7 @@ import datetime
 import ODTLabels
 import types
 from django.core.cache import cache
+from django.contrib.sites.models import Site
 
 from agilito import CACHE_ENABLED, EXCEL_ENABLED, UNRESTRICTED_SIZE, MATPLOTLIB_ENABLED, ITERATION_STATUS_FLASH_CHART, PRINTABLE_CARDS, CACHE_PREFIX
 

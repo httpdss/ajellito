@@ -18,10 +18,14 @@ function task_details(value) {
 }
 
 function remaining_change() {
+    var $remaining = $("#id_remaining");
+    var tot = parseFloat($remaining.data('old')) - parseFloat($remaining.val());
+
     if ($("#id_time_on_task").val() == '') {
-        var $remaining = $("#id_remaining");
-        var tot = parseFloat($remaining.data('old')) - parseFloat($remaining.val());
         $("#id_time_on_task").val('' + tot);
+    }
+    if ($("#id_summary").val() == '') {
+        $("#id_summary").val('Spent ' + tot + ' hours');
     }
 }
 
