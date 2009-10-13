@@ -538,7 +538,7 @@ class Iteration(ClueModel):
         if d == 0:
             return None
 
-        s = [(us.size or 0, us.state==UserStory.STATES.ACCEPTED) for us in self.userstory_set.all()]
+        s = [(us.size or 0, us.state in [UserStory.STATES.ACCEPTED, UserStory.STATES.COMPLETED]) for us in self.userstory_set.all()]
 
         v = {}
         v['estimated'] = sum(e[0] for e in s)
