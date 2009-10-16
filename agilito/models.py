@@ -9,6 +9,7 @@ from tagging.fields import TagField
 import tagging
 from tagging.utils import parse_tag_input
 from decimal import Decimal
+from collections import defaultdict
 
 from dateutil.rrule import rrule, DAILY, MO, TU, WE, TH, FR
 import datetime, time
@@ -601,6 +602,40 @@ class Iteration(ClueModel):
 
     @cached
     def burndown_data(self):
+        days = list(rrule(DAILY, cache=True, dtstart=self.start_date, until=self.end_date + datetime.timedelta(1), byweekday=(MO,TU,WE,TH,FR)))
+        date2day = dict(zip(days, range(len(days))))
+        dayrange = range(len(days))
+
+        tasks = {}
+        stories = defaultdict(list)
+        sizes = {}
+
+        for us in self.userstory_set.all():
+            sizes[us.id] = us.size or 0
+
+        for task in Task.object.get(user_story__iteration = self):
+            tasks[task.id] = [None for day in dayrange]
+            tasks[task.id][0] = task.estimate
+            tasks[task.id][-1] = task.remaining
+
+            stories[task.user_story.id].append(task.id)
+
+        for tlog in TaskLog.objects.filter(task__user_story__iteration = self):
+            try:
+                dayno = day2date[tlog.date]
+            except:
+                continue
+
+            tasks[tlog.task.id][dayno] = tlog.old_remaining
+
+        for id, data in tasks.items():
+            for p in reversed(dayrange[:-1]):
+                if data[p] is None: data[p] = data[p+1]
+
+        hours = [sum(task[day] for task in tasks.values()) for day in dayrange]
+        storypoints = [for day in dayrange]
+
+        hours = [.. for day in tasks.]
         burndown = []
         today = datetime.date.today()
         rr = list(rrule(DAILY, cache=True,
