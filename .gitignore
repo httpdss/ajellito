@@ -1,0 +1,5 @@
+*.pyc
+settings.py
+accounts
+tagging
+agilito.sqlite

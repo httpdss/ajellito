@@ -2,37 +2,33 @@
 
 import sys, os, shutil, re
 from distutils.sysconfig import get_python_lib
+import tempfile
+import uuid
+
+#tmpdir = tempfile.mkdtemp()
+TMPDIR = '/tmp/django'
+shutil.rmtree(TMPDIR, True)
 
 os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
 
-if len(sys.argv) > 1:
-    projectname = sys.argv[1]
-else:
-    projectname = '..'
+installdir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-installdir = os.path.abspath(projectname)
+def fullPath(*args):
+    global installdir
 
-fresh = not os.path.exists(installdir)
+    path = installdir[:]
+    for p in args:
+        path = os.path.join(path, p)
+    return path
 
-if fresh:
-    da = 'django/bin/django-admin.py'
-    django_admin = None
-    for d in sys.path:
-        candidate = os.path.join(d, da)
-        print candidate
-        if os.path.exists(candidate):
-            django_admin = candidate
-            break
-    if django_admin is None:
-        print 'I cannot find django-admin.py'
-        sys.exit()
-
-    py = sys.executable
-    os.system('%(py)s %(django_admin)s startproject %(projectname)s' % locals())
-
-if not os.path.exists(os.path.join(installdir, 'manage.py')):
-    print '%(installdir)s is not a django project' % locals()
-    sys.exit()
+if not os.path.exists(fullPath('settings.py')):
+    f = open(fullPath('agilito', 'install', 'settings.py'))
+    body = f.read()
+    f.close()
+    f = open(fullPath('settings.py'), 'w')
+    secret = (str(uuid.uuid4()) + str(uuid.uuid4())).replace("'", 'x')
+    f.write(body % {'secret': secret })
+    f.close()
 
 sys.path.append(installdir)
 os.chdir(installdir)
@@ -120,40 +116,45 @@ class Accounts(DownloadableModule):
 
 class BZR(DownloadableModule):
     def download(self):
+        global TMPDIR
+        tmpdir = TMPDIR
+
         url = self.url
         name = self.name
         subdir = self.subdir
 
-        shutil.rmtree('_bzrco', True)
-        os.system('bzr export _bzrco %(url)s' % locals())
+        shutil.rmtree(TMPDIR, True)
+        os.system('bzr export %(tmpdir)s %(url)s' % locals())
         if subdir:
-            shutil.move('_bzrco/%(subdir)s' % locals(), name)
+            shutil.move('%(tmpdir)s/%(subdir)s' % locals(), name)
         else:
-            shutil.move('_bzrco', name)
-        shutil.rmtree('_bzrco', True)
+            shutil.move('%(tmpdir)s', name)
+        shutil.rmtree(TMPDIR, True)
 
 class GIT(DownloadableModule):
     def download(self):
+        global TMPDIR
+        tmpdir = TMPDIR
+
         url = self.url
         name = self.name
         subdir = self.subdir
         branch = self.branch
-        codir = '_gitco'
 
-        shutil.rmtree('_gitco', True)
-        os.system('git clone %(url)s %(codir)s' % locals())
+        shutil.rmtree(TMPDIR, True)
+        os.system('git clone %(url)s %(tmpdir)s' % locals())
         if branch:
             cwd = os.getcwd()
-            os.chdir(codir)
+            os.chdir(TMPDIR)
             print 'Fetching git branch'
             os.system('git checkout -b %(branch)s origin/%(branch)s' % locals())
             os.chdir(cwd)
             
         if subdir:
-            shutil.move('%(codir)s/%(subdir)s' % locals(), name)
+            shutil.move('%(tmpdir)s/%(subdir)s' % locals(), name)
         else:
-            shutil.move(codir, name)
-        shutil.rmtree(codir, True)
+            shutil.move(TMPDIR, name)
+        shutil.rmtree(TMPDIR, True)
 
 Module('django', url = 'http://www.djangoproject.com/', app=False).verify()
 for app in ['admin', 'humanize', 'markup']:
@@ -170,10 +171,6 @@ Module('matplotlib',
     optional=True).verify()
 
 SVN('agilito', url = 'http://agilito.googlecode.com/svn/trunk/agilito').verify()
-
-if 'agilito' in Module.available and fresh:
-    print 'Installing default url redirector'
-    shutil.copyfile('agilito/install/urls.py', 'urls.py')
 
 SVN('queryutils', url = 'http://agilito.googlecode.com/svn/trunk/queryutils').verify()
 
