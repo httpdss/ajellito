@@ -1805,7 +1805,7 @@ def iteration_export(request, project_id, iteration_id):
         ws.write(2, c, h, style)
 
     for r, t in enumerate(Task.objects.filter(user_story__iteration=it)):
-        for c, d in enumerate([t.id, t.user_story.name, t.name, float(t.estimate or 0), t.owner.username, t.tags]):
+        for c, d in enumerate([t.id, t.user_story.name, t.name, float(t.estimate or 0), (t.owner and t.owner.username) or '', t.tags]):
             ws.write(r+3, c, d)
 
     response = HttpResponse(mimetype='application/application/vnd.ms-excel')
