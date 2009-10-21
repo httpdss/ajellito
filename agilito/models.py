@@ -610,7 +610,7 @@ class Iteration(ClueModel):
 
         days = list(rrule(DAILY, cache=True, dtstart=self.start_date, until=self.end_date + datetime.timedelta(extradays), byweekday=(MO,TU,WE,TH,FR)))
         iterationlength = len(days)
-        dayrange = xrange(iterationlength)
+        dayrange = list(xrange(iterationlength))
         
         start_date = self.start_date
         start_date = datetime.datetime(start_date.year, start_date.month, start_date.day, 0, 0)
@@ -646,22 +646,22 @@ class Iteration(ClueModel):
         tasks = Task.objects.filter(user_story__iteration=self).all()
         for task in tasks:
             task.remaining_for_day = [None for day in dayrange]
+            task.remaining_for_day[0] = task.estimate
             task.remaining_for_day[today] = task.remaining
             stories[task.user_story.id].tasklist.append(task)
         tasks = dict(zip([task.id for task in tasks], tasks))
-        print repr(tasks.keys())
 
         logs = TaskLog.objects.filter(task__user_story__iteration=self).order_by('date').all()
         for l in logs:
             tasks[l.task.id].remaining_for_day[getday(l.date)] = l.old_remaining
 
-        revdays = reversed(range(today+1))
+        revdays = list(reversed(range(today+1)))
         for id, task in tasks.items():
             for day in revdays:
                 if task.remaining_for_day[day] is None:
                     task.remaining_for_day[day] = task.remaining_for_day[day+1]
 
-        activedays = range(today)
+        activedays = list(xrange(today))
         for id, story in stories.items():
             size = story.size or 0
             for day in activedays:
@@ -672,7 +672,10 @@ class Iteration(ClueModel):
                     points = size
                 story.hours_remaining_for_day[day] = hours
                 story.points_remaining_for_day[day] = points
-        
+
+        stories = stories.values()
+        tasks = tasks.values()
+
         burndown = {'remaining': {}, 'max': {}}
         padding = [None for day in range(iterationlength - today)]
         burndown['remaining']['hours'] = [sum(story.hours_remaining_for_day[day] for story in stories) for day in activedays] + padding
@@ -683,9 +686,9 @@ class Iteration(ClueModel):
         ideal = [0.0] * iterationlength
         delta = iterationlength - 1
         deltainv = 1.0 / delta
-        maxh = burndown['max']['hours']
-        for day in days:
-            ideal[day] = deltainv * maxh * i
+        maxh = float(burndown['max']['hours'])
+        for day in dayrange:
+            ideal[day] = deltainv * maxh * day
         burndown['remaining']['ideal'] = ideal
 
         return burndown
