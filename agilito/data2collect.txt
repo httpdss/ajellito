@@ -1,0 +1,62 @@
+burndown.remaining.ideal: data points for ideal
+burndown.remaining.hours: data points for remaining hours
+burndown.remaining.points: data points for remaining story points
+burndown.max.hours: max data point from hours
+burndown.max.points: max data point from stry points
+burndown.days: labels for x axis
+
+iteration.name
+iteration.id
+iteration.get_absolute_url
+iteration.release.name
+iteration.start_date
+iteration.end_date
+iteration.description
+iteration.stories_accepted_percentage
+iteration.velocity (=iteration.velocity.actual)
+iteration.size (=iteration.velocity.estimate)
+iteration.hours (=estimated)
+iteration.remaining (uit burndown)
+iteration.failures (uit tests)
+
+project.name
+project.id
+project.iterations (id, name)
+
+stories
+
+story.id
+story.name
+story.get_state_display (=state + filter?)
+story.size (=story.planned)
+story.hours (=story.estimated)
+story.remaining (uit burndown)
+story.test_failed
+story.relative_rank
+story.get_absolute_url
+story.tags
+story.is_blocked
+story.is_starved
+story.is_archived
+
+task.relative_id
+task.get_absolute_url
+task.tags
+task.get_state_display (=state + filter?)
+task.owner
+task.estimate
+task.remaining
+task.is_archived
+
+tags (per tag list stories/tasks)
+
+impediment.id
+impediment.name
+impediment.get_absolute_url
+impediment.tasks
+impediment.blocked (?)
+impediment.resolved
+
+resolved_impediments, open_impediments (regroup on resolved)
+
+
