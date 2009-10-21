@@ -1153,20 +1153,6 @@ def iteration_status(request, project_id, iteration_id=None, template='iteration
                 tags[tag].append(ta)
         tags = [{'tag': tag, 'data': ','.join(tags[tag])} for tag in tags.keys()]
 
-        data_url = reverse('agilito.views.iteration_burndown_data',
-                           args=[project_id, latest_iteration.id])
-
-        try:
-            port = int(request.META['SERVER_PORT'])
-            if port:
-                port = ':%d' % port
-            else:
-                port = ''
-        except ValueError:
-            port = ''
-        site = Site.objects.get_current()
-        data_url = quote_plus('http://%s%s%s' % (site.domain, port, data_url))
-
         v = latest_iteration.velocity()
         if v is None:
             v = (None, None)
@@ -1213,17 +1199,18 @@ def iteration_status(request, project_id, iteration_id=None, template='iteration
                 reverse('agilito.views.iteration_export',
                         args=[project_id, latest_iteration.id]))
 
-        if MATPLOTLIB_ENABLED:
-            sidebar.add('Reports', 'Burndown Chart',
-                reverse('agilito.views.iteration_burndown_chart',
-                        args=[project_id, latest_iteration.id, 'large']))
+        sidebar.add('Reports', 'Burndown Chart',
+            reverse('agilito.views.iteration_burndown_chart',
+                    args=[project_id, latest_iteration.id]),
+                    props={'target': "_burndown"})
 
+        if MATPLOTLIB_ENABLED:
             sidebar.add('Reports', 'Backlog Evolution',
                 reverse('agilito.views.product_backlog_chart',
                         args=[project_id, latest_iteration.id]))
 
             burndown_chart = reverse('agilito.views.iteration_burndown_chart',
-                                    args=[project_id, latest_iteration.id, 'small'])
+                                    args=[project_id, latest_iteration.id])
         else:
             burndown_chart = None
 
@@ -1237,11 +1224,11 @@ def iteration_status(request, project_id, iteration_id=None, template='iteration
                           'tags': tags,
                           'planned' : planned,
                           'remaining' : todo,
-                          'data_url': data_url,
                           'estimated' : estimated,
                           'actuals' : actuals,
                           'failures' : failures,
                           'burndown_chart': burndown_chart,
+                          'burndown': _iteration_get_burndown_data(latest_iteration),
                           'sidebar': sidebar.ifenabled(),
                           'open_impediments': open_impediments,
                           'resolved_impediments': resolved_impediments,
@@ -1292,17 +1279,6 @@ def iteration_hours(request, project_id, iteration_id=None):
 
     context = AgilitoContext(request, inner_context, current_project=project_id)
     return render_to_response('iteration_hours.html', context_instance=context)
-
-@restricted
-def iteration_burndown_data(request, project_id, iteration_id):
-    it = Iteration.objects.get(id=iteration_id, project__id=project_id)
-
-    data = _iteration_get_burndown_data(it)
-
-    ctx = AgilitoContext(request, data, current_project=project_id)
-    return render_to_response('burndown_data.csv',
-                              context_instance=ctx, 
-                              mimetype="text/plain")
 
 @restricted
 def product_backlog_chart(request, project_id, iteration_id):
@@ -1423,56 +1399,14 @@ def product_backlog_chart(request, project_id, iteration_id):
 
 @restricted
 @cached
-def iteration_burndown_chart(request, project_id, iteration_id, name):
+def iteration_burndown_chart(request, project_id, iteration_id):
     it = Iteration.objects.get(id=iteration_id, project__id=project_id)
 
     data = _iteration_get_burndown_data(it)
+    data['iteration'] = {'name': it.name, 'starts': it.start_date, 'ends': it.end_date}
 
-    matplotlib.pyplot.clf()
-    fig = matplotlib.pyplot.figure()
-
-    small = (name == 'small')
-
-    layers = []
-    max_h = max(data['ideal'] + data['remaining'])
-    max_s = max(data['remaining_storypoints'])
-    layers.append((fig.add_subplot(111), 'ro-', data['ideal'], 'Ideal', max_h))
-    layers.append((layers[0][0], 'bo-', data['remaining'], 'Hours', max_h))
-    layers.append((layers[0][0].twinx(), 'go-', data['remaining_storypoints'], 'Story points', float(max_s) + 0.1))
-
-    x = [str(x) for x in range(1, len(data['ideal']) + 1)]
-
-    for layer, linestyle, dataset, label, y_max in layers:
-        layer.plot(dataset, linestyle)
-        layer.set_ylabel(label, color=linestyle[0], fontsize=8)
-
-        layer.set_xticks(range(1, len(x) + 1))
-        layer.set_xticklabels(x)
-        layer.set_ylim(0, float(y_max))
-
-        # workaround: twinx doesn't sync the axes unless you do this
-        layer.set_xlim(layers[0][0].get_xlim())
-
-        if small:
-            for l in layer.get_xticklabels():
-                l.set_rotation(45)
-                l.set_horizontalalignment('right')
-                l.set_fontsize(6)
-            for l in layer.get_yticklabels():
-                l.set_fontsize(6)
-
-    matplotlib.pyplot.grid(color='#999999')
-
-    response = HttpResponse(mimetype='image/png')
-    # response['Content-Disposition'] = 'attachment; filename=burndown.png'
-    matplotlib.pyplot.grid(color='#999999')
-
-    if small:
-        dpi = fig.get_dpi()
-        fig.set_size_inches(270.0 / dpi, 200.0 / dpi)
-
-    matplotlib.pyplot.savefig(response)
-    return response
+    context = AgilitoContext(request, {'burndown': data})
+    return render_to_response('burndown_chart.html', context_instance=context)
 
 @restricted
 @cached

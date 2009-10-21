@@ -7,10 +7,18 @@
 {% endblock %}
 
 {% block js %}
+
+    <!--[if IE]><script language="javascript" type="text/javascript" src="/agilito/js/jquery.jqplot/excanvas.js"></script><![endif]-->
+    <script language="javascript" type="text/javascript" src="/agilito/js/jquery.jqplot/jquery.jqplot.js"></script>
+    <script language="javascript" type="text/javascript" src="/agilito/js/jquery.jqplot/plugins/jqplot.highlighter.js"></script>
+    {% include "burndown.js" %}
+
 <script type="text/javascript">
 $(window).ready(function(){
     $("#user-story-list").treeTable({initialState: "expanded", treeColumn: 1});
     $("#impediment-list").treeTable();
+
+    burndown('burndown', 5);
 });
 
 function highlightTag(ids)
@@ -124,59 +132,7 @@ function highlightTag(ids)
             </table>
         </span>
 
-        <span id="burndown">
-            {% if flash %}
-                <object align="right" classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000"
-                        codebase="http://fpdownload.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=8,0,0,0" 
-                        width="320" height="240" id="ie_chart" align="middle">
-                    <param name="allowScriptAccess" value="sameDomain" />
-                    <param name="movie" value="/agilito/open-flash-chart.swf?data={{ data_url }}" />
-                    <param name="quality" value="high" />
-                    <param name="bgcolor" value="#FFFFFF" />
-    
-                    <SCRIPT LANGUAGE="JavaScript">
-                        flash_versions = 10;
-                        flash_installed = 0;
-                        flash_version = '0.0';
-                        // Netscape style plugin detection
-                        if (navigator.plugins && navigator.plugins.length) {
-                            for (x = 0; x <navigator.plugins.length; x++) {
-                                if (navigator.plugins[x].name.indexOf('Shockwave Flash') != -1) {
-                                    flash_version = navigator.plugins[x].description.split('Shockwave Flash ')[1];
-                                    flash_installed = 1;
-                                    break;
-                                }
-                            }
-    
-                        } else if (window.ActiveXObject) { // ActiveX style plugin detection
-                            for (x = 2; x <= flash_versions; x++) {
-                                try {
-                                    oFlash = eval("new ActiveXObject('ShockwaveFlash.ShockwaveFlash." + x + "');");
-                                    if (oFlash) {
-                                        flash_installed = 1;
-                                        flash_version = x + '.0';
-                                    }
-                                } catch(e) { }
-                            }
-                        }
-    
-                        if (flash_installed) {
-                            document.write('<embed align="right" src="/agilito/open-flash-chart.swf?data={{ data_url }}" quality="high" bgcolor="#FFFFFF" width="320" height="240" name="chart" align="middle" allowScriptAccess="sameDomain" type="application/x-shockwave-flash" pluginspage="http://www.macromedia.com/go/getflashplayer" id="chart"/>');
-                        }
-    
-                        {% if burndown_chart %}
-                        else {
-                            document.write('<IMG SRC="{{ burndown_chart }}" style="align=right;" ALT="Burndown">');
-                        }
-                        {% endif %}
-                    </SCRIPT>
-                </object>
-    
-            {% else %}
-                {% if burndown_chart %}
-                    <IMG SRC="{{ burndown_chart }}" ALT="Burndown" />
-                {% endif %}
-            {% endif %}
+        <span id="burndown" style="width:320px; height:240px;">
         </span>
 
         <div style="clear: both"></div>
