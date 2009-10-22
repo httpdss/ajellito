@@ -1,24 +1,8 @@
     <script type="text/javascript" language="javascript">
-  
-        function range(top, nticks)
-        {
-            delta = Math.ceil(top/nticks);
-
-            ticks = new Array();
-            for (t = 0; t <= nticks; t++) {
-                ticks.push(t * delta);
-            }
-
-            return ticks;
-        }
-
         function burndown(div, ticks) {
             ideal = [ {{ burndown.remaining.ideal|join:"," }} ];
             hours = [ {{ burndown.remaining.hours|join:"," }} ];
             storypoints = [ {{ burndown.remaining.points|join:"," }} ];
-            xticks = range({{burndown.days}}, Math.ceil(({{burndown.days}} + 1) / 2));
-            yticks = range({{burndown.max.hours}}, ticks);
-            y2ticks = range({{burndown.max.points}}, ticks);
 
             plot1 = $.jqplot(div, [ideal, storypoints, hours], {
                 // title:'Burndown',
@@ -29,9 +13,9 @@
                     {label: 'Hours', yaxis: 'yaxis'}
                     ],
                 axes:{
-                    xaxis:{ticks:xticks, tickOptions:{formatString:'%d'}}, 
-                    yaxis:{ticks:yticks, tickOptions:{formatString:'%d'}}, 
-                    y2axis:{ticks:y2ticks, tickOptions:{formatString:'%d'}}
+                    xaxis:{min:1, max:{{burndown.days}}, tickInterval:1, tickOptions:{formatString:'%d'}}, 
+                    yaxis:{min:0, max:{{burndown.max.hours}} * 1.01, tickOptions:{formatString:'%d'}}, 
+                    y2axis:{min:0, max:{{burndown.max.points}} * 1.01, tickOptions:{formatString:'%d'}}
                     },
                 highlighter:{
                     tooltipAxes: 'y',
