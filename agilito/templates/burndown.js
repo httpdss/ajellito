@@ -7,6 +7,8 @@
             plot1 = $.jqplot(div, [ideal, storypoints, hours], {
                 // title:'Burndown',
                 legend:{show:true, location:'sw'},
+                grid:{shadow:false},
+                seriesDefault:{shadow:false},
                 series:[
                     {label: 'Ideal', yaxis: 'yaxis'},
                     {label: 'Points', yaxis:'y2axis'},
