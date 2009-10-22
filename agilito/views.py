@@ -989,29 +989,6 @@ def _get_iteration(project_id, date=None):
  
     return latest_iteration
 
-def _iteration_get_burndown_data(it):
-    bd = it.burndown_data()
-    data = defaultdict(list)
-
-    for row in bd:
-        for k, v in row.items():
-            if v is not None:
-                data[k].append(v)
-        if row['remaining'] is not None:
-            diff = rounded(row['ideal'] - row['remaining'], 2)
-            data['ideal_tips'].append(diff)
-            data['remaining_tips'].append(-diff)
-        else:
-            data['ideal_tips'].append('-')
-            data['remaining_tips'].append('-')
-    data['y_max'] = max(data['ideal'] + data['remaining'])
-    if len(data['remaining_storypoints']) > 0:
-        data['y2_max'] = max(data['remaining_storypoints'])
-    else:
-        data['y2_max'] = 0
-
-    return data
-
 @restricted
 def iteration_import(request, project_id):
     project = Project.objects.get(id=project_id)
@@ -1222,7 +1199,7 @@ def iteration_status(request, project_id, iteration_id=None, template='iteration
                           'actuals' : actuals,
                           'failures' : failures,
                           'burndown_chart': burndown_chart,
-                          'burndown': _iteration_get_burndown_data(latest_iteration),
+                          'burndown': latest_iteration.burndown_data(),
                           'sidebar': sidebar.ifenabled(),
                           'open_impediments': open_impediments,
                           'resolved_impediments': resolved_impediments,
@@ -1380,7 +1357,7 @@ def product_backlog_chart(request, project_id, iteration_id):
 def iteration_burndown_chart(request, project_id, iteration_id):
     it = Iteration.objects.get(id=iteration_id, project__id=project_id)
 
-    data = _iteration_get_burndown_data(it)
+    data = it.burndown_data()
     data['iteration'] = {'name': it.name, 'starts': it.start_date, 'ends': it.end_date}
 
     context = AgilitoContext(request, {'burndown': data})

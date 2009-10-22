@@ -13,12 +13,12 @@
         }
 
         function burndown(div, ticks) {
-            ideal = [ {{ burndown.ideal|join:"," }} ];
-            hours = [ {{ burndown.remaining|join:"," }} ];
-            storypoints = [ {{ burndown.remaining_storypoints|join:"," }} ];
-            xticks = range({{burndown.ideal|length}}, Math.ceil(({{burndown.ideal|length}} + 1) / 2));
-            yticks = range({{burndown.y_max}}, ticks);
-            y2ticks = range({{burndown.y2_max}}, ticks);
+            ideal = [ {{ burndown.remaining.ideal|join:"," }} ];
+            hours = [ {{ burndown.remaining.hours|join:"," }} ];
+            storypoints = [ {{ burndown.remaining.points|join:"," }} ];
+            xticks = range({{burndown.days}}, Math.ceil(({{burndown.days}} + 1) / 2));
+            yticks = range({{burndown.max.hours}}, ticks);
+            y2ticks = range({{burndown.max.points}}, ticks);
 
             plot1 = $.jqplot(div, [ideal, storypoints, hours], {
                 // title:'Burndown',

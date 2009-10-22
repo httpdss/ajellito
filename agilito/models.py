@@ -608,26 +608,25 @@ class Iteration(ClueModel):
         else:
             extradays = 1
 
-        days = list(rrule(DAILY, cache=True, dtstart=self.start_date, until=self.end_date + datetime.timedelta(extradays), byweekday=(MO,TU,WE,TH,FR)))
+        days = [datetime.date(d.year, d.month, d.day) for d in rrule(DAILY, cache=True, dtstart=self.start_date, until=self.end_date + datetime.timedelta(extradays), byweekday=(MO,TU,WE,TH,FR))]
         iterationlength = len(days)
+        lastday = iterationlength - 1
         dayrange = list(xrange(iterationlength))
         
         start_date = self.start_date
-        start_date = datetime.datetime(start_date.year, start_date.month, start_date.day, 0, 0)
         end_date = self.end_date
-        end_date = datetime.datetime(end_date.year, end_date.month, end_date.day, 23, 59)
 
         date2day = {}
         def getday(dt):
-            if isinstance(dt, datetime.date):
-                dt = datetime.datetime(dt.year, dt.month, dt.day, 0, 0)
+            if isinstance(dt, datetime.datetime):
+                dt = datetime.date(dt.year, dt.month, dt.day)
             try:
                 return date2day[dt]
             except KeyError:
-                if dt < start_date:
-                    d = 1 # note logs for the 1st day on the 2nd day
+                if dt <= start_date:
+                    d = 0 # note logs for the 1st day on the 2nd day
                 elif dt > end_date:
-                    d = len(days) - 2 # note logs for the last day on the 2nd to last day -- last day gets task.remaining
+                    d = lastday
                 else:
                     for d, wd in enumerate(days):
                         if wd >= dt:
@@ -635,6 +634,12 @@ class Iteration(ClueModel):
             date2day[dt] = d
             return d
         today = getday(datetime.date.today())
+
+        def tasklogday(dt):
+            d = getday(dt)
+            if d == 0: return 1
+            if d >= today or d >= lastday: return -1
+            return d - 1
 
         stories = UserStory.objects.filter(iteration=self).all()
         for story in stories:
@@ -646,14 +651,14 @@ class Iteration(ClueModel):
         tasks = Task.objects.filter(user_story__iteration=self).all()
         for task in tasks:
             task.remaining_for_day = [None for day in dayrange]
-            task.remaining_for_day[0] = task.estimate
-            task.remaining_for_day[today] = task.remaining
+            task.remaining_for_day[0] = task.estimate or 0
+            task.remaining_for_day[today] = task.remaining or 0
             stories[task.user_story.id].tasklist.append(task)
         tasks = dict(zip([task.id for task in tasks], tasks))
 
-        logs = TaskLog.objects.filter(task__user_story__iteration=self).order_by('date').all()
+        logs = TaskLog.objects.filter(task__user_story__iteration=self, old_remaining__isnull=False,date__lt=datetime.date.today()).order_by('date').all()
         for l in logs:
-            tasks[l.task.id].remaining_for_day[getday(l.date)] = l.old_remaining
+            tasks[l.task.id].remaining_for_day[tasklogday(l.date)] = l.old_remaining
 
         revdays = list(reversed(range(today+1)))
         for id, task in tasks.items():
@@ -661,7 +666,7 @@ class Iteration(ClueModel):
                 if task.remaining_for_day[day] is None:
                     task.remaining_for_day[day] = task.remaining_for_day[day+1]
 
-        activedays = list(xrange(today))
+        activedays = list(xrange(today+1))
         for id, story in stories.items():
             size = story.size or 0
             for day in activedays:
@@ -677,16 +682,16 @@ class Iteration(ClueModel):
         tasks = tasks.values()
 
         burndown = {'remaining': {}, 'max': {}}
-        padding = [None for day in range(iterationlength - today)]
-        burndown['remaining']['hours'] = [sum(story.hours_remaining_for_day[day] for story in stories) for day in activedays] + padding
-        burndown['remaining']['points'] = [sum(story.points_remaining_for_day[day] for story in stories) for day in activedays] + padding
+        burndown['remaining']['hours'] = [sum(story.hours_remaining_for_day[day] for story in stories) for day in activedays]
+        burndown['remaining']['points'] = [sum(story.points_remaining_for_day[day] for story in stories) for day in activedays]
         burndown['max']['hours'] = max(burndown['remaining']['hours'])
         burndown['max']['points'] = max(burndown['remaining']['points'])
+        burndown['days'] = iterationlength
 
         ideal = [0.0] * iterationlength
         delta = iterationlength - 1
         deltainv = 1.0 / delta
-        maxh = float(burndown['max']['hours'])
+        maxh = float(burndown['remaining']['hours'][0])
         for day in dayrange:
             ideal[day] = deltainv * maxh * day
         burndown['remaining']['ideal'] = list(reversed(ideal))
