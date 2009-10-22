@@ -165,11 +165,6 @@ Module('pyExcelerator',
     app = False,
     optional=True).verify()
 
-Module('matplotlib',
-    url = 'http://matplotlib.sourceforge.net/',
-    app = False,
-    optional=True).verify()
-
 SVN('agilito', url = 'http://agilito.googlecode.com/svn/trunk/agilito').verify()
 
 SVN('queryutils', url = 'http://agilito.googlecode.com/svn/trunk/queryutils').verify()

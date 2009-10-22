@@ -50,16 +50,6 @@ try:
 except AttributeError:
     UNRESTRICTED_SIZE = False
 
-try:
-    import matplotlib
-    matplotlib.use('Agg')
-    import matplotlib.pyplot
-    MATPLOTLIB_ENABLED = True
-except ImportError:
-    MATPLOTLIB_ENABLED = False
-
-ITERATION_STATUS_FLASH_CHART = getattr(settings, 'ITERATION_STATUS_FLASH_CHART', True)
-
 class PrintableCards:
     def __init__(self, selected):
         self.ini = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'LabelSpecs.ini')
