@@ -6,12 +6,10 @@ import types
 from django.core.cache import cache
 from django.contrib.sites.models import Site
 
-from agilito import CACHE_ENABLED, EXCEL_ENABLED, UNRESTRICTED_SIZE, MATPLOTLIB_ENABLED, ITERATION_STATUS_FLASH_CHART, PRINTABLE_CARDS, CACHE_PREFIX
+from agilito import CACHE_ENABLED, EXCEL_ENABLED, UNRESTRICTED_SIZE, PRINTABLE_CARDS, CACHE_PREFIX
 
 if EXCEL_ENABLED:
     import pyExcelerator
-if MATPLOTLIB_ENABLED:
-    import matplotlib.pyplot
 
 import decimal
 
@@ -619,11 +617,10 @@ def backlog(request, project_id, states=None):
         sidebar.add('Reports', 'Backlog in Excel format',
             reverse('agilito.views.product_backlog', args=args))
 
-    if MATPLOTLIB_ENABLED:
-        sidebar.add('Reports', 'Backlog Evolution',
-            reverse('agilito.views.product_backlog_chart',
-                    args=[project_id, ""]),
-            popup="chart")
+    sidebar.add('Reports', 'Backlog Evolution',
+        reverse('agilito.views.product_backlog_chart',
+                args=[project_id, ""]),
+        popup="chart")
 
     sidebar.add('save-changes#Backlog changed', 'Save Changes',
         '#',
@@ -1204,15 +1201,12 @@ def iteration_status(request, project_id, iteration_id=None, template='iteration
                     args=[project_id, latest_iteration.id]),
                     props={'target': "_burndown"})
 
-        if MATPLOTLIB_ENABLED:
-            sidebar.add('Reports', 'Backlog Evolution',
-                reverse('agilito.views.product_backlog_chart',
-                        args=[project_id, latest_iteration.id]))
+        sidebar.add('Reports', 'Backlog Evolution',
+            reverse('agilito.views.product_backlog_chart',
+                    args=[project_id, latest_iteration.id]))
 
-            burndown_chart = reverse('agilito.views.iteration_burndown_chart',
-                                    args=[project_id, latest_iteration.id])
-        else:
-            burndown_chart = None
+        burndown_chart = reverse('agilito.views.iteration_burndown_chart',
+                                args=[project_id, latest_iteration.id])
 
         sidebar.add('Reports', 'Task Board',
             reverse('agilito.views.taskboard',
@@ -1232,7 +1226,6 @@ def iteration_status(request, project_id, iteration_id=None, template='iteration
                           'sidebar': sidebar.ifenabled(),
                           'open_impediments': open_impediments,
                           'resolved_impediments': resolved_impediments,
-                          'flash': ITERATION_STATUS_FLASH_CHART,
                           'velocity': v,
                           }
     else:
@@ -1363,39 +1356,24 @@ def product_backlog_chart(request, project_id, iteration_id):
 
     ind = range(len(days))
 
-    uso = [None for d in range(len(days))]
-    usobase = uso[:]
-    usc = uso[:]
-    uscbase = uso[:]
+    us_open = [None for d in ind]
+    us_closed = us_open[:]
 
     for x in ind:
-        uso[x] = added[x] + existing[x]
-        usobase[x] = -added[x]
+        us_open[x] = added[x] + existing[x]
+        us_closed[x] = completed[x]
+    # ind, labels
+    # completed
 
-        usc[x] = completed[x]
-        uscbase[x] = existing[x]
+    data = {
+        'open': us_open,
+        'closed': us_closed,
+        'completed': completed,
+        'xlabels': labels
+    }
 
-    matplotlib.pyplot.clf()
-    width = 0.35       # the width of the bars: can also be len(x) sequence
-    p1 = matplotlib.pyplot.bar(ind, uso,   width, color='#1D91DB', bottom=usobase)
-    p2 = matplotlib.pyplot.bar(ind, usc, width, color='y', bottom=uscbase)
-
-    matplotlib.pyplot.ylabel('Stories')
-    matplotlib.pyplot.xticks(ind, labels)
-    for t in matplotlib.pyplot.gca().get_xticklabels():
-        t.set_rotation(45)
-        t.set_horizontalalignment('right')
-        t.set_fontsize(6)
-    matplotlib.pyplot.legend( (p1[0], p2[0]), ('Open', 'Accepted'), 'best' )
-    matplotlib.pyplot.grid(color='#999999')
-
-    matplotlib.pyplot.axhline(linewidth=2, color='k', zorder=-1)
-
-    matplotlib.pyplot.plot(completed, 'mo-')
-
-    response = HttpResponse(mimetype='image/png')
-    matplotlib.pyplot.savefig(response)
-    return response
+    context = AgilitoContext(request, data)
+    return render_to_response('backlog_evolution.html', context_instance=context)
 
 @restricted
 @cached
