@@ -88,7 +88,7 @@ INSTALLED_APPS = (
     'queryutils',
     'accounts',
     'tagging',
-    'django_extensions',
+    #'django_extensions',
 )
 
 PRINTABLE_CARD_STOCK = 'Buro1 129820'

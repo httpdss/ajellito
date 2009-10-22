@@ -22,7 +22,7 @@ def fullPath(*args):
     return path
 
 if not os.path.exists(fullPath('settings.py')):
-    f = open(fullPath('agilito', 'install', 'settings.py'))
+    f = open(fullPath('agilito', 'install', 'settings_template.py'))
     body = f.read()
     f.close()
     f = open(fullPath('settings.py'), 'w')
