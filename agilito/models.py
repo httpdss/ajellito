@@ -689,7 +689,7 @@ class Iteration(ClueModel):
         maxh = float(burndown['max']['hours'])
         for day in dayrange:
             ideal[day] = deltainv * maxh * day
-        burndown['remaining']['ideal'] = ideal
+        burndown['remaining']['ideal'] = list(reversed(ideal))
 
         return burndown
 
