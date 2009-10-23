@@ -82,7 +82,13 @@ class Module:
     def download(self):
         print '%s is available at %s' % (self.name, self.url)
 
-    def verify(self):
+    def markPresent(self):
+        print '** %s is present' % self.name
+        if self.app:
+            Module.apps.append(self.name)
+        Module.available.append(self.name)
+
+    def verify(self, retry=True):
         if not self.optional:
             Module.required.append(self.name)
 
@@ -95,10 +101,7 @@ class Module:
                 present = True
 
         if present:
-            print '** %s is present' % self.name
-            if self.app:
-                Module.apps.append(self.name)
-            Module.available.append(self.name)
+            self.markPresent()
             return True
 
         if self.optional:
@@ -111,8 +114,22 @@ class Module:
         do_download = False
         do_download = do_download or (config['install'] == 'ask' and self.askDownload())
         do_download = do_download or config['install'] == 'auto'
-        if do_download:
-            self.download()
+        if not do_download:
+            return self.optional
+
+        self.download()
+
+        try:
+            __import__(self.name)
+            present = True
+        except ImportError, e:
+            if str(e).find('DJANGO_SETTINGS_MODULE') >= 0:
+                present = True
+
+        if present:
+            self.markPresent()
+
+        return present
 
 class DownloadableModule(Module):
     def askDownload(self):
