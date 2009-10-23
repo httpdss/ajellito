@@ -1,7 +1,20 @@
 /**
-* Copyright (c) 2009 Chris Leonello
-* This software is licensed under the GPL version 2.0 and MIT licenses.
-*/
+ * Copyright (c) 2009 Chris Leonello
+ * jqPlot is currently available for use in all personal or commercial projects 
+ * under both the MIT and GPL version 2.0 licenses. This means that you can 
+ * choose the license that best suits your project and use it accordingly. 
+ *
+ * The author would appreciate an email letting him know of any substantial
+ * use of jqPlot.  You can reach the author at: chris dot leonello at gmail 
+ * dot com or see http://www.jqplot.com/info.php .  This is, of course, 
+ * not required.
+ *
+ * If you are feeling kind and generous, consider supporting the project by
+ * making a donation at: http://www.jqplot.com/support .
+ *
+ * Thanks for using jqPlot!
+ * 
+ */
 (function($) {
     
     /**
@@ -44,7 +57,9 @@
 	$.jqplot.Dragable.parseOptions = function (defaults, opts) {
 	    var options = opts || {};
 	    this.plugins.dragable = new $.jqplot.Dragable(options.dragable);
-	    this.isDragable = true;
+	    // since this function is called before series options are parsed,
+	    // we can set this here and it will be overridden if needed.
+	    this.isDragable = $.jqplot.config.enablePlugins;
 	};
 	
 	// called within context of plot

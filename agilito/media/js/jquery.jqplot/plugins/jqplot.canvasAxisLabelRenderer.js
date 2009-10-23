@@ -1,20 +1,33 @@
 /**
-* Copyright (c) 2009 Chris Leonello
-* This software is licensed under the GPL version 2.0 and MIT licenses.
-*/
+ * Copyright (c) 2009 Chris Leonello
+ * jqPlot is currently available for use in all personal or commercial projects 
+ * under both the MIT and GPL version 2.0 licenses. This means that you can 
+ * choose the license that best suits your project and use it accordingly. 
+ *
+ * The author would appreciate an email letting him know of any substantial
+ * use of jqPlot.  You can reach the author at: chris dot leonello at gmail 
+ * dot com or see http://www.jqplot.com/info.php .  This is, of course, 
+ * not required.
+ *
+ * If you are feeling kind and generous, consider supporting the project by
+ * making a donation at: http://www.jqplot.com/support .
+ *
+ * Thanks for using jqPlot!
+ * 
+ */
 (function($) {
     /**
     * Class: $.jqplot.CanvasAxisLabelRenderer
     * Renderer to draw axis labels with a canvas element to support advanced
     * featrues such as rotated text.  This renderer uses a separate rendering engine
-    * to draw the text on the canvas.  Two modes of rendering the text are used.
+    * to draw the text on the canvas.  Two modes of rendering the text are available.
     * If the browser has native font support for canvas fonts (currently Mozila 3.5
-    * and Safari 4), Text will be rendered with the canvas fillText method.
-    * In these browsers, you supply a css spec for the font family.
+    * and Safari 4), you can enable text rendering with the canvas fillText method.
+    * You do so by setting the "enableFontSupport" option to true. 
     * 
     * Browsers lacking native font support will have the text drawn on the canvas
-    * using the Hershey font metrics.  This behaviour can be forced for all browsers
-    * by setting the "disableFontSupport" option to true.
+    * using the Hershey font metrics.  Even if the "enableFontSupport" option is true
+    * non-supporting browsers will still render with the Hershey font.
     * 
     */
     $.jqplot.CanvasAxisLabelRenderer = function(options) {
@@ -86,13 +99,14 @@
         if (this.enableFontSupport) {
             if ($.browser.safari) {
                 var p = $.browser.version.split('.');
-                if (p[0] >= 528 && p[1] >= 16) {
+                for (var i=0; i<p.length; i++) { p[i] = Number(p[i]); }
+                if (p[0] > 528 || (p[0] == 528 && p[1] >= 16)) {
                     this._textRenderer = new $.jqplot.CanvasFontRenderer(ropts); 
                 }
             }
             else if ($.browser.mozilla) {
                 var p = $.browser.version.split(".");
-                if (p[0] > 1 || p[0] == 1 &&  p[1] >= 9 && p[2] > 0 ) {
+                if (p[0] > 1 || (p[0] == 1 &&  p[1] >= 9 && p[2] > 0) ) {
                     this._textRenderer = new $.jqplot.CanvasFontRenderer(ropts);
                 }
                 else {
