@@ -155,3 +155,22 @@ ul.tags span.small {
     padding-left:32px;
 }
 
+ul.breadcrumbs {
+    font-size:80%;
+    margin:0.5em 0;
+    list-style-type:none;
+    list-style-image:none;
+    padding:0;
+    border-bottom:1px solid #EBEBEB;
+}
+.breadcrumbs li {
+    list-style-type:none;
+    list-style-image:none;
+    float:left;
+    position:relative;
+}
+
+.visualClear {
+    float:none !important;
+    clear:both;
+}

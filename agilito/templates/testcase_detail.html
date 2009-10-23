@@ -6,10 +6,10 @@
 
 {% block content %}
 <ul class="breadcrumbs">
-<li id="iteration">{{ object.user_story.project.name }} &gt; </li>
-<li id="iteration"><a href="{{ object.user_story.iteration.get_absolute_url }}">{{ object.user_story.iteration.name }}</a> &gt; </li> 
-<li id="iteration"><a href="{{ object.user_story.get_absolute_url }}">{{ object.user_story.name }}</a> &gt; </li> 
-<li id="iteration">{{ object.name }} </li>
+<li id="breadcrumb-project">{{ object.user_story.project.name }} &gt; </li>
+<li id="breadcrumb-iteration"><a href="{{ object.user_story.iteration.get_absolute_url }}">{{ object.user_story.iteration.name }}</a> &gt; </li> 
+<li id="breadcrumb-story"><a href="{{ object.user_story.get_absolute_url }}">{{ object.user_story.name }}</a> &gt; </li> 
+<li id="breadcrumb-testcase">{{ object.name }} </li>
 <li class="visualClear" />
 </ul>
 
