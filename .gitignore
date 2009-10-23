@@ -3,3 +3,4 @@ settings.py
 accounts
 tagging
 agilito.sqlite
+*.*~
