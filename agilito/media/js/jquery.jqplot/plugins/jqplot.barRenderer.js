@@ -1,13 +1,26 @@
 /**
-* Copyright (c) 2009 Chris Leonello
-* This software is licensed under the GPL version 2.0 and MIT licenses.
-*/
+ * Copyright (c) 2009 Chris Leonello
+ * jqPlot is currently available for use in all personal or commercial projects 
+ * under both the MIT and GPL version 2.0 licenses. This means that you can 
+ * choose the license that best suits your project and use it accordingly. 
+ *
+ * The author would appreciate an email letting him know of any substantial
+ * use of jqPlot.  You can reach the author at: chris dot leonello at gmail 
+ * dot com or see http://www.jqplot.com/info.php .  This is, of course, 
+ * not required.
+ *
+ * If you are feeling kind and generous, consider supporting the project by
+ * making a donation at: http://www.jqplot.com/support .
+ *
+ * Thanks for using jqPlot!
+ * 
+ */
 (function($) {
-    /**
-    *  Class: $.jqplot.BarRenderer
-    *  A plugin renderer for jqPlot to draw a bar plot.
-    *  Draws series as a line.
-    */
+    
+    // Class: $.jqplot.BarRenderer
+    // A plugin renderer for jqPlot to draw a bar plot.
+    // Draws series as a line.
+    
     $.jqplot.BarRenderer = function(){
         $.jqplot.LineRenderer.call(this);
     };
@@ -49,10 +62,12 @@
         if (this.barDirection == 'vertical' ) {
             this._primaryAxis = '_xaxis';
             this._stackAxis = 'y';
+            this.fillAxis = 'y';
         }
         else {
             this._primaryAxis = '_yaxis';
             this._stackAxis = 'x';
+            this.fillAxis = 'x';
         }
         // set the shape renderer options
         var opts = {lineJoin:'miter', lineCap:'round', fill:true, isarc:false, strokeStyle:this.color, fillStyle:this.color, closePath:this.fill};
@@ -148,7 +163,6 @@
         nvals = temp[0];
         nseries = temp[1];
         pos = temp[2];
-        // console.log(temp);
         
         if (this._stack) {
             this._barNudge = 0;
@@ -157,6 +171,11 @@
             this._barNudge = (-Math.abs(nseries/2 - 0.5) + pos) * (this.barWidth + this.barPadding);
         }
         if (showLine) {
+            var negativeColors = new $.jqplot.ColorGenerator(this.negativeSeriesColors);
+            var negativeColor = negativeColors.get(this.index);
+            var isnegative = false;
+            var posfs = opts.fillStyle;
+            var tempfs;
             
             if (this.barDirection == 'vertical') {
                 for (var i=0; i<gridData.length; i++) {
@@ -164,11 +183,26 @@
                     var base = gridData[i][0] + this._barNudge;
                     var ystart;
                     
+                    // stacked
                     if (this._stack && this._prevGridData.length) {
                         ystart = this._prevGridData[i][1];
                     }
+                    // not stacked and first series in stack
                     else {
-                        ystart = ctx.canvas.height;
+                        if (this.fillToZero) {
+                            ystart = this._yaxis.series_u2p(0);
+                        }
+                        else {
+                            ystart = ctx.canvas.height;
+                        }
+                    }
+                    if (this.fillToZero && this._plotData[i][1] < 0) {
+                        isnegative = true;
+                        opts.fillStyle = negativeColor;
+                    }
+                    else {
+                        opts.fillStyle = posfs;
+                        isnegative = false;
                     }
                     // console.log('%s, %s, %s', this._barNudge, base, ystart);
                     
@@ -256,7 +290,12 @@
                             ystart = this._prevGridData[i][1];
                         }
                         else {
-                            ystart = ctx.canvas.height;
+                            if (this.fillToZero) {
+                                ystart = this._yaxis.series_u2p(0);
+                            }
+                            else {
+                                ystart = ctx.canvas.height;
+                            }
                         }
                     
                         points.push([base-this.barWidth/2, ystart]);

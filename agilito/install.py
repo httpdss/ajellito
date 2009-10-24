@@ -4,6 +4,30 @@ import sys, os, shutil, re
 from distutils.sysconfig import get_python_lib
 import tempfile
 import uuid
+import getopt
+
+try:
+    opts, args = getopt.getopt(sys.argv[1:], "", ["install=", "apache", "nosqldiff"])
+except getopt.GetoptError, err:
+    print str(err)
+    sys.exit(1)
+
+config = {'install': 'ask', 'apache': False, 'nosqldiff': False}
+for o, a in opts:
+    if o == '--install':
+        if not a in ['auto', 'ask']:
+            print 'Unknown install option "%s"' % a
+            sys.exit(1)
+        config['install'] = a
+
+    elif o == '--apache':
+        config['apache'] = True
+
+    elif o == '--nosqldiff':
+        config['nosqldiff'] = True
+
+    else:
+        assert False, 'Unknown option "%s"' % o
 
 #tmpdir = tempfile.mkdtemp()
 TMPDIR = '/tmp/django'
@@ -58,7 +82,13 @@ class Module:
     def download(self):
         print '%s is available at %s' % (self.name, self.url)
 
-    def verify(self):
+    def markPresent(self):
+        print '** %s is present' % self.name
+        if self.app:
+            Module.apps.append(self.name)
+        Module.available.append(self.name)
+
+    def verify(self, retry=True):
         if not self.optional:
             Module.required.append(self.name)
 
@@ -71,10 +101,7 @@ class Module:
                 present = True
 
         if present:
-            print '** %s is present' % self.name
-            if self.app:
-                Module.apps.append(self.name)
-            Module.available.append(self.name)
+            self.markPresent()
             return True
 
         if self.optional:
@@ -84,8 +111,25 @@ class Module:
 
         Module.OK = Module.OK and self.optional
 
-        if self.askDownload():
-            self.download()
+        do_download = False
+        do_download = do_download or (config['install'] == 'ask' and self.askDownload())
+        do_download = do_download or config['install'] == 'auto'
+        if not do_download:
+            return self.optional
+
+        self.download()
+
+        try:
+            __import__(self.name)
+            present = True
+        except ImportError, e:
+            if str(e).find('DJANGO_SETTINGS_MODULE') >= 0:
+                present = True
+
+        if present:
+            self.markPresent()
+
+        return present
 
 class DownloadableModule(Module):
     def askDownload(self):
@@ -197,7 +241,7 @@ if not 'django_extensions' in Module.available or not 'django_extensions' in set
 If you install django_extensions
     (http://code.google.com/p/django-command-extensions)
 I can inspect the database for changes against the models"""
-else:
+elif not config['nosqldiff']:
     print 'Installer has detected the following changes pending for your database:'
     os.system('python manage.py sqldiff agilito')
 
@@ -232,11 +276,12 @@ if 'planned' in [str(col[0]) for col in intro.get_table_description(cursor, 'agi
     print 'and then set UNRESTRICTED_SIZE to True in your settings'
 
 
-import socket
-import django
-fqdn = socket.getfqdn()
-adminmedia = django.__path__[0] + '/contrib/admin/media'
-print """
+if config['apache']:
+    import socket
+    import django
+    fqdn = socket.getfqdn()
+    adminmedia = django.__path__[0] + '/contrib/admin/media'
+    print """
 You can run Agilito from Apache using the following site config:
 
 

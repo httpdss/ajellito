@@ -5,13 +5,24 @@
  * 
  * About: Version
  * 
- * 0.9.4 
+ * 0.9.5 
  * 
  * About: Copyright & License
  * 
- * Copyright (c) 2009 Chris Leonello.  This software is licensed under the GPL version 2.0 and MIT licenses.
- * See <GPL Version 2> and <MIT License> contained within this
- * distribution for further information.
+ * Copyright (c) 2009 Chris Leonello
+ * jqPlot is currently available for use in all personal or commercial projects 
+ * under both the MIT and GPL version 2.0 licenses. This means that you can 
+ * choose the license that best suits your project and use it accordingly.
+ * 
+ * See <GPL Version 2> and <MIT License> contained within this distribution for further information. 
+ *
+ * The author would appreciate an email letting him know of any substantial
+ * use of jqPlot.  You can reach the author at: chris dot leonello at gmail 
+ * dot com or see http://www.jqplot.com/info.php.  This is, of course, not required.
+ *
+ * If you are feeling kind and generous, consider supporting the project by
+ * making a donation at: http://www.jqplot.com/support.
+ *
  * 
  * About: Introduction
  * 
@@ -59,7 +70,7 @@
  * 
  * See <Change Log>
  * 
-**/
+ */
 
 (function($) {
     // make sure undefined is undefined
@@ -73,6 +84,14 @@
      * target - ID of target element to render the plot into.
      * data - an array of data series.
      * options - user defined options object.  See the individual classes for available options.
+     * 
+     * Properties:
+     * config - object to hold configuration information for jqPlot plot object.
+     * enablePlugins - True to enable plugins by default.  Plugins must be explicitly disabled.
+     *   False to disable plugins by default.  Plugins must be explicitly enabled.
+     *   This property sets the "show" property of certain plugins to true or false.
+     *   Only plugins that can be immediately active upon loading are affected.  This includes
+     *   non-renderer plugins like cursor, dragable, highlighter, and trendline.
      */
 
     $.jqplot = function(target, data, options) {
@@ -105,10 +124,17 @@
         plot.draw();
         return plot;
     };
-    
-    // declare some commonly used iteration variables.
-    
+        
     $.jqplot.debug = 1;
+    $.jqplot.config = {
+        debug:1,
+        enablePlugins:true,
+        defaultHeight:300,
+        defaultWidth:400
+    };
+    
+    $.jqplot.enablePlugins = $.jqplot.config.enablePlugins;
+    
     /**
      * 
      * Hooks: jqPlot Pugin Hooks
@@ -164,15 +190,30 @@
     };
     
     $.jqplot.ElemContainer.prototype.getWidth = function() {
-        return this._elem.outerWidth(true);
+        if (this._elem) {
+            return this._elem.outerWidth(true);
+        }
+        else {
+            return null;
+        }
     };
     
     $.jqplot.ElemContainer.prototype.getHeight = function() {
-        return this._elem.outerHeight(true);
+        if (this._elem) {
+            return this._elem.outerHeight(true);
+        }
+        else {
+            return null;
+        }
     };
     
     $.jqplot.ElemContainer.prototype.getPosition = function() {
-        return this._elem.position();
+        if (this._elem) {
+            return this._elem.position();
+        }
+        else {
+            return {top:null, left:null, bottom:null, right:null};
+        }
     };
     
     $.jqplot.ElemContainer.prototype.getTop = function() {
@@ -311,6 +352,23 @@
         this._offsets = {min:null, max:null};
         this._ticks=[];
         this._label = null;
+        // prop: syncTicks
+        // true to try and synchronize tick spacing across multiple axes so that ticks and
+        // grid lines line up.  This has an impact on autoscaling algorithm, however.
+        // In general, autoscaling an individual axis will work better if it does not
+        // have to sync ticks.
+        this.syncTicks = null;
+        // prop: tickSpacing
+        // Approximate pixel spacing between ticks on graph.  Used during autoscaling.
+        // This number will be an upper bound, actual spacing will be less.
+        this.tickSpacing = 75;
+        // Properties to hold the original values for min, max, ticks, tickInterval and numberTicks
+        // so they can be restored if altered by plugins.
+        this._min = null;
+        this._max = null;
+        this._tickInterval = null;
+        this._numberTicks = null;
+        this.__ticks = null;
     }
     
     Axis.prototype = new $.jqplot.ElemContainer();
@@ -347,8 +405,18 @@
         if (this.padMin == null) {
             this.padMin = (this.pad-1)/2 + 1;
         }
+        // now that padMin and padMax are correctly set, reset pad in case user has supplied 
+        // padMin and/or padMax
+        this.pad = this.padMax + this.padMin - 1;
         if (this.min != null || this.max != null) {
             this.autoscale = false;
+        }
+        // if not set, sync ticks for y axes but not x by default.
+        if (this.syncTicks == null && this.name.indexOf('y') > -1) {
+            this.syncTicks = true;
+        }
+        else if (this.syncTicks == null){
+            this.syncTicks = false;
         }
         this.renderer.init.call(this, this.rendererOptions);
         
@@ -356,6 +424,7 @@
     
     Axis.prototype.draw = function(ctx) {
         return this.renderer.draw.call(this, ctx);
+        
     };
     
     Axis.prototype.set = function() {
@@ -366,6 +435,19 @@
         if (this.show) {
             this.renderer.pack.call(this, pos, offsets);
         }
+        // these properties should all be available now.
+        if (this._min == null) {
+            this._min = this.min;
+            this._max = this.max;
+            this._tickInterval = this.tickInterval;
+            this._numberTicks = this.numberTicks;
+            this.__ticks = this._ticks;
+        }
+    };
+    
+    // reset the axis back to original values if it has been scaled, zoomed, etc.
+    Axis.prototype.reset = function() {
+        this.renderer.reset.call(this);
     };
 
     /**
@@ -374,7 +456,7 @@
      * by the Plot oject.  Legend properties can be set or overriden by the 
      * options passed in from the user.
      */
-    function Legend() {
+    function Legend(options) {
         $.jqplot.ElemContainer.call(this);
         // Group: Properties
         
@@ -420,6 +502,8 @@
         this.preDraw = false;
         this.escapeHtml = false;
         this._series = [];
+        
+        $.extend(true, this, options);
     }
     
     Legend.prototype = new $.jqplot.ElemContainer();
@@ -603,6 +687,15 @@
         // If true will stroke the line (with color this.color) as well as fill under it.
         // Applies only when fill is true.
         this.fillAndStroke = false;
+        // prop: disableStack
+        // true to not stack this series with other series in the plot.
+        // To render properly, non-stacked series must come after any stacked series
+        // in the plot's data series array.  So, the plot's data series array would look like:
+        // > [stackedSeries1, stackedSeries2, ..., nonStackedSeries1, nonStackedSeries2, ...]
+        // disableStack will put a gap in the stacking order of series, and subsequent
+        // stacked series will not fill down through the non-stacked series and will
+        // most likely not stack properly on top of the non-stacked series.
+        this.disableStack = false;
         // _stack is set by the Plot if the plot is a stacked chart.
         // will stack lines or bars on top of one another to build a "mountain" style chart.
         // May not be implemented in all renderers.
@@ -610,8 +703,21 @@
         // prop: neighborThreshold
         // how close or far (in pixels) the cursor must be from a point marker to detect the point.
         this.neighborThreshold = 4;
+        // prop: fillToZero
+        // true will force bar and filled series to fill toward zero on the fill Axis.
+        this.fillToZero = false;
+        // prop: fillAxis
+        // Either 'x' or 'y'.  Which axis to fill the line toward if fillToZero is true.
+        // 'y' means fill up/down to 0 on the y axis for this series.
+        this.fillAxis = 'y';
         this._stackData = [];
+        // _plotData accounts for stacking.  If plots not stacked, _plotData and data are same.  If
+        // stacked, _plotData is accumulation of stacking data.
         this._plotData = [];
+        // _plotValues hold the individual x and y values that will be plotted for this series.
+        this._plotValues = {x:[], y:[]};
+        // statistics about the intervals between data points.  Used for auto scaling.
+        this._intervals = {x:{}, y:{}};
         // data from the previous series, for stacked charts.
         this._prevPlotData = [];
         this._prevGridData = [];
@@ -917,16 +1023,18 @@
         this._height = null; 
         this._plotDimensions = {height:null, width:null};
         this._gridPadding = {top:10, right:10, bottom:10, left:10};
-        // don't think this is implemented.
-        this.equalXTicks = true;
-        // don't think this is implemented.
-        this.equalYTicks = true;
+        // a shortcut for axis syncTicks options.  Not implemented yet.
+        this.syncXTicks = true;
+        // a shortcut for axis syncTicks options.  Not implemented yet.
+        this.syncYTicks = true;
         // prop: seriesColors
         // Ann array of CSS color specifications that will be applied, in order,
         // to the series in the plot.  Colors will wrap around so, if their
         // are more series than colors, colors will be reused starting at the
         // beginning.  For pie charts, this specifies the colors of the slices.
         this.seriesColors = [ "#4bb2c5", "#EAA228", "#c5b47f", "#579575", "#839557", "#958c12", "#953579", "#4b5de4", "#d8b83f", "#ff5800", "#0085cc"];
+        // this.negativeSeriesColors = [ "#9653C4", "#1CE540", "#7BC28F", "#525A94", "#529386", "#00914A", "#967C33", "#E650A8", "#37D46A", "#1BF800", "#AD25CC"];
+        this.negativeSeriesColors = [ "#498991", "#C08840", "#9F9274", "#546D61", "#646C4A", "#6F6621", "#6E3F5F", "#4F64B0", "#A89050", "#C45923", "#187399"];
         // prop: sortData
         // false to not sort the data passed in by the user.
         // Many bar, stakced and other graphs as well as many plugins depend on
@@ -963,7 +1071,7 @@
         // Namespece to hold plugins.  Generally non-renderer plugins add themselves to here.
         this.plugins = {};
         
-        this.colorGenerator = ColorGenerator;
+        this.colorGenerator = $.jqplot.ColorGenerator;
         
         // Group: methods
         //
@@ -974,7 +1082,7 @@
             for (var i=0; i<$.jqplot.preInitHooks.length; i++) {
                 $.jqplot.preInitHooks[i].call(this, target, data, options);
             }
-            this.targetId = target;
+            this.targetId = '#'+target;
             this.target = $('#'+target);
             if (!this.target.get(0)) {
                 throw "No plot target specified";
@@ -990,15 +1098,35 @@
             
             // if no height or width specified, use a default.
             if (!this.target.height()) {
-                this._height = 300;
-                this.target.css('height', '300px');
+                var h;
+                if (options && options.height) {
+                    h = parseInt(options.height);
+                }
+                else if (this.target.attr('data-height')) {
+                    h = parseInt(this.target.attr('data-height'));
+                }
+                else {
+                    h = parseInt($.jqplot.config.defaultHeight);
+                }
+                this._height = h;
+                this.target.css('height', h+'px');
             }
             else {
                 this._height = this.target.height();
             }
             if (!this.target.width()) {
-                this._width = 400;
-                this.target.css('width', '400px');
+                var w;
+                if (options && options.width) {
+                    w = parseInt(options.width);
+                }
+                else if (this.target.attr('data-width')) {
+                    w = parseInt(this.target.attr('data-width'));
+                }
+                else {
+                    w = parseInt($.jqplot.config.defaultWidth);
+                }
+                this._width = w;
+                this.target.css('width', w+'px');
             }
             else {
                 this._width = this.target.width();
@@ -1064,26 +1192,31 @@
         
         // sort the series data in increasing order.
         function sortData(series) {
-            var d;
+            var d, ret;
             for (var i=0; i<series.length; i++) {
                 d = series[i].data;
+                var check = true;
                 if (series[i]._stackAxis == 'x') {
-                    d.sort(function(a,b){
-                        var ret = a[1] - b[1];
-                        if (ret) {
-                            return ret;
+                    for (var j = 0; j < d.length; j++) {
+                        if (typeof(d[j][1]) != "number") {
+                            check = false;
+                            break;
                         }
-                        return 0;
-                    });
+                    }
+                    if (check) {
+                        d.sort(function(a,b) { return a[1] - b[1]; });
+                    }
                 }
                 else {
-                    d.sort(function(a,b){
-                        var ret = a[0] - b[0];
-                        if (ret) {
-                            return ret;
+                    for (var j = 0; j < d.length; j++) {
+                        if (typeof(d[j][0]) != "number") {
+                            check = false;
+                            break;
                         }
-                        return 0;
-                    });
+                    }
+                    if (check) {
+                        d.sort(function(a,b) { return a[0] - b[0]; });
+                    }
                 }
             }
         }
@@ -1095,7 +1228,8 @@
             this._stackData = [];
             series._stackData = [];
             series._plotData = [];
-            if (this.stackSeries) {
+            var plotValues = {x:[], y:[]};
+            if (this.stackSeries && !series.disableStack) {
                 series._stack = true;
                 var sidx = series._stackAxis == 'x' ? 0 : 1;
                 var idx = sidx ? 0 : 1;
@@ -1114,16 +1248,26 @@
                         plotdata[k][sidx] += cd[k][sidx];
                     }
                 }
+                for (var i=0; i<plotdata.length; i++) {
+                    plotValues.x.push(plotdata[i][0]);
+                    plotValues.y.push(plotdata[i][1]);
+                }
                 this._plotData.push(plotdata);
                 this._stackData.push(temp);
                 series._stackData = temp;
                 series._plotData = plotdata;
+                series._plotValues = plotValues;
             }
             else {
+                for (var i=0; i<series.data.length; i++) {
+                    plotValues.x.push(series.data[i][0]);
+                    plotValues.y.push(series.data[i][1]);
+                }
                 this._stackData.push(series.data);
                 this.series[index]._stackData = series.data;
                 this._plotData.push(series.data);
                 series._plotData = series.data;
+                series._plotValues = plotValues;
             }
             if (index>0) {
                 series._prevPlotData = this.series[index-1]._plotData;
@@ -1156,7 +1300,8 @@
                 this.seriesColors = this.options.seriesColors;
             }
             var cg = new this.colorGenerator(this.seriesColors);
-            this._gridPadding = this.options.gridPadding;
+            // this._gridPadding = this.options.gridPadding;
+            $.extend(true, this._gridPadding, this.options.gridPadding);
             this.sortData = (this.options.sortData != null) ? this.options.sortData : this.sortData;
             for (var n in this.axes) {
                 var axis = this.axes[n];
@@ -1197,7 +1342,7 @@
                 for (var j=0; j<$.jqplot.preParseSeriesOptionsHooks.length; j++) {
                     $.jqplot.preParseSeriesOptionsHooks[j].call(temp, this.options.seriesDefaults, this.options.series[i]);
                 }
-                $.extend(true, temp, this.options.seriesDefaults, this.options.series[i]);
+                $.extend(true, temp, {seriesColors:this.seriesColors, negativeSeriesColors:this.negativeSeriesColors}, this.options.seriesDefaults, this.options.series[i]);
                 temp.data = normalizeData(this.data[i]);
                 switch (temp.xaxis) {
                     case 'xaxis':
@@ -1364,7 +1509,8 @@
             }
             else {  // draw series before legend
                 this.drawSeries(sctx);
-                this.target.append(this.legend.draw());
+                $(this.seriesCanvas._elem).after(this.legend.draw());
+                // this.target.append(this.legend.draw());
                 this.legend.pack(this._gridPadding);                
             }
             
@@ -1530,7 +1676,7 @@
     }
     
         
-   ColorGenerator = function(colors) {
+   $.jqplot.ColorGenerator = function(colors) {
         var idx = 0;
         
         this.next = function () { 
@@ -1551,6 +1697,11 @@
                 idx = colors.length-1;
                 return colors[idx];
             }
+        };
+        
+        // get a color by index without advancing pointer.
+        this.get = function(i) {
+            return colors[i];
         };
         
         this.setColors = function(c) {
@@ -1725,6 +1876,8 @@
         this.markSize = 6;
         // prop: show
         // wether or not to show the tick (mark and label).
+        // Setting this to false requires more testing.  It is recommended
+        // to set showLabel and showMark to false instead.
         this.show = true;
         // prop: showLabel
         // wether or not to show the label.
@@ -2047,7 +2200,7 @@
                         s = t.markSize;
                         m = t.mark;
                         var pos = Math.round(axis.u2p(t.value)) + 0.5;
-                        if (t.show && t.showGridline) {
+                        if (t.showMark && t.mark) {
                             switch (m) {
                                 case 'outside':
                                     b = left;
@@ -2227,45 +2380,137 @@
             if (showLine) {
                 // if we fill, we'll have to add points to close the curve.
                 if (fill) {
-                    // is stoking line as well as filling, get a copy of line data.
-                    if (fillAndStroke) {
-                        var fasgd = gd.slice(0);
-                    }
-                    // if not stacked, fill down to axis
-                    if (this.index == 0 || !this._stack) {
-                        var gridymin = this._yaxis.series_u2p(this._yaxis.min) - this.gridBorderWidth / 2;
-                        // IE doesn't return new length on unshift
-                        gd.unshift([gd[0][0], gridymin]);
-                        len = gd.length;
-                        gd.push([gd[len - 1][0], gridymin]);                    
-                    }
-                    // if stacked, fill to line below 
-                    else {
-                        var prev = this._prevGridData;
-                        for (var i=prev.length; i>0; i--) {
-                            gd.push(prev[i-1]);
+                    if (this.fillToZero) {
+                        // have to break line up into shapes at axis crossings
+                        var negativeColors = new $.jqplot.ColorGenerator(this.negativeSeriesColors);
+                        var negativeColor = negativeColors.get(this.index);
+                        var isnegative = false;
+                        var posfs = opts.fillStyle;
+                    
+                        // if stoking line as well as filling, get a copy of line data.
+                        if (fillAndStroke) {
+                            var fasgd = gd.slice(0);
                         }
-                    }
-                }
-                if (shadow) {
-                    this.renderer.shadowRenderer.draw(ctx, gd, opts);
-                }
+                        // if not stacked, fill down to axis
+                        if (this.index == 0 || !this._stack) {
+                        
+                            var tempgd = [];
+                            var pyzero = this._yaxis.series_u2p(0);
+                            var pxzero = this._xaxis.series_u2p(0);
+                            
+                            if (this.fillAxis == 'y') {
+                                tempgd.push([gd[0][0], pyzero]);
+                                
+                                for (var i=0; i<gd.length-1; i++) {
+                                    tempgd.push(gd[i]);
+                                    // do we have an axis crossing?
+                                    if (this._plotData[i][1] * this._plotData[i+1][1] < 0) {
+                                        if (this._plotData[i][1] < 0) {
+                                            isnegative = true;
+                                            opts.fillStyle = negativeColor;
+                                        }
+                                        else {
+                                            isnegative = false;
+                                            opts.fillStyle = posfs;
+                                        }
+                                        
+                                        var xintercept = gd[i][0] + (gd[i+1][0] - gd[i][0]) * (pyzero-gd[i][1])/(gd[i+1][1] - gd[i][1]);
+                                        tempgd.push([xintercept, pyzero]);
+                                        // now draw this shape and shadow.
+                                        if (shadow) {
+                                            this.renderer.shadowRenderer.draw(ctx, tempgd, opts);
+                                        }
+                                        this.renderer.shapeRenderer.draw(ctx, tempgd, opts);
+                                        // now empty temp array and continue
+                                        tempgd = [[xintercept, pyzero]];
+                                    }   
+                                }
+                                if (this._plotData[gd.length-1][1] < 0) {
+                                    isnegative = true;
+                                    opts.fillStyle = negativeColor;
+                                }
+                                else {
+                                    isnegative = false;
+                                    opts.fillStyle = posfs;
+                                }
+                                tempgd.push(gd[gd.length-1]);
+                                tempgd.push([gd[gd.length-1][0], pyzero]); 
+                            }
+                            // now draw this shape and shadow.
+                            if (shadow) {
+                                this.renderer.shadowRenderer.draw(ctx, tempgd, opts);
+                            }
+                            this.renderer.shapeRenderer.draw(ctx, tempgd, opts);
+                            
+                            
+                            // var gridymin = this._yaxis.series_u2p(0);
+                            // // IE doesn't return new length on unshift
+                            // gd.unshift([gd[0][0], gridymin]);
+                            // len = gd.length;
+                            // gd.push([gd[len - 1][0], gridymin]);                   
+                        }
+                        // if stacked, fill to line below 
+                        else {
+                            var prev = this._prevGridData;
+                            for (var i=prev.length; i>0; i--) {
+                                gd.push(prev[i-1]);
+                            }
+                            if (shadow) {
+                                this.renderer.shadowRenderer.draw(ctx, gd, opts);
+                            }
             
-                this.renderer.shapeRenderer.draw(ctx, gd, opts); 
-                if (fillAndStroke) {
-                    var fasopts = $.extend(true, {}, opts, {fill:false, closePath:false});
-                    this.renderer.shapeRenderer.draw(ctx, fasgd, fasopts);
-                    //////////
-                    // TODO: figure out some way to do shadows nicely
-                    // if (shadow) {
-                    //     this.renderer.shadowRenderer.draw(ctx, fasgd, fasopts);
-                    // }
-                    // now draw the markers
-                    if (this.markerRenderer.show) {
-                        for (i=0; i<fasgd.length; i++) {
-                            this.markerRenderer.draw(fasgd[i][0], fasgd[i][1], ctx, opts.markerOptions);
+                            this.renderer.shapeRenderer.draw(ctx, gd, opts);
                         }
                     }
+                    else {                    
+                        // if stoking line as well as filling, get a copy of line data.
+                        if (fillAndStroke) {
+                            var fasgd = gd.slice(0);
+                        }
+                        // if not stacked, fill down to axis
+                        if (this.index == 0 || !this._stack) {
+                            // var gridymin = this._yaxis.series_u2p(this._yaxis.min) - this.gridBorderWidth / 2;
+                            var gridymin = ctx.canvas.height;
+                            // IE doesn't return new length on unshift
+                            gd.unshift([gd[0][0], gridymin]);
+                            len = gd.length;
+                            gd.push([gd[len - 1][0], gridymin]);                   
+                        }
+                        // if stacked, fill to line below 
+                        else {
+                            var prev = this._prevGridData;
+                            for (var i=prev.length; i>0; i--) {
+                                gd.push(prev[i-1]);
+                            }
+                        }
+                        if (shadow) {
+                            this.renderer.shadowRenderer.draw(ctx, gd, opts);
+                        }
+            
+                        this.renderer.shapeRenderer.draw(ctx, gd, opts);                        
+                    }
+                    if (fillAndStroke) {
+                        var fasopts = $.extend(true, {}, opts, {fill:false, closePath:false});
+                        this.renderer.shapeRenderer.draw(ctx, fasgd, fasopts);
+                        //////////
+                        // TODO: figure out some way to do shadows nicely
+                        // if (shadow) {
+                        //     this.renderer.shadowRenderer.draw(ctx, fasgd, fasopts);
+                        // }
+                        // now draw the markers
+                        if (this.markerRenderer.show) {
+                            for (i=0; i<fasgd.length; i++) {
+                                this.markerRenderer.draw(fasgd[i][0], fasgd[i][1], ctx, opts.markerOptions);
+                            }
+                        }
+                    }
+                }
+                else {
+                    if (shadow) {
+                        this.renderer.shadowRenderer.draw(ctx, gd, opts);
+                    }
+    
+                    this.renderer.shapeRenderer.draw(ctx, gd, opts);
                 }
             }
         
@@ -2364,6 +2609,15 @@
             }
         }
         return this._elem;
+    };
+    
+    // called with scope of an axis
+    $.jqplot.LinearAxisRenderer.prototype.reset = function() {
+        this.min = this._min;
+        this.max = this._max;
+        this.tickInterval = this._tickInterval;
+        this.numberTicks = this._numberTicks;
+        // this._ticks = this.__ticks;
     };
     
     // called with scope of axis
@@ -2512,43 +2766,133 @@
             var temp;
             
             // autoscale.  Can't autoscale if min or max is supplied.
-            // Will use numberTicks and tickInterval if supplied.
+            // Will use numberTicks and tickInterval if supplied.  Ticks
+            // across multiple axes may not line up depending on how
+            // bars are to be plotted.
             if (this.autoscale && this.min == null && this.max == null) {
                 var rrange, ti, margin;
-    
-                if (this.numberTicks == null){
-                    if (dim > 100) {
-                        this.numberTicks = parseInt(3+(dim-100)/75, 10);
-                    }
-                    else {
-                        this.numberTicks = 2;
+                var forceMinZero = false;
+                var forceZeroLine = false;
+                var intervals = {min:null, max:null, average:null, stddev:null};
+                // if any series are bars, or if any are fill to zero, and if this
+                // is the axis to fill toward, check to see if we can start axis at zero.
+                for (var i=0; i<this._series.length; i++) {
+                    var s = this._series[i];
+                    var faname = (s.fillAxis == 'x') ? s._xaxis.name : s._yaxis.name;
+                    // check to see if this is the fill axis
+                    if (this.name == faname) {
+                        var vals = s._plotValues[s.fillAxis];
+                        var vmin = vals[0];
+                        var vmax = vals[0];
+                        for (var j=1; j<vals.length; j++) {
+                            if (vals[j] < vmin) {
+                                vmin = vals[j];
+                            }
+                            else if (vals[j] > vmax) {
+                                vmax = vals[j];
+                            }
+                        }
+                        var dp = (vmax - vmin) / vmax;
+                        // is this sries a bar?
+                        if (s.renderer.constructor == $.jqplot.BarRenderer) {
+                            // if no negative values and could also check range.
+                            if (vmin >= 0 && (s.fillToZero || dp > 0.1)) {
+                                forceMinZero = true;
+                            }
+                            else {
+                                forceMinZero = false;
+                                if (s.fill && s.fillToZero && vmin < 0 && vmax > 0) {
+                                    forceZeroLine = true;
+                                }
+                                else {
+                                    forceZeroLine = false;
+                                }
+                            }
+                        }
+                        
+                        // if not a bar and filling, use appropriate method.
+                        else if (s.fill) {
+                            if (vmin >= 0 && (s.fillToZero || dp > 0.1)) {
+                                forceMinZero = true;
+                            }
+                            else if (vmin < 0 && vmax > 0 && s.fillToZero) {
+                                forceMinZero = false;
+                                forceZeroLine = true;
+                            }
+                            else {
+                                forceMinZero = false;
+                                forceZeroLine = false;
+                            }
+                        }
+                        
+                        // if not a bar and not filling, only change existing state
+                        // if it doesn't make sense
+                        else if (vmin < 0) {
+                            forceMinZero = false;
+                        }
                     }
                 }
                 
-                if (this.tickInterval == null) {
-                    // get a tick interval
-                    ti = range/(this.numberTicks - 1);
-                
-                    if (ti < 1) {
-                        temp = Math.pow(10, Math.abs(Math.floor(Math.log(ti)/Math.LN10)));
+                // check if we need make axis min at 0.
+                if (forceMinZero) {
+                    // compute number of ticks
+                    this.numberTicks = 2 + Math.ceil((dim-(this.tickSpacing-1))/this.tickSpacing);
+                    this.min = 0;
+                    // what order is this range?
+                    // what tick interval does that give us?
+                    ti = max/(this.numberTicks-1);
+                    temp = Math.pow(10, Math.abs(Math.floor(Math.log(ti)/Math.LN10)));
+                    if (ti/temp == parseInt(ti/temp)) {
+                        ti += temp;
                     }
-                    else {
-                        temp = 1;
-                    }
-                    this.tickInterval = Math.ceil(ti*temp*this.pad)/temp;
+                    this.tickInterval = Math.ceil(ti/temp) * temp;
+                    this.max = this.tickInterval * (this.numberTicks - 1);
                 }
                 
-                // try to compute a nicer, more even tick interval
-                // temp = Math.pow(10, Math.floor(Math.log(ti)/Math.LN10));
-                // this.tickInterval = Math.ceil(ti/temp) * temp;
-                rrange = this.tickInterval * (this.numberTicks - 1);
-                margin = (rrange - range)/2;
-                
-                if (this.min == null) {
-                    this.min = Math.floor(temp*(min-margin))/temp;
+                // check if we need to make sure there is a tick at 0.
+                else if (forceZeroLine) {
+                    // compute number of ticks
+                    this.numberTicks = 2 + Math.ceil((dim-(this.tickSpacing-1))/this.tickSpacing);
+                    var ntmin = Math.ceil(Math.abs(min)/range*(this.numberTicks-1));
+                    var ntmax = this.numberTicks - 1  - ntmin;
+                    ti = Math.max(Math.abs(min/ntmin), Math.abs(max/ntmax));
+                    temp = Math.pow(10, Math.abs(Math.floor(Math.log(ti)/Math.LN10)));
+                    this.tickInterval = Math.ceil(ti/temp) * temp;
+                    this.max = this.tickInterval * ntmax;
+                    this.min = -this.tickInterval * ntmin;                  
                 }
-                if (this.max == null) {
-                    this.max = this.min + rrange;
+                
+                // if nothing else, do autoscaling which will try to line up ticks across axes.
+                else {  
+                    if (this.numberTicks == null){
+                        this.numberTicks = 2 + Math.ceil((dim-(this.tickSpacing-1))/this.tickSpacing);
+                    }
+            
+                    if (this.tickInterval == null) {
+                        // get a tick interval
+                        ti = range/(this.numberTicks - 1);
+
+                        if (ti < 1) {
+                            temp = Math.pow(10, Math.abs(Math.floor(Math.log(ti)/Math.LN10)));
+                        }
+                        else {
+                            temp = 1;
+                        }
+                        this.tickInterval = Math.ceil(ti*temp*this.pad)/temp;
+                    }
+                    
+                    // try to compute a nicer, more even tick interval
+                    // temp = Math.pow(10, Math.floor(Math.log(ti)/Math.LN10));
+                    // this.tickInterval = Math.ceil(ti/temp) * temp;
+                    rrange = this.tickInterval * (this.numberTicks - 1);
+                    margin = (rrange - range)/2;
+       
+                    if (this.min == null) {
+                        this.min = Math.floor(temp*(min-margin))/temp;
+                    }
+                    if (this.max == null) {
+                        this.max = this.min + rrange;
+                    }
                 }
             }
             
@@ -3264,11 +3608,13 @@
 
         }
 
-        function justify(value, prefix, leftJustify, minWidth, zeroPad) {
+        function justify(value, prefix, leftJustify, minWidth, zeroPad, htmlSpace) {
     	    var diff = minWidth - value.length;
         	if (diff > 0) {
+        	    var spchar = ' ';
+        	    if (htmlSpace) { spchar = '&nbsp;'; }
         	    if (leftJustify || !zeroPad) {
-        		    value = pad(value, minWidth, ' ', leftJustify);
+        		    value = pad(value, minWidth, spchar, leftJustify);
         	    } else {
         		    value = value.slice(0, prefix.length) + pad('', diff, '0', true) + value.slice(prefix.length);
         	    }
@@ -3276,19 +3622,19 @@
         	return value;
         }
 
-        function formatBaseX(value, base, prefix, leftJustify, minWidth, precision, zeroPad) {
+        function formatBaseX(value, base, prefix, leftJustify, minWidth, precision, zeroPad, htmlSpace) {
         	// Note: casts negative numbers to positive ones
         	var number = value >>> 0;
         	prefix = prefix && number && {'2': '0b', '8': '0', '16': '0x'}[base] || '';
         	value = prefix + pad(number.toString(base), precision || 0, '0', false);
-        	return justify(value, prefix, leftJustify, minWidth, zeroPad);
+        	return justify(value, prefix, leftJustify, minWidth, zeroPad, htmlSpace);
         }
 
-        function formatString(value, leftJustify, minWidth, precision, zeroPad) {
+        function formatString(value, leftJustify, minWidth, precision, zeroPad, htmlSpace) {
         	if (precision != null) {
         	    value = value.slice(0, precision);
         	}
-        	return justify(value, '', leftJustify, minWidth, zeroPad);
+        	return justify(value, '', leftJustify, minWidth, zeroPad, htmlSpace);
         }
 
         var a = arguments, i = 0, format = a[i++];
@@ -3297,13 +3643,14 @@
     	    if (substring == '%%') return '%';
 
     	    // parse flags
-    	    var leftJustify = false, positivePrefix = '', zeroPad = false, prefixBaseX = false;
+    	    var leftJustify = false, positivePrefix = '', zeroPad = false, prefixBaseX = false, htmlSpace = false;
         	    for (var j = 0; flags && j < flags.length; j++) switch (flags.charAt(j)) {
         		case ' ': positivePrefix = ' '; break;
         		case '+': positivePrefix = '+'; break;
         		case '-': leftJustify = true; break;
         		case '0': zeroPad = true; break;
         		case '#': prefixBaseX = true; break;
+        		case '&': htmlSpace = true; break;
     	    }
 
     	    // parameters may be null, undefined, empty-string or real valued
@@ -3349,19 +3696,27 @@
     	    var value = valueIndex ? a[valueIndex.slice(0, -1)] : a[i++];
 
     	    switch (type) {
-    		case 's': return formatString(String(value), leftJustify, minWidth, precision, zeroPad);
-    		case 'c': return formatString(String.fromCharCode(+value), leftJustify, minWidth, precision, zeroPad);
-    		case 'b': return formatBaseX(value, 2, prefixBaseX, leftJustify, minWidth, precision, zeroPad);
-    		case 'o': return formatBaseX(value, 8, prefixBaseX, leftJustify, minWidth, precision, zeroPad);
-    		case 'x': return formatBaseX(value, 16, prefixBaseX, leftJustify, minWidth, precision, zeroPad);
-    		case 'X': return formatBaseX(value, 16, prefixBaseX, leftJustify, minWidth, precision, zeroPad).toUpperCase();
-    		case 'u': return formatBaseX(value, 10, prefixBaseX, leftJustify, minWidth, precision, zeroPad);
+    		case 's': {
+    		    if (value == null) {
+    		        return '';
+    		    }
+    		    return formatString(String(value), leftJustify, minWidth, precision, zeroPad, htmlSpace);
+		    }
+    		case 'c': return formatString(String.fromCharCode(+value), leftJustify, minWidth, precision, zeroPad, htmlSpace);
+    		case 'b': return formatBaseX(value, 2, prefixBaseX, leftJustify, minWidth, precision, zeroPad,htmlSpace);
+    		case 'o': return formatBaseX(value, 8, prefixBaseX, leftJustify, minWidth, precision, zeroPad, htmlSpace);
+    		case 'x': return formatBaseX(value, 16, prefixBaseX, leftJustify, minWidth, precision, zeroPad, htmlSpace);
+    		case 'X': return formatBaseX(value, 16, prefixBaseX, leftJustify, minWidth, precision, zeroPad, htmlSpace).toUpperCase();
+    		case 'u': return formatBaseX(value, 10, prefixBaseX, leftJustify, minWidth, precision, zeroPad, htmlSpace);
     		case 'i':
     		case 'd': {
               var number = parseInt(+value);
+              if (isNaN(number)) {
+                return '';
+              }
               var prefix = number < 0 ? '-' : positivePrefix;
               value = prefix + pad(String(Math.abs(number)), precision, '0', false);
-              return justify(value, prefix, leftJustify, minWidth, zeroPad);
+              return justify(value, prefix, leftJustify, minWidth, zeroPad, htmlSpace);
     			  }
     		case 'e':
     		case 'E':
@@ -3371,17 +3726,23 @@
     		case 'G':
     		          {
     			      var number = +value;
+                      if (isNaN(number)) {
+                          return '';
+                      }
     			      var prefix = number < 0 ? '-' : positivePrefix;
     			      var method = ['toExponential', 'toFixed', 'toPrecision']['efg'.indexOf(type.toLowerCase())];
     			      var textTransform = ['toString', 'toUpperCase']['eEfFgG'.indexOf(type) % 2];
     			      value = prefix + Math.abs(number)[method](precision);
-    			      return justify(value, prefix, leftJustify, minWidth, zeroPad)[textTransform]();
+    			      return justify(value, prefix, leftJustify, minWidth, zeroPad, htmlSpace)[textTransform]();
     			  }
     		case 'p':
     		case 'P':
     		{
     		    // make sure number is a number
                 var number = +value;
+                if (isNaN(number)) {
+                    return '';
+                }
                 var prefix = number < 0 ? '-' : positivePrefix;
 
                 var parts = String(Number(Math.abs(number)).toExponential()).split(/e|E/);
@@ -3406,13 +3767,14 @@
                     value = prefix + Math.abs(number).toPrecision(prec);
                 }
                 var textTransform = ['toString', 'toUpperCase']['pP'.indexOf(type) % 2];
-                return justify(value, prefix, leftJustify, minWidth, zeroPad)[textTransform]();
+                return justify(value, prefix, leftJustify, minWidth, zeroPad, htmlSpace)[textTransform]();
             }
+            case 'n': return '';
     		default: return substring;
     	    }
-    		    });
+    	});
     };
     
-    $.jqplot.sprintf.regex = /%%|%(\d+\$)?([-+#0 ]*)(\*\d+\$|\*|\d+)?(\.(\*\d+\$|\*|\d+))?([scboxXuidfegpEGP])/g;
+    $.jqplot.sprintf.regex = /%%|%(\d+\$)?([-+#0& ]*)(\*\d+\$|\*|\d+)?(\.(\*\d+\$|\*|\d+))?([nAscboxXuidfegpEGP])/g;
 
 })(jQuery);  

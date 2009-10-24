@@ -4,14 +4,14 @@
 
 {% block content %}
 <ul class="breadcrumbs">
-<li id="project">{{ object.project.name }} &gt; </li>
-{% if object.iteration %}
-<li id="iteration"><a href="{{ object.iteration.get_absolute_url }}">{{ object.iteration.name }}</a> &gt; </li> 
-{% else %}
-<li id="backlog"><a href="/{{ object.project_id }}/backlog">Backlog</a> &gt; </li>
-{% endif %}
-<li id="iteration">{{ object.name }}</li>
-<li class="visualClear" />
+    <li id="breadcrumb-project">{{ object.project.name }} &gt; </li>
+    {% if object.iteration %}
+        <li id="breadcrumb-iteration"><a href="{{ object.iteration.get_absolute_url }}">{{ object.iteration.name }}</a> &gt; </li> 
+    {% else %}
+        <li id="breadcrumb-backlog"><a href="/{{ object.project_id }}/backlog">Backlog</a> &gt; </li>
+    {% endif %}
+    <li id="breadcrumb-story">{{ object.name }}</li>
+    <li class="visualClear" />
 </ul>
 
 

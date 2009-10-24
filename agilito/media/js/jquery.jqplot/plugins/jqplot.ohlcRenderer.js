@@ -1,7 +1,20 @@
 /**
-* Copyright (c) 2009 Chris Leonello
-* This software is licensed under the GPL version 2.0 and MIT licenses.
-*/
+ * Copyright (c) 2009 Chris Leonello
+ * jqPlot is currently available for use in all personal or commercial projects 
+ * under both the MIT and GPL version 2.0 licenses. This means that you can 
+ * choose the license that best suits your project and use it accordingly. 
+ *
+ * The author would appreciate an email letting him know of any substantial
+ * use of jqPlot.  You can reach the author at: chris dot leonello at gmail 
+ * dot com or see http://www.jqplot.com/info.php .  This is, of course, 
+ * not required.
+ *
+ * If you are feeling kind and generous, consider supporting the project by
+ * making a donation at: http://www.jqplot.com/support .
+ *
+ * Thanks for using jqPlot!
+ * 
+ */
 (function($) {
     /**
      * Class: $.jqplot.OHLCRenderer
@@ -46,14 +59,14 @@
         // Must have an open price, cannot be a hlc chart.
         this.candleStick = false;
         // prop: tickLength
-        // length of the line indicating open and close price.
+        // length of the line in pixels indicating open and close price.
         // Default will auto calculate based on plot width and 
         // number of points displayed.
-        this.tickLength = null;
+        this.tickLength = 'auto';
         // prop: bodyWidth
-        // width of the candlestick body.  Default will auto calculate
+        // width of the candlestick body in pixels.  Default will auto calculate
         // based on plot width and number of candlesticks displayed.
-        this.bodyWidth = null;
+        this.bodyWidth = 'auto';
         // prop: openColor
         // color of the open price tick mark.  Default is series color.
         this.openColor = null;
@@ -82,6 +95,8 @@
         // true if is a hi-low-close chart (no open price).
         // This is determined automatically from the series data.
         this.hlc = false;
+        this._tickLength;
+        this._bodyWidth;
     };
     
     $.jqplot.OHLCRenderer.prototype = new $.jqplot.LineRenderer();
@@ -156,12 +171,24 @@
                     xmaxidx = i+1;
                 }
             }
-            if (r.candleStick && r.bodyWidth == null) {
-                r.bodyWidth = Math.min(20, ctx.canvas.width/(xmaxidx - xminidx)/2);
+            
+            if (r.candleStick) {
+                if (typeof(r.bodyWidth) == 'number') {
+                    r._bodyWidth = r.bodyWidth;
+                }
+                else {
+                    r._bodyWidth = Math.min(20, ctx.canvas.width/(xmaxidx - xminidx)/2);
+                }
             }
-            else if (!r.candleStick && r.tickLength == null) {
-                r.tickLength = Math.min(10, ctx.canvas.width/(xmaxidx - xminidx)/4);
+            else {
+                if (typeof(r.tickLength) == 'number') {
+                    r._tickLength = r.tickLength;
+                }
+                else {
+                    r._tickLength = Math.min(10, ctx.canvas.width/(xmaxidx - xminidx)/4);
+                }
             }
+            
             for (var i=xminidx; i<xmaxidx; i++) {
                 x = xp(d[i][0]);
                 if (r.hlc) {
@@ -178,7 +205,7 @@
                 }
                 o = {};
                 if (r.candleStick && !r.hlc) {
-                    w = r.bodyWidth;
+                    w = r._bodyWidth;
                     a = x - w/2;
                     // draw candle
                     // determine if candle up or down
@@ -262,7 +289,7 @@
                     }
                     // draw open tick
                     if (!r.hlc) {
-                        r.shapeRenderer.draw(ctx, [[x-r.tickLength, open], [x, open]], opts);    
+                        r.shapeRenderer.draw(ctx, [[x-r._tickLength, open], [x, open]], opts);    
                     }
                     opts.color = prevColor;
                     // draw wick
@@ -275,7 +302,7 @@
                     if (r.closeColor) {
                         opts.color = r.closeColor;
                     }
-                    r.shapeRenderer.draw(ctx, [[x, close], [x+r.tickLength, close]], opts); 
+                    r.shapeRenderer.draw(ctx, [[x, close], [x+r._tickLength, close]], opts); 
                     opts.color = prevColor;
                 }
             }

@@ -1,7 +1,20 @@
 /**
-* Copyright (c) 2009 Chris Leonello
-* This software is licensed under the GPL version 2.0 and MIT licenses.
-*/
+ * Copyright (c) 2009 Chris Leonello
+ * jqPlot is currently available for use in all personal or commercial projects 
+ * under both the MIT and GPL version 2.0 licenses. This means that you can 
+ * choose the license that best suits your project and use it accordingly. 
+ *
+ * The author would appreciate an email letting him know of any substantial
+ * use of jqPlot.  You can reach the author at: chris dot leonello at gmail 
+ * dot com or see http://www.jqplot.com/info.php .  This is, of course, 
+ * not required.
+ *
+ * If you are feeling kind and generous, consider supporting the project by
+ * making a donation at: http://www.jqplot.com/support .
+ *
+ * Thanks for using jqPlot!
+ * 
+ */
 (function($) {  
     /**
      * Class: $.jqplot.DateAxisRenderer
@@ -100,7 +113,8 @@
         // this.tickRenderer = $.jqplot.AxisTickRenderer;
         // this.labelRenderer = $.jqplot.AxisLabelRenderer;
         this.tickOptions.formatter = $.jqplot.DateTickFormatter;
-        this._tickInterval = null;
+        this.daTickInterval = null;
+        this._daTickInterval = null;
         $.extend(true, this, options);
         var db = this._dataBounds;
         // Go through all the series attached to this axis and find
@@ -136,6 +150,16 @@
                 }              
             }
         }
+    };
+    
+    // called with scope of an axis
+    $.jqplot.DateAxisRenderer.prototype.reset = function() {
+        this.min = this._min;
+        this.max = this._max;
+        this.tickInterval = this._tickInterval;
+        this.numberTicks = this._numberTicks;
+        this.daTickInterval = this._daTickInterval;
+        // this._ticks = this.__ticks;
     };
     
     $.jqplot.DateAxisRenderer.prototype.createTicks = function() {
@@ -188,7 +212,7 @@
             this.numberTicks = userTicks.length;
             this.min = this._ticks[0].value;
             this.max = this._ticks[this.numberTicks-1].value;
-            this._tickInterval = [(this.max - this.min) / (this.numberTicks - 1)/1000, 'seconds'];
+            this.daTickInterval = [(this.max - this.min) / (this.numberTicks - 1)/1000, 'seconds'];
         }
         
         // we don't have any ticks yet, let's make some!
@@ -211,16 +235,16 @@
                 // if interval is a number or can be converted to one, use it.
                 // Assume it is in SECONDS!!!
                 if (Number(this.tickInterval)) {
-                    this._tickInterval = [Number(this.tickInterval), 'seconds'];
+                    this.daTickInterval = [Number(this.tickInterval), 'seconds'];
                 }
                 // else, parse out something we can build from.
                 else if (typeof this.tickInterval == "string") {
                     var parts = this.tickInterval.split(' ');
                     if (parts.length == 1) {
-                        this._tickInterval = [1, parts[0]];
+                        this.daTickInterval = [1, parts[0]];
                     }
                     else if (parts.length == 2) {
-                        this._tickInterval = [parts[0], parts[1]];
+                        this.daTickInterval = [parts[0], parts[1]];
                     }
                 }
             }
@@ -247,12 +271,12 @@
             if (this.numberTicks == null){
                 // if tickInterval is specified by user, we will ignore computed maximum.
                 // max will be equal or greater to fit even # of ticks.
-                if (this._tickInterval != null) {
-                    var nc = Date.create(this.max).diff(this.min, this._tickInterval[1], true);
-                    this.numberTicks = Math.ceil(nc/this._tickInterval[0]) +1;
-                    //log(this._tickInterval, nc, this.numberTicks);
-                    // this.max = Date.create(this.min).add(this.numberTicks-1, this._tickInterval[1]).getTime();
-                    this.max = Date.create(this.min).add((this.numberTicks-1) * this._tickInterval[0], this._tickInterval[1]).getTime();
+                if (this.daTickInterval != null) {
+                    var nc = Date.create(this.max).diff(this.min, this.daTickInterval[1], true);
+                    this.numberTicks = Math.ceil(nc/this.daTickInterval[0]) +1;
+                    //log(this.daTickInterval, nc, this.numberTicks);
+                    // this.max = Date.create(this.min).add(this.numberTicks-1, this.daTickInterval[1]).getTime();
+                    this.max = Date.create(this.min).add((this.numberTicks-1) * this.daTickInterval[0], this.daTickInterval[1]).getTime();
                 }
                 else if (dim > 200) {
                     this.numberTicks = parseInt(3+(dim-200)/100, 10);
@@ -262,12 +286,12 @@
                 }
             }
     
-            if (this._tickInterval == null) {
-            	this._tickInterval = [range / (this.numberTicks-1)/1000, 'seconds'];
+            if (this.daTickInterval == null) {
+            	this.daTickInterval = [range / (this.numberTicks-1)/1000, 'seconds'];
             }
             for (var i=0; i<this.numberTicks; i++){
                 var min = Date.create(this.min);
-                tt = min.add(i*this._tickInterval[0], this._tickInterval[1]).getTime();
+                tt = min.add(i*this.daTickInterval[0], this.daTickInterval[1]).getTime();
                 var t = new this.tickRenderer(this.tickOptions);
                 // var t = new $.jqplot.AxisTickRenderer(this.tickOptions);
                 if (!this.showTicks) {
@@ -280,6 +304,9 @@
                 t.setTick(tt, this.name);
                 this._ticks.push(t);
             }
+        }
+        if (this._daTickInterval == null) {
+            this._daTickInterval = this.daTickInterval;    
         }
     };
     
@@ -834,8 +861,8 @@
                     nm = $.inArray(match[2], Date.MONTHNAMES);
                 }
             
-                d.setUTCFullYear(ny, nm, nd);
-                d.setUTCHours(0,0,0,0);
+                d.setFullYear(ny, nm, nd);
+                d.setHours(0,0,0,0);
                 return d;
             }
             
@@ -845,7 +872,7 @@
         }        
     ];
     
-    if ($.jqplot.debug) {
+    if ($.jqplot.config.debug) {
     	$.date = Date.create;
     }
    
