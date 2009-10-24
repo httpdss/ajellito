@@ -1,9 +1,9 @@
-iteration.burndown.remaining.ideal: data points for ideal
-iteration.burndown.remaining.hours: data points for remaining hours
-iteration.burndown.remaining.points: data points for remaining story points
-iteration.burndown.max.hours: max data point from hours
-iteration.burndown.max.points: max data point from stry points
-iteration.burndown.days: labels for x axis
+! iteration.burndown.remaining.ideal: data points for ideal
+! iteration.burndown.remaining.hours: data points for remaining hours
+! iteration.burndown.remaining.points: data points for remaining story points
+! iteration.burndown.max.hours: max data point from hours
+! iteration.burndown.max.points: max data point from stry points
+! iteration.burndown.days: labels for x axis
 
 iteration.name
 iteration.id

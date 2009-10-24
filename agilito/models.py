@@ -17,6 +17,12 @@ import math, re
 
 from agilito import CACHE_ENABLED, UNRESTRICTED_SIZE, CACHE_PREFIX
 
+class GenericObject(object):
+    def __getattr__(self, key):
+        prop = GenericObject()
+        setattr(self, key, prop)
+        return prop
+
 def rounded(v, p):
     return Decimal(v).quantize(Decimal('1.' + ('0' * p)))
 
@@ -601,7 +607,12 @@ class Iteration(ClueModel):
         return sum(tl.time_on_task or 0 for tl in tasklogs)
 
     @cached
-    def burndown_data(self):
+    def status(self):
+        _status = GenericObject()
+
+        _status.iteration = self
+
+        ## burndown
         dow = self.end_date.weekday()
         if dow >= 4:
             extradays = 7 - dow
@@ -641,10 +652,14 @@ class Iteration(ClueModel):
             if d >= today or d >= lastday: return -1
             return d - 1
 
-        stories = UserStory.objects.filter(iteration=self).all()
+        stories = UserStory.objects.filter(iteration=self).order_by('rank').all()
+        _status.stories = stories
         for story in stories:
             story.hours_remaining_for_day = [None for day in dayrange]
             story.points_remaining_for_day = [None for day in dayrange]
+            ## don't change this -- tasklist is used in the templates
+            ## we don't want to re-request the tasks because we're enriching the
+            ## task objects as we fetch the status, and this status doesn't come from the DB
             story.tasklist = []
         stories = dict(zip([story.id for story in stories], stories))
 
@@ -681,22 +696,22 @@ class Iteration(ClueModel):
         stories = stories.values()
         tasks = tasks.values()
 
-        burndown = {'remaining': {}, 'max': {}}
-        burndown['remaining']['hours'] = [sum(story.hours_remaining_for_day[day] for story in stories) for day in activedays]
-        burndown['remaining']['points'] = [sum(story.points_remaining_for_day[day] for story in stories) for day in activedays]
-        burndown['max']['hours'] = max(burndown['remaining']['hours'])
-        burndown['max']['points'] = max(burndown['remaining']['points'])
-        burndown['days'] = iterationlength
+        _status.burndown.remaining.hours = [sum(story.hours_remaining_for_day[day] for story in stories) for day in activedays]
+        _status.burndown.remaining.points = [sum(story.points_remaining_for_day[day] for story in stories) for day in activedays]
+        _status.burndown.max.hours = max(_status.burndown.remaining.hours)
+        _status.burndown.max.points = max(_status.burndown.remaining.points)
+        _status.burndown.days = iterationlength
 
         ideal = [0.0] * iterationlength
         delta = iterationlength - 1
         deltainv = 1.0 / delta
-        maxh = float(burndown['remaining']['hours'][0])
+        maxh = float(_status.burndown.remaining.hours[0])
         for day in dayrange:
             ideal[day] = deltainv * maxh * day
-        burndown['remaining']['ideal'] = list(reversed(ideal))
+        _status.burndown.remaining.ideal = list(reversed(ideal))
+        ## burndown
 
-        return burndown
+        return _status
 
     def story_cards(self):
         cards = []

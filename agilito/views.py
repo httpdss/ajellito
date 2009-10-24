@@ -1182,9 +1182,6 @@ def iteration_status(request, project_id, iteration_id=None, template='iteration
             reverse('agilito.views.product_backlog_chart',
                     args=[project_id, latest_iteration.id]))
 
-        burndown_chart = reverse('agilito.views.iteration_burndown_chart',
-                                args=[project_id, latest_iteration.id])
-
         sidebar.add('Reports', 'Task Board',
             reverse('agilito.views.taskboard',
                         args=[project_id, latest_iteration.id]),
@@ -1198,8 +1195,7 @@ def iteration_status(request, project_id, iteration_id=None, template='iteration
                           'estimated' : estimated,
                           'actuals' : actuals,
                           'failures' : failures,
-                          'burndown_chart': burndown_chart,
-                          'burndown': latest_iteration.burndown_data(),
+                          'burndown': latest_iteration.status().burndown,
                           'sidebar': sidebar.ifenabled(),
                           'open_impediments': open_impediments,
                           'resolved_impediments': resolved_impediments,
@@ -1357,8 +1353,8 @@ def product_backlog_chart(request, project_id, iteration_id):
 def iteration_burndown_chart(request, project_id, iteration_id):
     it = Iteration.objects.get(id=iteration_id, project__id=project_id)
 
-    data = it.burndown_data()
-    data['iteration'] = {'name': it.name, 'starts': it.start_date, 'ends': it.end_date}
+    data = it.status().burndown
+    data.iteration = {'name': it.name, 'starts': it.start_date, 'ends': it.end_date}
 
     context = AgilitoContext(request, {'burndown': data})
     return render_to_response('burndown_chart.html', context_instance=context)
