@@ -399,13 +399,17 @@ class Project(ClueModel):
         Project.touch_cache(self.id)
 
 def toprank():
-    from django.db import connection, transaction
-    c = connection.cursor()
-    c.execute("""select coalesce(max(rank), 0) + 1 as rank from agilito_userstory
-                 union
-                 select coalesce(max(rank), 0) + 1 from agilito_release
-                 order by rank desc""")
-    return c.fetchone()[0]
+    class TopRank:
+        def __call__(self):
+            from django.db import connection, transaction
+            c = connection.cursor()
+            c.execute("""select coalesce(max(rank), 0) + 1 as rank from agilito_userstory
+                        union
+                        select coalesce(max(rank), 0) + 1 from agilito_release
+                        order by rank desc""")
+            return c.fetchone()[0]
+
+    return TopRank()
 
 class Release(ClueModel):
     project = models.ForeignKey(Project)
@@ -608,6 +612,9 @@ class Iteration(ClueModel):
 
     @cached
     def status(self):
+        from django.db import connection
+        cursor = connection.cursor()
+
         _status = GenericObject()
 
         _status.iteration = self
@@ -654,13 +661,16 @@ class Iteration(ClueModel):
 
         stories = UserStory.objects.filter(iteration=self).order_by('rank').all()
         _status.stories = stories
+        _status.time_spent = 0
         for story in stories:
             story.hours_remaining_for_day = [None for day in dayrange]
             story.points_remaining_for_day = [None for day in dayrange]
-            ## don't change this -- tasklist is used in the templates
+            ## don't change these -- tasklist is used in the templates
             ## we don't want to re-request the tasks because we're enriching the
             ## task objects as we fetch the status, and this status doesn't come from the DB
             story.tasklist = []
+            story.time_spent = 0
+            story.failures = 0
         stories = dict(zip([story.id for story in stories], stories))
 
         tasks = Task.objects.filter(user_story__iteration=self).all()
@@ -668,12 +678,35 @@ class Iteration(ClueModel):
             task.remaining_for_day = [None for day in dayrange]
             task.remaining_for_day[0] = task.estimate or 0
             task.remaining_for_day[today] = task.remaining or 0
-            stories[task.user_story.id].tasklist.append(task)
+            task.time_spent = 0
+            task.user_story = stories[task.user_story.id]
+            task.user_story.tasklist.append(task)
         tasks = dict(zip([task.id for task in tasks], tasks))
+
+        cursor.execute("""
+            select us.id, tc.id, tr.result
+            from agilito_userstory us
+            join agilito_testcase tc on tc.user_story_id = us.id
+            join agilito_testresult tr on tr.test_case_id = tc.id
+            where us.iteration_id =%s
+            order by tr.date""", (self.iteration.id))
+        for id, result in cursor.fetchall():
+            stories.
+        for result in TestResult.filter(test_case__user_story__iteration=self):
+        for testcase in TestCase.filter(user_story__iteration=self):
+            stories[testcase.user_story.id].failures EEH
 
         logs = TaskLog.objects.filter(task__user_story__iteration=self, old_remaining__isnull=False,date__lt=datetime.date.today()).order_by('date').all()
         for l in logs:
             tasks[l.task.id].remaining_for_day[tasklogday(l.date)] = l.old_remaining
+
+            ## don't change this -- time_spent is used in the templates
+            ## we don't want to re-request the tasks because we're enriching the
+            ## task objects as we fetch the status, and this status doesn't come from the DB
+            if l.time_on_task:
+                time_spent += l.time_on_task
+                task.time_spent += l.time_on_task
+                task.user_story.time_spent += l.time_on_task
 
         revdays = list(reversed(range(today+1)))
         for id, task in tasks.items():
@@ -701,6 +734,8 @@ class Iteration(ClueModel):
         _status.burndown.max.hours = max(_status.burndown.remaining.hours)
         _status.burndown.max.points = max(_status.burndown.remaining.points)
         _status.burndown.days = iterationlength
+        _status.size = sum(story.points_remaining_for_day[0] for story in stories)
+        _status.velocity = _status.size - _status.burndown.remaining.points[-1]
 
         ideal = [0.0] * iterationlength
         delta = iterationlength - 1

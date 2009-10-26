@@ -5,14 +5,15 @@ from distutils.sysconfig import get_python_lib
 import tempfile
 import uuid
 import getopt
+import urllib, urllib2
 
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "", ["install=", "apache", "nosqldiff"])
+    opts, args = getopt.getopt(sys.argv[1:], "", ["install=", "apache", "nosqldiff", 'debug'])
 except getopt.GetoptError, err:
     print str(err)
     sys.exit(1)
 
-config = {'install': 'ask', 'apache': False, 'nosqldiff': False}
+config = {'install': 'ask', 'apache': False, 'nosqldiff': False, 'debug': False}
 for o, a in opts:
     if o == '--install':
         if not a in ['auto', 'ask']:
@@ -25,6 +26,9 @@ for o, a in opts:
 
     elif o == '--nosqldiff':
         config['nosqldiff'] = True
+
+    elif o == '--debug':
+        config['debug'] = True
 
     else:
         assert False, 'Unknown option "%s"' % o
@@ -139,6 +143,33 @@ class DownloadableModule(Module):
             reply = reply.lower()[:1]
         return (reply == 'y')
 
+class Tarball(DownloadableModule):
+    def download(self):
+        global TMPDIR
+        tmpdir = TMPDIR
+
+        shutil.rmtree(TMPDIR, True)
+        os.makedirs(TMPDIR)
+
+        tb = os.path.join(TMPDIR, 'django-tarball.tgz')
+        tarball = self.url[:]
+        tarball = urllib2.Request(tarball)
+        opener = urllib2.build_opener()
+        tarball = opener.open(tarball).url
+        urllib.URLopener().retrieve(tarball, tb)
+
+        cwd = os.getcwd()
+        os.chdir(TMPDIR)
+        os.system('tar xvzf "%(tb)s"' % locals())
+        os.chdir(cwd)
+
+        subdir = self.subdir
+        if subdir:
+            shutil.move('%(tmpdir)s/%(subdir)s' % locals(), self.name)
+        else:
+            shutil.move(TMPDIR, self.name)
+        shutil.rmtree(TMPDIR, True)
+
 class SVN(DownloadableModule):
     def download(self):
         url = self.url
@@ -204,6 +235,11 @@ Module('django', url = 'http://www.djangoproject.com/', app=False).verify()
 for app in ['admin', 'humanize', 'markup']:
     Module('django.contrib.' + app).verify()
 
+if config['debug']:
+    Tarball('debug_toolbar',
+        url='http://github.com/robhudson/django-debug-toolbar/tarball/0.8.0',
+        subdir='robhudson-django-debug-toolbar-4f43c9b/debug_toolbar/').verify()
+
 Module('pyExcelerator',
     url = 'http://sourceforge.net/projects/pyexcelerator',
     app = False,
@@ -255,14 +291,6 @@ if not 'LOGIN_REDIRECT_URL' in dir(settings) or settings.LOGIN_REDIRECT_URL != '
     print 'Please set LOGIN_REDIRECT_URL to "/" in %(installdir)s/settings.py' % locals()
     Module.OK = False
 
-if not Module.OK:
-    print
-    print 'Please fix the issues reported and re-run the installer'
-    sys.exit()
-else:
-    print
-    print "You should be good to go. Edit your settings.py a and run 'python manage.py syncdb'"
-
 from django.db import connection, backend
 intro = backend.DatabaseIntrospection(connection)
 cursor = connection.cursor()
@@ -275,6 +303,31 @@ if 'planned' in [str(col[0]) for col in intro.get_table_description(cursor, 'agi
     print '   alter table agilito_userstory drop planned'
     print 'and then set UNRESTRICTED_SIZE to True in your settings'
 
+if config['debug']:
+    debug_errors = False
+    try:
+        settings.INTERNAL_IPS
+    except:
+        print 'You need to set INTERNAL_IPS'
+        debug_errors = True
+    try:
+        if not 'debug_toolbar.middleware.DebugToolbarMiddleware' in settings.MIDDLEWARE_CLASSES:
+            print 'You need to add debug_toolbar.middleware.DebugToolbarMiddleware to your MIDDLEWARE_CLASSES'
+            debug_errors = True
+    except:
+        debug_errors = True
+
+    if debug_errors:
+        print 'See documentation at http://github.com/robhudson/django-debug-toolbar'
+        Module.OK = False
+
+if not Module.OK:
+    print
+    print 'Please fix the issues reported and re-run the installer'
+    sys.exit()
+else:
+    print
+    print "You should be good to go. Edit your settings.py a and run 'python manage.py syncdb'"
 
 if config['apache']:
     import socket

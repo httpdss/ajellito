@@ -974,20 +974,18 @@ def _get_iteration(project_id, date=None):
     # the one with the latest start date.    
     if date is None:
         date = datetime.date.today()
-    iterations = Iteration.objects.filter(project__id=project_id,
-                                          start_date__lte=date,
-                                          end_date__gte=date)
-    
-    if iterations.count() > 0:
-        latest_iteration = iterations.latest('start_date')
-    else:
-        try:
-            latest_iteration = Iteration.objects.filter(project__id=project_id,
-                                                        end_date__lte=date).latest('start_date')
-        except Iteration.DoesNotExist:
-            latest_iteration = None
+
+    try:
+        return Iteration.objects.filter(project__id=project_id, start_date__lte=date, end_date__gte=date).latest('start_date')
+    except Iteration.DoesNotExist:
+        pass
+
+    try:
+        return Iteration.objects.filter(project__id=project_id, end_date__lte=date).latest('start_date')
+    except Iteration.DoesNotExist:
+        pass
  
-    return latest_iteration
+    return None
 
 @restricted
 def iteration_import(request, project_id):
@@ -1049,20 +1047,21 @@ def iteration_import(request, project_id):
 @restricted
 def iteration_status(request, project_id, iteration_id=None, template='iteration_status.html'):
     if iteration_id is None:
-        latest_iteration = _get_iteration(project_id)
+        iteration = _get_iteration(project_id)
     else:
         try:
-            latest_iteration = Iteration.objects.get(pk=iteration_id,
-                                                     project__pk=project_id)    
+            iteration = Iteration.objects.get(pk=iteration_id, project__pk=project_id)    
         except Iteration.DoesNotExist:
             raise Http404
 
-    if latest_iteration is not None:
-        user_stories = latest_iteration.userstory_set.all().order_by('rank')
-        planned = sum(i.size for i in user_stories if i.size)
-        todo = sum(i.remaining for i in user_stories)
-        estimated = sum(i.estimated for i in user_stories)
-        actuals = sum(i.actuals for i in user_stories)
+    if iteration is not None:
+        status = iteration.status()
+        # user_stories = latest_iteration.userstory_set.all().order_by('rank') # status.stories
+        # planned = sum(i.size for i in user_stories if i.size) # status.size
+
+        # todo = sum(i.remaining for i in user_stories) # status.burndown.remaining.hours[-1]
+        # estimated = sum(i.estimated for i in user_stories) # status.burndown.remaining.hours[0]
+        # actuals = sum(i.actuals for i in user_stories) # status.time_spent
         failures = sum(i.test_failed for i in user_stories)
 
         total = float(sum(u.size or 0 for u in user_stories)) / 100.0
