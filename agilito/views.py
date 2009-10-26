@@ -1067,7 +1067,9 @@ def iteration_status(request, project_id, iteration_id=None, template='iteration
         total = float(sum(u.size or 0 for u in user_stories)) / 100.0
 
         left = latest_iteration.ideal_hours(datetime.date.today())
+        unsized = False
         for us in user_stories:
+            unsized = (us.size is None or unsized)
             if left >= us.remaining:
                 us.is_starved = False
                 left -= us.remaining
@@ -1189,6 +1191,7 @@ def iteration_status(request, project_id, iteration_id=None, template='iteration
         inner_context = { 'current_iteration' : latest_iteration,
                           'user_stories' : user_stories,
                           'tags': tags,
+                          'unsized': unsized,
                           'planned' : planned,
                           'remaining' : todo,
                           'estimated' : estimated,
