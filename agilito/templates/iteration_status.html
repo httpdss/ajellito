@@ -116,6 +116,12 @@ function highlightTag(ids)
                     </tr>
                 {% endif %}
 
+                {% if unsized %}
+                    <tr class="starved">
+                        <td colspan=2>This iteration has unsized stories -- the story points burndown will be off</td>
+                    </tr>
+                {% endif %}
+
                 {% regroup tags|dictsort:"tag" by tag as grouped_tags %}
                 <tr>
                     <td>Tags</td>
