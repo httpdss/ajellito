@@ -40,6 +40,18 @@ function highlightTag(ids)
         }
         if (id.indexOf('ta-') == 0) {
             $("#" + id + " .name a").css({fontWeight:"bold"});
+
+            classes = $("#" + id).attr('class').split(' ');
+            prefix = "child-of-";
+            plen = prefix.length;
+            re = "^" + prefix;
+            for (i in classes) {
+                cls = classes[i];
+                if (cls.match(re) == prefix) {
+                    parent = '#' + cls.substring(plen);
+                    $(parent).expand();
+                }
+            }
         }
         if (id.indexOf('tag-') == 0) {
             $("#" + id + " a").css({fontWeight:"bold"});

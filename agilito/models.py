@@ -788,7 +788,7 @@ class Iteration(ClueModel):
             result.failures += story.failures
 
         ## fetch task data
-        task_owner = {}
+        task_owner = {None: 'Unassigned'}
         cursor.execute("""select t.id, t.name, t.state, t.estimate, t.remaining, t.tags, t.user_story_id, u.username, u.first_name, u.last_name, u.email
                           from agilito_task t
                           join agilito_userstory s on s.id = t.user_story_id
@@ -807,21 +807,18 @@ class Iteration(ClueModel):
             story.tasks.append(task)
             result.hours += estimate or 0
 
-            if not username:
-                task.owner = None
-            else:
-                if not task_owner.has_key(username):
-                    if first_name and last_name:
-                        task_owner[username] = '%s %s' % (first_name, last_name)
-                    elif first_name:
-                        task_owner [username]= first_name
-                    elif last_name:
-                        task_owner[username] = last_name
-                    elif email:
-                        task_owner[username] = email
-                    else:
-                        task_owner[username] = username
-                task.owner = task_owner[username]
+            if not task_owner.has_key(username):
+                if first_name and last_name:
+                    task_owner[username] = '%s %s' % (first_name, last_name)
+                elif first_name:
+                    task_owner [username]= first_name
+                elif last_name:
+                    task_owner[username] = last_name
+                elif email:
+                    task_owner[username] = email
+                else:
+                    task_owner[username] = username
+            task.owner = task_owner[username]
 
             if task.owner:
                 result.tags[task.owner].append(task)
