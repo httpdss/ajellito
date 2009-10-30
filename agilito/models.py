@@ -26,22 +26,11 @@ class Object(object):
         for k, v in kwargs.items():
             setattr(self, k, v)
 
-    def __getattr__(self, name):
-        if name == 'timetuple':
-             raise AttributeError, name
-
-        if len(name) < 3 or name[0] != '_' or name[-1] != '_' or name[1] == '_' or name[-2] == '_':
-            print "Can't auto-create attribute %s" % name
-            for i in range(40):
-                print '  ', sys._getframe(i).f_lineno, inspect.stack()[i+1][3]
+    def _(self, name):
+        if hasattr(self, name):
             raise AttributeError("Won't auto-create attribute %s" % name)
-
-        truename = name[1:-1]
-        if truename in self.__dict__.keys():
-            raise AttributeError("Attribute %s already exists" % truename)
-            
         o = Object()
-        setattr(self, truename, o)
+        setattr(self, name, o)
         return o
 
     @staticmethod
@@ -679,7 +668,7 @@ class Iteration(ClueModel):
                                until=self.end_date + datetime.timedelta(extradays),
                                byweekday=(MO,TU,WE,TH,FR))]
 
-        result._burndown_.days = len(days)
+        result._('burndown').days = len(days)
         lastday = result.burndown.days - 1
         dayrange = list(xrange(result.burndown.days))
 
@@ -742,7 +731,7 @@ class Iteration(ClueModel):
             if story.state == UserStory.STATES.ACCEPTED:
                 accepted += 1
 
-            story._tmp_.hours_remaining_for_day = [None for day in activedays]
+            story._('tmp').hours_remaining_for_day = [None for day in activedays]
             story.tmp.points_remaining_for_day = [None for day in activedays]
             story.tmp.testresult = {}
 
@@ -826,7 +815,7 @@ class Iteration(ClueModel):
             for tag in task.taglist:
                 result.tags[tag].append(task)
 
-            task._tmp_.remaining_for_day = [None for day in activedays]
+            task._('tmp').remaining_for_day = [None for day in activedays]
             task.tmp.remaining_for_day[0] = estimate or 0
             task.tmp.remaining_for_day[today] = remaining or 0
             tasks_by_id[id] = task
@@ -868,10 +857,10 @@ class Iteration(ClueModel):
             story.estimate = story.tmp.hours_remaining_for_day[0]
             story.remaining = story.tmp.hours_remaining_for_day[-1]
 
-        result.burndown._remaining_.hours = [sum(story.tmp.hours_remaining_for_day[day] for story in result.stories) for day in activedays]
+        result.burndown._('remaining').hours = [sum(story.tmp.hours_remaining_for_day[day] for story in result.stories) for day in activedays]
         result.burndown.remaining.points = [sum(story.tmp.points_remaining_for_day[day] for story in result.stories) for day in activedays]
 
-        result.burndown._max_.hours = max(result.burndown.remaining.hours)
+        result.burndown._('max').hours = max(result.burndown.remaining.hours)
         result.burndown.max.points = max(result.burndown.remaining.points)
 
         result.velocity = result.burndown.remaining.points[-1]
@@ -898,7 +887,7 @@ class Iteration(ClueModel):
 
         ## impediments
         impediment = {}
-        result._impediments_.resolved = []
+        result._('impediments').resolved = []
         result.impediments.open = []
         cursor.execute("""select i.id, i.name, i.resolved, t.id
                           from agilito_impediment i
@@ -919,7 +908,7 @@ class Iteration(ClueModel):
                 imp = Object(id=id, name=name, resolved=resolved, risk=0)
                 imp.tasks = []
                 imp.get_absolute_url = reverse('agilito.views.impediment_edit', args=[project_id, self.id, id])
-                imp._tmp_.storysize = {}
+                imp._('tmp').storysize = {}
 
                 impediment[id] = imp
 
