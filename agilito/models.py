@@ -825,7 +825,7 @@ class Iteration(ClueModel):
                           from agilito_tasklog tl
                           join agilito_task t on tl.task_id = t.id
                           join agilito_userstory s on t.user_story_id = s.id
-                          where s.iteration_id = %s and not tl.old_remaining is NULL and tl.date<%s
+                          where s.iteration_id = %s and tl.date<%s
                           order by tl.date
                           """, (self.id, datetime.date.today()))
         for old_remaining, date, spent, task in cursor.fetchall():
@@ -1551,7 +1551,7 @@ class TaskLog(models.Model):
     date = models.DateTimeField()
     iteration = models.ForeignKey('Iteration', null=True)
     owner = models.ForeignKey(User)
-    old_remaining = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True)
+    old_remaining = models.DecimalField(max_digits=5, decimal_places=2)
 
     def __unicode__(self):
         return 'Task Log: [%s, %s, %s, %s, %s]' % (self.iteration, self.date, 
