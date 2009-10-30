@@ -10,7 +10,7 @@
  * not required.
  *
  * If you are feeling kind and generous, consider supporting the project by
- * making a donation at: http://www.jqplot.com/support .
+ * making a donation at: http://www.jqplot.com/donate.php .
  *
  * Thanks for using jqPlot!
  * 
@@ -204,7 +204,6 @@
                         opts.fillStyle = posfs;
                         isnegative = false;
                     }
-                    // console.log('%s, %s, %s', this._barNudge, base, ystart);
                     
                     points.push([base-this.barWidth/2, ystart]);
                     points.push([base-this.barWidth/2, gridData[i][1]]);

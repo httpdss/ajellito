@@ -5,7 +5,7 @@
  * 
  * About: Version
  * 
- * 0.9.5 
+ * 0.9.5.2 
  * 
  * About: Copyright & License
  * 
@@ -21,7 +21,7 @@
  * dot com or see http://www.jqplot.com/info.php.  This is, of course, not required.
  *
  * If you are feeling kind and generous, consider supporting the project by
- * making a donation at: http://www.jqplot.com/support.
+ * making a donation at: http://www.jqplot.com/donate.php.
  *
  * 
  * About: Introduction
@@ -630,6 +630,9 @@
         // prop: label
         // Line label to use in the legend.
         this.label = '';
+        // prop: showLabel
+        // true to show label for this series in the legend.
+        this.showLabel = true;
         // prop: color
         // css color spec for the series
         this.color;
@@ -794,10 +797,7 @@
             else {
                 data = this._plotData;
             }
-            // console.log('plotdata before: %s', this._plotData);
             var gridData = options.gridData || this.renderer.makeGridData.call(this, data);
-            // console.log('plotdata after: %s', this._plotData);
-            // console.log('data:%s | gridData: %s', data, gridData);
             
             this.renderer.draw.call(this, sctx, gridData, options);
         }
@@ -1100,13 +1100,13 @@
             if (!this.target.height()) {
                 var h;
                 if (options && options.height) {
-                    h = parseInt(options.height);
+                    h = parseInt(options.height, 10);
                 }
                 else if (this.target.attr('data-height')) {
-                    h = parseInt(this.target.attr('data-height'));
+                    h = parseInt(this.target.attr('data-height'), 10);
                 }
                 else {
-                    h = parseInt($.jqplot.config.defaultHeight);
+                    h = parseInt($.jqplot.config.defaultHeight, 10);
                 }
                 this._height = h;
                 this.target.css('height', h+'px');
@@ -1117,13 +1117,13 @@
             if (!this.target.width()) {
                 var w;
                 if (options && options.width) {
-                    w = parseInt(options.width);
+                    w = parseInt(options.width, 10);
                 }
                 else if (this.target.attr('data-width')) {
-                    w = parseInt(this.target.attr('data-width'));
+                    w = parseInt(this.target.attr('data-width'), 10);
                 }
                 else {
-                    w = parseInt($.jqplot.config.defaultWidth);
+                    w = parseInt($.jqplot.config.defaultWidth, 10);
                 }
                 this._width = w;
                 this.target.css('width', w+'px');
@@ -1576,21 +1576,21 @@
                         if (r.constructor == $.jqplot.OHLCRenderer) {
                             if (r.candleStick) {
                                 var yp = s._yaxis.series_u2p;
-                                if (x >= p[0]-r.bodyWidth/2 && x <= p[0]+r.bodyWidth/2 && y >= yp(s.data[j][2]) && y <= yp(s.data[j][3])) {
+                                if (x >= p[0]-r._bodyWidth/2 && x <= p[0]+r._bodyWidth/2 && y >= yp(s.data[j][2]) && y <= yp(s.data[j][3])) {
                                     ret = {seriesIndex: i, pointIndex:j, gridData:p, data:s.data[j]};
                                 }
                             }
                             // if an open hi low close chart
                             else if (!r.hlc){
                                 var yp = s._yaxis.series_u2p;
-                                if (x >= p[0]-r.tickLength && x <= p[0]+r.tickLength && y >= yp(s.data[j][2]) && y <= yp(s.data[j][3])) {
+                                if (x >= p[0]-r._tickLength && x <= p[0]+r._tickLength && y >= yp(s.data[j][2]) && y <= yp(s.data[j][3])) {
                                     ret = {seriesIndex: i, pointIndex:j, gridData:p, data:s.data[j]};
                                 }
                             }
                             // a hi low close chart
                             else {
                                 var yp = s._yaxis.series_u2p;
-                                if (x >= p[0]-r.tickLength && x <= p[0]+r.tickLength && y >= yp(s.data[j][1]) && y <= yp(s.data[j][2])) {
+                                if (x >= p[0]-r._tickLength && x <= p[0]+r._tickLength && y >= yp(s.data[j][1]) && y <= yp(s.data[j][2])) {
                                     ret = {seriesIndex: i, pointIndex:j, gridData:p, data:s.data[j]};
                                 }
                             }
@@ -1665,12 +1665,10 @@
             // should be drawn before any series.  This will ensure, like for 
             // stacked bar plots, that shadows don't overlap series.
             for (var i=0; i<this.series.length; i++) {
-                // console.log('series %s data: %s', i, this.series[i].data);
                 this.series[i].drawShadow(sctx, options);
             }
             for (var i=0; i<this.series.length; i++) {
                 this.series[i].draw(sctx, options);
-                // console.log('series %s data: %s', i, this.series[i].data);
             }
         };
     }
@@ -2842,7 +2840,7 @@
                     // what tick interval does that give us?
                     ti = max/(this.numberTicks-1);
                     temp = Math.pow(10, Math.abs(Math.floor(Math.log(ti)/Math.LN10)));
-                    if (ti/temp == parseInt(ti/temp)) {
+                    if (ti/temp == parseInt(ti/temp, 10)) {
                         ti += temp;
                     }
                     this.tickInterval = Math.ceil(ti/temp) * temp;
@@ -3187,6 +3185,53 @@
         ctx.restore();
     };
     
+    $.jqplot.MarkerRenderer.prototype.drawPlus = function(x, y, ctx, fill, options) {
+        var stretch = 1.0;
+        var dx = this.size/2*stretch;
+        var dy = this.size/2*stretch;
+        var points1 = [[x, y-dy], [x, y+dy]];
+        var points2 = [[x+dx, y], [x-dx, y]];
+        var opts = $.extend(true, {}, this.options, {closePath:false});
+        if (this.shadow) {
+            this.shadowRenderer.draw(ctx, points1, {closePath:false});
+            this.shadowRenderer.draw(ctx, points2, {closePath:false});
+        }
+        this.shapeRenderer.draw(ctx, points1, opts);
+        this.shapeRenderer.draw(ctx, points2, opts);
+
+        ctx.restore();
+    };
+    
+    $.jqplot.MarkerRenderer.prototype.drawX = function(x, y, ctx, fill, options) {
+        var stretch = 1.0;
+        var dx = this.size/2*stretch;
+        var dy = this.size/2*stretch;
+        var opts = $.extend(true, {}, this.options, {closePath:false});
+        var points1 = [[x-dx, y-dy], [x+dx, y+dy]];
+        var points2 = [[x-dx, y+dy], [x+dx, y-dy]];
+        if (this.shadow) {
+            this.shadowRenderer.draw(ctx, points1, {closePath:false});
+            this.shadowRenderer.draw(ctx, points2, {closePath:false});
+        }
+        this.shapeRenderer.draw(ctx, points1, opts);
+        this.shapeRenderer.draw(ctx, points2, opts);
+
+        ctx.restore();
+    };
+    
+    $.jqplot.MarkerRenderer.prototype.drawDash = function(x, y, ctx, fill, options) {
+        var stretch = 1.0;
+        var dx = this.size/2*stretch;
+        var dy = this.size/2*stretch;
+        var points = [[x-dx, y], [x+dx, y]];
+        if (this.shadow) {
+            this.shadowRenderer.draw(ctx, points);
+        }
+        this.shapeRenderer.draw(ctx, points, options);
+
+        ctx.restore();
+    };
+    
     $.jqplot.MarkerRenderer.prototype.drawSquare = function(x, y, ctx, fill, options) {
         var stretch = 1.0;
         var dx = this.size/2/stretch;
@@ -3232,6 +3277,15 @@
                 break;
             case 'filledSquare':
                 this.drawSquare(x,y,ctx, true, options);
+                break;
+            case 'x':
+                this.drawX(x,y,ctx, true, options);
+                break;
+            case 'plus':
+                this.drawPlus(x,y,ctx, true, options);
+                break;
+            case 'dash':
+                this.drawDash(x,y,ctx, true, options);
                 break;
             default:
                 this.drawDiamond(x,y,ctx, false, options);
@@ -3450,12 +3504,12 @@
             ss += (this.fontSize) ? 'font-size:'+this.fontSize+';' : '';
             ss += (this.fontFamily) ? 'font-family:'+this.fontFamily+';' : '';
             ss += (this.textColor) ? 'color:'+this.textColor+';' : '';
-            this._elem = $('<table class="jqplot-legend" style="'+ss+'"></table>');
+            this._elem = $('<table class="jqplot-table-legend" style="'+ss+'"></table>');
         
             var pad = false;
             for (var i = 0; i< series.length; i++) {
                 s = series[i];
-                if (s.show) {
+                if (s.show && s.showLabel) {
                     var lt = s.label.toString();
                     if (lt) {
                         var color = s.color;
@@ -3479,12 +3533,11 @@
         
         function addrow(label, color, pad) {
             var rs = (pad) ? this.rowSpacing : '0';
-            var tr = $('<tr class="jqplot-legend"></tr>').appendTo(this._elem);
-            $('<td class="jqplot-legend" style="vertical-align:middle;text-align:center;padding-top:'+rs+';">'+
-                '<div style="border:1px solid #cccccc;padding:0.2em;">'+
-                '<div style="width:1.2em;height:0.7em;background-color:'+color+';"></div>'+
+            var tr = $('<tr class="jqplot-table-legend"></tr>').appendTo(this._elem);
+            $('<td class="jqplot-table-legend" style="text-align:center;padding-top:'+rs+';">'+
+                '<div><div class="jqplot-table-legend-swatch" style="border-color:'+color+';"></div>'+
                 '</div></td>').appendTo(tr);
-            var elem = $('<td class="jqplot-legend" style="vertical-align:middle;padding-top:'+rs+';"></td>');
+            var elem = $('<td class="jqplot-table-legend" style="padding-top:'+rs+';"></td>');
             elem.appendTo(tr);
             if (this.escapeHtml) {
                 elem.text(label);

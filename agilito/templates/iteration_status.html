@@ -1,4 +1,5 @@
 {% extends "master.html" %}
+{% load agilito_utils %}
 
 {% block link %}
 <link rel="alternate" type="application/rss+xml"
@@ -18,7 +19,7 @@ $(window).ready(function(){
     $("#user-story-list").treeTable({initialState: "expanded", treeColumn: 1});
     $("#impediment-list").treeTable();
 
-    burndown('burndown', 5);
+    burndown('burndown');
 });
 
 function highlightTag(ids)
@@ -47,6 +48,14 @@ function highlightTag(ids)
 }
 
 </script>
+{% endblock %}
+
+{% block css %}
+<style>
+    .jqplot-table-legend td div div {
+        border-style: solid;
+    }
+</style>
 {% endblock %}
 
 {% load humanize %}
@@ -103,8 +112,8 @@ function highlightTag(ids)
                 <tr>
                     <td>Stories</td>
                     <td>
-                        {% if user_stories %}
-                            {{ user_stories.count }} 
+                        {% if stories %}
+                            {{ stories.count }} 
                         {% endif %}
                     </td>
                 </tr>
@@ -154,7 +163,7 @@ function highlightTag(ids)
                 <th>Id</th>
                 <th>Name</th>
                 <th>State</th>
-                <th>Plan</th>
+                <th>Size</th>
                 <th>Tasks</th>
                 <th>To-Do</th>
                 <th>Failures</th>
@@ -181,20 +190,20 @@ function highlightTag(ids)
                 <td></td>
             </tr> 
     
-            {% for us in user_stories %}
+            {% for us in stories %}
                 <tr id="us-{{us.id}}" class="userstory {% cycle even,odd %} {%if us.is_blocked%}blocked{% endif %} {%if us.is_starved%}starved{% endif %}">
                     <td class="rank">{{us.relative_rank}}</td>
                     <td class="id"><a href="{{us.get_absolute_url}}">US{{us.id}}</a></td>
                     <td class="name{% if us.is_archived %} archived{% endif %}"><a href="{{us.get_absolute_url}}">{{us.name}}</a></td>
-                    <td class="state {{ us.get_state_display|slugify }}">{{us.get_state_display}}</td>
-                    <td class="planned">{{us.planned|default_if_none:"-"}}</td>
-                    <td class="estimated">{{us.estimated|default_if_none:"-"}}</td>
+                    <td class="state {{ us.state|storystate|slugify }}">{{us.state|storystate}}</td>
+                    <td class="planned">{{us.size|storysize|default_if_none:"-"}}</td>
+                    <td class="estimated">{{us.estimate|default_if_none:"-"}}</td>
                     <td class="todo">{{us.remaining|default_if_none:"-"}}</td>
-                    <td class="failures {% if us.test_failed %} fail {% endif %}">
-                        {% if us.test_failed %}
-                            <a href="{{us.get_absolute_url}}#test-cases">{{us.test_failed|default_if_none:"-"}}</a>
+                    <td class="failures {% if us.failures %} fail {% endif %}">
+                        {% if us.failures %}
+                            <a href="{{us.get_absolute_url}}#test-cases">{{us.failures|default_if_none:"-"}}</a>
                         {% else %}
-                            {{us.test_failed|default_if_none:"-"}}
+                            {{us.failures|default_if_none:"-"}}
                         {%endif%}
                     </td>
     
@@ -235,7 +244,7 @@ function highlightTag(ids)
                                 {% endfor %}
                             </ul>
                         </td>
-                        <td class="state {{ ta.get_state_display|slugify }}">{{ta.get_state_display}}</td>
+                        <td class="state {{ ta.state|taskstate|slugify }}">{{ta.state|taskstate}}</td>
                         <td>{{ta.owner|default_if_none:""}}</td>
                         <td>{{ta.estimate|default_if_none:"-"}}</td>
                         <td>{{ta.remaining|default_if_none:"-"}}</td>
@@ -271,7 +280,7 @@ function highlightTag(ids)
         </tbody>
     </table>
     
-    {% if open_impediments or resolved_impediments %}
+    {% if impediments.open or impediments.resolved %}
         <h3>Impediments</h3>
         <table id="impediment-list" cellspacing="0" cellpadding="2">
             <thead>
@@ -284,18 +293,18 @@ function highlightTag(ids)
             </thead>
 
             <tbody>
-                {% if open_impediments %}
-                    {% for impediment in open_impediments %}
+                {% if impediments.open %}
+                    {% for impediment in impediments.open %}
                         <tr "class="{% cycle even,odd %}" id="impediment-{{ impediment.id }}">
                             <td><a onclick="popup(this, 'impediment'); return false"
                                 href="{{ impediment.get_absolute_url }}?last_page={{last_page}}">IM{{ impediment.id }}</a></td>
-                            <td>{{ impediment.tasks.all.count }}</a></td>
-                            <td>{{ impediment.blocked }}</a></td>
+                            <td>{{ impediment.tasks.count }}</a></td>
+                            <td>{{ impediment.risk }}</a></td>
                             <td><a onclick="popup(this, 'impediment'); return false"
                                 href="{{ impediment.get_absolute_url }}?last_page={{last_page}}">{{ impediment.name }}</a></td>
                         </tr>
 
-                        {% for task in impediment.tasks.all %}
+                        {% for task in impediment.tasks %}
                             <tr id="impediment-{{ impediment.id }}-task-{{ task.id }}" class="child {% cycle even,odd %} child-of-impediment-{{ impediment.id }}">
                                 <td>TA{{ task.id }}</td>
                                 <td>&nbsp;</td>
@@ -306,25 +315,25 @@ function highlightTag(ids)
                     {% endfor %}
                 {% endif %}
     
-                {% if resolved_impediments %}
+                {% if impediments.resolved %}
                     <tr id="resolved-impediments">
                         <td>&nbsp;</td>
-                        <td>{{ resolved_impediments.count }}</a></td>
+                        <td>{{ impediments.resolved.count }}</a></td>
                         <td>&nbsp;</td>
                         <td>Resolved</td>
                     </tr>
     
-                    {% for impediment in resolved_impediments %}
+                    {% for impediment in impediments.resolved %}
                         <tr id="impediment-{{ impediment.id }}" class="child-of-resolved-impediments">
                             <td><a onclick="popup(this, 'impediment'); return false"
                                 href="{{ impediment.get_absolute_url }}?last_page={{last_page}}">IM{{ impediment.id }}</a></td>
-                            <td>{{ impediment.tasks.all.count }}</a></td>
+                            <td>{{ impediment.tasks.count }}</a></td>
                             <td>&nbsp;</td>
                             <td><a onclick="popup(this, 'impediment'); return false"
                                 href="{{ impediment.get_absolute_url }}?last_page={{last_page}}">{{ impediment.name }}</a></td>
                         </tr>
 
-                        {% for task in impediment.tasks.all %}
+                        {% for task in impediment.tasks %}
                             <tr id="impediment-{{ impediment.id }}-task-{{ task.id }}" class="child-of-impediment-{{ impediment.id }}">
                                 <td>TA{{ task.id }}</td>
                                 <td>&nbsp;</td>

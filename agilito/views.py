@@ -1056,97 +1056,28 @@ def iteration_status(request, project_id, iteration_id=None, template='iteration
 
     if iteration is not None:
         status = iteration.status()
-        # user_stories = latest_iteration.userstory_set.all().order_by('rank') # status.stories
-        # planned = sum(i.size for i in user_stories if i.size) # status.size
-
-        # todo = sum(i.remaining for i in user_stories) # status.burndown.remaining.hours[-1]
-        # estimated = sum(i.estimated for i in user_stories) # status.burndown.remaining.hours[0]
-        # actuals = sum(i.actuals for i in user_stories) # status.time_spent
-        failures = sum(i.test_failed for i in user_stories)
-
-        total = float(sum(u.size or 0 for u in user_stories)) / 100.0
-
-        left = latest_iteration.ideal_hours(datetime.date.today())
-        unsized = False
-        for us in user_stories:
-            unsized = (us.size is None or unsized)
-            if left >= us.remaining:
-                us.is_starved = False
-                left -= us.remaining
-            else:
-                us.is_starved = True
-
-        from django.db import connection, transaction
-        c = connection.cursor()
-        c.execute("""
-            select distinct i.id
-            from agilito_impediment i
-            join agilito_impediment_tasks it on it.impediment_id = i.id
-            join agilito_task t on it.task_id = t.id
-            join agilito_userstory s on t.user_story_id = s.id
-            where s.iteration_id=%s and i.resolved is NULL
-            and not s.state = %s and not t.state = %s
-        """, (latest_iteration.id,UserStory.STATES.ARCHIVED, Task.STATES.ARCHIVED))
-        impediments = [i[0] for i in c.fetchall()]
-        impediments = Impediment.objects.in_bulk(impediments).values()
-
-        open_impediments = [i for i in impediments if i.resolved is None]
-        resolved_impediments = [i for i in impediments if not i.resolved is None]
-
-        dn = latest_iteration.day_number(datetime.date.today())
-        td = latest_iteration.total_days()
-
-        for i in open_impediments:
-            stories = {}
-            for t in i.tasks.all():
-                if not t.user_story.state in [UserStory.STATES.ACCEPTED, UserStory.STATES.ARCHIVED]:
-                    stories[t.user_story.id] = t.user_story.size or 0
-            risk = sum(stories.values())
-            if total == 0:
-                i.blocked = '0%'
-            else:
-                i.blocked = '%.0f%%' % (float(risk) / total)
 
         tags = defaultdict(list)
-        tasks = Task.objects.filter(user_story__iteration=latest_iteration)
-        for task in tasks:
-            us = 'us-%d' % task.user_story.id
-            ta = 'ta-%d' % task.id
-
-            if task.owner:
-                tag = 'owner:' + task.owner.username
-            else:
-                tag = 'owner:none'
-            tags[tag].append(ta)
-            if not us in tags[tag]:
-                tags[tag].append(us)
-
-            for tag in parse_tag_input(task.tags):
-                # tag = tag.name
-                if not us in tags[tag]:
-                    tags[tag].append(us)
-                tags[tag].append(ta)
+        for tag, items in status.tags.items():
+            for item in items:
+                tags[tag].append('%s-%d' % (item.whatami[:2].lower(), item.id))
         tags = [{'tag': tag, 'data': ','.join(tags[tag])} for tag in tags.keys()]
-
-        v = latest_iteration.velocity()
-        if v is None:
-            v = (None, None)
 
         sidebar = SideBar(request)
         sidebar.add('Actions', 'Edit this iteration',
-            reverse('agilito.views.iteration_edit', args=[project_id, latest_iteration.id]),
+            reverse('agilito.views.iteration_edit', args=[project_id, iteration.id]),
             redirect=True,
             props={'class': "edit-object"})
 
         sidebar.add('Actions', 'Add User Story',
             reverse('story_from_iteration',
-                    args=[project_id, latest_iteration.id]),
+                    args=[project_id, iteration.id]),
             redirect=True,
             props={'class': "add-object"})
 
         sidebar.add('Actions', 'Report Impediment',
             reverse('agilito.views.impediment_create',
-                    args=[project_id, latest_iteration.id]),
+                    args=[project_id, iteration.id]),
             redirect=True,
             props={'class': "add-object"})
 
@@ -1157,51 +1088,50 @@ def iteration_status(request, project_id, iteration_id=None, template='iteration
             props={'class': "add-object"})
 
         sidebar.add('Actions', 'Delete this iteration',
-            reverse('agilito.views.iteration_delete', args=[project_id, latest_iteration.id]),
+            reverse('agilito.views.iteration_delete', args=[project_id, iteration.id]),
             redirect='/%s/iteration/' % project_id,
             props={'class': "delete-object"})
 
         sidebar.add('Reports', 'Task Cards',
             reverse('agilito.views.iteration_cards',
-                    args=[project_id, latest_iteration.id]))
+                    args=[project_id, iteration.id]))
 
         if EXCEL_ENABLED:
             sidebar.add('Reports', 'Task Status',
                 reverse('agilito.views.iteration_status_table',
-                        args=[project_id, latest_iteration.id]))
+                        args=[project_id, iteration.id]))
 
             sidebar.add('Reports', 'Iteration Export',
                 reverse('agilito.views.iteration_export',
-                        args=[project_id, latest_iteration.id]))
+                        args=[project_id, iteration.id]))
 
         sidebar.add('Reports', 'Burndown Chart',
             reverse('agilito.views.iteration_burndown_chart',
-                    args=[project_id, latest_iteration.id]),
+                    args=[project_id, iteration.id]),
                     props={'target': "_burndown"})
 
         sidebar.add('Reports', 'Backlog Evolution',
             reverse('agilito.views.product_backlog_chart',
-                    args=[project_id, latest_iteration.id]))
+                    args=[project_id, iteration.id]))
 
         sidebar.add('Reports', 'Task Board',
             reverse('agilito.views.taskboard',
-                        args=[project_id, latest_iteration.id]),
+                        args=[project_id, iteration.id]),
             popup="taskboard")
 
-        inner_context = { 'current_iteration' : latest_iteration,
-                          'user_stories' : user_stories,
+        inner_context = { 'current_iteration' : iteration,
                           'tags': tags,
-                          'unsized': unsized,
-                          'planned' : planned,
-                          'remaining' : todo,
-                          'estimated' : estimated,
-                          'actuals' : actuals,
-                          'failures' : failures,
-                          'burndown': latest_iteration.status().burndown,
                           'sidebar': sidebar.ifenabled(),
-                          'open_impediments': open_impediments,
-                          'resolved_impediments': resolved_impediments,
-                          'velocity': v,
+                          'stories' : status.stories,
+                          'unsized': status.burndown.unsized_stories,
+                          'planned' : status.size,
+                          'remaining' : status.remaining,
+                          'estimated' : status.hours,
+                          'actuals' : status.time_spent,
+                          'failures' : status.failures,
+                          'burndown': status.burndown,
+                          'impediments': status.impediments,
+                          'velocity': status.velocity,
                           }
     else:
         inner_context = {}

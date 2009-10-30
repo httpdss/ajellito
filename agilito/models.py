@@ -10,18 +10,66 @@ import tagging
 from tagging.utils import parse_tag_input
 from decimal import Decimal
 from collections import defaultdict
+from django.core.urlresolvers import reverse
+from tagging.utils import parse_tag_input
 
 from dateutil.rrule import rrule, DAILY, MO, TU, WE, TH, FR
 import datetime, time
 import math, re
+import sys
+import inspect
 
 from agilito import CACHE_ENABLED, UNRESTRICTED_SIZE, CACHE_PREFIX
 
-class GenericObject(object):
-    def __getattr__(self, key):
-        prop = GenericObject()
-        setattr(self, key, prop)
-        return prop
+class Object(object):
+    def __init__(self, *args, **kwargs):
+        for k, v in kwargs.items():
+            setattr(self, k, v)
+
+    def __getattr__(self, name):
+        if name == 'timetuple':
+             raise AttributeError, name
+
+        if len(name) < 3 or name[0] != '_' or name[-1] != '_' or name[1] == '_' or name[-2] == '_':
+            print "Can't auto-create attribute %s" % name
+            for i in range(40):
+                print '  ', sys._getframe(i).f_lineno, inspect.stack()[i+1][3]
+            raise AttributeError("Won't auto-create attribute %s" % name)
+
+        truename = name[1:-1]
+        if truename in self.__dict__.keys():
+            raise AttributeError("Attribute %s already exists" % truename)
+            
+        o = Object()
+        setattr(self, truename, o)
+        return o
+
+    @staticmethod
+    def _clean(obj, cache=[]):
+        if obj in cache:
+            return
+
+        if isinstance(obj, Object):
+            try:
+                del obj.tmp
+            except AttributeError:
+                pass
+
+            for n, o in obj.__dict__.items():
+                Object._clean(o, cache + [obj])
+        elif isinstance(obj, list):
+            for o in obj:
+                Object._clean(o, cache + [obj])
+        elif isinstance(obj, (dict, defaultdict)):
+            for o in obj.values():
+                Object._clean(o, cache + [obj])
+
+    def clean(self):
+        Object._clean(self)
+        return self
+
+    def __str__(self):
+        return '[' + ', '.join(['%s: %s' % (n, str(v)) for (n, v) in self.__dict__.items()]) + ']'
 
 def rounded(v, p):
     return Decimal(v).quantize(Decimal('1.' + ('0' * p)))
@@ -615,22 +663,27 @@ class Iteration(ClueModel):
         from django.db import connection
         cursor = connection.cursor()
 
-        _status = GenericObject()
+        result = Object()
 
-        _status.iteration = self
-
-        ## burndown
+        ## determine the days for this iteration, plus 1 (makes graphs easier)
         dow = self.end_date.weekday()
         if dow >= 4:
             extradays = 7 - dow
         else:
             extradays = 1
 
-        days = [datetime.date(d.year, d.month, d.day) for d in rrule(DAILY, cache=True, dtstart=self.start_date, until=self.end_date + datetime.timedelta(extradays), byweekday=(MO,TU,WE,TH,FR))]
-        iterationlength = len(days)
-        lastday = iterationlength - 1
-        dayrange = list(xrange(iterationlength))
-        
+        days = [datetime.date(d.year, d.month, d.day)
+                for d in rrule(DAILY,
+                               cache=True,
+                               dtstart=self.start_date,
+                               until=self.end_date + datetime.timedelta(extradays),
+                               byweekday=(MO,TU,WE,TH,FR))]
+
+        result._burndown_.days = len(days)
+        lastday = result.burndown.days - 1
+        dayrange = list(xrange(result.burndown.days))
+
+        ## calculate day-within-sprint number from a date
         start_date = self.start_date
         end_date = self.end_date
 
@@ -652,6 +705,7 @@ class Iteration(ClueModel):
             date2day[dt] = d
             return d
         today = getday(datetime.date.today())
+        activedays = list(xrange(today+1))
 
         def tasklogday(dt):
             d = getday(dt)
@@ -659,94 +713,245 @@ class Iteration(ClueModel):
             if d >= today or d >= lastday: return -1
             return d - 1
 
-        stories = UserStory.objects.filter(iteration=self).order_by('rank').all()
-        _status.stories = stories
-        _status.time_spent = 0
-        for story in stories:
-            story.hours_remaining_for_day = [None for day in dayrange]
-            story.points_remaining_for_day = [None for day in dayrange]
-            ## don't change these -- tasklist is used in the templates
-            ## we don't want to re-request the tasks because we're enriching the
-            ## task objects as we fetch the status, and this status doesn't come from the DB
-            story.tasklist = []
+        project_id = self.project.id
+
+        result.stories = []
+        result.tags = defaultdict(list)
+        result.time_spent = 0
+        result.size = 0
+        result.hours = 0
+
+        stories_by_id = {}
+        tasks_by_id = {}
+
+        ## fetch story data
+        unranked = []
+        accepted = 0
+        cursor.execute("""select s.id, s.name, s.state, s.size, s.rank, s.tags
+                          from agilito_userstory s
+                          where s.iteration_id = %s and s.state <> %s
+                          order by rank""", (self.id, UserStory.STATES.ARCHIVED))
+        for id, name, state, size, rank, tags in cursor.fetchall():
+            story = Object(id=id, name=name, state=state, size=size, rank=rank, is_archived=False, whatami='UserStory')
+            story.get_absolute_url = reverse('agilito.views.userstory_detail', args=[project_id, id])
+            story.taglist = parse_tag_input(tags)
+            story.is_blocked = False
+            story.tasks = []
             story.time_spent = 0
-            story.failures = 0
-        stories = dict(zip([story.id for story in stories], stories))
+            result.size += size or 0
+            if story.state == UserStory.STATES.ACCEPTED:
+                accepted += 1
 
-        tasks = Task.objects.filter(user_story__iteration=self).all()
-        for task in tasks:
-            task.remaining_for_day = [None for day in dayrange]
-            task.remaining_for_day[0] = task.estimate or 0
-            task.remaining_for_day[today] = task.remaining or 0
-            task.time_spent = 0
-            task.user_story = stories[task.user_story.id]
-            task.user_story.tasklist.append(task)
-        tasks = dict(zip([task.id for task in tasks], tasks))
+            story._tmp_.hours_remaining_for_day = [None for day in activedays]
+            story.tmp.points_remaining_for_day = [None for day in activedays]
+            story.tmp.testresult = {}
 
+            for tag in story.taglist:
+                result.tags[tag].append(story)
+
+            stories_by_id[id] = story
+
+            if rank is None:
+                unranked.append(story)
+            else:
+                result.stories.append(story)
+        ## this makes sure unranked stories go to the bottom
+        result.stories.extend(unranked)
+
+        result.stories_accepted = (accepted * 100.0) / len(result.stories)
+
+        ## compact ranks within a sprint
+        for rank, story in enumerate(result.stories):
+            story.relative_rank = rank + 1
+
+        ## fetch story test failures
         cursor.execute("""
             select us.id, tc.id, tr.result
             from agilito_userstory us
             join agilito_testcase tc on tc.user_story_id = us.id
             join agilito_testresult tr on tr.test_case_id = tc.id
             where us.iteration_id =%s
-            order by tr.date""", (self.iteration.id))
-        for id, result in cursor.fetchall():
-            stories.
-        for result in TestResult.filter(test_case__user_story__iteration=self):
-        for testcase in TestCase.filter(user_story__iteration=self):
-            stories[testcase.user_story.id].failures EEH
+            order by tr.date""", (self.id,))
+        for storyid, tcid, testresult in cursor.fetchall():
+            try:
+                tr = stories_by_id[storyid].tmp.testresult
+            except KeyError:
+                continue
+            if testresult == TestResult.RESULTS.Pass:
+                tr[tcid] = 0
+            else:
+                tr[tcid] = 1
 
-        logs = TaskLog.objects.filter(task__user_story__iteration=self, old_remaining__isnull=False,date__lt=datetime.date.today()).order_by('date').all()
-        for l in logs:
-            tasks[l.task.id].remaining_for_day[tasklogday(l.date)] = l.old_remaining
+        result.failures = 0
+        for story in result.stories:
+            story.failures = sum(r for r in story.tmp.testresult.values())
+            result.failures += story.failures
 
-            ## don't change this -- time_spent is used in the templates
-            ## we don't want to re-request the tasks because we're enriching the
-            ## task objects as we fetch the status, and this status doesn't come from the DB
-            if l.time_on_task:
-                time_spent += l.time_on_task
-                task.time_spent += l.time_on_task
-                task.user_story.time_spent += l.time_on_task
+        ## fetch task data
+        task_owner = {}
+        cursor.execute("""select t.id, t.name, t.state, t.estimate, t.remaining, t.tags, t.user_story_id, u.username, u.first_name, u.last_name, u.email
+                          from agilito_task t
+                          join agilito_userstory s on s.id = t.user_story_id
+                          left join auth_user u on t.owner_id = u.id
+                          where s.iteration_id = %s and s.state <> %s and t.state <> %s""", (self.id, UserStory.STATES.ARCHIVED, Task.STATES.ARCHIVED))
+        for id, name, state, estimate, remaining, tags, user_story_id, username, first_name, last_name, email in cursor.fetchall():
+            try:
+                story = stories_by_id[user_story_id]
+            except KeyError:
+                continue
+            task = Object(id=id, name=name, estimate=estimate, state=state, remaining=remaining, is_archived=False, whatami='Task')
+            task.get_absolute_url = reverse('agilito.views.task_detail', args=[project_id, user_story_id, id])
+            task.user_story = story
+            task.is_blocked = False
+            task.taglist = parse_tag_input(tags)
+            story.tasks.append(task)
+            result.hours += estimate or 0
 
-        revdays = list(reversed(range(today+1)))
-        for id, task in tasks.items():
-            for day in revdays:
-                if task.remaining_for_day[day] is None:
-                    task.remaining_for_day[day] = task.remaining_for_day[day+1]
+            if not username:
+                task.owner = None
+            else:
+                if not task_owner.has_key(username):
+                    if first_name and last_name:
+                        task_owner[username] = '%s %s' % (first_name, last_name)
+                    elif first_name:
+                        task_owner [username]= first_name
+                    elif last_name:
+                        task_owner[username] = last_name
+                    elif email:
+                        task_owner[username] = email
+                    else:
+                        task_owner[username] = username
+                task.owner = task_owner[username]
 
-        activedays = list(xrange(today+1))
-        for id, story in stories.items():
+            if task.owner:
+                result.tags[task.owner].append(task)
+
+            for tag in task.taglist:
+                result.tags[tag].append(task)
+
+            task._tmp_.remaining_for_day = [None for day in activedays]
+            task.tmp.remaining_for_day[0] = estimate or 0
+            task.tmp.remaining_for_day[today] = remaining or 0
+            tasks_by_id[id] = task
+
+        ## tasklog updates
+        cursor.execute("""select tl.old_remaining, tl.date, tl.time_on_task, t.id
+                          from agilito_tasklog tl
+                          join agilito_task t on tl.task_id = t.id
+                          join agilito_userstory s on t.user_story_id = s.id
+                          where s.iteration_id = %s and not tl.old_remaining is NULL and tl.date<%s
+                          order by tl.date
+                          """, (self.id, datetime.date.today()))
+        for old_remaining, date, spent, task in cursor.fetchall():
+            try:
+                tasks_by_id[task].tmp.remaining_for_day[tasklogday(date)] = old_remaining
+            except KeyError:
+                continue
+
+            if spent:
+                result.time_spent += spent
+
+        ## fill out burndown by overwriting None values with the earliest updated value
+        for id, task in tasks_by_id.items():
+            for day in activedays:
+                if task.tmp.remaining_for_day[day] is None:
+                    task.tmp.remaining_for_day[day] = task.tmp.remaining_for_day[day-1]
+
+        ## now that we have all task data we can update the story stats for all days spent in the iteration
+        for story in result.stories:
             size = story.size or 0
             for day in activedays:
-                hours = sum(task.remaining_for_day[day] for task in story.tasklist)
+                hours = sum(task.tmp.remaining_for_day[day] for task in story.tasks)
                 if hours == 0:
                     points = 0
                 else:
                     points = size
-                story.hours_remaining_for_day[day] = hours
-                story.points_remaining_for_day[day] = points
+                story.tmp.hours_remaining_for_day[day] = hours
+                story.tmp.points_remaining_for_day[day] = points
+            story.estimate = story.tmp.hours_remaining_for_day[0]
+            story.remaining = story.tmp.hours_remaining_for_day[-1]
 
-        stories = stories.values()
-        tasks = tasks.values()
+        result.burndown._remaining_.hours = [sum(story.tmp.hours_remaining_for_day[day] for story in result.stories) for day in activedays]
+        result.burndown.remaining.points = [sum(story.tmp.points_remaining_for_day[day] for story in result.stories) for day in activedays]
 
-        _status.burndown.remaining.hours = [sum(story.hours_remaining_for_day[day] for story in stories) for day in activedays]
-        _status.burndown.remaining.points = [sum(story.points_remaining_for_day[day] for story in stories) for day in activedays]
-        _status.burndown.max.hours = max(_status.burndown.remaining.hours)
-        _status.burndown.max.points = max(_status.burndown.remaining.points)
-        _status.burndown.days = iterationlength
-        _status.size = sum(story.points_remaining_for_day[0] for story in stories)
-        _status.velocity = _status.size - _status.burndown.remaining.points[-1]
+        result.burndown._max_.hours = max(result.burndown.remaining.hours)
+        result.burndown.max.points = max(result.burndown.remaining.points)
 
-        ideal = [0.0] * iterationlength
-        delta = iterationlength - 1
+        result.velocity = result.burndown.remaining.points[-1]
+
+        ## data points for the ideal
+        ideal = [0.0] * result.burndown.days
+        delta = result.burndown.days - 1
         deltainv = 1.0 / delta
-        maxh = float(_status.burndown.remaining.hours[0])
+        maxh = float(result.burndown.remaining.hours[0])
         for day in dayrange:
             ideal[day] = deltainv * maxh * day
-        _status.burndown.remaining.ideal = list(reversed(ideal))
-        ## burndown
+        result.burndown.remaining.ideal = list(reversed(ideal))
 
-        return _status
+        left = result.burndown.remaining.ideal[today]
+        unsized = False
+        for us in result.stories:
+            unsized = (us.size is None or unsized)
+            if not us.remaining is None and left >= float(us.remaining):
+                us.is_starved = False
+                left -= float(us.remaining)
+            else:
+                us.is_starved = True
+        result.burndown.unsized_stories = unsized
+
+        ## impediments
+        impediment = {}
+        result._impediments_.resolved = []
+        result.impediments.open = []
+        cursor.execute("""select i.id, i.name, i.resolved, t.id
+                          from agilito_impediment i
+                          join agilito_impediment_tasks it on it.impediment_id = i.id
+                          join agilito_task t on it.task_id = t.id
+                          join agilito_userstory s on t.user_story_id = s.id
+                          where s.iteration_id = %s
+                          """, (self.id,))
+        for id, name, resolved, taskid in cursor.fetchall():
+            try:
+                task = tasks_by_id[taskid]
+            except KeyError:
+                continue
+
+            try:
+                imp = impediment[id]
+            except KeyError:
+                imp = Object(id=id, name=name, resolved=resolved, risk=0)
+                imp.tasks = []
+                imp.get_absolute_url = reverse('agilito.views.impediment_edit', args=[project_id, self.id, id])
+                imp._tmp_.storysize = {}
+
+                impediment[id] = imp
+
+                if resolved:
+                    result.impediments.resolved.append(imp)
+                else:
+                    result.impediments.open.append(imp)
+
+            imp.tasks.append(task)
+            task.is_blocked = not resolved
+            story = task.user_story
+            if task.is_blocked:
+                story.is_blocked = True
+
+            if story.remaining > 0:
+                imp.tmp.storysize[story.id] = story.size or 0
+
+        if len(result.impediments.resolved) == 0:
+            result.impediments.resolved = None
+        if len(result.impediments.open) == 0:
+            result.impediments.open = None
+
+        if result.size and not result.impediments.open is None:
+            factor = float(result.size) / 100
+            for imp in result.impediments.open:
+                imp.risk = sum(imp.tmp.storysize.values()) / factor
+
+        result.remaining = result.burndown.remaining.hours[-1]
+        return result.clean()
 
     def story_cards(self):
         cards = []

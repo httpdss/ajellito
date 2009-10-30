@@ -16,10 +16,10 @@ td {
 
 #iteration-data {
     float: left;
+    width: 50%;
 }
 
 #burndown {
-    border-left: 1px solid #808080;
     float: right;
 }
 

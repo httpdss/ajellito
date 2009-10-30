@@ -10,7 +10,7 @@
  * not required.
  *
  * If you are feeling kind and generous, consider supporting the project by
- * making a donation at: http://www.jqplot.com/support .
+ * making a donation at: http://www.jqplot.com/donate.php .
  *
  * Thanks for using jqPlot!
  * 
@@ -274,7 +274,6 @@
                 if (this.daTickInterval != null) {
                     var nc = Date.create(this.max).diff(this.min, this.daTickInterval[1], true);
                     this.numberTicks = Math.ceil(nc/this.daTickInterval[0]) +1;
-                    //log(this.daTickInterval, nc, this.numberTicks);
                     // this.max = Date.create(this.min).add(this.numberTicks-1, this.daTickInterval[1]).getTime();
                     this.max = Date.create(this.min).add((this.numberTicks-1) * this.daTickInterval[0], this.daTickInterval[1]).getTime();
                 }
