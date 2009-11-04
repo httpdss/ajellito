@@ -299,7 +299,7 @@ class UserStoryForm(HiddenHttpRefererForm):
 
     class Meta:
         model = UserStory
-        fields = 'name', 'description', 'rank', 'size', 'planned', 'state', 'iteration', 'tags'
+        fields = 'name', 'description', 'rank', 'size', 'state', 'iteration', 'tags'
 
 class UserStoryMoveForm(forms.ModelForm):
     copy_tasks = forms.BooleanField(label='Copy tasks', required=False)
@@ -315,7 +315,7 @@ class UserStoryMoveForm(forms.ModelForm):
         if user_story.task_set.all().count() == 0:
             self.fields['copy_tasks'].hidden = True
 
-        choices = [('copy_archive', 'Copy and Archive original'), ('copy_fail', 'Copy and Fail original')]
+        choices = [('copy_fail', 'Copy and Fail original')]
         if user_story.is_blocked or (user_story.state != UserStory.STATES.COMPLETED and (it is None or it.end_date < datetime.date.today())):
             choices.reverse()
         choices.append(('copy', 'Copy'))
@@ -480,7 +480,6 @@ def gen_TaskLogForm(user):
 
     # this prevents hitting the database multiple times, quite a bit
     # faster. Plus it automatically sorts the menu
-    archived = Task.STATES.ARCHIVED
     tasks_sql = """
         select distinct
             'P',    p.id,   p.name
@@ -499,7 +498,7 @@ def gen_TaskLogForm(user):
         join agilito_task t on t.user_story_id = us.id
         left join agilito_tasklog tlr on tlr.task_id = t.id and tlr.iteration_id = i.id and tlr.date >= '%(recent_task)s'
         left join agilito_tasklog tlm on tlm.task_id = t.id and tlm.iteration_id = i.id and tlm.owner_id = pm.user_id
-        where i.start_date <= '%(today)s' and i.end_date >= '%(last_end)s' and t.state != %(archived)d
+        where i.start_date <= '%(today)s' and i.end_date >= '%(last_end)s'
         group by p.id, p.name, i.id, i.name, us.id, us.name, us.state, us.rank, t.id, t.name, t.owner_id
         order by p.id, i.id, us.rank, us.id, t.id
         """ % locals()
