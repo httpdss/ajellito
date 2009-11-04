@@ -28,13 +28,10 @@
                     states.push('{{state.state}}');
                 }
             {% endfor %}
-            states = states.join(':');
-            if (states != '') {
-                states += '/';
-            }
+            states = '/states=' + states.join(':');
 
             reset_states();
-            window.location = '{{default_backlog}}' + states;
+            window.location = window.location.href.replace(/\/states=[^/]+/, states);
         }
 
         var marked = {};
@@ -255,9 +252,6 @@
         <h2>
             {% if current_project %}
                 {{ current_project.name }} &raquo;
-                {% if current_project.release %}
-                    Release: {{current_project.release.name}} &raquo;
-                {% endif %}
             {% endif %}
     
             Backlog
@@ -267,10 +261,10 @@
             <div id="us-resume">
                 <span>Number of US in Backlog: <strong>{{ user_stories }}</strong> </span> 
                 {% if velocity.sprint_length %}
-                    <div>Velocity: {{ velocity.actual }} vs. {{ velocity.estimated }} (avg sprint length {{ velocity.sprint_length|floatformat:0 }} days)</div>
+                    <div>Velocity: {{ velocity.actual }} vs. {{ velocity.planned }} (avg sprint length {{ velocity.sprint_length|floatformat:0 }} days)</div>
                 {% endif %}
-                {% if accuracy %}
-                    <div>Sizing accuracy: {{ accuracy|floatformat:0 }}%</div>
+                {% if suggestions %}
+                    <div>Sizing accuracy: {{ suggestions.accuracy|floatformat:0 }}%, based on {{ suggestions.base }}</div>
                 {% endif %}
         {% else %}
             No user stories in the backlog.
@@ -313,7 +307,9 @@
                         <th>Id</th>
                         <th>Name</th>
                         <th>Size ({{ size }} total)</th>
-                        <th>Suggested size</th>
+                        {% if suggestions %}
+                            <th>Suggested size</th>
+                        {% endif %}
                         <th>State</th>
                         <th><!-- edit --></th>
                         <th><!-- move --></th>
@@ -357,7 +353,9 @@
                                         {{story.size|storysize}}
                                     {% endif %}
                                 </td>
-                                <td class="size">{{story.suggested_size|storysize}}</td>
+                                {% if suggestions %}
+                                    <td class="size {% if story.suggestion.is_benchmark %}size-benchmark{% endif %}">{{story.suggestion.size|storysize}}</td>
+                                {% endif %}
                                 <td class="state">
                                     <img src="/agilito/backlog-state/{{ story.backlog_state }}.png"
                                         title="{{ story.backlog_state }}" alt="{{ story.backlog_state }}" />
@@ -382,7 +380,7 @@
                                 {% with release.release_date as release_date %}
                                     <tr id="re_{{release.id}}" class="release {{release_date.severity}}">
                                         <td><span class="release-state"/></td>
-                                        <td colspan="6">
+                                        <td colspan="{% if suggestions %}6{% else %}5{% endif %}">
                                             {{release.name}}{%if release.deadline %}, deadline: {{release.deadline}}{% endif %}{% if release_date.date or release_date.error %}, projected release date: {{release_date.date|default_if_none:"unknown"}}{% endif %}{% if release_date.error %} ({{release_date.error}}){% endif %}
                                         </td>
 

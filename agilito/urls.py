@@ -17,10 +17,16 @@ urlpatterns = patterns('agilito.views',
     (r'^$', 'index'),
 
     (r'^(?P<project_id>\d+)/touch/$', 'touch_cache'),
-    (r'^(?P<project_id>\d+)/backlog/$', 'backlog'),
-    (r'^(?P<project_id>\d+)/backlog/(?P<states>\d+(:\d+)*)/$', 'backlog'),
-    (r'^(?P<project_id>\d+)/product_backlog/$', 'product_backlog'),
-    url(r'^(?P<project_id>\d+)/product_backlog/(?P<states>\d+(:\d+)*)/$', 'product_backlog', name='product_backlog_for_states'),
+
+    url(r'^(?P<project_id>\d+)/backlog/$', 'backlog', name='product_backlog'),
+    url(r'^(?P<project_id>\d+)/backlog/states=(?P<states>\d+(:\d+)*)/$', 'backlog', name='product_backlog_states'),
+    url(r'^(?P<project_id>\d+)/backlog/states=(?P<states>\d+(:\d+)*)/suggest-(?P<suggest>actuals|estimates)/$', 'backlog',
+        name='product_backlog_states_suggest'),
+
+    (r'^(?P<project_id>\d+)/backlog/excel/$', 'backlog_excel'),
+    (r'^(?P<project_id>\d+)/backlog/excel/states=(?P<states>\d+(:\d+)*)/$', 'backlog_excel'),
+    (r'^(?P<project_id>\d+)/backlog/excel/states=(?P<states>\d+(:\d+)*)/suggest-(?P<suggest>actuals|estimates)/$', 'backlog_excel'),
+
     url(r'^(?P<project_id>\d+)/backlog/userstory/add/$', 'userstory_create', name="story_from_backlog"),
     url(r'^(?P<project_id>\d+)/backlog/save/$', 'backlog_save', name="backlog_save"),
 

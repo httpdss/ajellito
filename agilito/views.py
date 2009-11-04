@@ -385,7 +385,7 @@ def release_delete(request, project_id, release_id):
     release = Release.objects.get(id=release_id, project__id = project_id)
 
     # set the url to return to after deletion
-    url = request.GET.get('last_page', reverse('agilito.views.product_backlog', args=[project_id]))
+    url = request.GET.get('last_page', reverse('agilito.views.backlog', args=[project_id]))
 
     return create_update.delete_object(request, object_id=release_id,
                                        model=Release,
@@ -415,7 +415,7 @@ def iteration_delete(request, project_id, iteration_id):
     iteration = Iteration.objects.get(id=iteration_id, project__id = project_id)
 
     # set the url to return to after deletion
-    url = request.GET.get('last_page', reverse('agilito.views.product_backlog', args=[project_id]))
+    url = request.GET.get('last_page', reverse('agilito.views.backlog', args=[project_id]))
 
     delobjs = list(iteration.userstory_set.all())
 
@@ -462,15 +462,10 @@ def userstory_move(request, project_id, userstory_id):
                 story.iteration = data['iteration']
                 story.save()
             else:
-                archiver = None
-                state = None
-                if data['action'] == 'copy_archive':
-                    state = UserStory.STATES.ARCHIVED
-                    archiver = request.user
-                elif data['action'] == 'copy_fail':
+                if data['action'] == 'copy_fail':
                     state = UserStory.STATES.FAILED
 
-                story.copy_to_iteration(data['iteration'], data['copy_tasks'], state, archiver)
+                story.copy_to_iteration(data['iteration'], data['copy_tasks'], state)
 
             url = request.GET.get('last_page', story.get_absolute_url())
             url = '/agilito/redirect.html#' + url
@@ -522,32 +517,30 @@ def userstory_delete(request, project_id, userstory_id):
     if testcases:
         delobjs.extend(['TestCases', testcases])
 
-    if len(delobjs) > 0:
-        actor = archive
-        template = 'archive.html'
-    else:
-        actor = create_update.delete_object
-        template = 'userstory_delete.html'
-    return actor(request, object_id=userstory_id,
+    return create_update.delete_object(request, object_id=userstory_id,
                                        model=UserStory,
-                                       template_name=template,
+                                       template_name='userstory_delete.html',
                                        post_delete_redirect=url,
                                        extra_context={'deleted_objects': delobjs})
 
 @restricted
-def backlog(request, project_id, states=None):
+def backlog(request, project_id, states=None, suggest=None):
     """
     """
     global EXCEL_ENABLED
 
+    if not states:
+        states = '%d:%d' % (UserStory.STATES.DEFINED, UserStory.STATES.SPECIFIED)
+        return HttpResponseRedirect( reverse('agilito.views.backlog', args=[project_id, states]))
+
     project = Project.objects.get(id=project_id)
 
-    if not states:
-        states_filter = [s for s in UserStory.STATES.values(include_hidden=True) if not s in UserStory.ENDSTATES]
-    else:
-        states_filter = [int(s) for s in states.split(':')]
+    states_filter = [int(s) for s in states.split(':')]
 
-    user_stories = project.backlog(states_filter)
+    if suggest:
+        backlog = project.backlog_suggest(states_filter, suggest)
+    else:
+        backlog = project.backlog(states_filter)
 
     iterations = Iteration.objects.filter(project__id=project_id, end_date__gte=datetime.date.today())
 
@@ -565,28 +558,18 @@ def backlog(request, project_id, states=None):
     else:
         sizes = [None] + UserStory.SIZES.values()
 
-    user_stories_count = 0
-    size = 0
-    for us in user_stories:
-        if us.whatami != 'UserStory': continue
-
-        user_stories_count += 1
-
-        if not us.size: continue
-        size += us.size
-
     states_options = []
     for state, name in UserStory.STATES.choices(True):
         states_options.append({ 'state':    state,
                                 'name':     name,
                                 'selected': state in states_filter,
                                 })
-    v = project.velocity()
+    velocity = backlog.velocity
 
-    if not v['sprint_length']:
+    if not velocity.sprint_length:
         newiteration['ends'] = ''
     else:
-        newiteration['ends'] = newiteration['starts'] + datetime.timedelta(days=v['sprint_length'] * 7.0 / 5)
+        newiteration['ends'] = newiteration['starts'] + datetime.timedelta(days=velocity.sprint_length)
         if newiteration['ends'].weekday() > 4: # weekend
             newiteration['ends'] += datetime.timedelta(days= 7 - newiteration['ends'].weekday())
 
@@ -609,13 +592,23 @@ def backlog(request, project_id, states=None):
         redirect=True,
         props={'class': "add-object"})
 
-    if EXCEL_ENABLED:
-        args = [project_id]
-        if states:
-            args.append(states)
+    if not UNRESTRICTED_SIZE:
+        if suggest is None or suggest == 'estimates':
+            sidebar.add('Review', 'Suggest sizes based on actuals',
+                reverse('agilito.views.backlog', args=[project_id, states, 'actuals']))
+        if suggest is None or suggest == 'actuals':
+            sidebar.add('Review', 'Suggest sizes based on estimates',
+                reverse('agilito.views.backlog', args=[project_id, states, 'estimates']))
+        if suggest in ('estimates', 'actuals'):
+            sidebar.add('Review', 'Remove size suggestions',
+                reverse('agilito.views.backlog', args=[project_id, states]))
 
-        sidebar.add('Reports', 'Backlog in Excel format',
-            reverse('agilito.views.product_backlog', args=args))
+    if EXCEL_ENABLED:
+        if suggest:
+            args=[project_id, states, suggest]
+        else:
+            args=[project_id, states]
+        sidebar.add('Reports', 'Backlog in Excel format', reverse('agilito.views.backlog_excel', args=args))
 
     sidebar.add('Reports', 'Backlog Evolution',
         reverse('agilito.views.product_backlog_chart',
@@ -627,17 +620,17 @@ def backlog(request, project_id, states=None):
         props={'onclick': "savechanges(); return false;"})
 
     inner_context = {   'sidebar'       : sidebar.ifenabled(),
-                        'backlog'       : user_stories,
-                        'user_stories'  : user_stories_count,
-                        'size'          : size,
-                        'velocity'      : v, 
-                        'accuracy'      : project.size_estimation_accuracy(),
+                        'backlog'       : backlog.backlog,
+                        'user_stories'  : backlog.story_count,
+                        'size'          : backlog.size,
+                        'velocity'      : velocity,
                         'states'        : states_options,
-                        'default_backlog': reverse('agilito.views.backlog', args=[project_id]),
                         'sizes'         : sizes,
                         'iterations'    : iterations,
                         'newiteration'  : newiteration
                     }
+    if suggest:
+        inner_context['suggestions'] = backlog.suggestions
     context = AgilitoContext(request, { }, current_project=project_id)
 
     return render_to_response('product_backlog.html', inner_context, context_instance=context)
@@ -775,15 +768,9 @@ def task_delete(request, project_id, userstory_id, task_id):
         url = task.get_container_url()
 
     tasklogs = task.tasklog_set.all()
-    if tasklogs.count() > 0:
-        actor = archive
-        template = 'archive.html'
-    else:
-        actor = create_update.delete_object
-        template = 'userstory_delete.html'
-    return actor(request, object_id=task_id,
+    return create_update.delete_object(request, object_id=task_id,
                                        model=Task,
-                                       template_name=template,
+                                       template_name='userstory_delete.html',
                                        post_delete_redirect=url,
                                        extra_context={'deleted_objects': tasklogs})
 
@@ -1241,14 +1228,6 @@ def product_backlog_chart(request, project_id, iteration_id):
                 completed[x] += size
                 continue
 
-            # if the story is archived, consider it existing if it
-            # isn't closed (which shouldn't happen!) or if it was
-            # closed after the current day
-            if st.state == UserStory.STATES.ARCHIVED:
-                if not st.closed is None and st.closed > day:
-                    existing[x] += size
-                continue
-
             # if the story wasn't created on day 0 and the current day
             # isn't day 0, consider it added-after-start
             if st.created > added_after and day >= added_after: # st.created > days[leeway]:
@@ -1400,78 +1379,73 @@ def backlog_save(request, project_id):
 
 @restricted
 @cached
-def product_backlog(request, project_id, states=None):
-    statename = {}
+def backlog_excel(request, project_id, states=None, suggest=None):
+    states_filter = [int(s) for s in states.split(':')]
 
-    if not states:
-        states_filter = [UserStory.STATES.DEFINED, UserStory.STATES.SPECIFIED]
+    project = Project.objects.get(id=project_id)
+    if suggest:
+        backlog = project.backlog_suggest(states_filter, suggest)
     else:
-        states_filter = [int(s) for s in states.split(':')]
+        backlog = project.backlog(states_filter)
 
+    statename = {}
     for state, name in UserStory.STATES.choices(include_hidden = True):
         statename[state] = name
 
-    stories = UserStory.objects.reset().filter(project__id=project_id).order_by('rank').order_by('id')
     wb = pyExcelerator.Workbook()
-    active = wb.add_sheet('Active Product Backlog')
-    full = wb.add_sheet('Product Backlog')
+    ws = wb.add_sheet('Product Backlog')
 
     style = pyExcelerator.XFStyle()
     style.font = pyExcelerator.Font()
     style.font.bold = True
 
-    for ws in [active, full]:
-        for c, header in enumerate(['Story', 'Rank', 'Name', 'Description', 'State', 'Iteration', 'Size', 'Suggested size']):
-            ws.write(0, c, header, style)
+    header_row = ['Story', 'Rank', 'Name', 'Description', 'State', 'Iteration', 'Size']
+    if suggest:
+        header_row.append('Suggested size (based on %s)' % suggest)
 
-    suggested_size = Project.objects.get(id=project_id).suggest_sizes()
+    for c, header in enumerate(header_row):
+        ws.write(0, c, header, style)
 
-    for us in stories:
-        if suggested_size.has_key(us.id):
-            us.suggested_size = UserStory.size_label_for(suggested_size[us.id])
-        else:
-            us.suggested_size = None
+    row = 0
+    for story in backlog.backlog:
+        if story.whatami != 'UserStory':
+            continue
 
-    row = [0, 0]
-    for story in stories:
-        for ws, write, shn in [(full, True, 1), (active, story.state in states_filter, 0)]:
-            if not write:
-                continue
+        row += 1
+        ws.write(row, 0, story.id)
 
-            row[shn] += 1
-            ws.write(row[shn], 0, story.id)
+        if not story.rank is None:
+            ws.write(row, 1, story.rank)
 
-            if not story.rank is None:
-                ws.write(row[shn], 1, story.rank)
-    
-            ws.write(row[shn], 2, story.name)
-    
-            if not story.description is None:
-                try:
-                    desc = unicode(story.description).decode('utf-8')
-                except:
-                    v_a = story.description.encode('ascii', 'ignore')
-                    desc = unicode(v_a).decode('utf-8')
-    
-                f = cStringIO.StringIO()
-                wr = formatter.DumbWriter(f)
-                fmt = formatter.AbstractFormatter(wr)
-                p = htmllib.HTMLParser(fmt)
-                p.feed(desc)
-                p.close()
-    
-                ws.write(row[shn], 3, f.getvalue())
-    
-            ws.write(row[shn], 4, statename[story.state])
-    
-            if not story.iteration is None:
-                ws.write(row[shn], 5, story.iteration.name)
-    
-            if story.size:
-                ws.write(row[shn], 6, UserStory.size_label_for(story.size))
-    
-            if story.suggested_size:
-                ws.write(row[shn], 7, story.suggested_size)
+        ws.write(row, 2, story.name)
+
+        if not story.description is None:
+            try:
+                desc = unicode(story.description).decode('utf-8')
+            except:
+                v_a = story.description.encode('ascii', 'ignore')
+                desc = unicode(v_a).decode('utf-8')
+
+            f = cStringIO.StringIO()
+            wr = formatter.DumbWriter(f)
+            fmt = formatter.AbstractFormatter(wr)
+            p = htmllib.HTMLParser(fmt)
+            p.feed(desc)
+            p.close()
+
+            ws.write(row, 3, f.getvalue())
+
+        ws.write(row, 4, statename[story.state])
+
+        if story.iteration:
+            ws.write(row, 5, story.iteration.name)
+
+        if story.size:
+            ws.write(row, 6, UserStory.size_label_for(story.size))
+
+        if suggest:
+            if story.suggestion:
+                ws.write(row, 7, UserStory.size_label_for(story.suggestion.size))
 
     response = HttpResponse(mimetype='application/application/vnd.ms-excel')
     response['Content-Disposition'] = 'attachment; filename=backlog.xls'
@@ -1879,42 +1853,3 @@ def csv_log_all_projects(request):
     response['Content-Disposition'] = 'attachment; filename=tasklogs-for-all-projects.csv'
     
     return response
-
-def archive(request, model, post_delete_redirect, object_id=None,
-        slug=None, slug_field='slug', template_name=None,
-        template_loader=loader, extra_context=None, login_required=False,
-        context_processors=None, template_object_name='object'):
-    """
-    Generic object-delete function.
-
-    The given template will be used to confirm deletetion if this view is
-    fetched using GET; for safty, deletion will only be performed if this
-    view is POSTed.
-
-    Templates: ``<app_label>/<model_name>_confirm_delete.html``
-    Context:
-        object
-            the original object being deleted
-    """
-    if extra_context is None: extra_context = {}
-    if login_required and not request.user.is_authenticated():
-        return redirect_to_login(request.path)
-
-    obj = create_update.lookup_object(model, object_id, slug, slug_field)
-
-    if request.method == 'POST':
-        if request.user.is_authenticated():
-            obj.archive(request.user)
-            request.user.message_set.create(message=ugettext("The %(verbose_name)s was archived.") % {"verbose_name": model._meta.verbose_name})
-        return HttpResponseRedirect(post_delete_redirect)
-    else:
-        if not template_name:
-            template_name = "%s/%s_confirm_delete.html" % (model._meta.app_label, model._meta.object_name.lower())
-        t = template_loader.get_template(template_name)
-        c = RequestContext(request, {
-            template_object_name: obj,
-        }, context_processors)
-        create_update.apply_extra_context(extra_context, c)
-        response = HttpResponse(t.render(c))
-        populate_xheaders(request, response, model, getattr(obj, obj._meta.pk.attname))
-        return response

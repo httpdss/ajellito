@@ -58,7 +58,7 @@
                 target = "/"
                 $("#project-selection").change(function(){
                     var location = window.location.href.split('/');
-                    if (location.length >=5 && location[4] in {'product_backlog': '', 'iteration': '', 'taskboard': '', 'search': '', 'log': ''}) {
+                    if (location.length >=5 && location[4] in {'backlog': '', 'iteration': '', 'taskboard': '', 'search': '', 'log': ''}) {
                         location = '/' + location[4];
                     } else {
                         location = '/backlog/';
@@ -112,8 +112,7 @@
 
         <div class="navigation">
             {% if current_project %}
-			    <a  id="navtab-backlog"
-                        href="{% url agilito.views.backlog current_project.id %}">Backlog</a>
+			    <a  id="navtab-backlog" href="{% url agilito.views.backlog current_project.id %}">Backlog</a>
 
                 {% if current_project.iteration_set.all %}
                     <a  id="navtab-iteration"

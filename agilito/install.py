@@ -303,6 +303,44 @@ if 'planned' in [str(col[0]) for col in intro.get_table_description(cursor, 'agi
     print '   alter table agilito_userstory drop planned'
     print 'and then set UNRESTRICTED_SIZE to True in your settings'
 
+needsdelete = False
+for s, p in [('UserStory', 'UserStories'), ('Task', 'Tasks')]:
+    cursor.execute('select count(1) from agilito_%s where state=1' % s.lower())
+
+    if cursor.fetchone()[0]:
+        needsdelete = True
+        Module.OK = False
+        print 'You have one or more archived %(p)s (state=1); %(s)s archival has been depracated, you will have to delete these from the database' % locals()
+if needsdelete:
+    print """the following SQL will do the trick:
+delete from agilito_impediment_tasks
+where task_id in (
+    select id from agilito_task
+    where state = 1 or exists(
+        select 1 from agilito_userstory s
+        where s.id = user_story_id and s.state = 1)
+    )
+;
+
+delete from agilito_tasklog
+where task_id in (
+    select id from agilito_task
+    where state = 1 or exists(
+        select 1 from agilito_userstory s
+        where s.id = user_story_id and s.state = 1)
+    )
+;
+
+delete from agilito_task
+where state = 1 or exists(
+    select 1 from agilito_userstory s
+    where s.id = user_story_id and s.state = 1)
+;
+
+delete from agilito_userstory where state = 1
+;
+"""
+
 if config['debug']:
     debug_errors = False
     try:

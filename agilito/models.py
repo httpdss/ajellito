@@ -286,102 +286,265 @@ class Project(ClueModel):
             return Project.touch_cache(id)
         return v
 
+    @staticmethod
+    def backlog_cmp_rank(self, other):
+        if self.rank is None and not other.rank is None:
+            return 1
+        if not self.rank is None and other.rank is None:
+            return -1
+        if self.rank is None and other.rank is None:
+            return cmp(self.typerank, other.typerank)
+        return cmp(Decimal('%d.%d' % (self.rank, self.typerank)), Decimal('%d.%d' % (other.rank, other.typerank)))
+
+    @cached
+    def backlog_suggest(self, states, base):
+        backlog = self.backlog(states)
+        suggestions, accuracy = self.suggested_sizes(base)
+
+        backlog._('suggestions').accuracy = 100 * accuracy
+        backlog.suggestions.base = base
+
+        for story in backlog.backlog:
+            if story.whatami != 'UserStory':
+                continue
+
+            try:
+                story.suggestion = suggestions[story.id]
+            except KeyError:
+                story.suggestion = None
+        return backlog
+
     @cached
     def backlog(self, states):
-        stories = list(UserStory.objects.reset().filter(project=self, state__in=states))
-        releases = list(Release.objects.filter(project=self))
+        from django.db import connection, transaction
+        cursor = connection.cursor()
 
-        suggested_size = self.suggest_sizes()
-        for us in stories:
-            if suggested_size.has_key(us.id):
-                us.suggested_size = suggested_size[us.id]
-            else:
-                us.suggested_size = None
+        result = Object()
 
-        pbl = []
-        norank = []
-        while stories and releases:
-            if stories[0].rank is None:
-                norank.append(stories.pop(0))
-            elif stories[0].rank < releases[0].rank:
-                pbl.append(stories.pop(0))
-            elif pbl == []: # don't start the PBL with an empty release
-                releases.pop(0) 
-            else:
-                pbl.append(releases.pop(0))
+        cursor.execute("""
+            select avg(end_date - start_date)
+            from agilito_iteration
+            where project_id = %s""", (self.id,))
+        result._('velocity').sprint_length = int(cursor.fetchone()[0])
 
-        pbl.extend(releases)
-        pbl.extend(stories)
-        pbl.extend(norank)
-        return pbl
+        stateset = ','.join([str(s) for s in states])
 
-    def closest(self, v, choices):
-        sel = 0
-        d = None
+        ## this selects all stories that are part of an iteration that
+        ## has no unsized stories, all stories have at least one task,
+        ## and no tasks are unestimated. As all iterations should be.
+        cursor.execute("""
+            select
+                sum(s.size) as planned,
+                sum(case when s.state=%s then s.size else 0 end) as finished
+            from agilito_userstory s
+            where s.project_id = %s and s.iteration_id in 
+                (select i.id
+                from agilito_iteration i
+                where project_id = %s
+                and not exists (select 1
+                    from agilito_userstory s
+                    left join agilito_task t on t.user_story_id = s.id
+                    where s.iteration_id = i.id and (s.size is NULL or t.estimate is NULL)
+                    )
+                )
+        """, (UserStory.STATES.ACCEPTED, self.id, self.id))
 
-        for i, c in enumerate(choices):
-            if d is None or math.fabs(v - c) < d:
-                sel = i
-                d = math.fabs(v - c)
-        return sel
+        result.velocity.actual, result.velocity.planned = cursor.fetchone()
 
-    def baseline_story(self, stories):
-        data = []
-        for story in stories:
-            hours = story.actuals or story.estimated
-            if not hours:
-                continue
-
-            data.append((story.id, float(hours)))
-
-        if len(data) == 0:
-            return None
-
-        avg = sum(d[1] for d in data)/len(data)
-
-        baseline = self.closest(avg, [d[1] for d in data])
-        return UserStory.objects.get(id=data[baseline][0])
-
-    @cached
-    def suggest_sizes(self, baseline=None, size=5, only_sized=False, include_original=False): # UserStory.SIZES.M): but needs forward declaration
-        if only_sized and not UNRESTRICTED_SIZE:
-            stories = self.userstory_set.exclude(size=None).exclude(size=UserStory.SIZES.INFINITY)
+        if result.velocity.planned:
+            result.velocity.accuracy = float(result.velocity.actual) / result.velocity.planned
         else:
-            stories = list(self.userstory_set.exclude(size=None).all())
+            result.velocity.accuracy = None
 
-        if baseline is None:
-            baseline = self.baseline_story(stories)
-
-        if baseline is None:
-            return {}
-
-        factor = float(size) / float(baseline.actuals or baseline.estimated)
-
-        if UNRESTRICTED_SIZE:
-            sizes = list(set(s.size for s in stories if s.size))
+        if result.velocity.actual and result.velocity.sprint_length:
+            points_per_day = float(result.velocity.actual / result.velocity.sprint_length)
         else:
-            sizes = [s for s in UserStory.SIZES.values() if s != UserStory.SIZES.INFINITY]
-        
+            points_per_day = 0
+
+        today = datetime.date.today()
+        stories = []
+        cursor.execute("""
+            select s.id, s.size, s.rank, s.name, s.description, s.state, s.tags, i.name
+                , case when s.state = %s then 'accepted'
+                    when s.state = %s then 'failed'
+                    when s.state = %s and i.id is NULL then 'needs-work'
+                    when i.id is NULL then 'unplanned'
+                    when i.start_date >= %s then 'planned'
+                    when i.end_date < %s then 'forgotten'
+                    when i.end_date >= %s then 'in-progress'
+                    else 'unknown' end
+            from agilito_userstory s
+            left join agilito_iteration i on s.iteration_id = i.id
+            where s.project_id = %s and s.state in (""" + stateset + ')', (
+                    UserStory.STATES.ACCEPTED,
+                    UserStory.STATES.FAILED,
+                    UserStory.STATES.DEFINED,
+                    today, today, today, self.id))
+        for id, size, rank, name, description, state, tags, iteration_name, backlog_state in cursor.fetchall():
+            story = Object(typerank=1, id=id, size=size, rank=rank, name=name, description=description, state=state,
+                           backlog_state=backlog_state, whatami = 'UserStory')
+            story.get_absolute_url = reverse('agilito.views.userstory_detail', args=[self.id, id])
+            if iteration_name:
+                story._('iteration').name = iteration_name
+            else:
+                story.iteration = None
+            story.taglist = parse_tag_input(tags)
+            stories.append(story)
+
+        cursor.execute("""
+            select count(1), sum(size)
+            from agilito_userstory
+            where project_id=%s and state in (""" + stateset + ')', (self.id,))
+        result.story_count, result.size = cursor.fetchone()
+
+        cursor.execute("""
+            select min(rank)
+            from agilito_userstory
+            where project_id = %s and state in (""" + stateset + ')', (self.id,))
+        minrank = cursor.fetchone()[0]
+
+        # make sure at least one story is shown before the first shown
+        # release
+        if minrank is None:
+            minrank = ''
+        else:
+            minrank = ' and r.rank >= %d' % minrank
+
+        release_by_id = {}
+        cursor.execute("""
+            select r.id, r.name, r.deadline, r.rank
+            from agilito_release r
+            where r.project_id = %s""" + minrank, (self.id,))
+        for id, name, deadline, rank in cursor.fetchall():
+            release = Object(typerank=0, id=id, name=name, deadline=deadline, rank=rank, whatami='Release')
+
+            if points_per_day == 0:
+                release._('release_date').date = None
+                release.release_date.error = 'project has unknown velocity'
+                release.release_date.severity = 'error'
+                release.release_date.achieved = False
+            else:
+                release._('release_date').date = today
+                release.release_date.error = None
+                release.release_date.severity = None
+                release.release_date.achieved = True
+
+            release_by_id[id] = release
+
+        warn_accuracy = (not result.velocity.accuracy is None and math.fabs(1-result.velocity.accuracy) < 0.1)
+
+        endstates = ','.join([str(s) for s in UserStory.ENDSTATES])
+        cursor.execute("""
+            select r.id,
+                max(i.end_date) as last_iteration_end,
+                sum(case when s.size is NULL then 1 else 0 end) as unsized,
+                sum(case when s.iteration_id is NULL then 0 else s.size end) as unplanned,
+                sum(case when s.state in (""" + endstates + """) then 0 else 1 end) as unfinished
+            from agilito_release r
+            join agilito_userstory s on s.project_id = r.project_id and s.rank < r.rank
+            left join agilito_iteration i on s.iteration_id = i.id
+            where r.project_id = %s""" + minrank + """
+            group by r.id""", (self.id,))
+        for id, it_end, unsized, unplanned, unfinished in cursor.fetchall():
+            release = release_by_id[id]
+            if unsized or (unplanned and points_per_day == 0):
+                release.release_date.date = None
+                if unsized:
+                    release.release_date.error = 'release has unsized stories'
+                else:
+                    release.release_date.error = 'project has unknown velocity'
+                release.release_date.severity = 'error'
+                release.release_date.achieved = False
+            else:
+                if it_end:
+                    release.release_date.date = it_end
+                else:
+                    release.release_date.date = today
+
+                release.release_date.date += datetime.timedelta(unplanned * points_per_day)
+
+                if release.deadline and release.deadline < release.release_date.date:
+                    release.release_date.severity = 'error'
+                    release.release_date.error = 'deadline exceeded'
+                elif unplanned and warn_accuracy:
+                    release.release_date.error = 'sprints based on unproven velocity'
+                    release.release_date.severity = 'warning'
+
+        result.backlog = sorted(stories + release_by_id.values(), Project.backlog_cmp_rank)
+
+        return result
+
+    def suggested_sizes(self, base):
+        from django.db import connection, transaction
+        cursor = connection.cursor()
+
+        ## might want to include other criteria later
+        stateset = ','.join([str(s) for s in (UserStory.STATES.ACCEPTED,)])
+
+        if base=='actuals':
+            field = 'tl.time_on_task'
+            tasklogs = 'join agilito_tasklog tl on tl.task_id = t.id'
+        elif base == 'estimates':
+            field = 't.estimate'
+            tasklogs = ''
+        else:
+            raise Exception('Unexpected calculation base "%s"' % base)
+
+        cursor.execute("""
+            select count(1)
+            from agilito_userstory
+            where project_id = %s and state in (""" + stateset + """)
+            """, (self.id,))
+        stories = cursor.fetchone()[0]
+
+        cursor.execute("""
+            select sum(""" + field + """)
+            from agilito_userstory s
+            join agilito_task t on t.user_story_id = s.id
+            """ + tasklogs + """
+            where s.project_id = %s and s.state in (""" + stateset + """)
+            """, (self.id,))
+        estimate = cursor.fetchone()[0]
+
+        avg = estimate / stories
+
+        cursor.execute("""
+            select s.id, max(s.size), sum(""" + field + """)
+            from agilito_userstory s
+            join agilito_task t on t.user_story_id = s.id
+            """ + tasklogs + """
+            where s.project_id = %s and s.state in (""" + stateset + """)
+            group by s.id
+            order by abs(sum(t.estimate) - %s)
+            """, (self.id, avg))
+        benchmark = cursor.fetchone()[1]
+
+        choices = zip(
+                    UserStory.SIZES.values() + [UserStory.SIZES.XL + UserStory.SIZES.XXL],
+                    UserStory.SIZES.values() + [UserStory.SIZES.INFINITY],
+                  )
+
+        benchmark = None
         suggestions = {}
-        for story in stories:
-            hours = float(story.actuals or story.estimated)
-            if not hours:
-                continue
+        planned = 0
+        suggested = 0
+        for id, size, hours in cursor.fetchall():
+            story = Object()
 
-            suggestions[story.id] = sizes[self.closest(int(factor * hours), sizes)]
-            if include_original:
-                suggestions[story.id] = (suggestions[story.id], story.size)
+            if benchmark is None:
+                story.is_benchmark = True
+                benchmark = hours
+            else:
+                story.is_benchmark = False
+            story.hours = hours
+            size = (story.hours/benchmark) * UserStory.SIZES.M
+            story.size = sorted([(math.fabs(size-c), s) for c, s in choices], lambda x, y: cmp(x[0], y[0]))[0][1]
 
-        return suggestions
+            planned += size
+            suggested += story.size
+            suggestions[id] = story
 
-    @cached
-    def size_estimation_accuracy(self):
-        sugg = self.suggest_sizes(only_sized = True, include_original = True).values()
-
-        try:
-            return (float(sum(s[0] for s in sugg)) / sum(s[1] for s in sugg)) * 100
-        except ZeroDivisionError:
-            return None
+        return (suggestions, planned / suggested)
 
     def reorder_backlog(self, table, id, rank):
         if rank is None:
@@ -718,10 +881,10 @@ class Iteration(ClueModel):
         accepted = 0
         cursor.execute("""select s.id, s.name, s.state, s.size, s.rank, s.tags
                           from agilito_userstory s
-                          where s.iteration_id = %s and s.state <> %s
-                          order by rank""", (self.id, UserStory.STATES.ARCHIVED))
+                          where s.iteration_id = %s
+                          order by rank""", (self.id,))
         for id, name, state, size, rank, tags in cursor.fetchall():
-            story = Object(id=id, name=name, state=state, size=size, rank=rank, is_archived=False, whatami='UserStory')
+            story = Object(id=id, name=name, state=state, size=size, rank=rank,  whatami='UserStory')
             story.get_absolute_url = reverse('agilito.views.userstory_detail', args=[project_id, id])
             story.taglist = parse_tag_input(tags)
             story.is_blocked = False
@@ -782,13 +945,13 @@ class Iteration(ClueModel):
                           from agilito_task t
                           join agilito_userstory s on s.id = t.user_story_id
                           left join auth_user u on t.owner_id = u.id
-                          where s.iteration_id = %s and s.state <> %s and t.state <> %s""", (self.id, UserStory.STATES.ARCHIVED, Task.STATES.ARCHIVED))
+                          where s.iteration_id = %s""", (self.id,))
         for id, name, state, estimate, remaining, tags, user_story_id, username, first_name, last_name, email in cursor.fetchall():
             try:
                 story = stories_by_id[user_story_id]
             except KeyError:
                 continue
-            task = Object(id=id, name=name, estimate=estimate, state=state, remaining=remaining, is_archived=False, whatami='Task')
+            task = Object(id=id, name=name, estimate=estimate, state=state, remaining=remaining, whatami='Task')
             task.get_absolute_url = reverse('agilito.views.task_detail', args=[project_id, user_story_id, id])
             task.user_story = story
             task.is_blocked = False
@@ -1036,16 +1199,6 @@ class UserStoryAttachment(ClueModel):
             ('view', 'Can view the user stories.'),
         )
 
-class UserStoryManager(models.Manager):
-    def get_query_set(self):
-        return super(UserStoryManager, self).get_query_set().filter(state__in=UserStory.STATES.keys)
-
-    def reset(self):
-        return super(UserStoryManager, self).get_query_set()
-
-    def get(self, *args, **kwargs):
-        return self.reset().get(*args, **kwargs)
-
 class UserStory(ClueModel):
     STATES = FieldChoices(
                 (10, 'Defined'),
@@ -1054,9 +1207,8 @@ class UserStory(ClueModel):
                 (30, 'Completed'),
                 (40, 'Accepted'),
                 (50, 'Failed'),
-                (1, '#Archived')
                 )
-    ENDSTATES = (STATES.ACCEPTED, STATES.FAILED, STATES.ARCHIVED)
+    ENDSTATES = (STATES.ACCEPTED, STATES.FAILED)
 
     SIZES = FieldChoices(
                 (1,  'XXS'),
@@ -1067,8 +1219,6 @@ class UserStory(ClueModel):
                 (13, 'XL'),
                 (21, 'XXL'),
                 (1000,  'Infinity'))
-
-    objects = UserStoryManager()
 
     project = models.ForeignKey(Project)
 
@@ -1119,9 +1269,6 @@ class UserStory(ClueModel):
 
     @property
     def backlog_state(self):
-        if self.state == UserStory.STATES.ARCHIVED:
-            return 'archived'
-
         if self.state == UserStory.STATES.ACCEPTED:
             return 'accepted'
 
@@ -1168,17 +1315,15 @@ class UserStory(ClueModel):
 
     @property
     def estimated(self):
-        return sum(t.estimate for t in self.task_set.all() if t.estimate and not t.is_archived)
+        return sum(t.estimate for t in self.task_set.all() if t.estimate)
 
     @property
     def actuals(self):
-        return sum(t.actuals for t in self.task_set.all() if t.actuals and not t.is_archived)
+        return sum(t.actuals for t in self.task_set.all() if t.actuals)
 
     @property
     def remaining(self):
-        if self.is_archived:
-            return 0
-        return sum(t.remaining for t in self.task_set.all() if t.remaining and not t.is_archived)
+        return sum(t.remaining for t in self.task_set.all() if t.remaining)
 
     def remaining_for_date(self, date):
         return sum(t.remaining_for_date(date) for t in self.task_set.all())
@@ -1197,10 +1342,6 @@ class UserStory(ClueModel):
                 pass
                
         return out
-
-    @property
-    def is_archived(self):
-        return (self.state == UserStory.STATES.ARCHIVED)
 
     def copy_to_iteration(self, iteration, copy_tasks, state, archiver):
         id = self.id
@@ -1227,17 +1368,6 @@ class UserStory(ClueModel):
             story = UserStory.objects.get(id=id)
             story.state = state
             story.save()
-
-        elif state == UserStory.STATES.ARCHIVED:
-            story = UserStory.objects.get(id=id)
-            story.archive(archiver)
-
-    def archive(self, archiver):
-        for task in self.task_set.all():
-            task.archive(archiver)
-
-        self.state = UserStory.STATES.ARCHIVED
-        self.save()
 
     def get_container_model(self):
         return self.iteration
@@ -1298,19 +1428,8 @@ class UserProfile(models.Model):
         verbose_name = _(u'User Profile')
         verbose_name_plural = _(u'User Profiles')
 
-class TaskManager(models.Manager):
-    def get_query_set(self):
-        return super(TaskManager, self).get_query_set().filter(state__in=Task.STATES.keys)
-
-    def reset(self):
-        return super(TaskManager, self).get_query_set()
-
-    def get(self, *args, **kwargs):
-        return self.reset().get(*args, **kwargs)
-
 class Task(ClueModel):
     STATES = FieldChoices(
-                (1, '#Archived'),
                 (10, 'Defined'),
                 (20, 'In Progress'),
                 (30, 'Completed'))
@@ -1322,8 +1441,6 @@ class Task(ClueModel):
                 (30, 'Development'),
                 (40, 'Testing'),
                 (99, 'Other'))
-
-    objects = TaskManager()
 
     estimate = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True)
     remaining = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True)
@@ -1359,20 +1476,12 @@ class Task(ClueModel):
         return (self.state == Task.STATES.COMPLETED)
 
     @property
-    def is_archived(self):
-        return (self.state == Task.STATES.ARCHIVED)
-
-    @property
     def is_in_progress(self):
         return (self.state == Task.STATES.IN_PROGRESS)
 
     @property
     def is_defined(self):
         return (self.state == Task.STATES.DEFINED)
-
-    def archive(self, archiver):
-        self.state = Task.STATES.ARCHIVED
-        self.save(user=archiver)
 
     def remaining_for_date(self, date):
         # for edits past the sprint end
@@ -1401,9 +1510,6 @@ class Task(ClueModel):
         return self.user_story
 
     def save(self, tasklog=None, user=None):
-        if self.state == Task.STATES.ARCHIVED:
-            self.remaining = 0
-
         if not self.id is None:
             old = Task.objects.get(id=self.id)
             if (old.remaining != self.remaining) or tasklog:
