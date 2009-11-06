@@ -538,6 +538,8 @@ def backlog(request, project_id, states=None, suggest=None):
     states_filter = [int(s) for s in states.split(':')]
 
     if suggest:
+        if not UserStory.STATES.ACCEPTED in states_filter:
+            states_filter = sorted(states_filter + [UserStory.STATES.ACCEPTED])
         backlog = project.backlog_suggest(states_filter, suggest)
     else:
         backlog = project.backlog(states_filter)
@@ -1119,6 +1121,7 @@ def iteration_status(request, project_id, iteration_id=None, template='iteration
                           'burndown': status.burndown,
                           'impediments': status.impediments,
                           'velocity': status.velocity,
+                          'comment_on': iteration,
                           }
     else:
         inner_context = {}

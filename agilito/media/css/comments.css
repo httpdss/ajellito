@@ -1,0 +1,20 @@
+.commentbox quote {
+    font-size: smaller;
+}
+
+.commentbox cite {
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
+.commentbox {
+    padding-top: 5px;
+
+}
+.commentbox.reply {
+    padding-top: 0;
+}
+
+#comment-form {
+    padding-top: 10px;
+}

@@ -3,5 +3,6 @@ settings.py
 accounts
 tagging
 debug_toolbar
+threadedcomments
 agilito.sqlite
 *.*~

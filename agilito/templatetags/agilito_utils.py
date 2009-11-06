@@ -22,3 +22,15 @@ def storystate(s):
 @register.filter
 def taskstate(s):
     return Task.STATES.label(s)
+
+@register.filter
+def fullusername(u):
+    if u.last_name and u.first_name:
+        return u'%s %s' % (u.first_name, u.last_name)
+    if u.last_name:
+        return u.last_name
+    if u.first_name:
+        return u.first_name
+    if u.email:
+        return u.email
+    return u.username

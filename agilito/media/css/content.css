@@ -174,3 +174,7 @@ ul.breadcrumbs {
     float:none !important;
     clear:both;
 }
+
+.size-benchmark {
+    border: 1px dotted grey;
+}

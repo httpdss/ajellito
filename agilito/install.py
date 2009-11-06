@@ -251,7 +251,9 @@ SVN('queryutils', url = 'http://agilito.googlecode.com/svn/trunk/queryutils').ve
 
 SVN('tagging', url = 'http://django-tagging.googlecode.com/svn/trunk/tagging').verify()
 
-#Module('threadedcomments', url = 'http://code.google.com/p/django-threadedcomments/').verify()
+Tarball('threadedcomments',
+    url='http://django-threadedcomments.googlecode.com/files/django-threadedcomments-0.5.1.tar.gz',
+    subdir='django-threadedcomments-0.5.1/threadedcomments').verify()
 
 #BZR('wiki', url = 'lp:django-wikiapp', subdir = 'wiki').verify()
 #GIT('wakawaka', url = 'git://github.com/brosner/django-wakawaka.git', branch = 'pinax-group-support', subdir = 'src/wakawaka').verify()
