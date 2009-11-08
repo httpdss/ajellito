@@ -1277,8 +1277,33 @@ def iteration_burndown_chart(request, project_id, iteration_id):
 @cached
 def iteration_cards(request, project_id, iteration_id):
     it = Iteration.objects.get(id=iteration_id, project__id=project_id)
-    tasks = it.task_cards()
-    stories = it.story_cards()
+    status = it.status()
+
+    tasks = []
+    stories = []
+
+    for story in status.stories:
+        stories.append({
+                        'StoryID': story.id,
+                        'StoryName': story.name,
+                        'StoryDescription': story.description,
+                        'StoryRank': story.relative_rank,
+                        'StorySize': us.size_label
+                        })
+        for task in story.tasks:
+            tasks.append({
+                        'TaskID': task.id,
+                        'TaskName': task.name,
+                        'TaskDescription': task.description,
+                        'TaskEstimate': task.estimate,
+                        'TaskRemaining': task.remaining,
+                        'TaskOwner': task.owner,
+                        'TaskTags': ', '.join(task.tags),
+                        'StoryID': story.id,
+                        'StoryName': story.name,
+                        'StoryDescription': story.description,
+                        'StoryRank': story.relative_rank,
+                        })
 
     labels = ODTLabels.ODTLabels(PRINTABLE_CARDS.ini)
     labels.setSheetType(PRINTABLE_CARDS.selected)

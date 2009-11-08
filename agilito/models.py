@@ -701,12 +701,12 @@ class Iteration(ClueModel):
         ## fetch story data
         unranked = []
         accepted = 0
-        cursor.execute("""select s.id, s.name, s.state, s.size, s.rank, s.tags
+        cursor.execute("""select s.id, s.name, s.description, s.state, s.size, s.rank, s.tags
                           from agilito_userstory s
                           where s.iteration_id = %s
                           order by rank""", (self.id,))
-        for id, name, state, size, rank, tags in cursor.fetchall():
-            story = Object(id=id, name=name, state=state, size=size, rank=rank,  whatami='UserStory')
+        for id, name, description, state, size, rank, tags in cursor.fetchall():
+            story = Object(id=id, name=name, description=description, state=state, size=size, rank=rank,  whatami='UserStory')
             story.get_absolute_url = reverse('agilito.views.userstory_detail', args=[project_id, id])
             story.taglist = parse_tag_input(tags)
             story.is_blocked = False
@@ -763,17 +763,17 @@ class Iteration(ClueModel):
 
         ## fetch task data
         task_owner = {None: 'Unassigned'}
-        cursor.execute("""select t.id, t.name, t.state, t.estimate, t.remaining, t.tags, t.user_story_id, u.username, u.first_name, u.last_name, u.email
+        cursor.execute("""select t.id, t.name, t.description, t.state, t.estimate, t.remaining, t.tags, t.user_story_id, u.username, u.first_name, u.last_name, u.email
                           from agilito_task t
                           join agilito_userstory s on s.id = t.user_story_id
                           left join auth_user u on t.owner_id = u.id
                           where s.iteration_id = %s""", (self.id,))
-        for id, name, state, estimate, remaining, tags, user_story_id, username, first_name, last_name, email in cursor.fetchall():
+        for id, name, description, state, estimate, remaining, tags, user_story_id, username, first_name, last_name, email in cursor.fetchall():
             try:
                 story = stories_by_id[user_story_id]
             except KeyError:
                 continue
-            task = Object(id=id, name=name, estimate=estimate, state=state, remaining=remaining, whatami='Task')
+            task = Object(id=id, name=name, description=description, estimate=estimate, state=state, remaining=remaining, whatami='Task')
             task.get_absolute_url = reverse('agilito.views.task_detail', args=[project_id, user_story_id, id])
             task.user_story = story
             task.is_blocked = False
@@ -924,50 +924,6 @@ class Iteration(ClueModel):
 
         result.remaining = result.burndown.remaining.hours[-1]
         return result.clean()
-
-    def story_cards(self):
-        cards = []
-        for us in UserStory.objects.filter(iteration=self):
-            card = {}
-            card['StoryID'] = us.id
-            card['StoryName'] = us.name
-            card['StoryDescription'] = us.description
-            card['StoryRank'] = _if_is_none_else(us.relative_rank, '?')
-            card['StorySize'] = us.size_label
-            cards.append(card)
-        return cards
-
-    def task_cards(self):
-        cards = []
-        for t in Task.objects.filter(user_story__iteration=self):
-            card = {}
-            card['TaskID'] = t.id
-            card['TaskName'] = t.name
-            card['TaskDescription'] = t.description
-            card['TaskEstimate'] = _if_is_none_else(t.estimate, '?')
-            card['TaskRemaining'] = _if_is_none_else(t.remaining, '?')
-
-            if not t.owner:
-                owner = 'Unassigned'
-            elif t.owner.first_name or t.owner.last_name:
-                owner = ' '.join([n for n in [t.owner.first_name, t.owner.last_name] if n])
-            elif t.owner.email:
-                owner = t.owner.email
-            else:
-                owner = t.owner.username
-            card['TaskOwner'] = owner
-
-            card['TaskTags'] = t.tags.replace('"', '')
-
-            us = t.user_story
-
-            card['StoryID'] = us.id
-            card['StoryName'] = us.name
-            card['StoryDescription'] = us.description
-            card['StoryRank'] = _if_is_none_else(us.relative_rank, '?')
-
-            cards.append(card)
-        return cards
 
     @property
     def estimated_without_owner(self):
