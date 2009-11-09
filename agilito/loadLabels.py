@@ -6,7 +6,7 @@ import amara
 import sys
 import os
 
-iniFile = 'ODTLabels.ini'
+iniFile = 'LabelSpecs.ini'
 
 fontsize = {
     '145.3': '20',

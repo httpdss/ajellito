@@ -1288,7 +1288,7 @@ def iteration_cards(request, project_id, iteration_id):
                         'StoryName': story.name,
                         'StoryDescription': story.description,
                         'StoryRank': story.relative_rank,
-                        'StorySize': us.size_label
+                        'StorySize': UserStory.SIZES.label(story.size)
                         })
         for task in story.tasks:
             tasks.append({
@@ -1298,7 +1298,7 @@ def iteration_cards(request, project_id, iteration_id):
                         'TaskEstimate': task.estimate,
                         'TaskRemaining': task.remaining,
                         'TaskOwner': task.owner,
-                        'TaskTags': ', '.join(task.tags),
+                        'TaskTags': ', '.join(task.taglist),
                         'StoryID': story.id,
                         'StoryName': story.name,
                         'StoryDescription': story.description,
@@ -1514,7 +1514,7 @@ def iteration_status_table(request, project_id, iteration_id):
     sprintlength = status.burndown.days
 
     style.font = bold
-    for c, h in enumerate(['task ID', 'priority', 'story', 'task'] + [str(d.date()) for d in days]):
+    for c, h in enumerate(['task ID', 'priority', 'story', 'task'] + [str(d) for d in days]):
         ws.write(0, c, h, style)
 
     row = 1
@@ -1534,7 +1534,7 @@ def iteration_status_table(request, project_id, iteration_id):
                 style.pattern = orange
             elif task.state == Task.STATES.COMPLETED and story.remaining != 0:
                 style.pattern = orange
-            ws.write(r + 1, 2, us.name, style)
+            ws.write(row, 2, story.name, style)
 
             for day, remaining in enumerate(task.remaining_for_day):
                 if day == 0:
@@ -1551,7 +1551,7 @@ def iteration_status_table(request, project_id, iteration_id):
                 else:
                     style.font = fade
 
-                ws.write(row, c + 4, remaining, style)
+                ws.write(row, day + 4, float(str(remaining)), style)
 
             style.font = defaultFont
             style.pattern = defaultPattern
@@ -1572,7 +1572,7 @@ def iteration_status_table(request, project_id, iteration_id):
     ws.write(row, 3, 'Tasks', style)
     for c in range(len(days)):
         colname = _excel_column(c + 5)
-        ws.write(row, c + 4, pyExcelerator.Formula("SUM(%s2:%s%d)" % (colname, colname, r + 2)))
+        ws.write(row, c + 4, pyExcelerator.Formula("SUM(%s2:%s%d)" % (colname, colname, row)))
 
     row += 1
     ws.write(row, 3, 'Story points', style)
@@ -1595,6 +1595,7 @@ def iteration_status_table(request, project_id, iteration_id):
 @cached
 def iteration_export(request, project_id, iteration_id):
     it = Iteration.objects.get(id=iteration_id, project__id=project_id)
+    status = it.status()
 
     style = pyExcelerator.XFStyle()
     defaultFont = style.font
@@ -1616,9 +1617,12 @@ def iteration_export(request, project_id, iteration_id):
     for c, h in enumerate(['ID', 'Story', 'Task', 'Estimate', 'Owner', 'Tags']):
         ws.write(2, c, h, style)
 
-    for r, t in enumerate(Task.objects.filter(user_story__iteration=it)):
-        for c, d in enumerate([t.id, t.user_story.name, t.name, float(t.estimate or 0), (t.owner and t.owner.username) or '', t.tags]):
-            ws.write(r+3, c, d)
+    row = 2
+    for story in status.stories:
+        for task in story.tasks:
+            row += 1
+            for c, d in enumerate([task.id, task.user_story.name, task.name, float(str(task.estimate)), task.owner, ', '.join(task.taglist)]):
+                ws.write(row, c, d)
 
     response = HttpResponse(mimetype='application/application/vnd.ms-excel')
     response['Content-Disposition'] = 'attachment; filename=iteration.xls'
