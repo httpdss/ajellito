@@ -309,7 +309,11 @@ class Project(ClueModel):
             select avg(end_date - start_date)
             from agilito_iteration
             where project_id = %s""", (self.id,))
-        result._('velocity').sprint_length = int(cursor.fetchone()[0])
+        try:
+            l = int(cursor.fetchone()[0])
+        except TypeError:
+            l = None
+        result._('velocity').sprint_length = None
 
         stateset = ','.join([str(s) for s in states])
 
