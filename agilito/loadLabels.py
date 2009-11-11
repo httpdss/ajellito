@@ -6,7 +6,7 @@ import amara
 import sys
 import os
 
-iniFile = 'ODTLabels.ini'
+iniFile = 'LabelSpecs.ini'
 
 fontsize = {
     '145.3': '20',
@@ -101,8 +101,8 @@ def fetchPaper(url):
         labels.set(name, 'height', size.height)
 
 for name in ['avery-iso-templates.xml', 'avery-other-templates.xml', 'avery-us-templates.xml', 'brother-other-templates.xml', 'dymo-other-templates.xml', 'misc-iso-templates.xml', 'misc-other-templates.xml', 'misc-us-templates.xml', 'zweckform-iso-templates.xml']:
-    fetchLabels('https://glabels.svn.sourceforge.net/svnroot/glabels/trunk/glabels2/data/templates/' + name)
+    fetchLabels('http://git.gnome.org/cgit/glabels/plain/templates/' + name)
 
-fetchPaper('https://glabels.svn.sourceforge.net/svnroot/glabels/trunk/glabels2/data/templates/paper-sizes.xml')
+fetchPaper('http://git.gnome.org/cgit/glabels/plain/templates/paper-sizes.xml')
 
 labels.write(open(iniFile, 'w'))

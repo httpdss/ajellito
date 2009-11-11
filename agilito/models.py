@@ -60,9 +60,6 @@ class Object(object):
     def __str__(self):
         return '[' + ', '.join(['%s: %s' % (n, str(v)) for (n, v) in self.__dict__.items()]) + ']'
 
-def rounded(v, p):
-    return Decimal(v).quantize(Decimal('1.' + ('0' * p)))
-
 def same_date(d1, d2):
     return ((d1 - d2).days == 0)
 
@@ -239,19 +236,6 @@ class Project(ClueModel):
     @property
     def project(self):
         return self
-
-    @cached
-    def velocity(self):
-        vs = filter(lambda x: not x is None, [it.velocity() for it in self.iteration_set.all()])
-
-        sprints = len(vs)
-        if sprints == 0:
-            return {'actual':None, 'estimated':None, 'sprint_length':None}
-
-        pv = {}
-        for key in ['actual', 'estimated', 'sprint_length']:
-            pv[key] = float(sum(v[key] for v in vs if not v[key] is None)) / sprints
-        return pv
 
     def __unicode__(self):
         return u'P%s: %s' % (self.id, self.name)
@@ -562,7 +546,7 @@ class Project(ClueModel):
             for t in ['userstory', 'release']:
                 cursor.execute('select %s(rank) from agilito_%s where project_id = %%s' % (rank, t), (self.id,))
                 r = cursor.fetchone()[0]
-                if r: ranks.append(r)
+                if not r is None: ranks.append(r)
 
             if ranks == []:
                 rank = 1
@@ -602,22 +586,9 @@ class Project(ClueModel):
         # which touches the cache using a signal
         Project.touch_cache(self.id)
 
-def toprank():
-    class TopRank:
-        def __call__(self):
-            from django.db import connection, transaction
-            c = connection.cursor()
-            c.execute("""select coalesce(max(rank), 0) + 1 as rank from agilito_userstory
-                        union
-                        select coalesce(max(rank), 0) + 1 from agilito_release
-                        order by rank desc""")
-            return c.fetchone()[0]
-
-    return TopRank()
-
 class Release(ClueModel):
     project = models.ForeignKey(Project)
-    rank = models.IntegerField(default=toprank)
+    rank = models.IntegerField(null=True, blank=True)
     deadline = models.DateField(null=True, blank=True)
 
     def __unicode__(self):
@@ -635,85 +606,6 @@ class Release(ClueModel):
     @models.permalink
     def get_absolute_url(self):
         return 'release_edit', (), {'project_id': self.project.id, 'release_id': self.id }      
-
-    @cached
-    def release_date(self):
-        from django.db import connection, transaction
-        c = connection.cursor()
-
-        status = {
-            'date': None,
-            'achieved': False,
-            'error': None,
-            'severity': None
-        }
-
-        end_states = ','.join(str(s) for s in UserStory.ENDSTATES)
-
-        # unsized
-        c.execute("""
-            select count(*)
-            from agilito_userstory
-            where project_id = %%s
-            and iteration_id is NULL
-            and size is NULL
-            and not state in (%s)
-            and rank < %%s""" % end_states, (self.project.id, self.rank))
-        unsized = c.fetchone()[0]
-
-        if unsized > 0:
-            status['error'] = 'release has unsized stories'
-            status['severity'] = 'error'
-            return status
-
-        # unplanned
-        c.execute("""
-            select sum(size)
-            from agilito_userstory
-            where project_id = %%s
-            and iteration_id is NULL
-            and not size is NULL
-            and not state in (%s)
-            and rank < %%s""" % end_states, (self.project.id, self.rank))
-        unplanned = c.fetchone()[0]
-        if unplanned is None:
-            unplanned = 0
-
-        pv = self.project.velocity()
-        pva = float(pv['actual']) / pv['sprint_length']
-        pve = float(pv['estimated']) / pv['sprint_length']
-
-        if unplanned > 0 and (pv['actual'] is None or pv['actual'] == 0):
-            status['error'] = 'project has unknown velocity'
-            status['severity'] = 'error'
-            return status
-        else:
-            # correct for weekdays
-            unplanned = unplanned * pva * (7.0/5)
-
-        # planned but unfinished
-        c.execute("""
-            select max(i.end_date), max(us.id)
-            from agilito_userstory us
-            left join agilito_iteration i on us.iteration_id = i.id and not state in (%s) and us.rank < %%s
-            where us.project_id = %%s""" % end_states, (self.project.id, self.rank))
-        sprints_end, unfinished = c.fetchone()[0]
-        if sprints_end is None: # no sprints defined
-            sprints_end = datetime.date.today()
-        elif not unfinished is None and pve > 1.1 * pva and sprints_end > datetime.date.today():
-            status['error'] = 'sprints based on unproven velocity'
-            status['severity'] = 'warning'
-        else:
-            status['achieved'] = unfinished is None
-
-        rd = sprints_end + datetime.timedelta(unplanned)
-        status['date'] = rd
-        if self.deadline and rd > self.deadline:
-            status['error'] = 'deadline exceeded'
-            status['severity'] = 'error'
-            return status
-
-        return status
 
     def save(self):
         super(Release, self).save()
@@ -734,77 +626,6 @@ class Iteration(ClueModel):
         return 'iteration_status_with_id', (), {'project_id': self.project.id,
                                                 'iteration_id': self.id }
                                                 
-    @property
-    def us_accepted(self):
-        return sum(us.size or 0 for us in self.userstory_set.filter(Q(state=UserStory.STATES.ACCEPTED)))
-    
-    @property
-    def us_accepted_percentage(self):
-        total = sum(us.size or 0 for us in self.userstory_set.all())
-        accepted = self.us_accepted
-        if total <> 0:
-            return (float(accepted)/float(total))*100 
-        else:
-            return 0
-
-    @cached
-    def velocity(self):
-        d = self.total_days()
-        if d == 0:
-            return None
-
-        s = [(us.size or 0, us.state in [UserStory.STATES.ACCEPTED, UserStory.STATES.COMPLETED]) for us in self.userstory_set.all()]
-
-        v = {}
-        v['estimated'] = sum(e[0] for e in s)
-        if v['estimated'] == 0:
-            return None
-
-        v['sprint_length'] = d
-
-        if self.end_date > datetime.date.today():
-            v['actual'] = None
-        else:
-            v['actual'] = sum(a[0] for a in filter(lambda x: x[1], s))
-
-        return v
-
-    @cached
-    def day_number(self, date):
-        """
-        Return the day of the iteration we're on.
-        date is start-of-day.
-        """
-        until = min(self.end_date + datetime.timedelta(1), date) - datetime.timedelta(1)
-        return rrule(DAILY, cache=True,
-                     dtstart=self.start_date, until=until,
-                     byweekday=(MO,TU,WE,TH,FR)).count()
-
-    @cached
-    def total_days(self):
-        return self.day_number(self.end_date + datetime.timedelta(1))
-
-    def ideal_hours(self, date):
-        # the ideal hours results by dividing the estimated hours
-        # (which are not changeable except through the admin) evenly
-        # over the iteration days
-        # date is start-of-day date
-        estimated = self.total_estimated()
-        ndays = self.total_days()
-        elapsed = self.day_number(date)
-        return rounded(estimated - estimated * elapsed / ndays, 2)
-
-    def remaining_hours(self, date):
-        return sum(t.remaining_for_date(date) for t in Task.objects.filter(user_story__iteration=self))
-
-    def remaining_storypoints(self, date):
-        is_start = same_date(date, self.start_date)
-        return sum(us.size or 0 for us in self.userstory_set.all() if is_start or us.remaining_for_date(date) > 0)
-
-    def total_estimated(self):
-        return sum(t.estimate or 0
-                   for t in Task.objects.filter(user_story__iteration=self))
-
     def user_estimated(self, userid):    
         tasks = Task.objects.filter(owner__id=userid, user_story__iteration__pk=self.id)
 
@@ -836,6 +657,7 @@ class Iteration(ClueModel):
                                byweekday=(MO,TU,WE,TH,FR))]
 
         result._('burndown').days = len(days)
+        result.burndown.dates = days
         lastday = result.burndown.days - 1
         dayrange = list(xrange(result.burndown.days))
 
@@ -883,12 +705,12 @@ class Iteration(ClueModel):
         ## fetch story data
         unranked = []
         accepted = 0
-        cursor.execute("""select s.id, s.name, s.state, s.size, s.rank, s.tags
+        cursor.execute("""select s.id, s.name, s.description, s.state, s.size, s.rank, s.tags
                           from agilito_userstory s
                           where s.iteration_id = %s
                           order by rank""", (self.id,))
-        for id, name, state, size, rank, tags in cursor.fetchall():
-            story = Object(id=id, name=name, state=state, size=size, rank=rank,  whatami='UserStory')
+        for id, name, description, state, size, rank, tags in cursor.fetchall():
+            story = Object(id=id, name=name, description=description, state=state, size=size, rank=rank,  whatami='UserStory')
             story.get_absolute_url = reverse('agilito.views.userstory_detail', args=[project_id, id])
             story.taglist = parse_tag_input(tags)
             story.is_blocked = False
@@ -914,7 +736,7 @@ class Iteration(ClueModel):
         ## this makes sure unranked stories go to the bottom
         result.stories.extend(unranked)
 
-        result.stories_accepted = (accepted * 100.0) / len(result.stories)
+        result.stories_accepted_percentage = (accepted * 100.0) / len(result.stories)
 
         ## compact ranks within a sprint
         for rank, story in enumerate(result.stories):
@@ -945,17 +767,17 @@ class Iteration(ClueModel):
 
         ## fetch task data
         task_owner = {None: 'Unassigned'}
-        cursor.execute("""select t.id, t.name, t.state, t.estimate, t.remaining, t.tags, t.user_story_id, u.username, u.first_name, u.last_name, u.email
+        cursor.execute("""select t.id, t.name, t.description, t.state, t.estimate, t.remaining, t.tags, t.user_story_id, u.username, u.first_name, u.last_name, u.email
                           from agilito_task t
                           join agilito_userstory s on s.id = t.user_story_id
                           left join auth_user u on t.owner_id = u.id
                           where s.iteration_id = %s""", (self.id,))
-        for id, name, state, estimate, remaining, tags, user_story_id, username, first_name, last_name, email in cursor.fetchall():
+        for id, name, description, state, estimate, remaining, tags, user_story_id, username, first_name, last_name, email in cursor.fetchall():
             try:
                 story = stories_by_id[user_story_id]
             except KeyError:
                 continue
-            task = Object(id=id, name=name, estimate=estimate, state=state, remaining=remaining, whatami='Task')
+            task = Object(id=id, name=name, description=description, estimate=estimate, state=state, remaining=remaining, whatami='Task')
             task.get_absolute_url = reverse('agilito.views.task_detail', args=[project_id, user_story_id, id])
             task.user_story = story
             task.is_blocked = False
@@ -982,9 +804,9 @@ class Iteration(ClueModel):
             for tag in task.taglist:
                 result.tags[tag].append(task)
 
-            task._('tmp').remaining_for_day = [None for day in activedays]
-            task.tmp.remaining_for_day[0] = estimate or 0
-            task.tmp.remaining_for_day[today] = remaining or 0
+            task.remaining_for_day = [None for day in activedays]
+            task.remaining_for_day[0] = estimate or 0
+            task.remaining_for_day[today] = remaining or 0
             tasks_by_id[id] = task
 
         ## tasklog updates
@@ -997,7 +819,7 @@ class Iteration(ClueModel):
                           """, (self.id, datetime.date.today()))
         for old_remaining, date, spent, task in cursor.fetchall():
             try:
-                tasks_by_id[task].tmp.remaining_for_day[tasklogday(date)] = old_remaining
+                tasks_by_id[task].remaining_for_day[tasklogday(date)] = old_remaining
             except KeyError:
                 continue
 
@@ -1008,14 +830,14 @@ class Iteration(ClueModel):
         revdays = list(reversed(activedays))
         for id, task in tasks_by_id.items():
             for day in revdays:
-                if task.tmp.remaining_for_day[day] is None:
-                    task.tmp.remaining_for_day[day] = task.tmp.remaining_for_day[day+1]
+                if task.remaining_for_day[day] is None:
+                    task.remaining_for_day[day] = task.remaining_for_day[day+1]
 
         ## now that we have all task data we can update the story stats for all days spent in the iteration
         for story in result.stories:
             size = story.size or 0
             for day in activedays:
-                hours = sum(task.tmp.remaining_for_day[day] for task in story.tasks)
+                hours = sum(task.remaining_for_day[day] for task in story.tasks)
                 if hours == 0:
                     points = 0
                 else:
@@ -1107,50 +929,6 @@ class Iteration(ClueModel):
         result.remaining = result.burndown.remaining.hours[-1]
         return result.clean()
 
-    def story_cards(self):
-        cards = []
-        for us in UserStory.objects.filter(iteration=self):
-            card = {}
-            card['StoryID'] = us.id
-            card['StoryName'] = us.name
-            card['StoryDescription'] = us.description
-            card['StoryRank'] = _if_is_none_else(us.relative_rank, '?')
-            card['StorySize'] = us.size_label
-            cards.append(card)
-        return cards
-
-    def task_cards(self):
-        cards = []
-        for t in Task.objects.filter(user_story__iteration=self):
-            card = {}
-            card['TaskID'] = t.id
-            card['TaskName'] = t.name
-            card['TaskDescription'] = t.description
-            card['TaskEstimate'] = _if_is_none_else(t.estimate, '?')
-            card['TaskRemaining'] = _if_is_none_else(t.remaining, '?')
-
-            if not t.owner:
-                owner = 'Unassigned'
-            elif t.owner.first_name or t.owner.last_name:
-                owner = ' '.join([n for n in [t.owner.first_name, t.owner.last_name] if n])
-            elif t.owner.email:
-                owner = t.owner.email
-            else:
-                owner = t.owner.username
-            card['TaskOwner'] = owner
-
-            card['TaskTags'] = t.tags.replace('"', '')
-
-            us = t.user_story
-
-            card['StoryID'] = us.id
-            card['StoryName'] = us.name
-            card['StoryDescription'] = us.description
-            card['StoryRank'] = _if_is_none_else(us.relative_rank, '?')
-
-            cards.append(card)
-        return cards
-
     @property
     def estimated_without_owner(self):
         tasks = Task.objects.filter(owner=None, user_story__iteration__pk=self.id)
@@ -1237,16 +1015,12 @@ class UserStory(ClueModel):
     else:
         size = models.SmallIntegerField(choices=SIZES.choices(), null=True)
 
-    # alter table agilito_userstory add column created date NOT NULL default 'now',
-    # alter table agilito_userstory add column closed date
     created = models.DateField(default=datetime.datetime.now)
     closed = models.DateField(null=True)
 
-    # alter table agilito_userstory add column tags varchar(255) NOT NULL default ''
     tags = TagField()
 
     copied_from = models.ForeignKey('UserStory', null=True)
-    #generation = models.SmallIntegerField(default=1)
 
     @property
     def taglist(self):
@@ -1271,32 +1045,6 @@ class UserStory(ClueModel):
     @property
     def state_label(self):
         return UserStory.STATES.label(self.state)
-
-    @property
-    def backlog_state(self):
-        if self.state == UserStory.STATES.ACCEPTED:
-            return 'accepted'
-
-        if self.state == UserStory.STATES.FAILED:
-            return 'failed'
-
-        if self.state == UserStory.STATES.DEFINED and self.iteration is None:
-            return 'needs-work'
-
-        if self.iteration is None:
-            return 'unplanned'
-
-        if self.iteration.start_date > datetime.date.today():
-            return 'planned'
-
-        if self.iteration.end_date < datetime.date.today():
-            return 'forgotten'
-
-        # allow for one day of leeway
-        if self.iteration.end_date >= (datetime.date.today() - datetime.timedelta(days=1)): 
-            return 'in-progress'
-
-        return 'unknown'
 
     @property
     def is_blocked(self):
@@ -1329,9 +1077,6 @@ class UserStory(ClueModel):
     @property
     def remaining(self):
         return sum(t.remaining for t in self.task_set.all() if t.remaining)
-
-    def remaining_for_date(self, date):
-        return sum(t.remaining_for_date(date) for t in self.task_set.all())
 
     @property
     def test_failed(self):
@@ -1487,26 +1232,6 @@ class Task(ClueModel):
     @property
     def is_defined(self):
         return (self.state == Task.STATES.DEFINED)
-
-    def remaining_for_date(self, date):
-        # for edits past the sprint end
-        if same_date(date, datetime.date.today()) or date > self.user_story.iteration.end_date:
-            return self.remaining or 0
-
-        # find the oldest tasklog that is newer than date and check
-        # what the estimate on this task was then
-        try:
-            log = self.tasklog_set.filter(date__gt=date).order_by('date')[0:1].get()
-        except TaskLog.DoesNotExist:
-            # no tasklog between here and there
-            return self.remaining or 0
-        else:
-            if log.old_remaining is not None:
-                return log.old_remaining
-            else:
-                # the info isn't there :(
-                # return something almost but not quite useful
-                return self.estimate or 0
 
     def __unicode__(self):
         return u'TA%s: %s' % (self.id, self.name)

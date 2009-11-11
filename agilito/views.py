@@ -84,7 +84,6 @@ from urllib import quote, urlencode
 from agilito.models import Project, Iteration, UserStory, Task, TestCase,\
     TaskLog, UserProfile, User, TestResult, UserStoryAttachment, \
     Impediment, Release
-from agilito.models import rounded
 
 from agilito.forms import UserStoryForm, UserStoryShortForm, gen_TaskLogForm,\
     TaskForm, TestCaseAddForm, TestCaseEditForm, testcase_form_factory,\
@@ -1122,6 +1121,7 @@ def iteration_status(request, project_id, iteration_id=None, template='iteration
                           'impediments': status.impediments,
                           'velocity': status.velocity,
                           'comment_on': iteration,
+                          'us_accepted_percentage': status.stories_accepted_percentage,
                           }
     else:
         inner_context = {}
@@ -1277,8 +1277,33 @@ def iteration_burndown_chart(request, project_id, iteration_id):
 @cached
 def iteration_cards(request, project_id, iteration_id):
     it = Iteration.objects.get(id=iteration_id, project__id=project_id)
-    tasks = it.task_cards()
-    stories = it.story_cards()
+    status = it.status()
+
+    tasks = []
+    stories = []
+
+    for story in status.stories:
+        stories.append({
+                        'StoryID': story.id,
+                        'StoryName': story.name,
+                        'StoryDescription': story.description,
+                        'StoryRank': story.relative_rank,
+                        'StorySize': UserStory.SIZES.label(story.size)
+                        })
+        for task in story.tasks:
+            tasks.append({
+                        'TaskID': task.id,
+                        'TaskName': task.name,
+                        'TaskDescription': task.description,
+                        'TaskEstimate': task.estimate,
+                        'TaskRemaining': task.remaining,
+                        'TaskOwner': task.owner,
+                        'TaskTags': ', '.join(task.taglist),
+                        'StoryID': story.id,
+                        'StoryName': story.name,
+                        'StoryDescription': story.description,
+                        'StoryRank': story.relative_rank,
+                        })
 
     labels = ODTLabels.ODTLabels(PRINTABLE_CARDS.ini)
     labels.setSheetType(PRINTABLE_CARDS.selected)
@@ -1460,7 +1485,9 @@ def backlog_excel(request, project_id, states=None, suggest=None):
 @restricted
 @cached
 def iteration_status_table(request, project_id, iteration_id):
+    ## IP
     it = Iteration.objects.get(id=iteration_id, project__id=project_id)
+    status = it.status()
 
     style = pyExcelerator.XFStyle()
     defaultFont = style.font
@@ -1483,88 +1510,79 @@ def iteration_status_table(request, project_id, iteration_id):
     wb = pyExcelerator.Workbook()
     ws = wb.add_sheet('Burndown')
 
-    days= list(rrule(DAILY, cache=True, dtstart=it.start_date, until=it.end_date, byweekday=(MO,TU,WE,TH,FR)))
-    days.append(days[-1] + datetime.timedelta(1))
-    sprintlength = len(days)
+    days = status.burndown.dates
+    sprintlength = status.burndown.days
 
     style.font = bold
-    for c, h in enumerate(['task ID', 'priority', 'story', 'task'] + [str(d.date()) for d in days]):
+    for c, h in enumerate(['task ID', 'priority', 'story', 'task'] + [str(d) for d in days]):
         ws.write(0, c, h, style)
 
-    today = datetime.date.today()
-    days = [d.date() for d in filter(lambda d: d.date()<=today, days)]
-    for r, t in enumerate(Task.objects.filter(user_story__iteration=it)):
-        us = t.user_story
+    row = 1
+    for story in status.stories:
+        for task in story.tasks:
+            row += 1
 
-        if t.estimate is None:
-            prev = 0
-        else:
-            prev = decimal.Decimal(t.estimate)
+            ws.write(row, 0, task.id)
+            if not story.rank is None:
+                ws.write(row, 1, story.rank)
 
-        for c, day in enumerate(days):
-
-            last = decimal.Decimal(t.remaining_for_date(day))
-
-            if last < prev:
+            style.font = defaultFont
+            style.pattern = defaultPattern
+            if story.state == UserStory.STATES.COMPLETED and story.remaining == 0:
                 style.pattern = green
-            elif last > prev:
+            elif task.state != Task.STATES.COMPLETED and story.remaining == 0:
                 style.pattern = orange
-            else:
-                style.pattern = defaultPattern
+            elif task.state == Task.STATES.COMPLETED and story.remaining != 0:
+                style.pattern = orange
+            ws.write(row, 2, story.name, style)
 
-            if last == 0:
+            for day, remaining in enumerate(task.remaining_for_day):
+                if day == 0:
+                    style.pattern = defaultPattern
+                elif task.remaining_for_day[day] < task.remaining_for_day[day - 1]:
+                    style.pattern = green
+                elif task.remaining_for_day[day] > task.remaining_for_day[day - 1]:
+                    style.pattern = orange
+                else:
+                    style.pattern = defaultPattern
+
+                if remaining:
+                    style.font = defaultFont
+                else:
+                    style.font = fade
+
+                ws.write(row, day + 4, float(str(remaining)), style)
+
+            style.font = defaultFont
+            style.pattern = defaultPattern
+            if task.estimate is None:
                 style.font = fade
-            else:
-                style.font = defaultFont
-
-            ws.write(r + 1, c + 4, float(last), style)
-            prev = last
-
-        ws.write(r + 1, 0, t.id)
-
-        if not us.rank is None:
-            ws.write(r + 1, 1, us.rank)
-
-        style.font = defaultFont
-        style.pattern = defaultPattern
-        if us.state == UserStory.STATES.COMPLETED and us.remaining == 0:
-            style.pattern = green
-        elif t.state != Task.STATES.COMPLETED and us.remaining == 0:
-            style.pattern = orange
-        elif t.state == Task.STATES.COMPLETED and us.remaining != 0:
-            style.pattern = orange
-        ws.write(r + 1, 2, us.name, style)
-
-        style.font = defaultFont
-        style.pattern = defaultPattern
-        if t.estimate is None:
-            style.font = fade
-        elif t.state == Task.STATES.COMPLETED and last == 0:
-            style.pattern = green
-        elif t.state != Task.STATES.COMPLETED and last == 0:
-            style.pattern = orange
-        elif t.state == Task.STATES.COMPLETED and last != 0:
-            style.pattern = orange
-        ws.write(r + 1, 3, t.name, style)
+            elif task.state == Task.STATES.COMPLETED and remaining == 0:
+                style.pattern = green
+            elif task.state != Task.STATES.COMPLETED and remaining == 0:
+                style.pattern = orange
+            elif task.state == Task.STATES.COMPLETED and last != 0:
+                style.pattern = orange
+            ws.write(row, 3, task.name, style)
 
     style.font = bold
     style.pattern = defaultPattern
 
-    ws.write(r+2, 3, 'Tasks', style)
+    row += 1
+    ws.write(row, 3, 'Tasks', style)
     for c in range(len(days)):
         colname = _excel_column(c + 5)
-        ws.write(r + 2, c + 4, pyExcelerator.Formula("SUM(%s2:%s%d)" % (colname, colname, r + 2)))
+        ws.write(row, c + 4, pyExcelerator.Formula("SUM(%s2:%s%d)" % (colname, colname, row)))
 
-    ws.write(r+3, 3, 'Story points', style)
-    for c, d in enumerate(days):
-        ws.write(r+3, c+4, it.remaining_storypoints(d))
+    row += 1
+    ws.write(row, 3, 'Story points', style)
+    for c, remaining in enumerate(status.burndown.remaining.points):
+        ws.write(row, c+4, remaining)
 
-    ws.write(r+4, 3, 'Ideal', style)
-    total = '$%s%d' % (_excel_column(5), r + 3)
-    sl = sprintlength - 1
-    for c in range(sprintlength):
-        f = '(%(total)s/%(sl)d) * (%(sl)d - (COLUMN() - 5))' % locals()
-        ws.write(r + 4, c + 4, pyExcelerator.Formula(f))
+    row += 1
+    ws.write(row, 3, 'Ideal', style)
+    for c, remaining in enumerate(status.burndown.remaining.ideal):
+        ws.write(row, c+4, remaining)
 
     response = HttpResponse(mimetype='application/application/vnd.ms-excel')
     response['Content-Disposition'] = 'attachment; filename=burndown.xls'
@@ -1577,6 +1595,7 @@ def iteration_status_table(request, project_id, iteration_id):
 @cached
 def iteration_export(request, project_id, iteration_id):
     it = Iteration.objects.get(id=iteration_id, project__id=project_id)
+    status = it.status()
 
     style = pyExcelerator.XFStyle()
     defaultFont = style.font
@@ -1598,9 +1617,12 @@ def iteration_export(request, project_id, iteration_id):
     for c, h in enumerate(['ID', 'Story', 'Task', 'Estimate', 'Owner', 'Tags']):
         ws.write(2, c, h, style)
 
-    for r, t in enumerate(Task.objects.filter(user_story__iteration=it)):
-        for c, d in enumerate([t.id, t.user_story.name, t.name, float(t.estimate or 0), (t.owner and t.owner.username) or '', t.tags]):
-            ws.write(r+3, c, d)
+    row = 2
+    for story in status.stories:
+        for task in story.tasks:
+            row += 1
+            for c, d in enumerate([task.id, task.user_story.name, task.name, float(str(task.estimate)), task.owner, ', '.join(task.taglist)]):
+                ws.write(row, c, d)
 
     response = HttpResponse(mimetype='application/application/vnd.ms-excel')
     response['Content-Disposition'] = 'attachment; filename=iteration.xls'
