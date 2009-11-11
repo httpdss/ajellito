@@ -732,7 +732,10 @@ class Iteration(ClueModel):
         ## this makes sure unranked stories go to the bottom
         result.stories.extend(unranked)
 
-        result.stories_accepted_percentage = (accepted * 100.0) / len(result.stories)
+        if len(result.stories) != 0:
+            result.stories_accepted_percentage = (accepted * 100.0) / len(result.stories)
+        else:
+            result.stories_accepted_percentage = 0
 
         ## compact ranks within a sprint
         for rank, story in enumerate(result.stories):
@@ -762,7 +765,7 @@ class Iteration(ClueModel):
             result.failures += story.failures
 
         ## fetch task data
-        task_owner = {None: 'Unassigned'}
+        task_owner = {None: 'unassigned'}
         cursor.execute("""select t.id, t.name, t.description, t.state, t.estimate, t.remaining, t.tags, t.user_story_id, u.username, u.first_name, u.last_name, u.email
                           from agilito_task t
                           join agilito_userstory s on s.id = t.user_story_id
