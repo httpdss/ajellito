@@ -642,18 +642,12 @@ class Iteration(ClueModel):
 
         result = Object()
 
-        ## determine the days for this iteration, plus 1 (makes graphs easier)
-        dow = self.end_date.weekday()
-        if dow >= 4:
-            extradays = 7 - dow
-        else:
-            extradays = 1
-
+        ## determine the days for this iteration
         days = [datetime.date(d.year, d.month, d.day)
                 for d in rrule(DAILY,
                                cache=True,
                                dtstart=self.start_date,
-                               until=self.end_date + datetime.timedelta(extradays),
+                               until=self.end_date,
                                byweekday=(MO,TU,WE,TH,FR))]
 
         result._('burndown').days = len(days)
