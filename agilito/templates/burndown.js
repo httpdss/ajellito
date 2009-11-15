@@ -4,23 +4,6 @@
             hours = [ {{ burndown.remaining.hours|join:"," }} ];
             storypoints = [ {{ burndown.remaining.points|join:"," }} ];
 
-            // jqplot currently can't handle series that have all the
-            // same datapoints
-            p = storypoints[0];
-            bug = true;
-            for (i in storypoints) {
-                if (storypoints[i] != p) {
-                    bug = false;
-                    break;
-                }
-            }
-            if (bug) {
-                storypoints = hours.slice();
-                pmax = {{burndown.max.hours}};
-            } else {
-                pmax = {{burndown.max.points}};
-            }
-
             plot1 = $.jqplot(div, [ideal, storypoints, hours], {
                 legend:{show:true, location:'sw'},
                 grid:{shadow:false},
@@ -32,8 +15,8 @@
                     ],
                 axes:{
                     xaxis:{min:1, max:{{burndown.days}}, tickInterval:1, tickOptions:{formatString:'%d'}}, 
-                    y2axis:{min:0, max:pmax * 1.01, tickOptions:{formatString:'%d'}},
-                    yaxis:{min:0, max:{{burndown.max.hours}} * 1.01, tickOptions:{formatString:'%d'}}
+                    y2axis:{min:0, max:{% if burndown.max.points %}{{burndown.max.points}}  * 1.01{% else %}1{% endif %}, tickOptions:{formatString:'%d'}},
+                    yaxis:{min:0, max:{% if burndown.max.hours %}{{burndown.max.hours}} * 1.01{% else %}1{% endif %}, tickOptions:{formatString:'%d'}}
                     },
                 highlighter:{
                     tooltipAxes: 'y',
