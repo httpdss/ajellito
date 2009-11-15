@@ -23,10 +23,5 @@
                     formatString: '%s'
                 }
             });
-            
-            /* $('#' + div + ' .jqplot-legend div div').each(function(i) {
-                $(this).append('<div></div>');
-                $(this).find('div').css('border-top', '7px solid ' + $(this).css('background-color'));
-            }); */
         }
     </script>
