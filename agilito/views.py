@@ -1551,7 +1551,7 @@ def iteration_status_table(request, project_id, iteration_id):
                 else:
                     style.font = fade
 
-                ws.write(row, day + 4, float(str(remaining)), style)
+                ws.write(row, day + 4, remaining, style)
 
             style.font = defaultFont
             style.pattern = defaultPattern
@@ -1621,7 +1621,7 @@ def iteration_export(request, project_id, iteration_id):
     for story in status.stories:
         for task in story.tasks:
             row += 1
-            for c, d in enumerate([task.id, task.user_story.name, task.name, float(str(task.estimate)), task.owner, ', '.join(task.taglist)]):
+            for c, d in enumerate([task.id, task.user_story.name, task.name, task.estimate, task.owner, ', '.join(task.taglist)]):
                 ws.write(row, c, d)
 
     response = HttpResponse(mimetype='application/application/vnd.ms-excel')
@@ -1669,7 +1669,8 @@ def hours_export(request, project_id, iteration_id):
             users.append(u)
             user_col[u] = len(users) + 3
 
-        ws.write(r+3, user_col[u], float(t.estimate or 0))
+        if t.estimate:
+            ws.write(r+3, user_col[u], t.estimate)
 
     for u in users:
         ws.write(2, user_col[u], u, style)
@@ -1799,7 +1800,6 @@ def task_json(request, task_id):
                                  actuals=dec2str(task.actuals),
                                  state=task.state))
     return HttpResponse(json, mimetype='application/json')
-
 
 def _mk_time(date_string):
     _date = time.mktime(time.strptime(date_string, '%Y-%m-%d'))

@@ -856,7 +856,7 @@ class Iteration(ClueModel):
         ideal = [0.0] * result.burndown.days
         delta = result.burndown.days - 1
         deltainv = 1.0 / delta
-        maxh = float(result.burndown.remaining.hours[0])
+        maxh = result.burndown.remaining.hours[0]
         for day in dayrange:
             ideal[day] = deltainv * maxh * day
         result.burndown.remaining.ideal = list(reversed(ideal))
@@ -865,9 +865,9 @@ class Iteration(ClueModel):
         unsized = False
         for us in result.stories:
             unsized = (us.size is None or unsized)
-            if not us.remaining is None and left >= float(us.remaining):
+            if not us.remaining is None and left >= us.remaining:
                 us.is_starved = False
-                left -= float(us.remaining)
+                left -= us.remaining
             else:
                 us.is_starved = True
         result.burndown.unsized_stories = unsized
@@ -1189,8 +1189,8 @@ class Task(ClueModel):
                 (40, 'Testing'),
                 (99, 'Other'))
 
-    estimate = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True)
-    remaining = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True)
+    estimate = models.FloatField(blank=True, null=True)
+    remaining = models.FloatField(blank=True, null=True)
 
     state = models.SmallIntegerField(choices=STATES.choices(), default=STATES.DEFINED)
 
@@ -1379,12 +1379,12 @@ class Impediment(models.Model):
 
 class TaskLog(models.Model):
     task = models.ForeignKey('Task')
-    time_on_task = models.DecimalField(max_digits=5, decimal_places=2)
+    time_on_task = models.FloatField()
     summary = models.TextField()
     date = models.DateTimeField()
     iteration = models.ForeignKey('Iteration', null=True)
     owner = models.ForeignKey(User)
-    old_remaining = models.DecimalField(max_digits=5, decimal_places=2)
+    old_remaining = models.FloatField()
 
     def __unicode__(self):
         return 'Task Log: [%s, %s, %s, %s, %s]' % (self.iteration, self.date, 
