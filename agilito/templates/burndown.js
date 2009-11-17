@@ -3,7 +3,7 @@
             ideal = [ {{ burndown.remaining.ideal|join:"," }} ];
             hours = [ {{ burndown.remaining.hours|join:"," }} ];
             storypoints = [ {{ burndown.remaining.points|join:"," }} ];
-            xticks = [ {% for x, label in burndown.labels.items %}{% if not forloop.first %}, {% endif %}[{{x|add:"1"}}, '{{label|addslashes}}']{% endfor %}];
+            xticks = [ {% for x, label in burndown.labels %}{% if not forloop.first %}, {% endif %}[{{x|add:"1"}}, '{{label|addslashes}}']{% endfor %}];
 
             plot1 = $.jqplot(div, [ideal, storypoints, hours], {
                 legend:{show:true, location:'sw'},

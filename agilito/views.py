@@ -248,7 +248,7 @@ def close_window(request):
 
 def datelabels(dates, l):
     label = ['mo', 'tu', 'we', 'th', 'fr', 'sa', 'su']
-    return dict(zip(range(len(dates)), [label[d.weekday()][:l] for d in dates]))
+    return list(enumerate([label[d.weekday()][:l] for d in dates]))
 
 @login_required
 def index(request):
