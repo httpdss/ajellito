@@ -74,3 +74,11 @@ def num_encode(n):
 
 CACHE_PREFIX = num_encode(os.getpid()) + '.'
 CACHE_PREFIX += '.'.join(str(num_encode(int(p))) for p in str(time.time()).split('.'))
+
+try:
+    from dulwich.repo import Repo
+    BACKLOG_ARCHIVE = settings.BACKLOG_ARCHIVE
+except AttributeError:
+    BACKLOG_ARCHIVE = None
+except ImportError:
+    BACKLOG_ARCHIVE = None
