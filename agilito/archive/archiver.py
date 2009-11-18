@@ -34,6 +34,9 @@ if not os.path.exists(os.path.join(BACKLOG_ARCHIVE, '.git')):
     print 'Backlog archival path is not a git repository'
     sys.exit(1)
 
+from dulwich.repo import Repo
+from dulwich import object_store as GitObjectStore
+
 sizes = not UNRESTRICTED_SIZE
 for project in Project.objects.all():
     data =  {'title': project.name,
@@ -48,4 +51,11 @@ os.chdir(BACKLOG_ARCHIVE)
 
 call('git add .')
 call('git commit -a -m "%s"' % datetime.date.today().isoformat())
-print call('git log --format=format:"%H %ct"')
+#print call('git log --format=format:"%H %ct"')
+
+repo = Repo(BACKLOG_ARCHIVE)
+for commit in repo.revision_history(repo.head()):
+    print commit.commit_time
+    for id, name, sha in repo.tree(commit.tree).entries():
+        print name, sha
+        GitObjectStore.tree_lookup_path(repo.object_store, commit.tree, name)
