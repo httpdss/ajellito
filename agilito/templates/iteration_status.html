@@ -124,17 +124,13 @@ function highlightTag(ids)
 
                 <tr>
                     <td>Stories</td>
-                    <td>
-                        {% if stories %}
-                            {{ stories.count }} 
-                        {% endif %}
-                    </td>
+                    <td>{{ stories|length }}</td>
                 </tr>
 
-                {% if velocity.estimated %}
+                {% if velocity.planned %}
                     <tr>
                         <td>Velocity</td>
-                        <td>{{ velocity.actual|default_if_none:"unknown" }} vs {{ velocity.estimated }}</td>
+                        <td>currently {{ velocity.actual|default_if_none:"unknown" }} vs {{ velocity.planned }} planned</td>
                     </tr>
                 {% endif %}
 

@@ -850,7 +850,8 @@ class Iteration(ClueModel):
         result.burndown._('max').hours = max(result.burndown.remaining.hours)
         result.burndown.max.points = max(result.burndown.remaining.points)
 
-        result.velocity = result.burndown.remaining.points[-1]
+        result._('velocity').planned = result.burndown.remaining.points[0]
+        result.velocity.actual = result.velocity.planned - result.burndown.remaining.points[-1]
 
         ## data points for the ideal
         ideal = [0.0] * result.burndown.days
