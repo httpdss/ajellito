@@ -467,6 +467,8 @@ def userstory_move(request, project_id, userstory_id):
             else:
                 if data['action'] == 'copy_fail':
                     state = UserStory.STATES.FAILED
+                else:
+                    state = UserStory.STATES.DEFINED
 
                 story.copy_to_iteration(data['iteration'], data['copy_tasks'], state)
 
