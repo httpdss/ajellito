@@ -246,6 +246,10 @@ def touch_cache(request, project_id):
 def close_window(request):
     return render_to_response('close_window.html', context_instance=Context())
 
+def datelabels(dates, l):
+    label = ['mo', 'tu', 'we', 'th', 'fr', 'sa', 'su']
+    return list(enumerate([label[d.weekday()][:l] for d in dates]))
+
 @login_required
 def index(request):
     """
@@ -463,6 +467,8 @@ def userstory_move(request, project_id, userstory_id):
             else:
                 if data['action'] == 'copy_fail':
                     state = UserStory.STATES.FAILED
+                else:
+                    state = UserStory.STATES.DEFINED
 
                 story.copy_to_iteration(data['iteration'], data['copy_tasks'], state)
 
@@ -1107,6 +1113,8 @@ def iteration_status(request, project_id, iteration_id=None, template='iteration
                         args=[project_id, iteration.id]),
             popup="taskboard")
 
+        status.burndown.labels = datelabels(status.burndown.dates, 1)
+
         inner_context = { 'current_iteration' : iteration,
                           'tags': tags,
                           'sidebar': sidebar.ifenabled(),
@@ -1268,6 +1276,7 @@ def iteration_burndown_chart(request, project_id, iteration_id):
     it = Iteration.objects.get(id=iteration_id, project__id=project_id)
 
     data = it.status().burndown
+    data.labels = datelabels(data.dates, 2)
     data.iteration = {'name': it.name, 'starts': it.start_date, 'ends': it.end_date}
 
     context = AgilitoContext(request, {'burndown': data})

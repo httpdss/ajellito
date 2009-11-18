@@ -768,7 +768,9 @@ class Iteration(ClueModel):
                           from agilito_task t
                           join agilito_userstory s on s.id = t.user_story_id
                           left join auth_user u on t.owner_id = u.id
-                          where s.iteration_id = %s""", (self.id,))
+                          where s.iteration_id = %s
+                          order by id
+                          """, (self.id,))
         for id, name, description, state, estimate, remaining, tags, user_story_id, username, first_name, last_name, email in cursor.fetchall():
             try:
                 story = stories_by_id[user_story_id]
@@ -850,7 +852,8 @@ class Iteration(ClueModel):
         result.burndown._('max').hours = max(result.burndown.remaining.hours)
         result.burndown.max.points = max(result.burndown.remaining.points)
 
-        result.velocity = result.burndown.remaining.points[-1]
+        result._('velocity').planned = result.burndown.remaining.points[0]
+        result.velocity.actual = result.velocity.planned - result.burndown.remaining.points[-1]
 
         ## data points for the ideal
         ideal = [0.0] * result.burndown.days
@@ -1090,7 +1093,7 @@ class UserStory(ClueModel):
                
         return out
 
-    def copy_to_iteration(self, iteration, copy_tasks, state, archiver):
+    def copy_to_iteration(self, iteration, copy_tasks, state):
         id = self.id
 
         tasks = self.task_set.all()
