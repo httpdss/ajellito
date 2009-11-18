@@ -1090,7 +1090,7 @@ class UserStory(ClueModel):
                
         return out
 
-    def copy_to_iteration(self, iteration, copy_tasks, state, archiver):
+    def copy_to_iteration(self, iteration, copy_tasks, state):
         id = self.id
 
         tasks = self.task_set.all()
