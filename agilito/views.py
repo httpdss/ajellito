@@ -605,13 +605,13 @@ def backlog(request, project_id, states=None, suggest=None):
     if not UNRESTRICTED_SIZE:
         if suggest is None or suggest == 'estimates':
             sidebar.add('Review', 'Suggest sizes based on actuals',
-                reverse('agilito.views.backlog', args=[project_id, states, 'actuals']))
+                reverse('agilito.views.backlog', args=[project_id, str(UserStory.STATES.ACCEPTED), 'actuals']))
         if suggest is None or suggest == 'actuals':
             sidebar.add('Review', 'Suggest sizes based on estimates',
-                reverse('agilito.views.backlog', args=[project_id, states, 'estimates']))
+                reverse('agilito.views.backlog', args=[project_id, str(UserStory.STATES.ACCEPTED), 'estimates']))
         if suggest in ('estimates', 'actuals'):
             sidebar.add('Review', 'Remove size suggestions',
-                reverse('agilito.views.backlog', args=[project_id, states]))
+                reverse('agilito.views.backlog', args=[project_id]))
 
     if EXCEL_ENABLED:
         if suggest:
@@ -1464,6 +1464,11 @@ def backlog_excel(request, project_id, states=None, suggest=None):
     header_row = ['Story', 'Rank', 'Name', 'Description', 'State', 'Iteration', 'Size']
     if suggest:
         header_row.append('Suggested size (based on %s)' % suggest)
+        if suggest == 'estimates':
+            header_row.append('Estimate (hours)')
+        else:
+            header_row.append('Actuals (hours)')
+        header_row.append('Pct')
 
     for c, header in enumerate(header_row):
         ws.write(0, c, header, style)
@@ -1507,7 +1512,15 @@ def backlog_excel(request, project_id, states=None, suggest=None):
 
         if suggest:
             if story.suggestion:
-                ws.write(row, 7, UserStory.size_label_for(story.suggestion.size))
+                if story.suggestion.is_benchmark:
+                    ws.write(row, 7, UserStory.size_label_for(story.suggestion.size), style)
+                else:
+                    ws.write(row, 7, UserStory.size_label_for(story.suggestion.size))
+
+                ws.write(row, 8, story.suggestion.hours)
+
+                if story.size:
+                    ws.write(row, 9, int(float(story.size * 100) / story.suggestion.size))
 
     response = HttpResponse(mimetype='application/application/vnd.ms-excel')
     response['Content-Disposition'] = 'attachment; filename=backlog.xls'
