@@ -29,6 +29,7 @@ urlpatterns = patterns('agilito.views',
 
     url(r'^(?P<project_id>\d+)/backlog/userstory/add/$', 'userstory_create', name="story_from_backlog"),
     url(r'^(?P<project_id>\d+)/backlog/save/$', 'backlog_save', name="backlog_save"),
+    (r'^(?P<project_id>\d+)/backlog/archived/(?P<date>[0-9]{4}-[0-9]{2}-[0-9]{2})/$', 'backlog_archived'),
 
     url(r'^(?P<project_id>\d+)/release/add/$', 'release_create', name="release_create"),
     url(r'^(?P<project_id>\d+)/release/(?P<release_id>\d+)/edit/$', 'release_edit', name='release_edit'),

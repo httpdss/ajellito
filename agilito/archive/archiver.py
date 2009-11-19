@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import os, sys, codecs, datetime
+import os, sys, codecs, datetime, re
 import subprocess
 
 os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
@@ -35,7 +35,6 @@ if not os.path.exists(os.path.join(BACKLOG_ARCHIVE, '.git')):
     sys.exit(1)
 
 from dulwich.repo import Repo
-from dulwich import object_store as GitObjectStore
 
 sizes = not UNRESTRICTED_SIZE
 for project in Project.objects.all():
@@ -51,11 +50,31 @@ os.chdir(BACKLOG_ARCHIVE)
 
 call('git add .')
 call('git commit -a -m "%s"' % datetime.date.today().isoformat())
-#print call('git log --format=format:"%H %ct"')
 
+from django.db import connection, transaction
+cursor = connection.cursor()
+
+cursor.execute('delete from agilito_archivedbacklog')
+id = 0
+
+projects = []
 repo = Repo(BACKLOG_ARCHIVE)
 for commit in repo.revision_history(repo.head()):
-    print commit.commit_time
-    for id, name, sha in repo.tree(commit.tree).entries():
-        print name, sha
-        GitObjectStore.tree_lookup_path(repo.object_store, commit.tree, name)
+    for mode, name, sha in repo.tree(commit.tree).entries():
+        m = re.match('([0-9]+)[.]html$', name)
+        if not m:
+            continue
+
+        #print GitObjectStore.tree_lookup_path(repo.object_store.__getitem__, commit.tree, name)
+
+        project_id = int(m.group(1))
+        if not project_id in projects:
+            projects.append(project_id)
+
+        id += 1
+        cursor.execute("""  insert into agilito_archivedbacklog (id, stamp, project_id, commit)
+                            values (%s, %s, %s, %s)""", (id, datetime.datetime.fromtimestamp(commit.commit_time), project_id, commit.tree))
+
+transaction.commit_unless_managed()
+for project_id in projects:
+    Project.touch_cache(project_id)

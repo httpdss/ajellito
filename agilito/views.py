@@ -6,10 +6,13 @@ import types
 from django.core.cache import cache
 from django.contrib.sites.models import Site
 
-from agilito import CACHE_ENABLED, EXCEL_ENABLED, UNRESTRICTED_SIZE, PRINTABLE_CARDS, CACHE_PREFIX
+from agilito import CACHE_ENABLED, EXCEL_ENABLED, UNRESTRICTED_SIZE, PRINTABLE_CARDS, CACHE_PREFIX, BACKLOG_ARCHIVE
 
 if EXCEL_ENABLED:
     import pyExcelerator
+if BACKLOG_ARCHIVE:
+    from dulwich.repo import Repo
+    from dulwich import object_store as GitObjectStore
 
 import decimal
 
@@ -83,7 +86,7 @@ from urllib import quote, urlencode
 
 from agilito.models import Project, Iteration, UserStory, Task, TestCase,\
     TaskLog, UserProfile, User, TestResult, UserStoryAttachment, \
-    Impediment, Release
+    Impediment, Release, ArchivedBacklog
 
 from agilito.forms import UserStoryForm, UserStoryShortForm, gen_TaskLogForm,\
     TaskForm, TestCaseAddForm, TestCaseEditForm, testcase_form_factory,\
@@ -1413,6 +1416,28 @@ def backlog_save(request, project_id):
 
     url = request.GET.get('last_page', project.get_absolute_url())
     return HttpResponseRedirect(url)
+
+@restricted
+def backlog_archived(request, project_id, date):
+    if BACKLOG_ARCHIVE is None:
+        raise Http404
+
+    year, month, day = [int(d) for d in date.split('-')]
+    date = datetime.datetime(year, month, day, 23, 59, 59)
+
+    try:
+        archived = ArchivedBacklog.objects.filter(project__id=project_id, stamp__lte=date).order_by('-stamp')[0]
+    except ArchivedBacklog.DoesNotExist:
+        raise Http404
+    except IndexError:
+        raise Http404
+
+    response = HttpResponse(mimetype='application/application/vnd.ms-excel')
+    response['Content-Disposition'] = 'attachment; filename=backlog.xls'
+
+    repo = Repo(BACKLOG_ARCHIVE)
+    response.write(GitObjectStore.tree_lookup_path(repo.object_store.__getitem__, str(archived.commit), '%d.html' % int(project_id)))
+    return response
 
 @restricted
 @cached

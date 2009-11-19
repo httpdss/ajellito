@@ -1429,3 +1429,11 @@ class TaskLog(models.Model):
         permissions = (
             ('view', 'Can view the task log.'),
         )
+
+class ArchivedBacklog(models.Model):
+    stamp = models.DateTimeField()
+    project = models.ForeignKey(Project)
+    commit = models.TextField()
+
+    class Meta:
+        ordering = ('-stamp',)
