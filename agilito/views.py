@@ -1482,7 +1482,10 @@ def backlog_excel(request, project_id, states=None, suggest=None):
 
         if suggest:
             if story.suggestion:
-                ws.write(row, 7, UserStory.size_label_for(story.suggestion.size))
+                if story.suggestion.is_benchmark:
+                    ws.write(row, 7, UserStory.size_label_for(story.suggestion.size), style)
+                else:
+                    ws.write(row, 7, UserStory.size_label_for(story.suggestion.size))
 
     response = HttpResponse(mimetype='application/application/vnd.ms-excel')
     response['Content-Disposition'] = 'attachment; filename=backlog.xls'
