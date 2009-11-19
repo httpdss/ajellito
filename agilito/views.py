@@ -602,13 +602,13 @@ def backlog(request, project_id, states=None, suggest=None):
     if not UNRESTRICTED_SIZE:
         if suggest is None or suggest == 'estimates':
             sidebar.add('Review', 'Suggest sizes based on actuals',
-                reverse('agilito.views.backlog', args=[project_id, states, 'actuals']))
+                reverse('agilito.views.backlog', args=[project_id, str(UserStory.STATES.ACCEPTED), 'actuals']))
         if suggest is None or suggest == 'actuals':
             sidebar.add('Review', 'Suggest sizes based on estimates',
-                reverse('agilito.views.backlog', args=[project_id, states, 'estimates']))
+                reverse('agilito.views.backlog', args=[project_id, str(UserStory.STATES.ACCEPTED), 'estimates']))
         if suggest in ('estimates', 'actuals'):
             sidebar.add('Review', 'Remove size suggestions',
-                reverse('agilito.views.backlog', args=[project_id, states]))
+                reverse('agilito.views.backlog', args=[project_id]))
 
     if EXCEL_ENABLED:
         if suggest:

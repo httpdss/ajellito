@@ -283,7 +283,7 @@ class Project(ClueModel):
     @cached
     def backlog_suggest(self, states, base):
         backlog = self.backlog(states)
-        suggestions, accuracy = self.suggested_sizes(base)
+        suggestions, accuracy = self.suggested_sizes(states, base)
 
         backlog._('suggestions').accuracy = 100 * accuracy
         backlog.suggestions.base = base
@@ -462,12 +462,11 @@ class Project(ClueModel):
 
         return result
 
-    def suggested_sizes(self, base):
+    def suggested_sizes(self, states, base):
         from django.db import connection, transaction
         cursor = connection.cursor()
 
-        ## might want to include other criteria later
-        stateset = ','.join([str(s) for s in (UserStory.STATES.ACCEPTED,)])
+        stateset = ','.join([str(s) for s in states])
 
         if base=='actuals':
             field = 'tl.time_on_task'
