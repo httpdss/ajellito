@@ -1439,6 +1439,11 @@ def backlog_excel(request, project_id, states=None, suggest=None):
     header_row = ['Story', 'Rank', 'Name', 'Description', 'State', 'Iteration', 'Size']
     if suggest:
         header_row.append('Suggested size (based on %s)' % suggest)
+        if suggest == 'estimates':
+            header_row.append('Estimate (hours)')
+        else:
+            header_row.append('Actuals (hours)')
+        header_row.append('Pct')
 
     for c, header in enumerate(header_row):
         ws.write(0, c, header, style)
@@ -1486,6 +1491,11 @@ def backlog_excel(request, project_id, states=None, suggest=None):
                     ws.write(row, 7, UserStory.size_label_for(story.suggestion.size), style)
                 else:
                     ws.write(row, 7, UserStory.size_label_for(story.suggestion.size))
+
+                ws.write(row, 8, story.suggestion.hours)
+
+                if story.size:
+                    ws.write(row, 9, int(float(story.size * 100) / story.suggestion.size))
 
     response = HttpResponse(mimetype='application/application/vnd.ms-excel')
     response['Content-Disposition'] = 'attachment; filename=backlog.xls'
