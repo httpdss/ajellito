@@ -628,6 +628,16 @@ def backlog(request, project_id, states=None, suggest=None):
     sidebar.add('save-changes#Backlog changed', 'Save Changes',
         '#',
         props={'onclick': "savechanges(); return false;"})
+    sidebar.add('Backlog changed', 'Cancel Changes',
+        '#',
+        props={'onclick': "window.location.reload(); return false;"})
+
+    try:
+        earliest_archive = ArchivedBacklog.objects.filter(project__id=project_id).order_by('stamp')[0]
+    except ArchivedBacklog.DoesNotExist:
+        earliest_archive = None
+    except IndexError:
+        earliest_archive = None
 
     inner_context = {   'sidebar'       : sidebar.ifenabled(),
                         'backlog'       : backlog.backlog,
@@ -637,7 +647,8 @@ def backlog(request, project_id, states=None, suggest=None):
                         'states'        : states_options,
                         'sizes'         : sizes,
                         'iterations'    : iterations,
-                        'newiteration'  : newiteration
+                        'newiteration'  : newiteration,
+                        'earliest_archive': earliest_archive,
                     }
     if suggest:
         inner_context['suggestions'] = backlog.suggestions
@@ -1102,6 +1113,14 @@ def iteration_status(request, project_id, iteration_id=None, template='iteration
                 reverse('agilito.views.iteration_export',
                         args=[project_id, iteration.id]))
 
+        try:
+            ArchivedBacklog.objects.filter(project__id=project_id, stamp__lte=iteration.start_date).order_by('stamp')[0]
+            sidebar.add('Reports', 'Product backlog at iteration start',
+                reverse('agilito.views.backlog_archive',
+                        args=[project_id, '%04d-%02d-%02d' % (iteration.start_date.year, iteration.start_date.month, iteration.start_date.day)]))
+        except IndexError:
+            pass
+
         sidebar.add('Reports', 'Burndown Chart',
             reverse('agilito.views.iteration_burndown_chart',
                     args=[project_id, iteration.id]),
@@ -1418,9 +1437,15 @@ def backlog_save(request, project_id):
     return HttpResponseRedirect(url)
 
 @restricted
-def backlog_archived(request, project_id, date):
+def backlog_archived(request, project_id, date=None):
     if BACKLOG_ARCHIVE is None:
         raise Http404
+
+    if date is None:
+        try:
+            date = request.POST['archivedate']
+        except KeyError:
+            raise Http404
 
     year, month, day = [int(d) for d in date.split('-')]
     date = datetime.datetime(year, month, day, 23, 59, 59)
@@ -1432,11 +1457,11 @@ def backlog_archived(request, project_id, date):
     except IndexError:
         raise Http404
 
-    response = HttpResponse(mimetype='application/application/vnd.ms-excel')
-    response['Content-Disposition'] = 'attachment; filename=backlog.xls'
+    response = HttpResponse(mimetype='application/vnd.oasis.opendocument.spreadsheet')
+    response['Content-Disposition'] = 'attachment; filename=backlog.ods'
 
     repo = Repo(BACKLOG_ARCHIVE)
-    response.write(GitObjectStore.tree_lookup_path(repo.object_store.__getitem__, str(archived.commit), '%d.html' % int(project_id)))
+    response.write(GitObjectStore.tree_lookup_path(repo.object_store.__getitem__, str(archived.commit), '%d.ods' % int(project_id)))
     return response
 
 @restricted
@@ -1532,7 +1557,6 @@ def backlog_excel(request, project_id, states=None, suggest=None):
 @restricted
 @cached
 def iteration_status_table(request, project_id, iteration_id):
-    ## IP
     it = Iteration.objects.get(id=iteration_id, project__id=project_id)
     status = it.status()
 

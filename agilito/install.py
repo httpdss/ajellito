@@ -232,6 +232,8 @@ class GIT(DownloadableModule):
         shutil.rmtree(TMPDIR, True)
 
 Module('django', url = 'http://www.djangoproject.com/', app=False).verify()
+Module('html5lib', url = 'http://code.google.com/p/html5lib/', app=False).verify()
+Module('ooolib', url = 'http://ooolib.sourceforge.net/', app=False).verify()
 for app in ['admin', 'humanize', 'markup']:
     Module('django.contrib.' + app).verify()
 

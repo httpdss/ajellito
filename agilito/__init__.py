@@ -78,6 +78,8 @@ CACHE_PREFIX += '.'.join(str(num_encode(int(p))) for p in str(time.time()).split
 try:
     from dulwich.repo import Repo
     BACKLOG_ARCHIVE = settings.BACKLOG_ARCHIVE
+    if not os.path.exists(os.path.join(BACKLOG_ARCHIVE, '.git')):
+        BACKLOG_ARCHIVE = None
 except AttributeError:
     BACKLOG_ARCHIVE = None
 except ImportError:

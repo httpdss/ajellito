@@ -89,6 +89,13 @@
             }
         }
 
+        function enableArchive()
+        {
+            {% if earliest_archive %}
+                $('#archivefetch').attr("disabled", $('#archivedate').val() == '' || isDirty(false));
+            {% endif %}
+        }
+
         function showSave()
         {
             if (isDirty(true)) {
@@ -96,6 +103,8 @@
             } else {
                 $("#save-changes").hide();
             }
+
+            enableArchive();
         }
 
         function savechanges()
@@ -190,6 +199,12 @@
 
             $("#iterationstarts").datepicker({ dateFormat: 'yy-mm-dd' });
             $("#iterationends").datepicker({ dateFormat: 'yy-mm-dd' });
+            {% if earliest_archive %}
+                $("#archivedate").datepicker({
+                    dateFormat: 'yy-mm-dd',
+                    minDate: new Date({{earliest_archive.stamp.year}}, {{earliest_archive.stamp.month|add:"-1"}}, {{earliest_archive.stamp.day}})
+                    });
+            {% endif %}
 
             $("#user-story-list").tableDnD({
                 onDragClass: "dragging",
@@ -400,6 +415,14 @@
                     {%endfor%}
                 </tbody>
             </table>
+            {% if earliest_archive %}
+                <form name="archive" action="{%  url agilito.views.backlog_archived current_project.id %}" method="post">
+                    <input type="submit" id="archivefetch" disabled="disabled" class="save" value="Fetch" />
+                    backlog as it was on 
+                        <input onchange="enableArchive()" id="archivedate" name="archivedate"
+                            value="" maxlength="10" size="10" type="text" />
+                </form>
+            {% endif %}
             <form style="display:none" name="queuesubmit" id="queuesubmit" action="{% url backlog_save current_project.id %}?last_page={{last_page}}" method="post">
                 <textarea name="command-queue" id="command-queue" class="mceNoEditor"></textarea>
                 <input type="submit" class="save" value="Save" />
