@@ -47,7 +47,7 @@ def render(d, data):
 
         doc.set_cell(row, 5, story.backlog_state)
         doc.set_cell(row, 6, ', '.join(story.taglist))
-    
+
     doc.save(d)
 
 from agilito.models import Project, UserStory
