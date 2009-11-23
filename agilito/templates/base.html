@@ -1,0 +1,16 @@
+{% extends "site_base.html" %}
+
+{% load i18n %}
+
+{% block body_class %}agilito{% endblock %}
+
+{% block subnav %}
+    <!-- TODO: add menu links to base.html -->
+    {% if user.is_authenticated %}
+        <ul>
+            <li>Link1</li>
+        </ul>
+    {% else %}
+        &nbsp;
+    {% endif %}
+{% endblock %}
