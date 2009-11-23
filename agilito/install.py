@@ -242,11 +242,6 @@ if config['debug']:
         url='http://github.com/robhudson/django-debug-toolbar/tarball/0.8.0',
         subdir='robhudson-django-debug-toolbar-4f43c9b/debug_toolbar/').verify()
 
-Module('pyExcelerator',
-    url = 'http://sourceforge.net/projects/pyexcelerator',
-    app = False,
-    optional=True).verify()
-
 SVN('agilito', url = 'http://agilito.googlecode.com/svn/trunk/agilito').verify()
 
 SVN('queryutils', url = 'http://agilito.googlecode.com/svn/trunk/queryutils').verify()

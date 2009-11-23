@@ -5,11 +5,10 @@ import ODTLabels
 import types
 from django.core.cache import cache
 from django.contrib.sites.models import Site
+from agilito.tools import Calc
 
-from agilito import CACHE_ENABLED, EXCEL_ENABLED, UNRESTRICTED_SIZE, PRINTABLE_CARDS, CACHE_PREFIX, BACKLOG_ARCHIVE
+from agilito import CACHE_ENABLED, UNRESTRICTED_SIZE, PRINTABLE_CARDS, CACHE_PREFIX, BACKLOG_ARCHIVE
 
-if EXCEL_ENABLED:
-    import pyExcelerator
 if BACKLOG_ARCHIVE:
     from dulwich.repo import Repo
     from dulwich import object_store as GitObjectStore
@@ -19,10 +18,6 @@ import decimal
 from django.core.xheaders import populate_xheaders
 from django.utils.translation import ugettext
 from django.utils.datastructures import SortedDict
-
-import cStringIO
-import formatter
-import htmllib
 
 from dateutil.rrule import rrule, WEEKLY, DAILY, MO, TU, WE, TH, FR
 
@@ -535,8 +530,6 @@ def userstory_delete(request, project_id, userstory_id):
 def backlog(request, project_id, states=None, suggest=None):
     """
     """
-    global EXCEL_ENABLED
-
     if not states:
         states = '%d:%d' % (UserStory.STATES.DEFINED, UserStory.STATES.SPECIFIED)
         return HttpResponseRedirect( reverse('agilito.views.backlog', args=[project_id, states]))
@@ -613,12 +606,11 @@ def backlog(request, project_id, states=None, suggest=None):
             sidebar.add('Review', 'Remove size suggestions',
                 reverse('agilito.views.backlog', args=[project_id]))
 
-    if EXCEL_ENABLED:
-        if suggest:
-            args=[project_id, states, suggest]
-        else:
-            args=[project_id, states]
-        sidebar.add('Reports', 'Backlog in Excel format', reverse('agilito.views.backlog_excel', args=args))
+    if suggest:
+        args=[project_id, states, suggest]
+    else:
+        args=[project_id, states]
+    sidebar.add('Reports', 'Backlog in spreadsheet format', reverse('agilito.views.backlog_ods', args=args))
 
     sidebar.add('Reports', 'Backlog Evolution',
         reverse('agilito.views.product_backlog_chart',
@@ -1104,14 +1096,13 @@ def iteration_status(request, project_id, iteration_id=None, template='iteration
             reverse('agilito.views.iteration_cards',
                     args=[project_id, iteration.id]))
 
-        if EXCEL_ENABLED:
-            sidebar.add('Reports', 'Task Status',
-                reverse('agilito.views.iteration_status_table',
-                        args=[project_id, iteration.id]))
+        sidebar.add('Reports', 'Task Status',
+            reverse('agilito.views.iteration_status_table',
+                    args=[project_id, iteration.id]))
 
-            sidebar.add('Reports', 'Iteration Export',
-                reverse('agilito.views.iteration_export',
-                        args=[project_id, iteration.id]))
+        sidebar.add('Reports', 'Iteration Export',
+            reverse('agilito.views.iteration_export',
+                    args=[project_id, iteration.id]))
 
         try:
             ArchivedBacklog.objects.filter(project__id=project_id, stamp__lte=iteration.start_date).order_by('stamp')[0]
@@ -1345,7 +1336,7 @@ def iteration_cards(request, project_id, iteration_id):
     labels.makeLabels(tasks, stories, response)
     return response
 
-def _excel_column(n):
+def _ods_column(n):
     """
     Returns excel formated column number for n
     
@@ -1357,7 +1348,7 @@ def _excel_column(n):
     if div==0:
         return chr(65+n)
     else:
-        return _excel_column(div)+chr(65+n%26)
+        return _ods_column(div)+chr(65+n%26)
 
 def backlog_cmd_set_iteration(context, cmd):
     if cmd['id'] != 'new':
@@ -1466,7 +1457,7 @@ def backlog_archived(request, project_id, date=None):
 
 @restricted
 @cached
-def backlog_excel(request, project_id, states=None, suggest=None):
+def backlog_ods(request, project_id, states=None, suggest=None):
     states_filter = [int(s) for s in states.split(':')]
 
     project = Project.objects.get(id=project_id)
@@ -1479,12 +1470,7 @@ def backlog_excel(request, project_id, states=None, suggest=None):
     for state, name in UserStory.STATES.choices(include_hidden = True):
         statename[state] = name
 
-    wb = pyExcelerator.Workbook()
-    ws = wb.add_sheet('Product Backlog')
-
-    style = pyExcelerator.XFStyle()
-    style.font = pyExcelerator.Font()
-    style.font.bold = True
+    calc = Calc('Product Backlog')
 
     header_row = ['Story', 'Rank', 'Name', 'Description', 'State', 'Iteration', 'Size']
     if suggest:
@@ -1496,7 +1482,7 @@ def backlog_excel(request, project_id, states=None, suggest=None):
         header_row.append('Pct')
 
     for c, header in enumerate(header_row):
-        ws.write(0, c, header, style)
+        calc.set_cell(0, c, header, style='bold')
 
     row = 0
     for story in backlog.backlog:
@@ -1504,12 +1490,10 @@ def backlog_excel(request, project_id, states=None, suggest=None):
             continue
 
         row += 1
-        ws.write(row, 0, story.id)
 
-        if not story.rank is None:
-            ws.write(row, 1, story.rank)
-
-        ws.write(row, 2, story.name)
+        calc.set_cell(row, 0, story.id)
+        calc.set_cell(row, 1, story.rank)
+        calc.set_cell(row, 2, story.name)
 
         if not story.description is None:
             try:
@@ -1518,39 +1502,29 @@ def backlog_excel(request, project_id, states=None, suggest=None):
                 v_a = story.description.encode('ascii', 'ignore')
                 desc = unicode(v_a).decode('utf-8')
 
-            f = cStringIO.StringIO()
-            wr = formatter.DumbWriter(f)
-            fmt = formatter.AbstractFormatter(wr)
-            p = htmllib.HTMLParser(fmt)
-            p.feed(desc)
-            p.close()
+            calc.set_cell(row, 3, HTMLConverter(desc).text())
 
-            ws.write(row, 3, f.getvalue())
-
-        ws.write(row, 4, statename[story.state])
-
-        if story.iteration:
-            ws.write(row, 5, story.iteration.name)
-
-        if story.size:
-            ws.write(row, 6, UserStory.size_label_for(story.size))
+        calc.set_cell(row, 4, statename[story.state])
+        calc.set_cell(row, 5, story.iteration.name)
+        calc.set_cell(row, 6, UserStory.size_label_for(story.size))
 
         if suggest:
             if story.suggestion:
                 if story.suggestion.is_benchmark:
-                    ws.write(row, 7, UserStory.size_label_for(story.suggestion.size), style)
+                    style='bold'
                 else:
-                    ws.write(row, 7, UserStory.size_label_for(story.suggestion.size))
+                    style=None
+                calc.set_cell(row, 7, UserStory.size_label_for(story.suggestion.size), style=style)
 
-                ws.write(row, 8, story.suggestion.hours)
+                calc.set_cell(row, 8, story.suggestion.hours)
 
                 if story.size:
-                    ws.write(row, 9, int(float(story.size * 100) / story.suggestion.size))
+                    calc.set_cell(row, 9, int(float(story.size * 100) / story.suggestion.size))
 
-    response = HttpResponse(mimetype='application/application/vnd.ms-excel')
-    response['Content-Disposition'] = 'attachment; filename=backlog.xls'
+    response = HttpResponse(mimetype='application/vnd.oasis.opendocument.spreadsheet')
+    response['Content-Disposition'] = 'attachment; filename=backlog.ods'
 
-    wb.save(response)
+    calc.save(response)
 
     return response
 
@@ -1560,100 +1534,75 @@ def iteration_status_table(request, project_id, iteration_id):
     it = Iteration.objects.get(id=iteration_id, project__id=project_id)
     status = it.status()
 
-    style = pyExcelerator.XFStyle()
-    defaultFont = style.font
-    defaultPattern = style.pattern
+    fade = 'color:#333333'
+    orange = 'background:#FF0000'
+    green = 'background:#00FF00'
 
-    fade = pyExcelerator.Font()
-    fade.colour_index = 55
-
-    bold = pyExcelerator.Font()
-    bold.bold = True
-
-    orange = pyExcelerator.Pattern()
-    orange.pattern_fore_colour = 436
-    orange.pattern = style.pattern.SOLID_PATTERN
-
-    green = pyExcelerator.Pattern()
-    green.pattern_fore_colour = 562
-    green.pattern = style.pattern.SOLID_PATTERN
-
-    wb = pyExcelerator.Workbook()
-    ws = wb.add_sheet('Burndown')
+    calc = Calc('Burndown')
 
     days = status.burndown.dates
     sprintlength = status.burndown.days
 
-    style.font = bold
     for c, h in enumerate(['task ID', 'priority', 'story', 'task'] + [str(d) for d in days]):
-        ws.write(0, c, h, style)
+        calc.set_cell(0, c, h, style='bold')
 
     row = 1
     for story in status.stories:
         for task in story.tasks:
             row += 1
 
-            ws.write(row, 0, task.id)
-            if not story.rank is None:
-                ws.write(row, 1, story.rank)
+            calc.set_cell(row, 0, task.id)
+            calc.set_cell(row, 1, story.rank)
 
-            style.font = defaultFont
-            style.pattern = defaultPattern
+            style = None
             if story.state == UserStory.STATES.COMPLETED and story.remaining == 0:
-                style.pattern = green
+                style = green
             elif task.state != Task.STATES.COMPLETED and story.remaining == 0:
-                style.pattern = orange
+                style = orange
             elif task.state == Task.STATES.COMPLETED and story.remaining != 0:
-                style.pattern = orange
-            ws.write(row, 2, story.name, style)
+                style = orange
+            calc.set_cell(row, 2, story.name, style=style)
 
             for day, remaining in enumerate(task.remaining_for_day):
                 if day == 0:
-                    style.pattern = defaultPattern
+                    style = []
                 elif task.remaining_for_day[day] < task.remaining_for_day[day - 1]:
-                    style.pattern = green
+                    style = [green]
                 elif task.remaining_for_day[day] > task.remaining_for_day[day - 1]:
-                    style.pattern = orange
+                    style = [orange]
                 else:
-                    style.pattern = defaultPattern
+                    style = []
 
-                if remaining:
-                    style.font = defaultFont
-                else:
-                    style.font = fade
+                if not remaining:
+                    style.append(fade)
 
-                ws.write(row, day + 4, remaining, style)
+                calc.set_cell(row, day + 4, remaining, style=style)
 
-            style.font = defaultFont
-            style.pattern = defaultPattern
             if task.estimate is None:
-                style.font = fade
+                style = fade
             elif task.state == Task.STATES.COMPLETED and remaining == 0:
-                style.pattern = green
+                style = green
             elif task.state != Task.STATES.COMPLETED and remaining == 0:
-                style.pattern = orange
+                style = orange
             elif task.state == Task.STATES.COMPLETED and last != 0:
-                style.pattern = orange
-            ws.write(row, 3, task.name, style)
-
-    style.font = bold
-    style.pattern = defaultPattern
+                style = orange
+            calc.set_cell(row, 3, task.name, style=style)
 
     row += 1
-    ws.write(row, 3, 'Tasks', style)
+    calc.set_cell(row, 3, 'Tasks', style='bold')
     for c in range(len(days)):
-        colname = _excel_column(c + 5)
-        ws.write(row, c + 4, pyExcelerator.Formula("SUM(%s2:%s%d)" % (colname, colname, row)))
+        colname = _ods_column(c + 5)
+        calc.set_cell(row, c + 4, "=SUM(%s2:%s%d)" % (colname, colname, row))
 
     row += 1
-    ws.write(row, 3, 'Story points', style)
+    calc.set_cell(row, 3, 'Story points', style='bold')
     for c, remaining in enumerate(status.burndown.remaining.points):
-        ws.write(row, c+4, remaining)
+        calc.set_cell(row, c+4, remaining)
 
     row += 1
-    ws.write(row, 3, 'Ideal', style)
+    calc.set_cell(row, 3, 'Ideal', style='bold')
     for c, remaining in enumerate(status.burndown.remaining.ideal):
-        ws.write(row, c+4, remaining)
+        calc.set_cell(row, c+4, remaining)
 
     response = HttpResponse(mimetype='application/application/vnd.ms-excel')
     response['Content-Disposition'] = 'attachment; filename=burndown.xls'
@@ -1668,32 +1617,23 @@ def iteration_export(request, project_id, iteration_id):
     it = Iteration.objects.get(id=iteration_id, project__id=project_id)
     status = it.status()
 
-    style = pyExcelerator.XFStyle()
-    defaultFont = style.font
-    defaultPattern = style.pattern
+    calc = Calc('Burndown')
 
-    bold = pyExcelerator.Font()
-    bold.bold = True
-
-    wb = pyExcelerator.Workbook()
-    ws = wb.add_sheet('Burndown')
-
-    style.font = bold
     for c, h in enumerate(['ID', 'Name', 'Start', 'End']):
-        ws.write(0, c, h, style)
+        calc.set_cell(0, c, h, style='bold')
 
     for c, d in enumerate([it.id, it.name, str(it.start_date), str(it.end_date)]):
-        ws.write(1, c, d)
+        calc.set_cell(1, c, d)
 
     for c, h in enumerate(['ID', 'Story', 'Task', 'Estimate', 'Owner', 'Tags']):
-        ws.write(2, c, h, style)
+        calc.set_cell(2, c, h, style='bold')
 
     row = 2
     for story in status.stories:
         for task in story.tasks:
             row += 1
             for c, d in enumerate([task.id, task.user_story.name, task.name, task.estimate, task.owner, ', '.join(task.taglist)]):
-                ws.write(row, c, d)
+                calc.set_cell(row, c, d)
 
     response = HttpResponse(mimetype='application/application/vnd.ms-excel')
     response['Content-Disposition'] = 'attachment; filename=iteration.xls'
@@ -1709,31 +1649,22 @@ def hours_export(request, project_id, iteration_id):
     users = []
     user_col = {}
 
-    style = pyExcelerator.XFStyle()
-    defaultFont = style.font
-    defaultPattern = style.pattern
+    calc = Calc('Burndown')
 
-    bold = pyExcelerator.Font()
-    bold.bold = True
-
-    wb = pyExcelerator.Workbook()
-    ws = wb.add_sheet('Burndown')
-
-    style.font = bold
     for c, h in enumerate(['ID', 'Name', 'Start', 'End']):
-        ws.write(0, c, h, style)
+        calc.set_cell(0, c, h, style='bold')
 
     for c, d in enumerate([it.id, it.name, str(it.start_date), str(it.end_date)]):
-        ws.write(1, c, d)
+        calc.set_cell(1, c, d)
 
     for c, h in enumerate(['ID', 'Story', 'Task', 'Estimate']): # add users later
-        ws.write(2, c, h, style)
+        calc.set_cell(2, c, h, style='bold')
 
     tasks = 0
     for r, t in enumerate(Task.objects.filter(user_story__iteration=it)):
         tasks += 1
         for c, d in enumerate([t.id, t.user_story.name, t.name]):
-            ws.write(r+3, c, d)
+            calc.set_cell(r+3, c, d)
 
         u = t.owner.username
         if not u in users:
@@ -1741,15 +1672,15 @@ def hours_export(request, project_id, iteration_id):
             user_col[u] = len(users) + 3
 
         if t.estimate:
-            ws.write(r+3, user_col[u], t.estimate)
+            calc.set_cell(r+3, user_col[u], t.estimate)
 
     for u in users:
-        ws.write(2, user_col[u], u, style)
+        calc.set_cell(2, user_col[u], u, style)
 
-    c1 = _excel_column(5)
-    c2 = _excel_column(4 + len(users))
+    c1 = _ods_column(5)
+    c2 = _ods_column(4 + len(users))
     for r in range(3, tasks + 3):
-        ws.write(r, 3, pyExcelerator.Formula("SUM(%s%d:%s%d)" % (c1, r+1, c2, r+1)))
+        calc.set_cell(r, 3, "=SUM(%s%d:%s%d)" % (c1, r+1, c2, r+1))
         
     response = HttpResponse(mimetype='application/application/vnd.ms-excel')
     response['Content-Disposition'] = 'attachment; filename=iteration.xls'
