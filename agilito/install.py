@@ -109,9 +109,9 @@ class Module:
             return True
 
         if self.optional:
-            print 'If you install %s you will get additional features in Agilito' % self.name
+            print '\nIf you install %s you will get additional features in Agilito' % self.name
         else:
-            print 'You need to have %s installed' % self.name
+            print '\nYou need to have %s installed' % self.name
 
         Module.OK = Module.OK and self.optional
 
@@ -258,6 +258,7 @@ Tarball('threadedcomments',
 Accounts('accounts').verify()
 
 Module('django_extensions', url='http://code.google.com/p/django-command-extensions', optional=True).verify()
+Module('dulwich', url='???', app=False, optional=True).verify()
 
 import settings
 
