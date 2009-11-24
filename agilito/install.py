@@ -122,9 +122,9 @@ class Module:
             return True
 
         if self.optional:
-            print 'If you install %s you will get additional features in Agilito' % self.name
+            print '\nIf you install %s you will get additional features in Agilito' % self.name
         else:
-            print 'You need to have %s installed' % self.name
+            print '\nYou need to have %s installed' % self.name
 
         Module.OK = Module.OK and self.optional
 
@@ -255,11 +255,6 @@ if config['debug']:
         url='http://github.com/robhudson/django-debug-toolbar/tarball/0.8.0',
         subdir='robhudson-django-debug-toolbar-4f43c9b/debug_toolbar/').verify()
 
-Module('pyExcelerator',
-    url = 'http://sourceforge.net/projects/pyexcelerator',
-    app = False,
-    optional=True).verify()
-
 SVN('agilito', url = 'http://agilito.googlecode.com/svn/trunk/agilito').verify()
 
 SVN('queryutils', url = 'http://agilito.googlecode.com/svn/trunk/queryutils').verify()
@@ -276,6 +271,7 @@ Tarball('threadedcomments',
 Accounts('accounts').verify()
 
 Module('django_extensions', url='http://code.google.com/p/django-command-extensions', optional=True).verify()
+Module('dulwich', url='???', app=False, optional=True).verify()
 
 import settings
 
