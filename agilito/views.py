@@ -5,7 +5,7 @@ import ODTLabels
 import types
 from django.core.cache import cache
 from django.contrib.sites.models import Site
-from agilito.tools import Calc
+from agilito.tools import Calc, HTMLConverter
 
 from agilito import CACHE_ENABLED, UNRESTRICTED_SIZE, PRINTABLE_CARDS, CACHE_PREFIX, BACKLOG_ARCHIVE
 
@@ -1505,7 +1505,8 @@ def backlog_ods(request, project_id, states=None, suggest=None):
             calc.set_cell(row, 3, HTMLConverter(desc).text())
 
         calc.set_cell(row, 4, statename[story.state])
-        calc.set_cell(row, 5, story.iteration.name)
+        if story.iteration:
+            calc.set_cell(row, 5, story.iteration.name)
         calc.set_cell(row, 6, UserStory.size_label_for(story.size))
 
         if suggest:
@@ -1534,11 +1535,12 @@ def iteration_status_table(request, project_id, iteration_id):
     it = Iteration.objects.get(id=iteration_id, project__id=project_id)
     status = it.status()
 
-    fade = 'color:#333333'
+    fade = 'color:#C9C9C9'
+    bold = 'bold'
     orange = 'background:#FF0000'
     green = 'background:#00FF00'
 
-    calc = Calc('Burndown')
+    calc = Calc('Iteration Status')
 
     days = status.burndown.dates
     sprintlength = status.burndown.days
@@ -1575,6 +1577,7 @@ def iteration_status_table(request, project_id, iteration_id):
 
                 if not remaining:
                     style.append(fade)
+                    style.append(bold)
 
                 calc.set_cell(row, day + 4, remaining, style=style)
 
@@ -1604,10 +1607,10 @@ def iteration_status_table(request, project_id, iteration_id):
     for c, remaining in enumerate(status.burndown.remaining.ideal):
         calc.set_cell(row, c+4, remaining)
 
-    response = HttpResponse(mimetype='application/application/vnd.ms-excel')
-    response['Content-Disposition'] = 'attachment; filename=burndown.xls'
+    response = HttpResponse(mimetype='application/vnd.oasis.opendocument.spreadsheet')
+    response['Content-Disposition'] = 'attachment; filename=iteration-status.ods'
 
-    wb.save(response)
+    calc.save(response)
 
     return response
 
@@ -1617,7 +1620,7 @@ def iteration_export(request, project_id, iteration_id):
     it = Iteration.objects.get(id=iteration_id, project__id=project_id)
     status = it.status()
 
-    calc = Calc('Burndown')
+    calc = Calc('Iteration')
 
     for c, h in enumerate(['ID', 'Name', 'Start', 'End']):
         calc.set_cell(0, c, h, style='bold')
@@ -1635,10 +1638,10 @@ def iteration_export(request, project_id, iteration_id):
             for c, d in enumerate([task.id, task.user_story.name, task.name, task.estimate, task.owner, ', '.join(task.taglist)]):
                 calc.set_cell(row, c, d)
 
-    response = HttpResponse(mimetype='application/application/vnd.ms-excel')
-    response['Content-Disposition'] = 'attachment; filename=iteration.xls'
+    response = HttpResponse(mimetype='application/vnd.oasis.opendocument.spreadsheet')
+    response['Content-Disposition'] = 'attachment; filename=iteration.ods'
 
-    wb.save(response)
+    calc.save(response)
 
     return response
 
@@ -1646,10 +1649,8 @@ def iteration_export(request, project_id, iteration_id):
 @cached
 def hours_export(request, project_id, iteration_id):
     it = Iteration.objects.get(id=iteration_id, project__id=project_id)
-    users = []
-    user_col = {}
 
-    calc = Calc('Burndown')
+    calc = Calc('Hours')
 
     for c, h in enumerate(['ID', 'Name', 'Start', 'End']):
         calc.set_cell(0, c, h, style='bold')
@@ -1660,32 +1661,66 @@ def hours_export(request, project_id, iteration_id):
     for c, h in enumerate(['ID', 'Story', 'Task', 'Estimate']): # add users later
         calc.set_cell(2, c, h, style='bold')
 
+    users = []
+    users_data = {}
+    add_unassigned = False
+    for t in Task.objects.filter(user_story__iteration=it):
+        if t.owner is None:
+            add_unassigned = True
+            continue
+
+        if t.owner.id in users:
+            continue
+
+        oid = t.owner.id
+        users.append(oid)
+        users_data[oid] = {}
+
+        if t.owner.first_name and t.owner.last_name:
+            users_data[oid]['name'] = '%s %s' % (t.owner.first_name, t.owner.last_name)
+        elif t.owner.first_name:
+            users_data[oid]['name'] = t.owner.first_name
+        elif t.owner.last_name:
+            users_data[oid]['name'] = t.owner.last_name
+        elif t.owner.email:
+            users_data[oid]['name'] = t.owner.email
+        else:
+            users_data[oid]['name'] = t.owner.username
+
+    users.sort()
+    if add_unassigned:
+        users.append(None)
+        users_data[None] = {}
+        users_data[None]['name'] = 'Unassigned'
+    for col, user in enumerate(users):
+        users_data[user]['col'] = col + 4
+
     tasks = 0
     for r, t in enumerate(Task.objects.filter(user_story__iteration=it)):
         tasks += 1
         for c, d in enumerate([t.id, t.user_story.name, t.name]):
             calc.set_cell(r+3, c, d)
 
-        u = t.owner.username
-        if not u in users:
-            users.append(u)
-            user_col[u] = len(users) + 3
+        if t.owner:
+            oid = t.owner.id
+        else:
+            oid = None
 
         if t.estimate:
-            calc.set_cell(r+3, user_col[u], t.estimate)
+            calc.set_cell(r+3, users_data[oid]['col'], t.estimate)
 
     for u in users:
-        calc.set_cell(2, user_col[u], u, style)
+        calc.set_cell(2, users_data[u]['col'], users_data[u]['name'], style='bold')
 
     c1 = _ods_column(5)
     c2 = _ods_column(4 + len(users))
     for r in range(3, tasks + 3):
         calc.set_cell(r, 3, "=SUM(%s%d:%s%d)" % (c1, r+1, c2, r+1))
-        
-    response = HttpResponse(mimetype='application/application/vnd.ms-excel')
-    response['Content-Disposition'] = 'attachment; filename=iteration.xls'
 
-    wb.save(response)
+    response = HttpResponse(mimetype='application/vnd.oasis.opendocument.spreadsheet')
+    response['Content-Disposition'] = 'attachment; filename=iteration.ods'
+
+    calc.save(response)
 
     return response
 

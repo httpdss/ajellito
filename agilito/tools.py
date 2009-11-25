@@ -71,14 +71,14 @@ class HTMLConverter(html5lib.HTMLParser):
 class Calc(ooolib.Calc):
     def __init__(self, *args, **kwargs):
         ooolib.Calc.__init__(self, *args, **kwargs)
-        self.cell_properties = [n for n in dir(self) if n.startswith('property_cell_')]
+        self.cell_properties = [n for n in dir(self.styles) if n.startswith('property_cell_')]
 
     def style_stash(self):
-        return dict(zip(self.cell_properties, [getattr(self, p) for p in self.cell_properties]))
+        return dict(zip(self.cell_properties, [getattr(self.styles, p) for p in self.cell_properties]))
 
     def style_reapply(self, stash):
         for k, v in stash.items():
-            setattr(self, k, v)
+            setattr(self.styles, k, v)
 
     def set_cell(self, row, col, data, datatype=None, style=None):
         if data is None:
