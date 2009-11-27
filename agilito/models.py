@@ -681,7 +681,7 @@ class Iteration(ClueModel):
         def tasklogday(dt):
             d = getday(dt)
             if d == 0: return 1
-            if d >= today or d >= lastday: return -1
+            if d >= today or d >= lastday: return min(today, lastday) - 1
             return d - 1
 
         project_id = self.project.id
@@ -812,7 +812,7 @@ class Iteration(ClueModel):
                           from agilito_tasklog tl
                           join agilito_task t on tl.task_id = t.id
                           join agilito_userstory s on t.user_story_id = s.id
-                          where s.iteration_id = %s and tl.date<%s
+                          where s.iteration_id = %s and tl.date<=%s
                           order by tl.date
                           """, (self.id, datetime.date.today()))
         for old_remaining, date, spent, task in cursor.fetchall():
