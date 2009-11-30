@@ -768,7 +768,7 @@ class Iteration(ClueModel):
                           join agilito_userstory s on s.id = t.user_story_id
                           left join auth_user u on t.owner_id = u.id
                           where s.iteration_id = %s
-                          order by id
+                          order by t.id
                           """, (self.id,))
         for id, name, description, state, estimate, remaining, tags, user_story_id, username, first_name, last_name, email in cursor.fetchall():
             try:
