@@ -127,7 +127,6 @@ def _if_is_none_else(item,  rv_case_none,  fun_case_not_none=None):
 class FieldChoices:
     def __init__(self, *args, **kwargs):
         self.__choices = []
-        self.__hidden_choices = []
         self.keys = []
 
         for v, l in args:
@@ -144,15 +143,11 @@ class FieldChoices:
     def addkey(self, k, v, l):
         if hasattr(self, k):
             raise Exception('Duplicate key "%s" for (%s, %s)' % (k, v, l))
-        if l.startswith('#'):
-            self.__hidden_choices.append((v, l[1:]))
         else:
             self.__choices.append((v, l))
         setattr(self, k.upper(), v)
 
-    def choices(self, include_hidden = False):
-        if include_hidden:
-            return self.__choices + self.__hidden_choices
+    def choices(self):
         return self.__choices
 
     def values(self, include_hidden = False):
@@ -161,7 +156,10 @@ class FieldChoices:
     def label(self, value):
         if value is None:
             return None
-        return filter(lambda x: x[0] == value, self.__choices + self.__hidden_choices)[0][1]
+        try:
+            return (l for v, l in self.__choices if v == value).next()
+        except StopIteration:
+            return None
 
 class NoProjectException(Exception):
     pass
@@ -698,16 +696,18 @@ class Iteration(ClueModel):
         ## fetch story data
         unranked = []
         accepted = 0
+        statenames = {Task.STATES.DEFINED: 'todo', Task.STATES.IN_PROGRESS: 'in_progress', Task.STATES.COMPLETED: 'done'}
+
         cursor.execute("""select s.id, s.name, s.description, s.state, s.size, s.rank, s.tags
                           from agilito_userstory s
                           where s.iteration_id = %s
                           order by rank""", (self.id,))
         for id, name, description, state, size, rank, tags in cursor.fetchall():
-            story = Object(id=id, name=name, description=description, state=state, size=size, rank=rank,  whatami='UserStory')
+            story = Object(id=id, name=name, description=description, state=state, size=size, rank=rank, whatami='UserStory')
             story.get_absolute_url = reverse('agilito.views.userstory_detail', args=[project_id, id])
             story.taglist = parse_tag_input(tags)
             story.is_blocked = False
-            story.tasks = []
+            story.tasks = {'todo': [], 'in_progress': [], 'done': []}
             story.time_spent = 0
             result.size += size or 0
             if story.state == UserStory.STATES.ACCEPTED:
@@ -780,7 +780,7 @@ class Iteration(ClueModel):
             task.user_story = story
             task.is_blocked = False
             task.taglist = parse_tag_input(tags)
-            story.tasks.append(task)
+            story.tasks[statenames[task.state]].append(task)
             result.hours += estimate or 0
 
             if not task_owner.has_key(username):
@@ -837,7 +837,9 @@ class Iteration(ClueModel):
         for story in result.stories:
             size = story.size or 0
             for day in activedays:
-                hours = sum(task.remaining_for_day[day] for task in story.tasks)
+                story.tasks['all'] = story.tasks['todo'] + story.tasks['in_progress'] + story.tasks['done']
+                hours = sum(task.remaining_for_day[day] for task in story.tasks['all'])
+
                 if hours == 0:
                     points = 0
                 else:

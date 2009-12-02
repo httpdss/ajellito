@@ -25,7 +25,7 @@
 </thead>
 
 <tbody>
-{% for us in user_stories %}
+{% for us in stories %}
     <tr>
         <td>
             <ul class="story">
@@ -36,36 +36,30 @@
             </ul>
         </td>
         <td>
-            {% for ta in us.tasks %}
-                {% if ta.is_defined %}
-                    <ul class="task">
-                        <li class="id"><span>{{ ta.id }}</span></li>
-                        <li class="remaining"><span>remaining: {{ ta.remaining|default_if_none:"-" }}</span></li>
-                        <li class="name"><span>{{ ta.name }}</span></li>
-                    </ul>
-                {% endif %}
+            {% for ta in us.tasks.todo %}
+                <ul class="task">
+                    <li class="id"><span>{{ ta.id }}</span></li>
+                    <li class="remaining"><span>remaining: {{ ta.remaining|default_if_none:"-" }}</span></li>
+                    <li class="name"><span>{{ ta.name }}</span></li>
+                </ul>
             {% endfor %}
         </td>
         <td>
-            {% for ta in us.tasks %}
-                {% if ta.is_in_progress %}
-                    <ul class="task">
-                        <li class="id"><span>{{ ta.id }}</span></li>
-                        <li class="remaining"><span>remaining: {{ ta.remaining|default_if_none:"-" }}</span></li>
-                        <li class="name"><span>{{ ta.name }}</span></li>
-                    </ul>
-                {% endif %}
+            {% for ta in us.tasks.in_progress %}
+                <ul class="task">
+                    <li class="id"><span>{{ ta.id }}</span></li>
+                    <li class="remaining"><span>remaining: {{ ta.remaining|default_if_none:"-" }}</span></li>
+                    <li class="name"><span>{{ ta.name }}</span></li>
+                </ul>
             {% endfor %}
         </td>
         <td>
-            {% for ta in us.tasks %}
-                {% if ta.is_complete %}
-                    <ul class="task">
-                        <li class="id"><span>{{ ta.id }}</span></li>
-                        <li class="remaining"><span>remaining: {{ ta.remaining|default_if_none:"-" }}</span></li>
-                        <li class="name"><span>{{ ta.name }}</span></li>
-                    </ul>
-                {% endif %}
+            {% for ta in us.tasks.done %}
+                <ul class="task">
+                    <li class="id"><span>{{ ta.id }}</span></li>
+                    <li class="remaining"><span>remaining: {{ ta.remaining|default_if_none:"-" }}</span></li>
+                    <li class="name"><span>{{ ta.name }}</span></li>
+                </ul>
             {% endfor %}
         </td>
     </tr>
