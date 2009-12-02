@@ -1,6 +1,7 @@
 import time
 import string
 import os
+from dulwich.repo import Repo
 
 import settings
 
@@ -41,7 +42,6 @@ CACHE_PREFIX = num_encode(os.getpid()) + '.'
 CACHE_PREFIX += '.'.join(str(num_encode(int(p))) for p in str(time.time()).split('.'))
 
 try:
-    from dulwich.repo import Repo
     BACKLOG_ARCHIVE = settings.BACKLOG_ARCHIVE
     if not os.path.exists(os.path.join(BACKLOG_ARCHIVE, '.git')):
         BACKLOG_ARCHIVE = None
@@ -49,3 +49,19 @@ except AttributeError:
     BACKLOG_ARCHIVE = None
 except ImportError:
     BACKLOG_ARCHIVE = None
+
+RELEASE = None
+__projectdir__ = os.path.abspath(os.path.dirname(__file__))
+while __projectdir__ != '/' and not os.path.exists(os.path.join(__projectdir__, 'settings.py')):
+    __projectdir__ = os.path.dirname(__projectdir__)
+if __projectdir__ != '/' and os.path.exists('.git'):
+    repo = Repo(__projectdir__)
+    for commit in repo.revision_history(repo.head()):
+        RELEASE = 'Git: ' + commit.tree
+        break
+if RELEASE is None:
+    try:
+        import agilitorelease
+        RELEASE = agilitorelease.RELEASE
+    except:
+        pass

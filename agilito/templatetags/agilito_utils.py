@@ -2,7 +2,7 @@ from django import template
 from django.utils.safestring import mark_safe
 
 import settings
-from agilito import UNRESTRICTED_SIZE
+from agilito import UNRESTRICTED_SIZE, RELEASE
 
 from agilito.models import UserStory, Task
 
@@ -34,3 +34,7 @@ def fullusername(u):
     if u.email:
         return u.email
     return u.username
+
+@register.simple_tag
+def agilitorelease():
+    return RELEASE
