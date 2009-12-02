@@ -54,7 +54,7 @@ RELEASE = None
 __projectdir__ = os.path.abspath(os.path.dirname(__file__))
 while __projectdir__ != '/' and not os.path.exists(os.path.join(__projectdir__, 'settings.py')):
     __projectdir__ = os.path.dirname(__projectdir__)
-if __projectdir__ != '/' and os.path.exists('.git'):
+if __projectdir__ != '/' and os.path.exists(os.path.join(__projectdir__, '.git')):
     repo = Repo(__projectdir__)
     for commit in repo.revision_history(repo.head()):
         RELEASE = 'Git: ' + commit.tree
