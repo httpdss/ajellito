@@ -562,7 +562,7 @@ def backlog(request, project_id, states=None, suggest=None):
         sizes = [None] + UserStory.SIZES.values()
 
     states_options = []
-    for state, name in UserStory.STATES.choices(True):
+    for state, name in UserStory.STATES.choices():
         states_options.append({ 'state':    state,
                                 'name':     name,
                                 'selected': state in states_filter,

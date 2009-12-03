@@ -150,8 +150,8 @@ class FieldChoices:
     def choices(self):
         return self.__choices
 
-    def values(self, include_hidden = False):
-        return [c[0] for c in self.choices(include_hidden)]
+    def values(self):
+        return [c[0] for c in self.choices()]
 
     def label(self, value):
         if value is None:
