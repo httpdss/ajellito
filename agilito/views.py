@@ -1107,7 +1107,7 @@ def iteration_status(request, project_id, iteration_id=None, template='iteration
         try:
             ArchivedBacklog.objects.filter(project__id=project_id, stamp__lte=iteration.start_date).order_by('stamp')[0]
             sidebar.add('Reports', 'Product backlog at iteration start',
-                reverse('agilito.views.backlog_archive',
+                reverse('agilito.views.backlog_archived',
                         args=[project_id, '%04d-%02d-%02d' % (iteration.start_date.year, iteration.start_date.month, iteration.start_date.day)]))
         except IndexError:
             pass
