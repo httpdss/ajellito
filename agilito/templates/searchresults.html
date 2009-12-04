@@ -5,7 +5,7 @@
     {% endif %}
 
     {% if object_list %}
-      {% include "pager.html" %}
+      {% include "agilito/pager.html" %}
 <table id="user-story-list" cellspacing="0" cellpadding="2">
 <thead>
     <tr>
@@ -55,7 +55,7 @@
         {% endfor %}
 </tbody>
 </table>
-        {% include "pager.html" %}
+        {% include "agilito/pager.html" %}
     {% else %}
       <p> <strong> No use story not found </strong> </p>
     {% endif %}

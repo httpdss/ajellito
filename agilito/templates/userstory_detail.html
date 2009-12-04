@@ -119,7 +119,7 @@ Planned :
 
 <tbody>
 {% for task in object.task_set.all %}
-    {% include "task.html" %}
+    {% include "agilito/task.html" %}
 {%endfor%}
 </tbody>
 
@@ -147,7 +147,7 @@ Planned :
 
 <tbody>
 {% for object in object.testcase_set.all %}
-{% include "testcase.html" %}
+{% include "agilito/testcase.html" %}
 {%endfor%}
 </tbody>
 </table>
