@@ -6,14 +6,21 @@ import tempfile
 import uuid
 import getopt
 import urllib, urllib2
+import subprocess
+
+def call(cmd):
+    p = subprocess.Popen(cmd, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, close_fds=True)
+    output = p.stdout.read()
+    p.wait()
+    return output
 
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "", ["install=", "apache", "nosqldiff", 'debug'])
+    opts, args = getopt.getopt(sys.argv[1:], "", ["install=", "verbose", "apache", "nosqldiff", 'debug'])
 except getopt.GetoptError, err:
     print str(err)
     sys.exit(1)
 
-config = {'install': 'ask', 'apache': False, 'nosqldiff': False, 'debug': False}
+config = {'verbose': False, 'install': 'ask', 'apache': False, 'nosqldiff': False, 'debug': False}
 for o, a in opts:
     if o == '--install':
         if not a in ['auto', 'ask']:
@@ -26,6 +33,9 @@ for o, a in opts:
 
     elif o == '--nosqldiff':
         config['nosqldiff'] = True
+
+    elif o == '--verbose':
+        config['verbose'] = True
 
     elif o == '--debug':
         config['debug'] = True
@@ -87,7 +97,10 @@ class Module:
         print '%s is available at %s' % (self.name, self.url)
 
     def markPresent(self):
-        print '** %s is present' % self.name
+        global config
+
+        if config['verbose']:
+            print '** %s is present' % self.name
         if self.app:
             Module.apps.append(self.name)
         Module.available.append(self.name)
@@ -109,9 +122,9 @@ class Module:
             return True
 
         if self.optional:
-            print 'If you install %s you will get additional features in Agilito' % self.name
+            print '\nIf you install %s you will get additional features in Agilito' % self.name
         else:
-            print 'You need to have %s installed' % self.name
+            print '\nYou need to have %s installed' % self.name
 
         Module.OK = Module.OK and self.optional
 
@@ -232,6 +245,8 @@ class GIT(DownloadableModule):
         shutil.rmtree(TMPDIR, True)
 
 Module('django', url = 'http://www.djangoproject.com/', app=False).verify()
+Module('html5lib', url = 'http://code.google.com/p/html5lib/', app=False).verify()
+Module('ooolib', url = 'http://ooolib.sourceforge.net/', app=False).verify()
 for app in ['admin', 'humanize', 'markup']:
     Module('django.contrib.' + app).verify()
 
@@ -239,11 +254,6 @@ if config['debug']:
     Tarball('debug_toolbar',
         url='http://github.com/robhudson/django-debug-toolbar/tarball/0.8.0',
         subdir='robhudson-django-debug-toolbar-4f43c9b/debug_toolbar/').verify()
-
-Module('pyExcelerator',
-    url = 'http://sourceforge.net/projects/pyexcelerator',
-    app = False,
-    optional=True).verify()
 
 SVN('agilito', url = 'http://agilito.googlecode.com/svn/trunk/agilito').verify()
 
@@ -261,6 +271,7 @@ Tarball('threadedcomments',
 Accounts('accounts').verify()
 
 Module('django_extensions', url='http://code.google.com/p/django-command-extensions', optional=True).verify()
+Module('dulwich', url='???', app=False, optional=True).verify()
 
 import settings
 
@@ -280,8 +291,27 @@ If you install django_extensions
     (http://code.google.com/p/django-command-extensions)
 I can inspect the database for changes against the models"""
 elif not config['nosqldiff']:
-    print 'Installer has detected the following changes pending for your database:'
-    os.system('python manage.py sqldiff agilito')
+    diff = call('python manage.py sqldiff agilito')
+    syncdb = False
+    applydiff = False
+    for l in diff.split('\n'):
+        l = l.strip().lower()
+        if not l:
+            continue
+        if l in ['begin;', 'commit;']:
+            continue
+
+        if l.startswith('-- table missing'):
+            syncdb = True
+        elif not l.startswith('--'):
+            applydiff = True
+
+    if applydiff:
+        print 'The following changes need to be applied to your database:'
+        print diff
+    if syncdb:
+        print "You have missing tables. Please re-run 'python manage.py syncdb'"
+    Module.OK = Module.OK and not (applydiff or syncdb)
 
 if not 'PRINTABLE_CARD_STOCK' in dir(settings):
     print """Please add the following to %(installdir)s/settings.py:

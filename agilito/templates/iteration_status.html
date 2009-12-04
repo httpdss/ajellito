@@ -64,11 +64,6 @@ function highlightTag(ids)
 
 {% block css %}
 <link rel="stylesheet" type="text/css" href="/agilito/js/jquery.jqplot/jquery.jqplot.css" />
-<!-- style>
-    .jqplot-table-legend td div div {
-        border-style: solid;
-    }
-</style -->
 {% endblock %}
 
 {% load humanize %}
@@ -242,7 +237,7 @@ function highlightTag(ids)
                     </td>
                 </tr> 
 
-                {% for ta in us.tasks %}
+                {% for ta in us.tasks.all %}
                     <tr id="ta-{{ta.id}}" class="task child child-of-us-{{us.id}} {% cycle even,odd %} {%if ta.is_blocked%}blocked{% endif %}">
                         <td></td><!-- rank -->
                         <td class="id"><a href="{{ta.get_absolute_url}}">TA{{ta.id}}</a></td>

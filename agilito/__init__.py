@@ -1,41 +1,7 @@
 import time
 import string
 import os
-
-try:
-    import pyExcelerator
-    import pyExcelerator.CompoundDoc
-    import types
-
-    ## this is a monkey patch to trick pyExcelerator into saving to a
-    ## stream instead of to a file(name)
-    def pyexcelerator_compounddoc_xlsdoc_save(self, filename, stream):
-        # 1. Align stream on 0x1000 boundary (and therefore on sector boundary)
-        padding = '\x00' * (0x1000 - (len(stream) % 0x1000))
-        self.book_stream_len = len(stream) + len(padding)
-
-        self._XlsDoc__build_directory()
-        self._XlsDoc__build_sat()
-        self._XlsDoc__build_header()
-
-        if isinstance(filename, types.StringTypes):
-            f = file(filename, 'wb')
-        else:
-            f = filename
-        f.write(self.header)
-        f.write(self.packed_MSAT_1st)
-        f.write(stream)
-        f.write(padding)
-        f.write(self.packed_MSAT_2nd)
-        f.write(self.packed_SAT)
-        f.write(self.dir_stream)
-        f.close()
-
-    pyExcelerator.CompoundDoc.XlsDoc.save = pyexcelerator_compounddoc_xlsdoc_save
-    EXCEL_ENABLED = True
-
-except ImportError:
-    EXCEL_ENABLED = False
+from dulwich.repo import Repo
 
 import settings
 
@@ -74,3 +40,28 @@ def num_encode(n):
 
 CACHE_PREFIX = num_encode(os.getpid()) + '.'
 CACHE_PREFIX += '.'.join(str(num_encode(int(p))) for p in str(time.time()).split('.'))
+
+try:
+    BACKLOG_ARCHIVE = settings.BACKLOG_ARCHIVE
+    if not os.path.exists(os.path.join(BACKLOG_ARCHIVE, '.git')):
+        BACKLOG_ARCHIVE = None
+except AttributeError:
+    BACKLOG_ARCHIVE = None
+except ImportError:
+    BACKLOG_ARCHIVE = None
+
+RELEASE = None
+__projectdir__ = os.path.abspath(os.path.dirname(__file__))
+while __projectdir__ != '/' and not os.path.exists(os.path.join(__projectdir__, 'settings.py')):
+    __projectdir__ = os.path.dirname(__projectdir__)
+if __projectdir__ != '/' and os.path.exists(os.path.join(__projectdir__, '.git')):
+    repo = Repo(__projectdir__)
+    for commit in repo.revision_history(repo.head()):
+        RELEASE = 'Git: ' + commit.tree
+        break
+if RELEASE is None:
+    try:
+        import agilitorelease
+        RELEASE = agilitorelease.RELEASE
+    except:
+        pass

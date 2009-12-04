@@ -17,6 +17,7 @@ urlpatterns = patterns('',
     # Uncomment the next line to enable the admin:
     # (r'^admin/(.*)', admin.site.root),
     (r'^accounts/', include('accounts.urls')),
-    (r'', include('agilito.urls')),
     (r'^admin/(.*)', admin.site.root),
+    (r'', include('agilito.urls')),
+
 )
