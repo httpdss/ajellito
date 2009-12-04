@@ -678,8 +678,16 @@ class Iteration(ClueModel):
 
         def tasklogday(dt):
             d = getday(dt)
-            if d == 0: return 1
+
+            # apply updates beyond the end of the graph to the day
+            # before the last day
             if d >= today or d >= lastday: return min(today, lastday) - 1
+
+            # apply updates that occur on the 1st or 2nd day on the
+            # 2nd day
+            if d <= 1: return 1
+
+            # apply update to the day before
             return d - 1
 
         project_id = self.project.id
@@ -805,33 +813,38 @@ class Iteration(ClueModel):
                 result.tags[tag].append(task)
 
             task.remaining_for_day = [None for day in activedays]
-            task.remaining_for_day[0] = estimate or 0
+
+            # order is important here -- if we're on day 1, we want
+            # the estimate, not the remaining
             task.remaining_for_day[today] = remaining or 0
+            task.remaining_for_day[0] = estimate or 0
+
             tasks_by_id[id] = task
 
-        ## tasklog updates
-        cursor.execute("""select tl.old_remaining, tl.date, tl.time_on_task, t.id
-                          from agilito_tasklog tl
-                          join agilito_task t on tl.task_id = t.id
-                          join agilito_userstory s on t.user_story_id = s.id
-                          where s.iteration_id = %s and tl.date<=%s
-                          order by tl.date
-                          """, (self.id, datetime.date.today()))
-        for old_remaining, date, spent, task in cursor.fetchall():
-            try:
-                tasks_by_id[task].remaining_for_day[tasklogday(date)] = old_remaining
-            except KeyError:
-                continue
+        # if we're only 2 days into the sprint the burndown is covered
+        # by estimate and remaining
+        if result.burndown.days > 2:
+            ## tasklog updates
+            cursor.execute("""select tl.old_remaining, tl.date, tl.time_on_task, t.id
+                            from agilito_tasklog tl
+                            join agilito_task t on tl.task_id = t.id
+                            join agilito_userstory s on t.user_story_id = s.id
+                            where s.iteration_id = %s and tl.date<=%s
+                            order by tl.date
+                            """, (self.id, datetime.date.today()))
+            for old_remaining, date, spent, task in cursor.fetchall():
+                task = tasks_by_id[task]
+                task.remaining_for_day[tasklogday(date)] = old_remaining
 
-            if spent:
-                result.time_spent += spent
+                if spent:
+                    result.time_spent += spent
 
-        ## fill out burndown by overwriting None values with the earliest updated value
-        revdays = list(reversed(activedays))
-        for id, task in tasks_by_id.items():
-            for day in revdays:
-                if task.remaining_for_day[day] is None:
-                    task.remaining_for_day[day] = task.remaining_for_day[day+1]
+            ## fill out burndown by overwriting None values with the earliest updated value
+            revdays = list(reversed(activedays))
+            for id, task in tasks_by_id.items():
+                for day in revdays:
+                    if task.remaining_for_day[day] is None:
+                        task.remaining_for_day[day] = task.remaining_for_day[day+1]
 
         ## now that we have all task data we can update the story stats for all days spent in the iteration
         for story in result.stories:
