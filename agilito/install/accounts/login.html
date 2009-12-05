@@ -4,13 +4,13 @@
 
 {%block css%}
 <style type="text/css">
-#content form{
-width:50%;
-margin:0 auto;
-border: 1px solid #EBEBEB;
-padding:10px;
-}
-
+    #content form {
+        width: 50%;
+        margin: 0 auto;
+        border: 1px solid #EBEBEB;
+        padding: 10px;
+    }
+    
 </style>
 {%endblock%}
 
@@ -18,12 +18,11 @@ padding:10px;
 <div id="login-form">
 <h2>Please login</h2>
 {% if form.errors %}
-<p id="error-message">Username / password combination does not
-exist</p>
+<p id="error-message">Username / password combination does not exist</p>
 {% endif %}
 
 <form method="post" action=".">
-{% include 'generic_form.html' %}
+{% include 'agilito/generic_form.html' %}
 <input type="hidden" name="next" value="{{ next }}" />
 <input type="submit" value="login" />
 </form>

@@ -242,7 +242,7 @@ def touch_cache(request, project_id):
     return response
 
 def close_window(request):
-    return render_to_response('close_window.html', context_instance=Context())
+    return render_to_response('agilito/close_window.html', context_instance=Context())
 
 def datelabels(dates, l):
     label = ['mo', 'tu', 'we', 'th', 'fr', 'sa', 'su']
@@ -257,7 +257,7 @@ def index(request):
     try:    
         context = AgilitoContext(request)
     except UserHasNoProjectException:
-        return render_to_response('errorpage.html',
+        return render_to_response('agilito/errorpage.html',
                                   context_instance=\
                                     Context({'error_message' : 
                                              'You are not assigned into any project.',}))
@@ -304,7 +304,7 @@ def add_attachment(request, project_id, userstory_id, instance=None):
     context = AgilitoContext(request, {'form': form,
                                       'story' : story},
                             current_project=project_id)
-    return render_to_response('add_attachment.html', context_instance=context)
+    return render_to_response('agilito/add_attachment.html', context_instance=context)
 
 #### No point in having this function, just kept it here for the record.
 #def edit_attachment(request, project_id, userstory_id, attachment_id):
@@ -323,7 +323,7 @@ def delete_attachment(request, project_id, userstory_id, attachment_id):
     url = request.GET.get('last_page', att.get_container_url())
     return create_update.delete_object(request, object_id=attachment_id,
                                        model=UserStoryAttachment,
-                                       template_name='userstory_delete.html',
+                                       template_name='agilito/userstory_delete.html',
                                        post_delete_redirect=url)
 
 @restricted
@@ -356,7 +356,7 @@ def impediment_create(request, project_id, iteration_id, instance=None):
         form = ImpedimentForm(iteration=it, initial={'http_referer' : url}, instance=instance)
 
     context = AgilitoContext(request, {'form': form})
-    return render_to_response('impediment_edit.html', context_instance=context)
+    return render_to_response('agilito/impediment_edit.html', context_instance=context)
 
 @restricted
 def impediment_edit(request, project_id, iteration_id, impediment_id):
@@ -374,7 +374,7 @@ def release_create(request, project_id, instance=None):
         form = ReleaseForm(initial={'http_referer' : url}, project=Project.objects.get(id=project_id), instance=instance)
 
     context = AgilitoContext(request, {'form': form}, current_project=project_id)
-    return render_to_response('generic_action.html', context_instance=context)
+    return render_to_response('agilito/generic_action.html', context_instance=context)
 
 @restricted
 def release_edit(request, project_id, release_id):
@@ -390,7 +390,7 @@ def release_delete(request, project_id, release_id):
 
     return create_update.delete_object(request, object_id=release_id,
                                        model=Release,
-                                       template_name='userstory_delete.html',
+                                       template_name='agilito/userstory_delete.html',
                                        post_delete_redirect=url)
 
 @restricted
@@ -404,7 +404,7 @@ def iteration_create(request, project_id, instance=None):
         form = IterationForm(initial={'http_referer' : url}, instance=instance, project=Project.objects.get(id=project_id))
 
     context = AgilitoContext(request, {'form': form}, current_project=project_id)
-    return render_to_response('generic_action.html', context_instance=context)
+    return render_to_response('agilito/generic_action.html', context_instance=context)
 
 @restricted
 def iteration_edit(request, project_id, iteration_id):
@@ -422,7 +422,7 @@ def iteration_delete(request, project_id, iteration_id):
 
     return create_update.delete_object(request, object_id=iteration_id,
                                        model=Iteration,
-                                       template_name='userstory_delete.html',
+                                       template_name='agilito/userstory_delete.html',
                                        post_delete_redirect=url,
                                        extra_context={"title": "Are you sure you want to delete this iteration? This iteration has these stories attached", 'deleted_objects': delobjs})
 
@@ -446,7 +446,7 @@ def userstory_create(request, project_id, iteration_id=None, instance=None):
                              project=Project.objects.get(id=project_id))
 
     context = AgilitoContext(request, {'form': form}, current_project=project_id)
-    return render_to_response('userstory_edit.html', context_instance=context)
+    return render_to_response('agilito/userstory_edit.html', context_instance=context)
 
 @restricted
 def userstory_move(request, project_id, userstory_id):
@@ -477,7 +477,7 @@ def userstory_move(request, project_id, userstory_id):
         form = UserStoryMoveForm(instance=instance, project=project)
 
     context = AgilitoContext(request, {'object': instance, 'action': 'Copy/Move User Story', 'form': form}, current_project=project_id)
-    return render_to_response('generic_action.html', context_instance=context)
+    return render_to_response('agilito/generic_action.html', context_instance=context)
 
 @restricted
 def userstory_edit(request, project_id, userstory_id):
@@ -522,7 +522,7 @@ def userstory_delete(request, project_id, userstory_id):
 
     return create_update.delete_object(request, object_id=userstory_id,
                                        model=UserStory,
-                                       template_name='userstory_delete.html',
+                                       template_name='agilito/userstory_delete.html',
                                        post_delete_redirect=url,
                                        extra_context={'deleted_objects': delobjs})
 
@@ -646,7 +646,7 @@ def backlog(request, project_id, states=None, suggest=None):
         inner_context['suggestions'] = backlog.suggestions
     context = AgilitoContext(request, { }, current_project=project_id)
 
-    return render_to_response('product_backlog.html', inner_context, context_instance=context)
+    return render_to_response('agilito/product_backlog.html', inner_context, context_instance=context)
 
 @restricted
 def userstory_detail(request, project_id, userstory_id):
@@ -683,7 +683,7 @@ def userstory_detail(request, project_id, userstory_id):
     queryset = UserStory.objects.filter(project__pk=project_id)
     
     try:
-        rv =  object_detail(request, queryset=queryset, template_name='userstory_detail.html',
+        rv =  object_detail(request, queryset=queryset, template_name='agilito/userstory_detail.html',
                             object_id=userstory_id, extra_context=context)
         return rv
     except UserStory.DoesNotExist:
@@ -744,7 +744,7 @@ def task_create(request, project_id, userstory_id, instance=None):
     context = AgilitoContext(request, {'form': form,
                                       'story': story},
                             current_project=project_id)
-    return render_to_response('task_create.html', context_instance=context)
+    return render_to_response('agilito/task_create.html', context_instance=context)
 
 @restricted
 def task_edit(request, project_id, userstory_id, task_id):
@@ -766,7 +766,7 @@ def task_detail(request, project_id, userstory_id, task_id):
     context = AgilitoContext(request, {'sidebar': sidebar}, current_project=project_id, current_story=userstory_id)
     queryset = Task.objects.filter(user_story__project__pk=project_id, user_story__id=userstory_id)
 
-    return object_detail(request, queryset=queryset, template_name='task_detail.html',
+    return object_detail(request, queryset=queryset, template_name='agilito/task_detail.html',
                          template_object_name='task',
                          object_id=task_id, extra_context=context)
 
@@ -783,7 +783,7 @@ def task_delete(request, project_id, userstory_id, task_id):
     tasklogs = task.tasklog_set.all()
     return create_update.delete_object(request, object_id=task_id,
                                        model=Task,
-                                       template_name='userstory_delete.html',
+                                       template_name='agilito/userstory_delete.html',
                                        post_delete_redirect=url,
                                        extra_context={'deleted_objects': tasklogs})
 
@@ -809,7 +809,7 @@ def testcase_create(request, project_id, userstory_id, instance=None):
     context = AgilitoContext(request, {'form': form,
                                       'story': story },
                             current_project=project_id)
-    return render_to_response('testcase_create.html', context_instance=context)
+    return render_to_response('agilito/testcase_create.html', context_instance=context)
 
 @restricted
 def testcase_edit(request, project_id, userstory_id, testcase_id):
@@ -836,7 +836,7 @@ def testcase_detail(request, project_id, userstory_id, testcase_id):
     queryset = TestCase.objects.filter(user_story__pk=userstory_id, 
                                        user_story__project__pk=project_id)
 
-    return object_detail(request, queryset=queryset, template_name='testcase_detail.html',
+    return object_detail(request, queryset=queryset, template_name='agilito/testcase_detail.html',
                           object_id=testcase_id, extra_context=context)
 
 @restricted
@@ -853,7 +853,7 @@ def testcase_delete(request, project_id, userstory_id, testcase_id):
     testresults = testcase.testresult_set.all()
     return create_update.delete_object(request, object_id=testcase_id,
                                        model=TestCase,
-                                       template_name='testcase_delete.html',
+                                       template_name='agilito/testcase_delete.html',
                                        post_delete_redirect=url,
                                        extra_context={'deleted_objects': testresults})
 
@@ -882,7 +882,7 @@ def testresult_create(request, project_id, userstory_id, testcase_id, instance=N
     context = AgilitoContext(request, {'form': form,
                                       'testcase': testcase },
                             current_project=project_id)    
-    return render_to_response('testresult_create.html', context_instance=context)
+    return render_to_response('agilito/testresult_create.html', context_instance=context)
 
 def testresult_edit(request, project_id, userstory_id, testcase_id, testresult_id):
     testresult = TestResult.objects.get(pk=testresult_id)
@@ -899,7 +899,7 @@ def testresult_detail(request, project_id, userstory_id, testcase_id, testresult
     queryset = TestResult.objects.filter(id=testresult_id, test_case__id=testcase_id,
                                          test_case__user_story__id=userstory_id,
                                          test_case__user_story__project__id=project_id)
-    return object_detail(request, queryset=queryset, template_name='testresult_detail.html',
+    return object_detail(request, queryset=queryset, template_name='agilito/testresult_detail.html',
                           object_id=testresult_id, extra_context=context)
 
 @restricted
@@ -917,7 +917,7 @@ def testresult_delete(request, project_id, userstory_id, testcase_id, testresult
 
     return create_update.delete_object(request, object_id=testresult_id,
                                        model=TestResult,
-                                       template_name='userstory_delete.html',
+                                       template_name='agilito/userstory_delete.html',
                                        post_delete_redirect=url)
 
 
@@ -960,12 +960,12 @@ def search(request, project_id):
                                           'prefix' : prefix,
                                           }, current_project=project_id)
     except UserHasNoProjectException:
-        return render_to_response('errorpage.html',
+        return render_to_response('agilito/errorpage.html',
                                   context_instance=Context({'error_message' : 
                                                             'You are not assigned into any project.',}))
 
     return object_list(request, queryset=queryset.order_by('id'), paginate_by=paginate_by,
-                       template_name='search.html',
+                       template_name='agilito/search.html',
                        extra_context=context)
 
 
@@ -1042,10 +1042,10 @@ def iteration_import(request, project_id):
         form = IterationImportForm(project_id, initial={'data': 'ID\tName\tStart\tEnd\n\nID\tStory\tTask\tEstimate\tOwner\tTags'})
 
     context = AgilitoContext(request, {'form': form}, current_project=project_id)
-    return render_to_response('iteration_import.html', context_instance=context)
+    return render_to_response('agilito/iteration_import.html', context_instance=context)
 
 @restricted
-def iteration_status(request, project_id, iteration_id=None, template='iteration_status.html'):
+def iteration_status(request, project_id, iteration_id=None, template='agilito/iteration_status.html'):
     if iteration_id is None:
         iteration = _get_iteration(project_id)
     else:
@@ -1152,7 +1152,7 @@ def iteration_status(request, project_id, iteration_id=None, template='iteration
 
 @restricted
 def taskboard(request, project_id, iteration_id=None):
-    return iteration_status(request, project_id, iteration_id=iteration_id, template='taskboard.html')
+    return iteration_status(request, project_id, iteration_id=iteration_id, template='agilito/taskboard.html')
 
 @restricted
 def iteration_hours(request, project_id, iteration_id=None):
@@ -1187,7 +1187,7 @@ def iteration_hours(request, project_id, iteration_id=None):
         inner_context = {}
 
     context = AgilitoContext(request, inner_context, current_project=project_id)
-    return render_to_response('iteration_hours.html', context_instance=context)
+    return render_to_response('agilito/iteration_hours.html', context_instance=context)
 
 @restricted
 def product_backlog_chart(request, project_id, iteration_id):
@@ -1281,7 +1281,7 @@ def product_backlog_chart(request, project_id, iteration_id):
     }
 
     context = AgilitoContext(request, data)
-    return render_to_response('backlog_evolution.html', context_instance=context)
+    return render_to_response('agilito/backlog_evolution.html', context_instance=context)
 
 @restricted
 @cached
@@ -1293,7 +1293,7 @@ def iteration_burndown_chart(request, project_id, iteration_id):
     data.iteration = {'name': it.name, 'starts': it.start_date, 'ends': it.end_date}
 
     context = AgilitoContext(request, {'burndown': data})
-    return render_to_response('burndown_chart.html', context_instance=context)
+    return render_to_response('agilito/burndown_chart.html', context_instance=context)
 
 @restricted
 @cached
@@ -1728,7 +1728,7 @@ def hours_export(request, project_id, iteration_id):
 def iteration_burndown(request, project_id, iteration_id):
     it = Iteration.objects.get(id=iteration_id, project__id=project_id)
     ctx = AgilitoContext(request, {'current_iteration': it}, current_project=project_id)
-    return render_to_response('iteration_burndown.html',
+    return render_to_response('agilito/iteration_burndown.html',
                               context_instance=ctx)
 
 
@@ -1814,7 +1814,7 @@ def timelog(request, project_id, task_id=None, instance=None):
                                       'selectedTask': selectedTask},
                                     current_project=project_id)
     
-    return render_to_response('timelog.html', context_instance=context)
+    return render_to_response('agilito/timelog.html', context_instance=context)
 
 @restricted
 def timelog_task(request, project_id, task_id):

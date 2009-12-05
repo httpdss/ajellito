@@ -228,7 +228,7 @@ class GenericFormTest(test.TestCase):
 
     def test_set_required(self):
         testform = self.TestForm()
-        t = loader.get_template('generic_form.html')
+        t = loader.get_template('agilito/generic_form.html')
         c = Context({ 'form': testform })
         rendered = t.render(c)
         dom = minidom.parseString(rendered)
@@ -242,7 +242,7 @@ class GenericFormTest(test.TestCase):
 
     def test_set_failed(self):
         testform = self.TestForm(data='')
-        t = loader.get_template('generic_form.html')
+        t = loader.get_template('agilito/generic_form.html')
         c = Context({ 'form': testform })
         rendered = t.render(c)
         dom = minidom.parseString(rendered)
