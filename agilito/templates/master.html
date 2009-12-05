@@ -22,7 +22,7 @@
             <link rel="stylesheet" type="text/css" href="/agilito/css/comments.css" />
         {% endif %}
 
-        <title>{% block title %}Agilito Project Managment App{% endblock %} (release {% agilitorelease %})</title>
+        <title>{% block head_title %}{% endblock %} - Agilito Project Managment App (release {% agilitorelease %})</title>
 
         {% block link %} {% endblock %}
         {% block css %} {% endblock %}
@@ -201,7 +201,7 @@
                 </div>
                 <div id="zoomborder">
                     <span id="zoombutton"></span>
-                    {% block content %} {% endblock %}
+                    {% block body %} {% endblock %}
 
                     {% if comment_on %}
                         <h1>Comments</h1>
