@@ -2,9 +2,9 @@
 {% load markup %}
 {% load humanize %}
 
-{% block title %} {{ object.name }} {% endblock %}
+{% block head_title %} {{ object.name }} {% endblock %}
 
-{% block content %}
+{% block body %}
 <ul class="breadcrumbs">
 <li id="breadcrumb-project">{{ object.user_story.project.name }} &gt; </li>
 <li id="breadcrumb-iteration"><a href="{{ object.user_story.iteration.get_absolute_url }}">{{ object.user_story.iteration.name }}</a> &gt; </li> 

@@ -258,12 +258,12 @@
     </script>
 {% endblock %}
 
-{% block title %} User Stories in the Backlog {% endblock %}
+{% block head_title %} User Stories in the Backlog {% endblock %}
 
 {% if current_project %}
     {% block select_tab %} "backlog" {% endblock %}
 
-    {% block content_header %}
+    {% block body_header %}
         <h2>
             {% if current_project %}
                 {{ current_project.name }} &raquo;
@@ -297,7 +297,7 @@
         {% endif %}
     {% endblock %}
     
-    {% block content %}
+    {% block body %}
         {% if backlog %}
             <form id="filter-form" action="#">Filter: <input name="filter" id="filter" value="" maxlength="30" size="30" type="text" /></form>
             <form id="iteration-form" action="#">

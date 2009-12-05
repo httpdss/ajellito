@@ -1,6 +1,6 @@
 {% extends "agilito/base.html" %}
-{% block title %}Adding / Editing an attachment to {{ story }}{% endblock %}
-{% block content %}
+{% block head_title %}Adding / Editing an attachment to {{ story }}{% endblock %}
+{% block body %}
 
 <h2><small>Adding / Editing an attachment to</small><br /> {{ story }}</h2>
 {% if form.is_multipart %}

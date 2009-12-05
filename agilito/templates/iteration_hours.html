@@ -1,7 +1,7 @@
 {% extends "agilito/base.html" %}
 {% load humanize %}
 
-{% block title %}
+{% block head_title %}
     {% if current_iteration %}
         {{current_iteration.name}} Hours
     {% else %}
@@ -11,7 +11,7 @@
 
 {% block select_tab %} "hours" {% endblock %}
 
-{% block content %}
+{% block body %}
     {% if current_iteration %}
         <table>
             <tr>
