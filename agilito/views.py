@@ -192,7 +192,7 @@ class AgilitoContext(RequestContext):
         self.request = request
         
         if request.user.is_authenticated():
-            project_list = request.user.project_set.all()
+            project_list = request.user.project_set.all().extra(select={'lower_name': 'lower(name)'}).order_by('lower_name')
             if project_list is None or project_list.count() == 0:
                 raise UserHasNoProjectException        
         else:
