@@ -1312,7 +1312,7 @@ def iteration_cards(request, project_id, iteration_id):
                         'StoryRank': story.relative_rank,
                         'StorySize': UserStory.SIZES.label(story.size)
                         })
-        for task in story.tasks:
+        for task in story.tasks['all']:
             tasks.append({
                         'TaskID': task.id,
                         'TaskName': task.name,
@@ -1550,7 +1550,7 @@ def iteration_status_table(request, project_id, iteration_id):
 
     row = 1
     for story in status.stories:
-        for task in story.tasks:
+        for task in story.tasks['all']:
             row += 1
 
             calc.set_cell(row, 0, task.id)
@@ -1633,7 +1633,7 @@ def iteration_export(request, project_id, iteration_id):
 
     row = 2
     for story in status.stories:
-        for task in story.tasks:
+        for task in story.tasks['all']:
             row += 1
             for c, d in enumerate([task.id, task.user_story.name, task.name, task.estimate, task.owner, ', '.join(task.taglist)]):
                 calc.set_cell(row, c, d)
