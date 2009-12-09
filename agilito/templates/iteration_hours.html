@@ -23,7 +23,7 @@
                                     <select id="iteration-selection" style="width:10em">
                                         {%for iteration in itset %}
                                             <option {% ifequal iteration.id current_iteration.id %} selected="selected" {%endifequal%}
-                                                value="{{iteration.get_absolute_url}}">{{ iteration.name }}</option>
+                                                value="{% url agilito.views.iteration_hours current_project.id,iteration.id %}">{{ iteration.name }}</option>
                                         {%endfor%}
                                     </select>
                             {% else %}
