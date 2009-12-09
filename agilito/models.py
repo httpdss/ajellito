@@ -823,7 +823,7 @@ class Iteration(ClueModel):
 
         # if we're only 2 days into the sprint the burndown is covered
         # by estimate and remaining
-        if result.burndown.days > 2:
+        if today > 2:
             ## tasklog updates
             cursor.execute("""select tl.old_remaining, tl.date, tl.time_on_task, t.id
                             from agilito_tasklog tl
