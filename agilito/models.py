@@ -19,6 +19,8 @@ import math, re
 import sys
 import inspect
 
+import random, string
+
 from agilito import CACHE_ENABLED, UNRESTRICTED_SIZE, CACHE_PREFIX
 
 class Object(object):
@@ -979,8 +981,18 @@ class Iteration(ClueModel):
         )
         ordering = ('start_date',)
 
+def attachment_path(instance, filename):
+    extension = filename.split('.')[-1]
+
+    dir = 'attachments/%d' % instance.user_story.project.id
+
+    chars = string.letters + string.digits
+    name = string.join(random.sample(chars, 30), '')
+
+    return "%s/%s.%s" % (dir, name, extension)
+    
 class UserStoryAttachment(ClueModel):
-    attachment = models.FileField(upload_to='attachments/')
+    attachment = models.FileField(upload_to=attachment_path)
 
     user_story = models.ForeignKey('UserStory')
 
