@@ -111,7 +111,7 @@ class Module:
 
         present = False
         try:
-            __import__(self.name)
+            __import__(self.name.replace('/', '.'))
             present = True
         except ImportError, e:
             if str(e).find('DJANGO_SETTINGS_MODULE') >= 0:
@@ -137,7 +137,7 @@ class Module:
         self.download()
 
         try:
-            __import__(self.name)
+            __import__(self.name.replace('/', '.'))
             present = True
         except ImportError, e:
             if str(e).find('DJANGO_SETTINGS_MODULE') >= 0:
@@ -178,6 +178,7 @@ class Tarball(DownloadableModule):
 
         subdir = self.subdir
         if subdir:
+            print '%(tmpdir)s/%(subdir)s' % locals(), self.name
             shutil.move('%(tmpdir)s/%(subdir)s' % locals(), self.name)
         else:
             shutil.move(TMPDIR, self.name)
@@ -246,7 +247,6 @@ class GIT(DownloadableModule):
 
 Module('django', url = 'http://www.djangoproject.com/', app=False).verify()
 Module('html5lib', url = 'http://code.google.com/p/html5lib/', app=False).verify()
-Module('ooolib', url = 'http://ooolib.sourceforge.net/', app=False).verify()
 for app in ['admin', 'humanize', 'markup']:
     Module('django.contrib.' + app).verify()
 
@@ -265,8 +265,15 @@ Tarball('threadedcomments',
     url='http://django-threadedcomments.googlecode.com/files/django-threadedcomments-0.5.1.tar.gz',
     subdir='django-threadedcomments-0.5.1/threadedcomments').verify()
 
-#BZR('wiki', url = 'lp:django-wikiapp', subdir = 'wiki').verify()
-#GIT('wakawaka', url = 'git://github.com/brosner/django-wakawaka.git', branch = 'pinax-group-support', subdir = 'src/wakawaka').verify()
+Tarball('odf',
+    url='http://forge.osor.eu/frs/download.php/552/odfpy-0.9.1.tar.gz',
+    subdir='odfpy-0.9.1/odf',
+    app=False).verify()
+
+Tarball('reportlab',
+    url='http://www.reportlab.org/ftp/ReportLab_2_3.tar.gz',
+    subdir='ReportLab_2_3/src/reportlab',
+    app=False).verify()
 
 Accounts('accounts').verify()
 
