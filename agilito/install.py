@@ -111,7 +111,7 @@ class Module:
 
         present = False
         try:
-            __import__(self.name.replace('/', '.'))
+            __import__(self.name)
             present = True
         except ImportError, e:
             if str(e).find('DJANGO_SETTINGS_MODULE') >= 0:
@@ -126,18 +126,18 @@ class Module:
         else:
             print '\nYou need to have %s installed' % self.name
 
-        Module.OK = Module.OK and self.optional
 
         do_download = False
         do_download = do_download or (config['install'] == 'ask' and self.askDownload())
         do_download = do_download or config['install'] == 'auto'
         if not do_download:
+            Module.OK = Module.OK and self.optional
             return self.optional
 
         self.download()
 
         try:
-            __import__(self.name.replace('/', '.'))
+            __import__(self.name)
             present = True
         except ImportError, e:
             if str(e).find('DJANGO_SETTINGS_MODULE') >= 0:
@@ -145,6 +145,8 @@ class Module:
 
         if present:
             self.markPresent()
+
+        Module.OK = Module.OK and present
 
         return present
 
@@ -270,10 +272,14 @@ Tarball('odf',
     subdir='odfpy-0.9.1/odf',
     app=False).verify()
 
-Tarball('reportlab',
-    url='http://www.reportlab.org/ftp/ReportLab_2_3.tar.gz',
-    subdir='ReportLab_2_3/src/reportlab',
-    app=False).verify()
+#Tarball('reportlab',
+#    url='http://www.reportlab.org/ftp/ReportLab_2_3.tar.gz',
+#    subdir='ReportLab_2_3/src/reportlab',
+#    app=False).verify()
+#Tarball('svglib',
+#    url='http://pypi.python.org/packages/source/s/svglib/svglib-0.6.2.tar.gz',
+#    subdir='svglib-0.6.2/src/svglib',
+#    app=False).verify()
 
 Accounts('accounts').verify()
 
