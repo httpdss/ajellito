@@ -831,9 +831,9 @@ class Iteration(ClueModel):
                             from agilito_tasklog tl
                             join agilito_task t on tl.task_id = t.id
                             join agilito_userstory s on t.user_story_id = s.id
-                            where s.iteration_id = %s and tl.date<=%s
+                            where s.iteration_id = %s
                             order by tl.date
-                            """, (self.id, datetime.date.today()))
+                            """, (self.id,))
             for old_remaining, date, spent, task in cursor.fetchall():
                 task = tasks_by_id[task]
                 task.remaining_for_day[tasklogday(date)] = old_remaining
