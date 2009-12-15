@@ -5,7 +5,7 @@ import ODTLabels
 import types
 from django.core.cache import cache
 from django.contrib.sites.models import Site
-from agilito.opendocument import Calc, HTML
+from agilito.opendocument import Calc, HTML, Formula
 
 from agilito import CACHE_ENABLED, UNRESTRICTED_SIZE, PRINTABLE_CARDS, CACHE_PREFIX, BACKLOG_ARCHIVE
 
@@ -1467,7 +1467,7 @@ def backlog_ods(request, project_id, states=None, suggest=None):
         backlog = project.backlog(states_filter)
 
     statename = {}
-    for state, name in UserStory.STATES.choices(include_hidden = True):
+    for state, name in UserStory.STATES.choices():
         statename[state] = name
 
     calc = Calc('Product Backlog')
