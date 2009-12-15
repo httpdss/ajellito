@@ -86,6 +86,7 @@ class Module:
         self.subdir = None
         self.branch = None
         self.app = True
+        self.download_msg = None
 
         for k, v in kwargs.items():
             setattr(self, k, v)
@@ -153,8 +154,16 @@ class Module:
 class DownloadableModule(Module):
     def askDownload(self):
         reply = None
+
+        msg = 'Do you want me to retrieve %s and install it into your project? ' % self.name
+        if not self.download_msg is None:
+            if self.download_msg.startswith('+'):
+                msg += self.download_msg[1:]
+            else:
+                msg = self.download_msg
+
         while not reply in ['y', 'n']:
-            reply = raw_input('Do you want me to retrieve %s and install it into your project? ' % self.name)
+            reply = raw_input(msg)
             reply = reply.lower()[:1]
         return (reply == 'y')
 
@@ -272,19 +281,23 @@ Tarball('odf',
     subdir='odfpy-0.9.1/odf',
     app=False).verify()
 
-#Tarball('reportlab',
-#    url='http://www.reportlab.org/ftp/ReportLab_2_3.tar.gz',
-#    subdir='ReportLab_2_3/src/reportlab',
-#    app=False).verify()
-#Tarball('svglib',
-#    url='http://pypi.python.org/packages/source/s/svglib/svglib-0.6.2.tar.gz',
-#    subdir='svglib-0.6.2/src/svglib',
-#    app=False).verify()
+Tarball('reportlab',
+    url='http://www.reportlab.org/ftp/ReportLab_2_3.tar.gz',
+    subdir='ReportLab_2_3/src/reportlab',
+    download_msg='+Download and install separately to get faster PDF generation. ',
+    app=False).verify()
 
 Accounts('accounts').verify()
 
-Module('django_extensions', url='http://code.google.com/p/django-command-extensions', optional=True).verify()
-Module('dulwich', url='???', app=False, optional=True).verify()
+Tarball('django_extensions',
+        url='http://django-command-extensions.googlecode.com/files/django-extensions-0.4.1.tar.gz',
+        subdir='django-extensions-0.4.1/django_extensions',
+        optional=True).verify()
+Tarball('dulwich',
+        url='http://samba.org/~jelmer/dulwich/dulwich-0.4.0.tar.gz',
+        subdir='dulwich-0.4.0/dulwich',
+        app=False,
+        optional=True).verify()
 
 import settings
 

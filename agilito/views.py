@@ -5,7 +5,11 @@ import ODTLabels
 import types
 from django.core.cache import cache
 from django.contrib.sites.models import Site
-from agilito.opendocument import Calc, HTML, Formula
+<<<<<<< Updated upstream:agilito/views.py
+from agilito.reporting import Calc, HTML, Formula
+=======
+from agilito.reporting import Calc, HTML
+>>>>>>> Stashed changes:agilito/views.py
 
 from agilito import CACHE_ENABLED, UNRESTRICTED_SIZE, PRINTABLE_CARDS, CACHE_PREFIX, BACKLOG_ARCHIVE
 
@@ -1592,9 +1596,9 @@ def iteration_status_table(request, project_id, iteration_id):
 
     row += 1
     calc.write((row, 3), 'Tasks', {'bold': True})
-    for c in range(len(days)):
+    for c, remaining in enumerate(status.burndown.remaining.hours):
         colname = _ods_column(c + 5)
-        calc.write((row, c + 4), Formula("=SUM(%s2:%s%d)" % (colname, colname, row)))
+        calc.write((row, c + 4), Formula("=SUM(%s2:%s%d)" % (colname, colname, row), remaining))
 
     row += 1
     calc.write((row, 3), 'Story points', {'bold': True})
@@ -1714,7 +1718,8 @@ def hours_export(request, project_id, iteration_id):
     c1 = _ods_column(5)
     c2 = _ods_column(4 + len(users))
     for r in range(3, tasks + 3):
-        calc.write((r, 3), Formula("=SUM(%s%d:%s%d)" % (c1, r+1, c2, r+1)))
+        # replace 0 by pre-calculated total -- stupid Excel
+        calc.write((r, 3), Formula("=SUM(%s%d:%s%d)" % (c1, r+1, c2, r+1), 0))
 
     response = HttpResponse(mimetype='application/vnd.oasis.opendocument.spreadsheet')
     response['Content-Disposition'] = 'attachment; filename=iteration.ods'

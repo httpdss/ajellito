@@ -1,8 +1,9 @@
 import odf.opendocument as opendocument
 import odf.style
 from odf.table import Table, TableColumn, TableRow, TableCell
-from odf.namespaces import OFFICENS, TABLENS
+from odf.namespaces import OFFICENS, TABLENS, TEXTNS
 from odf.text import P, S, LineBreak, Span, Section, List, ListItem
+from odf.draw import Frame, TextBox
 import odf.element as element
 
 import html5lib
@@ -31,12 +32,10 @@ def Style(uid, family, props):
 
     return style
 
-class Formula(unicode):
-    def __new__(cls, s):
-        return unicode.__new__(cls, s)
-
-    def __init__(self, s):
-        self.formula = True
+class Formula(object):
+    def __init__(self, f, v):
+        self.formula = f
+        self.value = v
 
 class HTML(unicode):
     def __new__(cls, s):
@@ -80,8 +79,8 @@ class Sheet:
         tc = TableCell(stylename=self.style('table-cell', style))
 
         if isinstance(value, Formula):
-            tc.setAttrNS(TABLENS, 'formula', value)
-            tc.setAttrNS(OFFICENS, 'value', '0')
+            tc.setAttrNS(TABLENS, 'formula', value.formula)
+            tc.setAttrNS(OFFICENS, 'value', str(value.value))
             tc.setAttrNS(OFFICENS, 'value-type', 'float')
             tc.addElement(P(text=unicode('0', 'utf-8')))
 
@@ -262,3 +261,29 @@ class Calc(OpenDocument):
             self._doc.spreadsheet.addElement(sheet.render())
         self._doc.write(f)
 
+import reportlab.platypus as platypus
+import reportlab.lib
+
+#http://www.hoboes.com/Mimsy/hacks/multiple-column-pdf/
+class Cards(object):
+    def __init__(self, spec):
+        inch = reportlab.lib.units.inch
+        style = reportlab.lib.styles.getSampleStyleSheet() 
+        para = platypus.Paragraph(para, style['Normal'])
+
+        pagesize = getattr(reportlab.lib.pagesizes, spec.page.upper)
+        document = platypus.BaseDocTemplate('/var/www/auto/sign/test.pdf', pagesize=pagesize)
+        frameCount = 2
+        frameWidth = document.width/frameCount
+        frameHeight = document.height-.05*inch
+        frames = []
+        #construct a frame for each column
+
+        for frame in range(frameCount):
+            leftMargin = document.leftMargin + frame*frameWidth
+            column = platypus.Frame(leftMargin, document.bottomMargin, frameWidth, frameHeight)
+            frames.append(column)
+
+        template = platypus.PageTemplate(frames=frames)
+        document.addPageTemplates(template)
+        document.build(posts) 

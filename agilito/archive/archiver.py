@@ -11,7 +11,7 @@ while projectdir != '/' and not os.path.exists(os.path.join(projectdir, 'setting
 if projectdir != '/':
     sys.path.append(projectdir)
 
-from agilito.opendocument import HTML, Calc
+from agilito.reporting import HTML, Calc
 
 def call(cmd):
     p = subprocess.Popen(cmd, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, close_fds=True)
