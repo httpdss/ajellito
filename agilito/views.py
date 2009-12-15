@@ -5,11 +5,7 @@ import ODTLabels
 import types
 from django.core.cache import cache
 from django.contrib.sites.models import Site
-<<<<<<< Updated upstream:agilito/views.py
 from agilito.reporting import Calc, HTML, Formula
-=======
-from agilito.reporting import Calc, HTML
->>>>>>> Stashed changes:agilito/views.py
 
 from agilito import CACHE_ENABLED, UNRESTRICTED_SIZE, PRINTABLE_CARDS, CACHE_PREFIX, BACKLOG_ARCHIVE
 
