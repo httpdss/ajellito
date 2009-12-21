@@ -14,7 +14,7 @@ feeds = {
     }
 
 urlpatterns = patterns('agilito.views',
-    (r'^$', 'index'),
+    url(r'^$', 'index', name = "agilito_index"),
 
     (r'^(?P<project_id>\d+)/touch/$', 'touch_cache'),
 
@@ -38,10 +38,10 @@ urlpatterns = patterns('agilito.views',
     
     url(r'^(?P<project_id>\d+)/iteration/$', 'iteration_status', name="current_iteration_status"),
     url(r'^(?P<project_id>\d+)/iteration/(?P<iteration_id>\d+)/$', 'iteration_status', name="iteration_status_with_id"),
-    (r'^(?P<project_id>\d+)/iteration/import/$', 'iteration_import'),
+    url(r'^(?P<project_id>\d+)/iteration/import/$', 'iteration_import', name='iteration_import'),
     url(r'^(?P<project_id>\d+)/iteration/add/$', 'iteration_create', name="iteration_create"),
     url(r'^(?P<project_id>\d+)/iteration/(?P<iteration_id>\d+)/edit/$', 'iteration_edit', name='iteration_edit'),
-    (r'^(?P<project_id>\d+)/iteration/(?P<iteration_id>\d+)/delete/$', 'iteration_delete'),
+    url(r'^(?P<project_id>\d+)/iteration/(?P<iteration_id>\d+)/delete/$', 'iteration_delete', name='iteration_delete'),
 
     url(r'^(?P<project_id>\d+)/taskboard/(?P<iteration_id>\d+)/$', 'taskboard', name="taskboard"),
     url(r'^(?P<project_id>\d+)/iteration/(?P<iteration_id>\d+)/userstory/add/$', 'userstory_create', name="story_from_iteration"),
@@ -49,11 +49,11 @@ urlpatterns = patterns('agilito.views',
     url(r'^(?P<project_id>\d+)/iteration/hours/$', 'iteration_hours', name="current_iteration_hours"),
     url(r'^(?P<project_id>\d+)/iteration/(?P<iteration_id>\d+)/hours/$', 'iteration_hours', name="itertion_hours_with_id"),
     (r'^(?P<project_id>\d+)/iteration/(?P<iteration_id>\d+)/hours_export/$', 'hours_export'),
-    (r'^(?P<project_id>\d+)/iteration/(?P<iteration_id>\d+)/cards/$', 'iteration_cards'),
+    url(r'^(?P<project_id>\d+)/iteration/(?P<iteration_id>\d+)/cards/$', 'iteration_cards', name='iteration_cards'),
     (r'^(?P<project_id>\d+)/iteration/(?P<iteration_id>\d+)/status_table/$', 'iteration_status_table'),
     (r'^(?P<project_id>\d+)/iteration/(?P<iteration_id>\d+)/export/$', 'iteration_export'),
     (r'^(?P<project_id>\d+)/iteration/(?P<iteration_id>\d+)/burndown_chart/$', 'iteration_burndown_chart'),
-    (r'^(?P<project_id>\d+)/iteration/(?P<iteration_id>\d+)/impediment/add/$', 'impediment_create'),
+    url(r'^(?P<project_id>\d+)/iteration/(?P<iteration_id>\d+)/impediment/add/$', 'impediment_create', name='impediment_create'),
     url(r'^(?P<project_id>\d+)/iteration/(?P<iteration_id>\d+)/impediment/(?P<impediment_id>\d+)/edit/$', 'impediment_edit', name='impediment_edit'),
     (r'^(?P<project_id>\d+)/product_backlog_chart/(?P<iteration_id>.*)$', 'product_backlog_chart'),
 
