@@ -190,13 +190,13 @@ class AgilitoContext(RequestContext):
     """
     def __init__(self, request, dictionary=None, current_project=None, current_story=None):
         self.request = request
-        
+
         if request.user.is_authenticated():
             project_list = request.user.project_set.all().extra(select={'lower_name': 'lower(name)'}).order_by('lower_name')
             if project_list is None or project_list.count() == 0:
-                raise UserHasNoProjectException        
+                raise UserHasNoProjectException
         else:
-            raise UserHasNoProjectException        
+            raise UserHasNoProjectException
 
         if current_project is None:
             current_project = project_list[0]
@@ -207,7 +207,7 @@ class AgilitoContext(RequestContext):
             try:
                 current_story = UserStory.objects.get(id=current_story)
             except UserStory.DoesNotExist:
-                current_story = None            
+                current_story = None
 
         if dictionary is None:
             self.dictionary = { 'project_list' : project_list,
@@ -225,7 +225,7 @@ class AgilitoContext(RequestContext):
 
     def items(self):
         return self.dictionary.items()
-    
+
     def iteritems(self):
         return self.dictionary.iteritems()
 
@@ -254,17 +254,16 @@ def index(request):
     Main index, constructs the url to the iteration one project and redirects 
     to it.
     """
-    try:    
+    try:
         context = AgilitoContext(request)
     except UserHasNoProjectException:
         return render_to_response('agilito/errorpage.html',
                                   context_instance=\
-                                    Context({'error_message' : 
+                                    Context({'error_message' :
                                              'You are not assigned into any project.',}))
 
-
-    url = '/%s/iteration/' % (context['current_project'].id,)
-    return HttpResponseRedirect(url)
+    return HttpResponseRedirect(reverse('current_iteration_status',
+                                            args=[context['current_project'].id]))
 
 
 @restricted
