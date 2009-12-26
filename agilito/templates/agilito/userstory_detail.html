@@ -75,12 +75,12 @@ Planned :
         </td>
         <td class="">
             <a id="att_dwld" href="{{attach.attachment.url}}"> 
-                <img src="/agilito/down.png" alt="download this file" />
+                <img src="{{ STATIC_URL }}agilito/images/down.png" alt="download this file" />
             </a>
         </td>
         <td class="">
             <a id="att_del" href="{% url agilito.views.delete_attachment current_project.id,object.id,attach.id %}?last_page={{last_page}}">
-            <img src="/agilito/delete.png" alt="delete" title="delete" width="16" height="16" />
+            <img src="{{ STATIC_URL }}agilito/images/delete.png" alt="delete" title="delete" width="16" height="16" />
         </a>
         </td>
     </tr>

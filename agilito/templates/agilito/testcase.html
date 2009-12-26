@@ -13,15 +13,15 @@
         <td class="description">{{object.description|safe}}</td>
         <td id="add_testresult_{{object.id}}" class="">
             <a href="{% url agilito.views.testresult_create current_project.id,current_story.id,object.id %}?last_page={{last_page}}">
-                <img src="/agilito/add_.png" alt="add task" title="add test result" width="16" height="16" /></a></td>
+                <img src="{{ STATIC_URL }}agilito/images/add_.png" alt="add task" title="add test result" width="16" height="16" /></a></td>
         <td id="edit_testcase_{{object.id}}" class="">
             <a href="{% url agilito.views.testcase_edit current_project.id,current_story.id,object.id %}?last_page={{last_page}}">
-                <img src="/agilito/pencil.png" alt="edit" title="edit" width="16" height="16" />
+                <img src="{{ STATIC_URL }}agilito/images/pencil.png" alt="edit" title="edit" width="16" height="16" />
             </a>
         </td>
         <td id="delete_testcase_{{object.id}}" class="">
             <a href="{% url agilito.views.testcase_delete current_project.id,current_story.id,object.id %}?last_page={{last_page}}">
-                <img src="/agilito/delete.png" alt="delete" title="delete" width="16" height="16" />
+                <img src="{{ STATIC_URL }}agilito/images/delete.png" alt="delete" title="delete" width="16" height="16" />
             </a>
         </td>
     </tr>

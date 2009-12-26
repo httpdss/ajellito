@@ -79,12 +79,12 @@
         <td class="description"><pre>{{object.comments}}</pre></td>
         <td id="edit_testresult_{{object.id}}" class="">
             <a href="{% url agilito.views.testresult_edit current_project.id,current_story.id,testcase.id,object.id %}?last_page={{last_page}}">
-                <img src="/agilito/pencil.png" alt="edit" title="edit" width="16" height="16" />
+                <img src="{{ STATIC_URL }}agilito/images/pencil.png" alt="edit" title="edit" width="16" height="16" />
             </a>
         </td>
         <td id="delete_testresult_{{object.id}}" class="">
             <a href="{% url agilito.views.testresult_delete current_project.id,current_story.id,testcase.id,object.id %}?last_page={{last_page}}">
-                <img src="/agilito/delete.png" alt="delete" title="delete" width="16" height="16" />
+                <img src="{{ STATIC_URL }}agilito/images/delete.png" alt="delete" title="delete" width="16" height="16" />
             </a>
         </td>
     </tr>
