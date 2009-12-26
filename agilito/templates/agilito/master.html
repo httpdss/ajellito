@@ -202,45 +202,7 @@
                 <div id="zoomborder">
                     <span id="zoombutton"></span>
                     {% block body %} {% endblock %}
-
-                    {% if comment_on %}
-                        <h1>Comments</h1>
-                        {% get_threaded_comment_tree for comment_on as tree %}
-                        {% for comment in tree %}
-                            <div style="margin-left: {{ comment.depth }}em;" class="commentbox {% ifnotequal comment.depth 0 %}reply{% endifnotequal %}">
-                                <quote>{{ comment.user|fullusername }} {% ifequal comment.depth 0 %}said{% else %}replied{% endifequal %}: (<a id="c{{ comment.id }}" href="javascript:show_reply_form('c{{ comment.id }}','{% get_comment_url comment_on comment %}','{{ comment.user|fullusername }}')">reply</a>)</quote><br/>
-                                <cite>{% auto_transform_markup comment %}</cite>
-                            </div>
-                        {% endfor %}
-                        <form method="POST" action="{% get_comment_url comment_on%}">
-                            {% get_threaded_comment_form as comment_form %}
-                            <div id="comment-form">
-                            <table class="formfields">
-                                {% if comment_form.non_field_errors  %}
-                                    {{ comment_form.non_field_errors }}
-                                {% endif %}
-
-                                <tr class="{% if comment_form.comment.errors %}errors {% endif %} {% if comment_form.comment.field.required %}required{%endif%}">
-                                    <td class="form-label">
-                                        <span>
-                                            {{ comment_form.comment.label_tag }}
-                                            {% if comment_form.comment.field.required and not comment_form.comment.errors %}<br/><span class="required-text">required</span>{%endif%}
-                                        </span>
-                                    </td>
-                                    <td class="form-entry">
-                                        <textarea class="mceNoEditor" id="id_comment" rows="10" cols="40" name="comment"></textarea>
-                                        {% if comment_form.comment.help_text %}<p class="discreet">{{ comment_form.comment.help_text }}</p>{% endif %}
-                                        {% if comment_form.comment.errors %}{{ comment_form.comment.errors }}{% endif %}
-                                    </td>
-                                </tr>
-                                <tr><td colspan="2">
-                                    <input type="submit" value="Submit Comment" />
-                                    {{ comment_form.markup }}
-                                </td></tr>
-                            </table>
-                            </div>
-                        </form>
-                    {% endif %}
+                    {% include "agilito/comments_section.html" %}
                 </div>
             </div>
             {% comment %}
@@ -282,18 +244,7 @@ color: #555;</code>
 
         <div class="sidenav">
                 {% if not user.is_anonymous and current_project %}
-                    <h1>Search</h1>
-                    <form action="{% url agilito.views.search current_project.id %}">
-                    <div>
-                        <input type="text" name="query" class="styled" value="{{ query|escape }}" size=40/>
-                        <select name="model">
-                            <option value="User Story">User Stories</option>
-                            <option value="Task">Tasks</option>
-                            <option value="Test Case">Test Cases</option>
-                        </select>
-                        <input type="submit" value="Search" class="button" />
-                    </div>
-                    </form>
+                    {% include 'agilito/search_box.html' %}
                 {% endif %}
 
                 {% if sidebar %}

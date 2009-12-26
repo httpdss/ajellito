@@ -1,0 +1,32 @@
+
+<h2>
+    {% if current_project %}
+    {{ current_project.name }} &raquo;
+    {% endif %}
+
+    Backlog
+</h2>
+
+{% if backlog %}
+<div id="us-resume">
+    <span>Number of US in Backlog: <strong>{{ user_stories }}</strong> </span> 
+    {% if velocity.sprint_length %}
+    <div>Velocity: {{ velocity.actual }} vs. {{ velocity.planned }} (avg sprint length {{ velocity.sprint_length|floatformat:0 }} days)</div>
+    {% endif %}
+    {% if suggestions %}
+    <div>Sizing accuracy: {{ suggestions.accuracy|floatformat:0 }}%, based on {{ suggestions.base }}</div>
+    {% endif %}
+    {% else %}
+    No user stories in the backlog.
+    {% endif %}
+    <div>
+        <form name="states" action="#">
+            {% for state in states %}
+            <input type="checkbox" id="story_state_{{state.state}}" name="story_state_{{state.state}}" value="{{ state.state }}" />&nbsp;<label class="inline" for="story_state_{{state.state}}">{{state.name}}</label>
+            {% endfor %}
+            <input onclick="select_states(); return false" type="image" src="{{ STATIC_URL }}agilito/images/bullet_go.png" alt="Submit Form" />
+        </form>
+    </div>
+    {% if backlog %}
+</div>
+{% endif %}

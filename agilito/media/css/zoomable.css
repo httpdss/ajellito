@@ -19,10 +19,10 @@
         float: right;
         height: 16px;
         width: 16px;
-        background: url(../zoom.png) no-repeat;
+        background: url(../images/zoom.png) no-repeat;
     }
     #zoomable.zoomed #zoombutton {
-        background: url(../unzoom.png) no-repeat;
+        background: url(../images/unzoom.png) no-repeat;
     }
 }
 

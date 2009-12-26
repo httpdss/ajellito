@@ -1,0 +1,12 @@
+<h1>Search</h1>
+<form action="{% url agilito.views.search current_project.id %}">
+    <div>
+        <input type="text" name="query" class="styled" value="{{ query|escape }}" size=40/>
+        <select name="model">
+            <option value="User Story">User Stories</option>
+            <option value="Task">Tasks</option>
+            <option value="Test Case">Test Cases</option>
+        </select>
+        <input type="submit" value="Search" class="button" />
+    </div>
+</form>

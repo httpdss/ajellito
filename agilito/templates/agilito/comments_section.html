@@ -1,0 +1,43 @@
+{% load threadedcommentstags %}
+{% load agilito_utils %}
+
+<div>
+    {% if comment_on %}
+    <h1>Comments</h1>
+    {% get_threaded_comment_tree for comment_on as tree %}
+    {% for comment in tree %}
+    <div style="margin-left: {{ comment.depth }}em;" class="commentbox {% ifnotequal comment.depth 0 %}reply{% endifnotequal %}">
+        <quote>{{ comment.user|fullusername }} {% ifequal comment.depth 0 %}said{% else %}replied{% endifequal %}: (<a id="c{{ comment.id }}" href="javascript:show_reply_form('c{{ comment.id }}','{% get_comment_url comment_on comment %}','{{ comment.user|fullusername }}')">reply</a>)</quote><br/>
+        <cite>{% auto_transform_markup comment %}</cite>
+    </div>
+    {% endfor %}
+    <form method="POST" action="{% get_comment_url comment_on%}">
+        {% get_threaded_comment_form as comment_form %}
+        <div id="comment-form">
+            <table class="formfields">
+                {% if comment_form.non_field_errors  %}
+                {{ comment_form.non_field_errors }}
+                {% endif %}
+
+                <tr class="{% if comment_form.comment.errors %}errors {% endif %} {% if comment_form.comment.field.required %}required{%endif%}">
+                    <td class="form-label">
+                        <span>
+                            {{ comment_form.comment.label_tag }}
+                            {% if comment_form.comment.field.required and not comment_form.comment.errors %}<br/><span class="required-text">required</span>{%endif%}
+                        </span>
+                    </td>
+                    <td class="form-entry">
+                        <textarea class="mceNoEditor" id="id_comment" rows="10" cols="40" name="comment"></textarea>
+                        {% if comment_form.comment.help_text %}<p class="discreet">{{ comment_form.comment.help_text }}</p>{% endif %}
+                        {% if comment_form.comment.errors %}{{ comment_form.comment.errors }}{% endif %}
+                    </td>
+                </tr>
+                <tr><td colspan="2">
+                        <input type="submit" value="Submit" />
+                        {{ comment_form.markup }}
+                </td></tr>
+            </table>
+        </div>
+    </form>
+    {% endif %}
+</div>

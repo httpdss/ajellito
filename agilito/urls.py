@@ -84,7 +84,7 @@ urlpatterns = patterns('agilito.views',
     (r'^(?P<project_id>\d+)/userstory/(?P<userstory_id>\d+)/testcase/(?P<testcase_id>\d+)/testresult/(?P<testresult_id>\d+)/delete/$', 'testresult_delete'),
 
     (r'^(?P<project_id>\d+)/search/', 'search'),
-    (r'^json/task/[ra]?(?P<task_id>\d+)/$', 'task_json'),
+    url(r'^json/task/[ra]?(?P<task_id>\d+)/$', 'task_json', name="task_json"),
 
     (r'^(?P<project_id>\d+)/log/$', 'timelog'),
     (r'^(?P<project_id>\d+)/log/task/(?P<task_id>\d+)/$', 'timelog_task'),
@@ -98,10 +98,10 @@ urlpatterns = patterns('agilito.views',
 )
 
 urlpatterns += patterns('',
-    (r'^admin/(.*)', admin.site.root),
-    (r'^agilito/(?P<path>.*)$', 'django.views.static.serve', {'document_root': media_root}),
+#    (r'^admin/(.*)', admin.site.root),
+#    (r'^agilito/(?P<path>.*)$', 'django.views.static.serve', {'document_root': media_root}),
     (r'^xmlrpc/', 'agilito.xmlrpc.xmlrpc.view', {'module':'agilito.xmlrpc'}),
-    (r'^(rsd.xml)$', 'django.views.static.serve', {'document_root': media_root}),
+#    (r'^(rsd.xml)$', 'django.views.static.serve', {'document_root': media_root}),
 
     (r'^feeds/(?P<url>.*)/$', 'agilito.feeds.feed', {'feed_dict': feeds}),
 )

@@ -1,10 +1,12 @@
 {% extends "agilito/base.html" %}
 
+{% block body_class %}timelog{% endblock %}
+
 {% block js %}
 <script type="text/javascript">
 
 function task_details(value) {
-    $.getJSON("/json/task/" + value + "/", function(data) {
+    $.getJSON("{% url agilito_index %}json/task/" + value + "/", function(data) {
             $('#story-name').text(data.story);
             $('#task-name').text(data.name);
             $("#id_estimate").attr("value", data.estimate);

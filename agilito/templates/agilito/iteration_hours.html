@@ -1,6 +1,8 @@
 {% extends "agilito/base.html" %}
 {% load humanize %}
 
+{% block body_class %}hours{% endblock %}
+
 {% block head_title %}
     {% if current_iteration %}
         {{current_iteration.name}} Hours

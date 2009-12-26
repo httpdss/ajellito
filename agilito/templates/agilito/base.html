@@ -5,12 +5,42 @@
 {% block body_class %}agilito{% endblock %}
 
 {% block subnav %}
-    <!-- TODO: add menu links to base.html -->
-    {% if user.is_authenticated %}
-        <ul>
-            <li>Link1</li>
-        </ul>
-    {% else %}
-        &nbsp;
-    {% endif %}
+<!-- TODO: add menu links to base.html -->
+{% if user.is_authenticated %}
+{% if sidebar %}
+{% for label, section in sidebar.items %}
+<ul>
+    {% for entry in section %}
+    <li><a href="{{entry.url}}"
+            {% for k, v in entry.properties.items %}
+            {{k}}="{{v}}"
+            {% endfor %}
+            {% if entry.popup %}
+            onclick="popup(this, '{{entry.popup}}'); return false"
+            {% endif %}
+            >{{entry.label}}</a></li>
+    {% endfor %}
+</ul>
+{% endfor %}
+{% else %}
+
+<ul>
+    <li>&nbsp;</li>
+</ul>
+{% endif %}
+{% else %}
+<ul>
+    <li>&nbsp;</li>
+</ul>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_body %}
+{% block js %}{% endblock %}
+{% endblock %}
+
+{% block extra_head %}
+{% block link %}{% endblock %}
+{% block css %}{% endblock %}
 {% endblock %}

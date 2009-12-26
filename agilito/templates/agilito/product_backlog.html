@@ -3,6 +3,8 @@
 {% load humanize %}
 {% load agilito_utils %}
 
+{% block body_class %}backlog{% endblock %}
+
 {% block link %}
     <link rel="alternate" type="application/rss+xml"
         title="Product backlog for {{current_project.name}}"
@@ -264,40 +266,13 @@
     {% block select_tab %} "backlog" {% endblock %}
 
     {% block body_header %}
-        <h2>
-            {% if current_project %}
-                {{ current_project.name }} &raquo;
-            {% endif %}
-    
-            Backlog
-        </h2>
-
-        {% if backlog %}
-            <div id="us-resume">
-                <span>Number of US in Backlog: <strong>{{ user_stories }}</strong> </span> 
-                {% if velocity.sprint_length %}
-                    <div>Velocity: {{ velocity.actual }} vs. {{ velocity.planned }} (avg sprint length {{ velocity.sprint_length|floatformat:0 }} days)</div>
-                {% endif %}
-                {% if suggestions %}
-                    <div>Sizing accuracy: {{ suggestions.accuracy|floatformat:0 }}%, based on {{ suggestions.base }}</div>
-                {% endif %}
-        {% else %}
-            No user stories in the backlog.
-        {% endif %}
-                <div>
-                    <form name="states" action="#">
-                        {% for state in states %}
-                            <input type="checkbox" id="story_state_{{state.state}}" name="story_state_{{state.state}}" value="{{ state.state }}" />&nbsp;<label class="inline" for="story_state_{{state.state}}">{{state.name}}</label>
-                        {% endfor %}
-                        <input onclick="select_states(); return false" type="image" src="/agilito/bullet_go.png" alt="Submit Form" />
-                    </form>
-                </div>
-        {% if backlog %}
-            </div>
-        {% endif %}
+        {% include "agilito/product_backlog_body_header.html" %}
     {% endblock %}
     
     {% block body %}
+    <div id="body-header">
+        {% include "agilito/product_backlog_body_header.html" %}
+    </div>
         {% if backlog %}
             <form id="filter-form" action="#">Filter: <input name="filter" id="filter" value="" maxlength="30" size="30" type="text" /></form>
             <form id="iteration-form" action="#">
