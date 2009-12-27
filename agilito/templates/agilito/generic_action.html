@@ -7,14 +7,14 @@
 <h3>{{ object.name }}</h3>
 
 <form method="post">
-<table class="formfields">
     {% for field in form %}
         {% if field.is_hidden %}
             {{ field }}
         {% endif %}
     {% endfor %}
-    {% for field in form %}
-        {% if not field.is_hidden %}
+    <table class="formfields">
+        {% for field in form %}
+            {% if not field.is_hidden %}
             <tr class="{% if field.errors %}errors {% endif %} {% if field.field.required %}required{%endif%}">
                 <td class="form-label">
                     <span>
@@ -28,10 +28,10 @@
                     {% if field.errors %}{{ field.errors }}{% endif %}
                 </td>
             </tr>
-        {% endif %}
-    {% endfor %}
-</table>
-	
+            {% endif %}
+        {% endfor %}
+    </table>
+
     <input type="submit" class="save" value="Save"/>
 </form>
 {% endblock %}
