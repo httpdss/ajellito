@@ -126,12 +126,12 @@ class Module:
         else:
             print '\nYou need to have %s installed' % self.name
 
-        Module.OK = Module.OK and self.optional
 
         do_download = False
         do_download = do_download or (config['install'] == 'ask' and self.askDownload())
         do_download = do_download or config['install'] == 'auto'
         if not do_download:
+            Module.OK = Module.OK and self.optional
             return self.optional
 
         self.download()
@@ -145,6 +145,8 @@ class Module:
 
         if present:
             self.markPresent()
+
+        Module.OK = Module.OK and present
 
         return present
 
@@ -178,6 +180,7 @@ class Tarball(DownloadableModule):
 
         subdir = self.subdir
         if subdir:
+            print '%(tmpdir)s/%(subdir)s' % locals(), self.name
             shutil.move('%(tmpdir)s/%(subdir)s' % locals(), self.name)
         else:
             shutil.move(TMPDIR, self.name)
@@ -246,7 +249,6 @@ class GIT(DownloadableModule):
 
 Module('django', url = 'http://www.djangoproject.com/', app=False).verify()
 Module('html5lib', url = 'http://code.google.com/p/html5lib/', app=False).verify()
-Module('ooolib', url = 'http://ooolib.sourceforge.net/', app=False).verify()
 for app in ['admin', 'humanize', 'markup']:
     Module('django.contrib.' + app).verify()
 
@@ -265,8 +267,19 @@ Tarball('threadedcomments',
     url='http://django-threadedcomments.googlecode.com/files/django-threadedcomments-0.5.1.tar.gz',
     subdir='django-threadedcomments-0.5.1/threadedcomments').verify()
 
-#BZR('wiki', url = 'lp:django-wikiapp', subdir = 'wiki').verify()
-#GIT('wakawaka', url = 'git://github.com/brosner/django-wakawaka.git', branch = 'pinax-group-support', subdir = 'src/wakawaka').verify()
+Tarball('odf',
+    url='http://forge.osor.eu/frs/download.php/552/odfpy-0.9.1.tar.gz',
+    subdir='odfpy-0.9.1/odf',
+    app=False).verify()
+
+#Tarball('reportlab',
+#    url='http://www.reportlab.org/ftp/ReportLab_2_3.tar.gz',
+#    subdir='ReportLab_2_3/src/reportlab',
+#    app=False).verify()
+#Tarball('svglib',
+#    url='http://pypi.python.org/packages/source/s/svglib/svglib-0.6.2.tar.gz',
+#    subdir='svglib-0.6.2/src/svglib',
+#    app=False).verify()
 
 Accounts('accounts').verify()
 

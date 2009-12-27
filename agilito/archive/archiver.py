@@ -11,7 +11,7 @@ while projectdir != '/' and not os.path.exists(os.path.join(projectdir, 'setting
 if projectdir != '/':
     sys.path.append(projectdir)
 
-from agilito.tools import HTMLConverter, Calc
+from agilito.opendocument import HTML, Calc
 
 def call(cmd):
     p = subprocess.Popen(cmd, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, close_fds=True)
@@ -19,15 +19,11 @@ def call(cmd):
     p.wait()
     return output
 
-def html2text(s):
-    return HTMLConverter(s).text()
-
 def render(d, data):
     doc = Calc(sheetname=data['title'])
-    doc.set_meta('title', data['title'])
 
     for col, h in enumerate(['Rank', 'Id', 'Name', 'Description', 'Size', 'State', 'Tags']):
-        doc.set_cell(0, col, h, style='bold')
+        doc.write((0, col), h, {'bold': True})
 
     row = 0
     for story in data['backlog']:
@@ -35,18 +31,18 @@ def render(d, data):
             continue
 
         row += 1
-        doc.set_cell(row, 0, story.rank)
-        doc.set_cell(row, 1, story.id)
-        doc.set_cell(row, 2, story.name)
-        doc.set_cell(row, 3, html2text(story.description))
+        doc.write((row, 0), story.rank)
+        doc.write((row, 1), story.id)
+        doc.write((row, 2), story.name)
+        doc.write((row, 3), HTML(story.description))
 
         if data['sizes']:
-            doc.set_cell(row, 4, UserStory.SIZES.label(story.size))
+            doc.write((row, 4), UserStory.SIZES.label(story.size))
         else:
-            doc.set_cell(row, 4, story.size)
+            doc.write((row, 4), story.size)
 
-        doc.set_cell(row, 5, story.backlog_state)
-        doc.set_cell(row, 6, ', '.join(story.taglist))
+        doc.write((row, 5), story.backlog_state)
+        doc.write((row, 6), ', '.join(story.taglist))
 
     doc.save(d)
 

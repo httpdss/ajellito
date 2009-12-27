@@ -5,7 +5,7 @@ import ODTLabels
 import types
 from django.core.cache import cache
 from django.contrib.sites.models import Site
-from agilito.tools import Calc, HTMLConverter
+from agilito.opendocument import Calc, HTML, Formula
 
 from agilito import CACHE_ENABLED, UNRESTRICTED_SIZE, PRINTABLE_CARDS, CACHE_PREFIX, BACKLOG_ARCHIVE
 
@@ -1459,7 +1459,7 @@ def backlog_ods(request, project_id, states=None, suggest=None):
         backlog = project.backlog(states_filter)
 
     statename = {}
-    for state, name in UserStory.STATES.choices(include_hidden = True):
+    for state, name in UserStory.STATES.choices():
         statename[state] = name
 
     calc = Calc('Product Backlog')
@@ -1474,7 +1474,7 @@ def backlog_ods(request, project_id, states=None, suggest=None):
         header_row.append('Pct')
 
     for c, header in enumerate(header_row):
-        calc.set_cell(0, c, header, style='bold')
+        calc.write((0, c), header, {'bold': True})
 
     row = 0
     for story in backlog.backlog:
@@ -1483,9 +1483,9 @@ def backlog_ods(request, project_id, states=None, suggest=None):
 
         row += 1
 
-        calc.set_cell(row, 0, story.id)
-        calc.set_cell(row, 1, story.rank)
-        calc.set_cell(row, 2, story.name)
+        calc.write((row, 0), story.id)
+        calc.write((row, 1), story.rank)
+        calc.write((row, 2), story.name)
 
         if not story.description is None:
             try:
@@ -1494,25 +1494,23 @@ def backlog_ods(request, project_id, states=None, suggest=None):
                 v_a = story.description.encode('ascii', 'ignore')
                 desc = unicode(v_a).decode('utf-8')
 
-            calc.set_cell(row, 3, HTMLConverter(desc).text())
+            calc.write((row, 3), HTML(desc))
 
-        calc.set_cell(row, 4, statename[story.state])
+        calc.write((row, 4), statename[story.state])
         if story.iteration:
-            calc.set_cell(row, 5, story.iteration.name)
-        calc.set_cell(row, 6, UserStory.size_label_for(story.size))
+            calc.write((row, 5), story.iteration.name)
+        calc.write((row, 6), UserStory.size_label_for(story.size))
 
         if suggest:
+            style = {'bold': False}
             if story.suggestion:
-                if story.suggestion.is_benchmark:
-                    style='bold'
-                else:
-                    style=None
-                calc.set_cell(row, 7, UserStory.size_label_for(story.suggestion.size), style=style)
+                style['bold'] = story.suggestion.is_benchmark
+                calc.write((row, 7), UserStory.size_label_for(story.suggestion.size), style)
 
-                calc.set_cell(row, 8, story.suggestion.hours)
+                calc.write((row, 8), story.suggestion.hours)
 
                 if story.size:
-                    calc.set_cell(row, 9, int(float(story.size * 100) / story.suggestion.size))
+                    calc.write((row, 9), int(float(story.size * 100) / story.suggestion.size))
 
     response = HttpResponse(mimetype='application/vnd.oasis.opendocument.spreadsheet')
     response['Content-Disposition'] = 'attachment; filename=backlog.ods'
@@ -1527,10 +1525,9 @@ def iteration_status_table(request, project_id, iteration_id):
     it = Iteration.objects.get(id=iteration_id, project__id=project_id)
     status = it.status()
 
-    fade = 'color:#C9C9C9'
-    bold = 'bold'
-    orange = 'background:#FF0000'
-    green = 'background:#00FF00'
+    fade = '#C9C9C9'
+    orange = '#FF0000'
+    green = '#00FF00'
 
     calc = Calc('Iteration Status')
 
@@ -1538,66 +1535,68 @@ def iteration_status_table(request, project_id, iteration_id):
     sprintlength = status.burndown.days
 
     for c, h in enumerate(['task ID', 'priority', 'story', 'task'] + [str(d) for d in days]):
-        calc.set_cell(0, c, h, style='bold')
+        calc.write((0, c), h, {'bold': True})
 
     row = 1
     for story in status.stories:
         for task in story.tasks['all']:
             row += 1
 
-            calc.set_cell(row, 0, task.id)
-            calc.set_cell(row, 1, story.rank)
+            calc.write((row, 0), task.id)
+            calc.write((row, 1), story.rank)
 
-            style = None
+            style = {'background': False}
             if story.state == UserStory.STATES.COMPLETED and story.remaining == 0:
-                style = green
+                style['background'] = green
             elif task.state != Task.STATES.COMPLETED and story.remaining == 0:
-                style = orange
+                style['background'] = orange
             elif task.state == Task.STATES.COMPLETED and story.remaining != 0:
-                style = orange
-            calc.set_cell(row, 2, story.name, style=style)
+                style['background'] = orange
+            calc.write((row, 2), story.name, style)
 
             for day, remaining in enumerate(task.remaining_for_day):
                 if day == 0:
-                    style = []
+                    style = {}
                 elif task.remaining_for_day[day] < task.remaining_for_day[day - 1]:
-                    style = [green]
+                    style = {'background': green}
                 elif task.remaining_for_day[day] > task.remaining_for_day[day - 1]:
-                    style = [orange]
+                    style = {'background': orange}
                 else:
-                    style = []
+                    style = {}
 
                 if not remaining:
-                    style.append(fade)
-                    style.append(bold)
+                    style['color'] = fade
+                    style['bold'] = True
 
-                calc.set_cell(row, day + 4, remaining, style=style)
+                calc.write((row, day + 4), remaining, style)
 
             if task.estimate is None:
-                style = fade
+                style = {'color': fade}
             elif task.state == Task.STATES.COMPLETED and remaining == 0:
-                style = green
+                style = {'background': green}
             elif task.state != Task.STATES.COMPLETED and remaining == 0:
-                style = orange
+                style = {'background': orange}
             elif task.state == Task.STATES.COMPLETED and last != 0:
-                style = orange
-            calc.set_cell(row, 3, task.name, style=style)
+                style = {'background': orange}
+            else:
+                style={}
+            calc.write((row, 3), task.name, style)
 
     row += 1
-    calc.set_cell(row, 3, 'Tasks', style='bold')
+    calc.write((row, 3), 'Tasks', {'bold': True})
     for c in range(len(days)):
         colname = _ods_column(c + 5)
-        calc.set_cell(row, c + 4, "=SUM(%s2:%s%d)" % (colname, colname, row))
+        calc.write((row, c + 4), Formula("=SUM(%s2:%s%d)" % (colname, colname, row)))
 
     row += 1
-    calc.set_cell(row, 3, 'Story points', style='bold')
+    calc.write((row, 3), 'Story points', {'bold': True})
     for c, remaining in enumerate(status.burndown.remaining.points):
-        calc.set_cell(row, c+4, remaining)
+        calc.write((row, c+4), remaining)
 
     row += 1
-    calc.set_cell(row, 3, 'Ideal', style='bold')
+    calc.write((row, 3), 'Ideal', {'bold': True})
     for c, remaining in enumerate(status.burndown.remaining.ideal):
-        calc.set_cell(row, c+4, remaining)
+        calc.write((row, c+4), remaining)
 
     response = HttpResponse(mimetype='application/vnd.oasis.opendocument.spreadsheet')
     response['Content-Disposition'] = 'attachment; filename=iteration-status.ods'
@@ -1615,20 +1614,20 @@ def iteration_export(request, project_id, iteration_id):
     calc = Calc('Iteration')
 
     for c, h in enumerate(['ID', 'Name', 'Start', 'End']):
-        calc.set_cell(0, c, h, style='bold')
+        calc.write((0, c), h, {'bold': True})
 
     for c, d in enumerate([it.id, it.name, str(it.start_date), str(it.end_date)]):
-        calc.set_cell(1, c, d)
+        calc.write((1, c), d)
 
     for c, h in enumerate(['ID', 'Story', 'Task', 'Estimate', 'Owner', 'Tags']):
-        calc.set_cell(2, c, h, style='bold')
+        calc.write((2, c), h, {'bold': True})
 
     row = 2
     for story in status.stories:
         for task in story.tasks['all']:
             row += 1
             for c, d in enumerate([task.id, task.user_story.name, task.name, task.estimate, task.owner, ', '.join(task.taglist)]):
-                calc.set_cell(row, c, d)
+                calc.write((row, c), d)
 
     response = HttpResponse(mimetype='application/vnd.oasis.opendocument.spreadsheet')
     response['Content-Disposition'] = 'attachment; filename=iteration.ods'
@@ -1645,13 +1644,13 @@ def hours_export(request, project_id, iteration_id):
     calc = Calc('Hours')
 
     for c, h in enumerate(['ID', 'Name', 'Start', 'End']):
-        calc.set_cell(0, c, h, style='bold')
+        calc.write((0, c), h, {'bold': True})
 
     for c, d in enumerate([it.id, it.name, str(it.start_date), str(it.end_date)]):
-        calc.set_cell(1, c, d)
+        calc.write((1, c), d)
 
     for c, h in enumerate(['ID', 'Story', 'Task', 'Estimate']): # add users later
-        calc.set_cell(2, c, h, style='bold')
+        calc.write((2, c), h, {'bold': True})
 
     users = []
     users_data = {}
@@ -1691,7 +1690,7 @@ def hours_export(request, project_id, iteration_id):
     for r, t in enumerate(Task.objects.filter(user_story__iteration=it)):
         tasks += 1
         for c, d in enumerate([t.id, t.user_story.name, t.name]):
-            calc.set_cell(r+3, c, d)
+            calc.write((r+3, c), d)
 
         if t.owner:
             oid = t.owner.id
@@ -1699,15 +1698,15 @@ def hours_export(request, project_id, iteration_id):
             oid = None
 
         if t.estimate:
-            calc.set_cell(r+3, users_data[oid]['col'], t.estimate)
+            calc.write((r+3, users_data[oid]['col']), t.estimate)
 
     for u in users:
-        calc.set_cell(2, users_data[u]['col'], users_data[u]['name'], style='bold')
+        calc.write((2, users_data[u]['col']), users_data[u]['name'], {'bold': True})
 
     c1 = _ods_column(5)
     c2 = _ods_column(4 + len(users))
     for r in range(3, tasks + 3):
-        calc.set_cell(r, 3, "=SUM(%s%d:%s%d)" % (c1, r+1, c2, r+1))
+        calc.write((r, 3), Formula("=SUM(%s%d:%s%d)" % (c1, r+1, c2, r+1)))
 
     response = HttpResponse(mimetype='application/vnd.oasis.opendocument.spreadsheet')
     response['Content-Disposition'] = 'attachment; filename=iteration.ods'

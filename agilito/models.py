@@ -19,6 +19,8 @@ import math, re
 import sys
 import inspect
 
+import random, string
+
 from agilito import CACHE_ENABLED, UNRESTRICTED_SIZE, CACHE_PREFIX
 
 class Object(object):
@@ -823,15 +825,15 @@ class Iteration(ClueModel):
 
         # if we're only 2 days into the sprint the burndown is covered
         # by estimate and remaining
-        if today > 2:
+        if today > 1:
             ## tasklog updates
             cursor.execute("""select tl.old_remaining, tl.date, tl.time_on_task, t.id
                             from agilito_tasklog tl
                             join agilito_task t on tl.task_id = t.id
                             join agilito_userstory s on t.user_story_id = s.id
-                            where s.iteration_id = %s and tl.date<=%s
+                            where s.iteration_id = %s
                             order by tl.date
-                            """, (self.id, datetime.date.today()))
+                            """, (self.id,))
             for old_remaining, date, spent, task in cursor.fetchall():
                 task = tasks_by_id[task]
                 task.remaining_for_day[tasklogday(date)] = old_remaining
@@ -979,8 +981,18 @@ class Iteration(ClueModel):
         )
         ordering = ('start_date',)
 
+def attachment_path(instance, filename):
+    extension = filename.split('.')[-1]
+
+    dir = 'attachments/%d' % instance.user_story.project.id
+
+    chars = string.letters + string.digits
+    name = string.join(random.sample(chars, 30), '')
+
+    return "%s/%s.%s" % (dir, name, extension)
+    
 class UserStoryAttachment(ClueModel):
-    attachment = models.FileField(upload_to='attachments/')
+    attachment = models.FileField(upload_to=attachment_path)
 
     user_story = models.ForeignKey('UserStory')
 

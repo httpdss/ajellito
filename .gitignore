@@ -6,3 +6,5 @@ debug_toolbar
 threadedcomments
 agilito.sqlite
 *.*~
+odf
+reportlab
