@@ -281,12 +281,6 @@ Tarball('odf',
     subdir='odfpy-0.9.1/odf',
     app=False).verify()
 
-Tarball('reportlab',
-    url='http://www.reportlab.org/ftp/ReportLab_2_3.tar.gz',
-    subdir='ReportLab_2_3/src/reportlab',
-    download_msg='+Download and install separately to get faster PDF generation. ',
-    app=False).verify()
-
 Accounts('accounts').verify()
 
 Tarball('django_extensions',

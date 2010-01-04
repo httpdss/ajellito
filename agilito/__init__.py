@@ -16,16 +16,10 @@ try:
 except AttributeError:
     UNRESTRICTED_SIZE = False
 
-class PrintableCards:
-    def __init__(self, selected):
-        self.ini = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'LabelSpecs.ini')
-        self.selected = selected
-        self.template = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'templates/template.odt')
-
 try:
-    PRINTABLE_CARDS = PrintableCards(settings.PRINTABLE_CARD_STOCK)
+    PRINTABLE_CARD_STOCK = settings.PRINTABLE_CARD_STOCK
 except AttributeError:
-    PRINTABLE_CARDS = None
+    PRINTABLE_CARD_STOCK = None
 
 ALPHABET = ''.join(c for c in string.ascii_uppercase + string.ascii_lowercase + string.digits + string.punctuation if c != '.')
 BASE = len(ALPHABET)

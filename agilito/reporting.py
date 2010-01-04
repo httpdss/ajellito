@@ -1,13 +1,22 @@
+# -*- coding: utf-8 -*-
+
 import odf.opendocument as opendocument
 import odf.style
-from odf.table import Table, TableColumn, TableRow, TableCell
+import odf.table
 from odf.namespaces import OFFICENS, TABLENS, TEXTNS
-from odf.text import P, S, LineBreak, Span, Section, List, ListItem
-from odf.draw import Frame, TextBox
+import odf.text
 import odf.element as element
+from types import TupleType, ListType
 
 import html5lib
 import copy
+import os.path
+import math
+
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
 
 def Style(uid, family, props):
     style = odf.style.Style(name='%s-%s' % (family, str(uid)), family=family)
@@ -27,6 +36,8 @@ def Style(uid, family, props):
             style.addElement(odf.style.TextProperties(textlinethroughstyle='solid'))
         elif k == 'align' and family == 'paragraph':
             style.addElement(odf.style.ParagraphProperties(textalign=v, justifysingleword='false'))
+        elif k == 'columnwidth' and family == 'table-column':
+            style.addElement(odf.style.TableColumnProperties(columnwidth=v))
         else:
             raise Exception('Unsupported stye attribute %s' % k)
 
@@ -56,18 +67,18 @@ class Sheet:
         return self._calc.style(family, props)
 
     def render(self):
-        table = Table(name=self._name)
-        table.addElement(TableColumn(stylename=self._calc.style_co1))
+        table = odf.table.Table(name=self._name)
+        table.addElement(odf.table.TableColumn(stylename=self._calc.style_co1))
 
         for row in range(self._rows):
-            tr = TableRow()
+            tr = odf.table.TableRow()
             table.addElement(tr)
 
             for col in range(self._cols):
                 try:
                     tc = self._cells[(row, col)]
                 except KeyError:
-                    tc = TableCell()
+                    tc = odf.table.TableCell()
                 tr.addElement(tc)
         return table
 
@@ -76,26 +87,26 @@ class Sheet:
         if row >= self._rows: self._rows = row + 1
         if col >= self._cols: self._cols = col + 1
 
-        tc = TableCell(stylename=self.style('table-cell', style))
+        tc = odf.table.TableCell(stylename=self.style('table-cell', style))
 
         if isinstance(value, Formula):
             tc.setAttrNS(TABLENS, 'formula', value.formula)
             tc.setAttrNS(OFFICENS, 'value', str(value.value))
             tc.setAttrNS(OFFICENS, 'value-type', 'float')
-            tc.addElement(P(text=unicode('0', 'utf-8')))
+            tc.addElement(odf.text.P(text=unicode('0', 'utf-8')))
 
         elif isinstance(value, HTML):
             tc.setAttrNS(OFFICENS, 'value-type', 'string')
-            self._calc.HTML(html5lib.HTMLParser().parse(value), tc)
+            self._calc.HTML(self._calc._html_parser.parse(value), tc)
 
         elif isinstance(value, basestring):
             tc.setAttrNS(OFFICENS, 'value-type', 'string')
-            tc.addElement(P(text=value))
+            tc.addElement(odf.text.P(text=value))
 
         elif isinstance(value, (float, int)):
             tc.setAttrNS(OFFICENS, 'value-type', 'float')
             tc.setAttrNS(OFFICENS, 'value', str(value))
-            tc.addElement(P(text=str(value)))
+            tc.addElement(odf.text.P(text=str(value)))
 
         elif isinstance(value, element.Element):
             tc.setAttrNS(OFFICENS, 'value-type', 'string')
@@ -110,6 +121,13 @@ class OpenDocument(object):
         self._styles = {'':{}}
 
         self.debug = False
+        self._html_parser = html5lib.HTMLParser()
+
+        self._style_hr = odf.style.Style(name="Horizontal Rule", family="paragraph")
+        self._style_hr.addElement(odf.style.ParagraphProperties(padding="0cm",
+                                    borderleft="none", borderright="none", bordertop="none",
+                                    borderbottom="0.002cm solid #000000", shadow="none"))
+        self._doc.automaticstyles.addElement(self._style_hr)
 
     def style(self, family, props):
         if not self._styles.has_key(family):
@@ -129,6 +147,309 @@ class OpenDocument(object):
             self._styles[family][attrs] = s
             self._doc.automaticstyles.addElement(s)
             return s
+
+    def P(self, root, p):
+        if p is None:
+            p = odf.text.P()
+            root.addElement(p)
+        return p
+
+    def HTML(self, chunk, root, p=None, style={}):
+        for child in chunk.childNodes:
+            if child.name is None:
+                tag = None
+            else:
+                tag = child.name.lower()
+    
+            if tag is None:
+                if child.value.strip():
+                    p = self.P(root, p)
+                    if child.value[0].isspace():
+                        p.addElement(odf.text.S())
+                    s = odf.text.Span(text=child.value.strip(), stylename=self.style('text', style))
+                    p.addElement(s)
+                    if child.value[-1].isspace():
+                        p.addElement(odf.text.S())
+
+            elif tag == 'br':
+                p = self.P(root, p)
+                p.addElement(odf.text.LineBreak())
+
+            elif tag == 'hr':
+                root.addElement(odf.text.P(stylename=self._style_hr))
+                p = None
+
+            elif tag in ['p', 'div']:
+                if child.attributes.has_key('align'):
+                    align = {'right': 'end', 'left': False, 'center': 'center', 'justify': 'justify'}[child.attributes['align']]
+                    p = odf.text.P(stylename=self.style('paragraph', {'align': align}))
+                else:
+                    p = odf.text.P()
+                root.addElement(p)
+                self.HTML(child, root, p, style)
+
+            elif tag in ['i', 'em']:
+                _style = copy.copy(style)
+                _style.update({'italic': True})
+                self.HTML(child, root, p, _style)
+
+            elif tag in ['b', 'strong']:
+                _style = copy.copy(style)
+                _style.update({'bold': True})
+                self.HTML(child, root, p, _style)
+
+            elif tag == 'u':
+                _style = copy.copy(style)
+                _style.update({'underline': True})
+                self.HTML(child, root, p, _style)
+
+            elif tag == 'strike':
+                _style = copy.copy(style)
+                _style.update({'strike': True})
+                self.HTML(child, root, p, _style)
+
+            elif tag in ['ol', 'ul']:
+                self._html_list(child, root, p, style, tag)
+                p = None
+
+            elif tag == 'table':
+                self._html_table(child, root, p, style)
+                p = None
+
+            elif tag in ['html', 'head', 'body', 'tbody', 'tr', 'td']:
+                self.HTML(child, root, p, style)
+
+            ## later we'll just ignore what we don't understand, but
+            ## right now I want explicit notification.
+            else:
+                if self.debug: print 'Unexpected tag', tag
+                self.HTML(child, root, p, style)
+    
+        return root
+
+def loadLabels():
+    specs = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'LabelSpecs.pickle')
+    f = open(specs)
+    l = pickle.load(f)
+    f.close()
+    return l
+
+class DictObject(object):
+    def __init__(self, d):
+        for k, v in d.items():
+            setattr(self, k.replace(' ', '_').replace('.', '_'), v)
+
+class Cards(OpenDocument):
+    LABELSPECS = loadLabels()
+
+    @staticmethod
+    def addUnit(s):
+        return '%f%s' % (s, Cards.LABELSPECS['units'])
+
+    def __init__(self, label):
+        super(Cards, self).__init__(opendocument.OpenDocumentText())
+
+        self._label = DictObject(Cards.LABELSPECS['label:' + label])
+
+        self._cards = []
+
+        pl = odf.style.PageLayout(name="pagelayout")
+
+        pl.addElement(odf.style.PageLayoutProperties(
+                                            margintop=Cards.addUnit(self._label.top_margin),
+                                            marginbottom="0pt",
+                                            marginleft=Cards.addUnit(self._label.left_margin),
+                                            marginright=Cards.addUnit(self._label.right_margin),
+                                            pagewidth=Cards.addUnit(self._label.paper_width),
+                                            pageheight=Cards.addUnit(self._label.paper_height),
+                                            printorientation="portrait"))
+        self._doc.automaticstyles.addElement(pl)
+
+        mp = odf.style.MasterPage(name="Standard", pagelayoutname=pl)
+        self._doc.masterstyles.addElement(mp)
+
+        self._layout_table_label_width = odf.style.Style(name="layout table label width", family="table-column")
+        self._layout_table_label_width.addElement(odf.style.TableColumnProperties(columnwidth=Cards.addUnit(self._label.width), useoptimalcolumnwidth="false"))
+        self._doc.automaticstyles.addElement(self._layout_table_label_width)
+
+        if self._label.width != self._label.horizontal_pitch:
+            self._layout_table_horizontal_spacer = odf.style.Style(name="layout table horizontal spacer", family="table-column")
+            self._layout_table_horizontal_spacer.addElement(odf.style.TableColumnProperties(columnwidth=Cards.addUnit(self._label.horizontal_pitch - self._label.width), useoptimalcolumnwidth="false"))
+            self._doc.automaticstyles.addElement(self._layout_table_horizontal_spacer)
+
+            self._layout_table_colspec = [self._layout_table_label_width, self._layout_table_horizontal_spacer] * self._label.across
+            self._layout_table_colspec = self._layout_table_colspec[:-1]
+        else:
+            self._layout_table_colspec = [self._layout_table_label_width] * self._label.across
+
+        self._layout_table_label_height = odf.style.Style(name="layout table label height", family="table-row")
+        self._layout_table_label_height.addElement(odf.style.TableRowProperties(backgroundcolor="#FFFFFF", rowheight=Cards.addUnit(self._label.height), useoptimalrowheight="false"))
+        self._doc.automaticstyles.addElement(self._layout_table_label_height)
+
+        if self._label.height != self._label.vertical_pitch:
+            self._layout_table_vertical_spacer = odf.style.Style(name="layout table vertical spacer", family="table-column")
+            self._layout_table_vertical_spacer.addElement(odf.style.TableRowProperties(rowheight=Cards.addUnit(self._label.vertical_pitch - self._label.height), useoptimalrowheight="false"))
+            self._doc.automaticstyles.addElement(self._layout_table_vertical_spacer)
+
+        self._para = odf.style.Style(name="Para", family="paragraph")
+        self._para.addElement(odf.style.ParagraphProperties(numberlines="false", linenumber="0"))
+        self._para.addElement(odf.style.TextProperties(fontsize="12pt", fontweight="bold"))
+        self._doc.automaticstyles.addElement(self._para)
+
+        self._page_break = odf.style.Style(name="table page break", family="table")
+        self._page_break.addElement(odf.style.TableProperties(breakafter="true"))
+        self._doc.automaticstyles.addElement(self._page_break)
+
+        self._style_card_table_cell = odf.style.Style(name="Card table cell", family="table-cell")
+        self._style_card_table_cell.addElement(odf.style.TableCellProperties(padding="0.1cm"))
+        self._doc.automaticstyles.addElement(self._style_card_table_cell)
+
+        self._list_style = {}
+        for listtype in ('ol', 'ul'):
+            self._list_style[listtype] = odf.text.ListStyle(name="HTML list (%s)" % listtype)
+            llp = odf.style.ListLevelProperties()
+            llp.setAttribute('spacebefore', '0.5cm')
+            llp.setAttribute('minlabelwidth', '0.5cm')
+
+            if (listtype == 'ol'):
+                lls = odf.text.ListLevelStyleNumber(level=1)
+                lls.setAttribute('numsuffix', '.')
+                lls.setAttribute('displaylevels', 1)
+            else:
+                lls = odf.text.ListLevelStyleBullet(level=1, bulletchar=u"•")
+                lls.addElement(odf.style.TextProperties(fontname="StarSymbol"))
+
+            lls.addElement( llp )
+
+            self._list_style[listtype].addElement(lls)
+            self._doc.automaticstyles.addElement(self._list_style[listtype])
+
+        self._inner_table_style = odf.style.Style(name="Inner table", family="table")
+        self._inner_table_style.addElement(odf.style.TableProperties(bordermodel="collapsing"))
+        self._doc.automaticstyles.addElement(self._inner_table_style)
+
+        self._inner_table_col_style = odf.style.Style(name="Inner table column", family="table-column")
+        self._inner_table_col_style.addElement(odf.style.TableColumnProperties(useoptimalcolumnwidth="true"))
+        self._doc.automaticstyles.addElement(self._inner_table_col_style)
+
+        self._inner_table_cell_style = odf.style.Style(name="Inner table cell", family="table-cell")
+        self._inner_table_cell_style.addElement(odf.style.TableCellProperties(padding="0.1cm", border="0.02cm solid #000000"))
+        self._doc.automaticstyles.addElement(self._inner_table_cell_style)
+
+    def _html_list(self, chunk, root, p, style, listtype):
+        l = odf.text.List(stylename=self._list_style[listtype])
+        root.addElement(l)
+        for li in chunk.childNodes:
+            if li.name != 'li':
+                continue
+
+            elem = odf.text.ListItem()
+            l.addElement(elem)
+
+            self.HTML(li, elem, None, style)
+
+    def _html_table(self, chunk, root, p, style):
+        for tbody in chunk.childNodes:
+            if tbody.name == 'tbody':
+                chunk = tbody
+                break
+
+        table = odf.table.Table(stylename=self._inner_table_style)
+        root.addElement(table)
+
+        widths = []
+        taken = 0
+        for tr in chunk.childNodes:
+            if tr.name == 'tr':
+                for td in tr.childNodes:
+                    if td.name == 'td':
+                        w = None
+
+                        if td.attributes.has_key('width'):
+                            _w = td.attributes['width'].replace(' ', '')
+                            if _w.endswith('%'):
+                                w = float(_w[:-1])
+                                taken += w
+
+                        elif td.attributes.has_key('style'):
+                            s = td.attributes['style']
+                            for se in s.split(';'):
+                                se = se.replace(' ', '')
+                                try:
+                                    k, v = se.split(':')
+                                    if k == 'width' and v.endswith('%'):
+                                        w = float(v[:-1])
+                                        taken += w
+                                        break
+
+                                except ValueError:
+                                    pass
+
+                        widths.append(w)
+                # we only look at the first row
+                break
+
+        if taken > 100:
+            raise Exception('Table columns claim %d%%' % taken)
+
+        remaining = 100.0 - taken
+        unsized = len(filter(lambda x: not x, widths))
+        if unsized:
+            remaining = remaining / unsized
+            widths = [w or remaining for w in widths]
+
+        for w in widths:
+            table.addElement(odf.table.TableColumn(stylename=self.style('table-column', {'columnwidth': '%f%%' % w})))
+
+        for tr in chunk.childNodes:
+            if tr.name != 'tr':
+                continue
+
+            row = odf.table.TableRow()
+            table.addElement(row)
+
+            for td in tr.childNodes:
+                if td.name == 'td':
+                    tc = odf.table.TableCell(stylename=self._inner_table_cell_style)
+                    row.addElement(tc)
+                    self.HTML(td, tc, None, style)
+
+    def add(self, card):
+        self._cards.append(card.strip())
+
+    def save(self, f):
+        cards_per_page = self._label.across * self._label.down
+        pages = int(math.ceil(float(len(self._cards)) / cards_per_page))
+        spacer = (self._label.width != self._label.horizontal_pitch)
+
+        for page in range(pages):
+            table = odf.table.Table(stylename=self._page_break)
+            self._doc.text.addElement(table)
+
+            for cs in self._layout_table_colspec:
+                table.addElement(odf.table.TableColumn(stylename=cs))
+
+            for row in range(self._label.down):
+                data = []
+                for col in range(self._label.across):
+                    try:
+                        data.append(self._cards[(page * cards_per_page) + (col * self._label.down) + row])
+                    except IndexError:
+                        data.append('')
+                    if spacer:
+                        data.append('')
+                if spacer:
+                    data.pop()
+
+                tr = odf.table.TableRow(stylename=self._layout_table_label_height)
+                table.addElement(tr)
+
+                for d in data:
+                    tc = odf.table.TableCell(stylename=self._style_card_table_cell)
+                    tr.addElement(tc)
+                    self.HTML(self._html_parser.parse(d), tc)
+
+        self._doc.write(f)
 
 class Calc(OpenDocument):
     def __init__(self, sheetname):
@@ -153,91 +474,42 @@ class Calc(OpenDocument):
         name = '%s%s%d' % (chr(64 + col), name, row + 1)
         return name
 
-    def P(self, root, p):
-        if p is None:
-            p = P()
-            root.addElement(p)
-        return p
+    def _html_list(self, chunk, root, p, style, listtype):
+        linum = 0
+        for li in chunk.childNodes:
+            if li.name != 'li':
+                continue
 
-    def HTML(self, chunk, root, p=None, style={}, listtype=None):
-        for child in chunk.childNodes:
-            if child.name is None:
-                tag = None
+            p = self.P(root, None)
+
+            if listtype == 'ul':
+                s = odf.text.Span(text='*', stylename=self.style('text', style))
+            elif listtype == 'ol':
+                linum += 1
+                s = odf.text.Span(text='%d.' % linum, stylename=self.style('text', style))
             else:
-                tag = child.name.lower()
-    
-            if tag is None:
-                p = self.P(root, p)
+                raise Exception('List type not set')
 
-                if child.value[0].isspace():
-                    p.addElement(S())
-                s = Span(text=child.value.strip(), stylename=self.style('text', style))
-                p.addElement(s)
-                if child.value[-1].isspace():
-                    p.addElement(S())
+            p.addElement(s)
+            p.addElement(odf.text.S())
+            self.HTML(li, root, p, style)
 
-            elif tag in ['br', 'hr']:
-                root.addElement(P())
-                p = None
+    def _html_table(self, chunk, root, p, style):
+        for tbody in chunk.childNodes:
+            if tbody.name == 'tbody':
+                chunk = tbody
+                break
 
-            elif tag in ['p', 'div']: # handle alignment
-                if child.attributes.has_key('align'):
-                    align = {'right': 'end', 'left': False, 'center': 'center', 'justify': 'justify'}[child.attributes['align']]
-                    p = P(stylename=self.style('paragraph', {'align': align}))
-                else:
-                    p = P()
-                root.addElement(p)
-                self.HTML(child, root, p, style, listtype)
+        for tr in chunk.childNodes:
+            if tr.name != 'tr':
+                continue
 
-            elif tag in ['i', 'em']:
-                _style = copy.copy(style)
-                _style.update({'italic': True})
-                self.HTML(child, root, p, _style, listtype)
+            p = self.P(root, None)
 
-            elif tag in ['b', 'strong']:
-                _style = copy.copy(style)
-                _style.update({'bold': True})
-                self.HTML(child, root, p, _style, listtype)
-
-            elif tag == 'u':
-                _style = copy.copy(style)
-                _style.update({'underline': True})
-                self.HTML(child, root, p, _style, listtype)
-
-            elif tag == 'strike':
-                _style = copy.copy(style)
-                _style.update({'strike': True})
-                self.HTML(child, root, p, _style, listtype)
-
-            elif tag in ['ol', 'ul']:
-                self._olcount = 0
-                self.HTML(child, root, p, style, tag)
-
-            elif tag in ['html', 'head', 'body', 'table', 'tbody', 'tr', 'td']:
-                self.HTML(child, root, p, style, listtype)
-
-            elif tag == 'li':
-                p = self.P(root, None)
-
-                if listtype == 'ul':
-                    s = Span(text='*', stylename=self.style('text', style))
-                elif listtype == 'ol':
-                    self._olcount += 1
-                    s = Span(text='%d.' % self._olcount, stylename=self.style('text', style))
-                else:
-                    raise Exception('List type not set')
-
-                p.addElement(s)
-                p.addElement(S())
-                self.HTML(child, root, p, style, listtype)
-
-            ## later we'll just ignore what we don't understand, but
-            ## right now I want explicit notification.
-            else:
-                if self.debug: print 'Unexpected tag', tag
-                self.HTML(child, root, p, style, listtype)
-    
-        return root
+            for td in tr.childNodes:
+                if td.name == 'td':
+                    self.HTML(td, root, p, style)
+                    p.addElement(odf.text.S())
 
     def __getitem__(self, key):
         if isinstance(key, int):
@@ -261,29 +533,3 @@ class Calc(OpenDocument):
             self._doc.spreadsheet.addElement(sheet.render())
         self._doc.write(f)
 
-import reportlab.platypus as platypus
-import reportlab.lib
-
-#http://www.hoboes.com/Mimsy/hacks/multiple-column-pdf/
-class Cards(object):
-    def __init__(self, spec):
-        inch = reportlab.lib.units.inch
-        style = reportlab.lib.styles.getSampleStyleSheet() 
-        para = platypus.Paragraph(para, style['Normal'])
-
-        pagesize = getattr(reportlab.lib.pagesizes, spec.page.upper)
-        document = platypus.BaseDocTemplate('/var/www/auto/sign/test.pdf', pagesize=pagesize)
-        frameCount = 2
-        frameWidth = document.width/frameCount
-        frameHeight = document.height-.05*inch
-        frames = []
-        #construct a frame for each column
-
-        for frame in range(frameCount):
-            leftMargin = document.leftMargin + frame*frameWidth
-            column = platypus.Frame(leftMargin, document.bottomMargin, frameWidth, frameHeight)
-            frames.append(column)
-
-        template = platypus.PageTemplate(frames=frames)
-        document.addPageTemplates(template)
-        document.build(posts) 

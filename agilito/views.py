@@ -1,13 +1,13 @@
 import csv, StringIO
 import time 
 import datetime
-import ODTLabels
 import types
 from django.core.cache import cache
 from django.contrib.sites.models import Site
 from agilito.reporting import Calc, HTML, Formula
+import agilito.reporting
 
-from agilito import CACHE_ENABLED, UNRESTRICTED_SIZE, PRINTABLE_CARDS, CACHE_PREFIX, BACKLOG_ARCHIVE
+from agilito import CACHE_ENABLED, UNRESTRICTED_SIZE, PRINTABLE_CARD_STOCK, CACHE_PREFIX, BACKLOG_ARCHIVE
 
 if BACKLOG_ARCHIVE:
     from dulwich.repo import Repo
@@ -63,7 +63,7 @@ except ImportError:
 
 from urllib import quote_plus
 
-from django.template import RequestContext, Context, loader
+from django.template import RequestContext, Context, loader, Template
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render_to_response
@@ -1301,39 +1301,65 @@ def iteration_cards(request, project_id, iteration_id):
     it = Iteration.objects.get(id=iteration_id, project__id=project_id)
     status = it.status()
 
+    cards = agilito.reporting.Cards(PRINTABLE_CARD_STOCK)
+
+    # these will come from the database later
+    task_template = """
+        <table>
+            <tr>
+                <td>prio: story.task</td>
+                <td><b>{{story.relative_priority}}<b>: {{story.id}}.{{task.priority}}<br/>{{task.id}}</td>
+                <td><b>{{task.estimate}}<br/>{{task.remaining}}</b></td>
+            </tr>
+        </table>
+        <b>{{task.name}}</b>
+        <hr/>
+        {{task.description}}
+    """
+    task_template = Template(task_template.strip().replace('}}', '|safe}}'))
+
+    story_template = """
+        <table>
+            <tr>
+                <td>prio:story</td>
+                <td><b>{{story.relative_priority}}<b>: {{story.id}}</td>
+                <td><b>{{story.size_string}}</b></td>
+            </tr>
+        </table>
+        <b>{{story.name}}</b>
+        <hr/>
+        {{story.description}}
+    """
+    story_template = Template(story_template.strip().replace('}}', '|safe}}'))
+
     tasks = []
     stories = []
 
     for story in status.stories:
-        stories.append({
-                        'StoryID': story.id,
-                        'StoryName': story.name,
-                        'StoryDescription': story.description,
-                        'StoryRank': story.relative_rank,
-                        'StorySize': UserStory.SIZES.label(story.size)
-                        })
-        for task in story.tasks['all']:
-            tasks.append({
-                        'TaskID': task.id,
-                        'TaskName': task.name,
-                        'TaskDescription': task.description,
-                        'TaskEstimate': task.estimate,
-                        'TaskRemaining': task.remaining,
-                        'TaskOwner': task.owner,
-                        'TaskTags': ', '.join(task.taglist),
-                        'StoryID': story.id,
-                        'StoryName': story.name,
-                        'StoryDescription': story.description,
-                        'StoryRank': story.relative_rank,
-                        })
+        if story.rank:
+            story.relative_priority = story.relative_rank
+        else:
+            story.relative_priority = ''
+        if story.size:
+            story.size_string = UserStory.size_label_for(story.size)
+        else:
+            story.size_string = ''
 
-    labels = ODTLabels.ODTLabels(PRINTABLE_CARDS.ini)
-    labels.setSheetType(PRINTABLE_CARDS.selected)
-    labels.setTemplate(PRINTABLE_CARDS.template)
+        stories.append(story_template.render(Context({'story': story})))
+
+        taskprio = 1
+        for task in story.tasks['all']:
+            task.priority = taskprio
+            tasks.append(task_template.render(Context({'task': task, 'story': story})))
+
+    for story in stories:
+        cards.add(story)
+    for task in tasks:
+        cards.add(task)
 
     response = HttpResponse(mimetype='application/vnd.oasis.opendocument.text')
     response['Content-Disposition'] = 'attachment; filename=cards.odt'
-    labels.makeLabels(tasks, stories, response)
+    cards.save(response)
     return response
 
 def _ods_column(n):
