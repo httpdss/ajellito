@@ -257,7 +257,7 @@ if config['debug']:
         url='http://github.com/robhudson/django-debug-toolbar/tarball/0.8.0',
         subdir='robhudson-django-debug-toolbar-4f43c9b/debug_toolbar/').verify()
 
-SVN('agilito', url = 'http://agilito.googlecode.com/svn/trunk/agilito').verify()
+Module('dulwich', url='http://samba.org/~jelmer/dulwich/', app=False, optional=True).verify()
 
 SVN('queryutils', url = 'http://agilito.googlecode.com/svn/trunk/queryutils').verify()
 
@@ -272,19 +272,9 @@ Tarball('odf',
     subdir='odfpy-0.9.1/odf',
     app=False).verify()
 
-#Tarball('reportlab',
-#    url='http://www.reportlab.org/ftp/ReportLab_2_3.tar.gz',
-#    subdir='ReportLab_2_3/src/reportlab',
-#    app=False).verify()
-#Tarball('svglib',
-#    url='http://pypi.python.org/packages/source/s/svglib/svglib-0.6.2.tar.gz',
-#    subdir='svglib-0.6.2/src/svglib',
-#    app=False).verify()
-
 Accounts('accounts').verify()
 
 Module('django_extensions', url='http://code.google.com/p/django-command-extensions', optional=True).verify()
-Module('dulwich', url='???', app=False, optional=True).verify()
 
 import settings
 
