@@ -761,7 +761,7 @@ class Iteration(ClueModel):
                 tr = stories_by_id[storyid].tmp.testresult
             except KeyError:
                 continue
-            if testresult == TestResult.RESULTS.Pass:
+            if testresult == TestResult.RESULTS.PASS:
                 tr[tcid] = 0
             else:
                 tr[tcid] = 1

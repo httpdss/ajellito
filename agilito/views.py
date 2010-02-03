@@ -824,8 +824,8 @@ def testcase_detail(request, project_id, userstory_id, testcase_id):
         redirect=True,
         props={'class': "edit-object"})
     sidebar.add('Actions', 'Delete this testcase',
-        reverse('agilito.views.testcase_delete', args=[project_id, userstory_id, task_id]),
-        redirect=reverse('userstory_detail', args=[project_id, userstory_id]),
+        reverse('agilito.views.testcase_delete', args=[project_id, userstory_id, testcase_id]),
+        redirect=reverse('agilito.views.userstory_detail', args=[project_id, userstory_id]),
         props={'class': "delete-object"})
     sidebar.add('Actions', 'Add a test result',
         reverse('agilito.views.agilito.views.testresult_create', args=[project_id, userstory_id, testcase_id]),
