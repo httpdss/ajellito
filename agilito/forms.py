@@ -62,7 +62,7 @@ class UserStoryAttachmentForm(HiddenHttpRefererForm):
 
     class Meta:
         model = UserStoryAttachment
-        exclude = ('user_story',)
+        exclude = ('user_story', 'original_name',)
 
 class IterationImportForm(forms.Form):
     data = forms.CharField(widget=forms.widgets.Textarea(attrs={'class': 'mceNoEditor'}))

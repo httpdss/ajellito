@@ -3,6 +3,8 @@ import time
 import datetime
 import ODTLabels
 import types
+import mimetypes
+import os
 from django.core.cache import cache
 from django.contrib.sites.models import Site
 from agilito.opendocument import Calc, HTML, Formula
@@ -292,6 +294,7 @@ def add_attachment(request, project_id, userstory_id, instance=None):
         if form.is_valid():
             attachment = form.save(commit=False)
             attachment.user_story = story
+            attachment.original_name = request.FILES['attachment'].name
             attachment.save()
             return HttpResponseRedirect(form.cleaned_data['http_referer'])
         else:
@@ -325,6 +328,45 @@ def delete_attachment(request, project_id, userstory_id, attachment_id):
                                        model=UserStoryAttachment,
                                        template_name='userstory_delete.html',
                                        post_delete_redirect=url)
+
+@restricted
+def view_attachment(request, project_id, userstory_id, attachment_id):
+    """borrowed from http://www.djangosnippets.org/snippets/1710/
+    thanks to achimnol"""
+    att = UserStoryAttachment.objects.get(id=attachment_id, 
+                                          user_story__id=userstory_id, 
+                                          user_story__project__id=project_id)
+    file_path = att.attachment.path
+    original_filename = att.original_name
+    fp = open(file_path, 'rb')
+    response = HttpResponse(fp.read())
+    fp.close()
+    type, encoding = mimetypes.guess_type(file_path)
+    
+    if type is None:
+        type = 'application/octet-stream'
+    
+    response['Content-Type'] = type
+    response['Content-Length'] = str(os.stat(file_path).st_size)
+    
+    if encoding is not None:
+        response['Content-Encoding'] = encoding
+
+    # To inspect details for the below code, see http://greenbytes.de/tech/tc2231/
+    if u'WebKit' in request.META['HTTP_USER_AGENT']:
+        # Safari 3.0 and Chrome 2.0 accepts UTF-8 encoded string directly.
+        filename_header = 'filename=%s' % original_filename.encode('utf-8')
+    elif u'MSIE' in request.META['HTTP_USER_AGENT']:
+        # IE does not support internationalized filename at all.
+        # It can only recognize internationalized URL, so we do the trick via routing rules.
+        filename_header = ''
+    else:
+        # For others like Firefox, we follow RFC2231 (encoding extension in HTTP headers).
+        filename_header = 'filename*=UTF-8\'\'%s' % urllib.quote(original_filename.encode('utf-8'))
+    
+    response['Content-Disposition'] = 'attachment; ' + filename_header
+    return response
+
 
 @restricted
 def impediment_create(request, project_id, iteration_id, instance=None):

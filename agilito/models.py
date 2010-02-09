@@ -993,7 +993,7 @@ def attachment_path(instance, filename):
     
 class UserStoryAttachment(ClueModel):
     attachment = models.FileField(upload_to=attachment_path)
-
+    original_name = models.CharField(max_length=200)
     user_story = models.ForeignKey('UserStory')
 
     def __unicode__(self):
