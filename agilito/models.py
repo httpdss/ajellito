@@ -1415,7 +1415,7 @@ class TaskLog(models.Model):
     date = models.DateTimeField()
     iteration = models.ForeignKey('Iteration', null=True)
     owner = models.ForeignKey(User)
-    old_remaining = models.FloatField()
+    old_remaining = models.FloatField(null=True, blank=True)
 
     def __unicode__(self):
         return 'Task Log: [%s, %s, %s, %s, %s]' % (self.iteration, self.date, 
