@@ -72,6 +72,7 @@ urlpatterns = patterns('agilito.views',
     #just left it for the record.
     #(r'^(?P<project_id>\d+)/userstory/(?P<userstory_id>\d+)/attachment/(?P<attachment_id>\d+)/edit/$', 'edit_attachment'),
     (r'^(?P<project_id>\d+)/userstory/(?P<userstory_id>\d+)/attachment/(?P<attachment_id>\d+)/delete/$', 'delete_attachment'),
+    (r'^(?P<project_id>\d+)/userstory/(?P<userstory_id>\d+)/attachment/(?P<attachment_id>\d+)/view/$', 'view_attachment'),
     
     (r'^(?P<project_id>\d+)/userstory/(?P<userstory_id>\d+)/testcase/add/$', 'testcase_create'),
     (r'^(?P<project_id>\d+)/userstory/(?P<userstory_id>\d+)/testcase/(?P<testcase_id>\d+)/edit/$', 'testcase_edit'),

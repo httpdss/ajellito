@@ -266,7 +266,7 @@ if config['debug']:
         url='http://github.com/robhudson/django-debug-toolbar/tarball/0.8.0',
         subdir='robhudson-django-debug-toolbar-4f43c9b/debug_toolbar/').verify()
 
-SVN('agilito', url = 'http://agilito.googlecode.com/svn/trunk/agilito').verify()
+Module('dulwich', url='http://samba.org/~jelmer/dulwich/', app=False, optional=True).verify()
 
 SVN('queryutils', url = 'http://agilito.googlecode.com/svn/trunk/queryutils').verify()
 

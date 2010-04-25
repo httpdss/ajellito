@@ -761,7 +761,7 @@ class Iteration(ClueModel):
                 tr = stories_by_id[storyid].tmp.testresult
             except KeyError:
                 continue
-            if testresult == TestResult.RESULTS.Pass:
+            if testresult == TestResult.RESULTS.PASS:
                 tr[tcid] = 0
             else:
                 tr[tcid] = 1
@@ -993,7 +993,7 @@ def attachment_path(instance, filename):
     
 class UserStoryAttachment(ClueModel):
     attachment = models.FileField(upload_to=attachment_path)
-
+    original_name = models.CharField(max_length=200)
     user_story = models.ForeignKey('UserStory')
 
     def __unicode__(self):
@@ -1415,7 +1415,7 @@ class TaskLog(models.Model):
     date = models.DateTimeField()
     iteration = models.ForeignKey('Iteration', null=True)
     owner = models.ForeignKey(User)
-    old_remaining = models.FloatField()
+    old_remaining = models.FloatField(null=True, blank=True)
 
     def __unicode__(self):
         return 'Task Log: [%s, %s, %s, %s, %s]' % (self.iteration, self.date, 
