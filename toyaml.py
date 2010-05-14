@@ -195,10 +195,11 @@ for project in Project.objects.all():
         }
 
     if not DEFAULT_USER in pdump['members'].keys():
-        raise Exception("Project %s: members: %s" % (project.name, ', '.join(pdump['members'].keys())))
+        raise Exception("Project %s: default user %s not one of %s" % (project.name, DEFAULT_USER, ', '.join(pdump['members'].keys())))
 
     for sprint in project.iteration_set.all():
         sprint_id = sprint_key(sprint.id)
+        print 'sprint', sprint_id
         pdump['sprints'][sprint_id] = {'name': sprint.name, 'description': totextile(sprint.description), 'start': sprint.start_date, 'end': sprint.end_date}
         current_sprint = pdump['sprints'][sprint_id]
         current_sprint['open'] = sprint.start_date is None or sprint.end_date is None or (sprint.start_date >= datetime.date.today() and datetime.date.today() <= sprint.end_date)
