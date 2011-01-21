@@ -1,13 +1,15 @@
 import csv, StringIO
 import time 
 import datetime
-import ODTLabels
 import types
+import mimetypes
+import os
 from django.core.cache import cache
 from django.contrib.sites.models import Site
-from agilito.opendocument import Calc, HTML, Formula
+from agilito.reporting import Calc, HTML, Formula
+import agilito.reporting
 
-from agilito import CACHE_ENABLED, UNRESTRICTED_SIZE, PRINTABLE_CARDS, CACHE_PREFIX, BACKLOG_ARCHIVE
+from agilito import CACHE_ENABLED, UNRESTRICTED_SIZE, PRINTABLE_CARD_STOCK, CACHE_PREFIX, BACKLOG_ARCHIVE
 
 if BACKLOG_ARCHIVE:
     from dulwich.repo import Repo
@@ -63,7 +65,7 @@ except ImportError:
 
 from urllib import quote_plus
 
-from django.template import RequestContext, Context, loader
+from django.template import RequestContext, Context, loader, Template
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render_to_response
@@ -291,6 +293,7 @@ def add_attachment(request, project_id, userstory_id, instance=None):
         if form.is_valid():
             attachment = form.save(commit=False)
             attachment.user_story = story
+            attachment.original_name = request.FILES['attachment'].name
             attachment.save()
             return HttpResponseRedirect(form.cleaned_data['http_referer'])
         else:
@@ -323,6 +326,45 @@ def delete_attachment(request, project_id, userstory_id, attachment_id):
                                        model=UserStoryAttachment,
                                        template_name='agilito/userstory_delete.html',
                                        post_delete_redirect=url)
+
+@restricted
+def view_attachment(request, project_id, userstory_id, attachment_id):
+    """borrowed from http://www.djangosnippets.org/snippets/1710/
+    thanks to achimnol"""
+    att = UserStoryAttachment.objects.get(id=attachment_id, 
+                                          user_story__id=userstory_id, 
+                                          user_story__project__id=project_id)
+    file_path = att.attachment.path
+    original_filename = att.original_name
+    fp = open(file_path, 'rb')
+    response = HttpResponse(fp.read())
+    fp.close()
+    type, encoding = mimetypes.guess_type(file_path)
+    
+    if type is None:
+        type = 'application/octet-stream'
+    
+    response['Content-Type'] = type
+    response['Content-Length'] = str(os.stat(file_path).st_size)
+    
+    if encoding is not None:
+        response['Content-Encoding'] = encoding
+
+    # To inspect details for the below code, see http://greenbytes.de/tech/tc2231/
+    if u'WebKit' in request.META['HTTP_USER_AGENT']:
+        # Safari 3.0 and Chrome 2.0 accepts UTF-8 encoded string directly.
+        filename_header = 'filename=%s' % original_filename.encode('utf-8')
+    elif u'MSIE' in request.META['HTTP_USER_AGENT']:
+        # IE does not support internationalized filename at all.
+        # It can only recognize internationalized URL, so we do the trick via routing rules.
+        filename_header = ''
+    else:
+        # For others like Firefox, we follow RFC2231 (encoding extension in HTTP headers).
+        filename_header = 'filename*=UTF-8\'\'%s' % urllib.quote(original_filename.encode('utf-8'))
+    
+    response['Content-Disposition'] = 'attachment; ' + filename_header
+    return response
+
 
 @restricted
 def impediment_create(request, project_id, iteration_id, instance=None):
@@ -817,8 +859,8 @@ def testcase_detail(request, project_id, userstory_id, testcase_id):
         redirect=True,
         props={'class': "edit-object"})
     sidebar.add('Actions', 'Delete this testcase',
-        reverse('agilito.views.testcase_delete', args=[project_id, userstory_id, task_id]),
-        redirect=reverse('userstory_detail', args=[project_id, userstory_id]),
+        reverse('agilito.views.testcase_delete', args=[project_id, userstory_id, testcase_id]),
+        redirect=reverse('agilito.views.userstory_detail', args=[project_id, userstory_id]),
         props={'class': "delete-object"})
     sidebar.add('Actions', 'Add a test result',
         reverse('agilito.views.agilito.views.testresult_create', args=[project_id, userstory_id, testcase_id]),
@@ -1293,39 +1335,65 @@ def iteration_cards(request, project_id, iteration_id):
     it = Iteration.objects.get(id=iteration_id, project__id=project_id)
     status = it.status()
 
+    cards = agilito.reporting.Cards(PRINTABLE_CARD_STOCK)
+
+    # these will come from the database later
+    task_template = """
+        <table>
+            <tr>
+                <td>prio: story.task</td>
+                <td><b>{{story.relative_priority}}<b>: {{story.id}}.{{task.priority}}<br/>{{task.id}}</td>
+                <td><b>{{task.estimate}}<br/>{{task.remaining}}</b></td>
+            </tr>
+        </table>
+        <b>{{task.name}}</b>
+        <hr/>
+        {{task.description}}
+    """
+    task_template = Template(task_template.strip().replace('}}', '|safe}}'))
+
+    story_template = """
+        <table>
+            <tr>
+                <td>prio:story</td>
+                <td><b>{{story.relative_priority}}<b>: {{story.id}}</td>
+                <td><b>{{story.size_string}}</b></td>
+            </tr>
+        </table>
+        <b>{{story.name}}</b>
+        <hr/>
+        {{story.description}}
+    """
+    story_template = Template(story_template.strip().replace('}}', '|safe}}'))
+
     tasks = []
     stories = []
 
     for story in status.stories:
-        stories.append({
-                        'StoryID': story.id,
-                        'StoryName': story.name,
-                        'StoryDescription': story.description,
-                        'StoryRank': story.relative_rank,
-                        'StorySize': UserStory.SIZES.label(story.size)
-                        })
-        for task in story.tasks['all']:
-            tasks.append({
-                        'TaskID': task.id,
-                        'TaskName': task.name,
-                        'TaskDescription': task.description,
-                        'TaskEstimate': task.estimate,
-                        'TaskRemaining': task.remaining,
-                        'TaskOwner': task.owner,
-                        'TaskTags': ', '.join(task.taglist),
-                        'StoryID': story.id,
-                        'StoryName': story.name,
-                        'StoryDescription': story.description,
-                        'StoryRank': story.relative_rank,
-                        })
+        if story.rank:
+            story.relative_priority = story.relative_rank
+        else:
+            story.relative_priority = ''
+        if story.size:
+            story.size_string = UserStory.size_label_for(story.size)
+        else:
+            story.size_string = ''
 
-    labels = ODTLabels.ODTLabels(PRINTABLE_CARDS.ini)
-    labels.setSheetType(PRINTABLE_CARDS.selected)
-    labels.setTemplate(PRINTABLE_CARDS.template)
+        stories.append(story_template.render(Context({'story': story})))
+
+        taskprio = 1
+        for task in story.tasks['all']:
+            task.priority = taskprio
+            tasks.append(task_template.render(Context({'task': task, 'story': story})))
+
+    for story in stories:
+        cards.add(story)
+    for task in tasks:
+        cards.add(task)
 
     response = HttpResponse(mimetype='application/vnd.oasis.opendocument.text')
     response['Content-Disposition'] = 'attachment; filename=cards.odt'
-    labels.makeLabels(tasks, stories, response)
+    cards.save(response)
     return response
 
 def _ods_column(n):
@@ -1584,9 +1652,9 @@ def iteration_status_table(request, project_id, iteration_id):
 
     row += 1
     calc.write((row, 3), 'Tasks', {'bold': True})
-    for c in range(len(days)):
+    for c, remaining in enumerate(status.burndown.remaining.hours):
         colname = _ods_column(c + 5)
-        calc.write((row, c + 4), Formula("=SUM(%s2:%s%d)" % (colname, colname, row)))
+        calc.write((row, c + 4), Formula("=SUM(%s2:%s%d)" % (colname, colname, row), remaining))
 
     row += 1
     calc.write((row, 3), 'Story points', {'bold': True})
@@ -1706,7 +1774,8 @@ def hours_export(request, project_id, iteration_id):
     c1 = _ods_column(5)
     c2 = _ods_column(4 + len(users))
     for r in range(3, tasks + 3):
-        calc.write((r, 3), Formula("=SUM(%s%d:%s%d)" % (c1, r+1, c2, r+1)))
+        # replace 0 by pre-calculated total -- stupid Excel
+        calc.write((r, 3), Formula("=SUM(%s%d:%s%d)" % (c1, r+1, c2, r+1), 0))
 
     response = HttpResponse(mimetype='application/vnd.oasis.opendocument.spreadsheet')
     response['Content-Disposition'] = 'attachment; filename=iteration.ods'

@@ -66,7 +66,7 @@ Planned :
 {% for attach in object.userstoryattachment_set.all %}
     <tr class="{% cycle even,odd %}">
         <td class=""> 
-            <a href="{{attach.attachment.url}}"> 
+            <a href="{% url agilito.views.view_attachment current_project.id,object.id,attach.id %}"> 
                 {{attach.name}}
             </a>
         </td>
@@ -75,7 +75,7 @@ Planned :
         </td>
         <td class="">
             <a id="att_dwld" href="{{attach.attachment.url}}"> 
-                <img src="{{ STATIC_URL }}agilito/images/down.png" alt="download this file" />
+                <img src="{{ STATIC_URL }}agilito/images/save.png" alt="download this file" />
             </a>
         </td>
         <td class="">
