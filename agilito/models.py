@@ -22,6 +22,7 @@ import inspect
 import random, string
 
 from agilito import CACHE_ENABLED, UNRESTRICTED_SIZE, CACHE_PREFIX
+from agilito.exceptions import NoProjectException
 
 class Object(object):
     def __init__(self, *args, **kwargs):
@@ -162,9 +163,6 @@ class FieldChoices:
             return (l for v, l in self.__choices if v == value).next()
         except StopIteration:
             return None
-
-class NoProjectException(Exception):
-    pass
 
 PERMLINK_PREFIX = __name__.rsplit('.', 1)[0] + '.views.'
 
