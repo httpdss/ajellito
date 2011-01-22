@@ -10,7 +10,7 @@ from agilito.reporting import Calc, HTML, Formula
 import agilito.reporting
 
 from agilito import CACHE_ENABLED, UNRESTRICTED_SIZE, PRINTABLE_CARD_STOCK, CACHE_PREFIX, BACKLOG_ARCHIVE
-from agilito.exceptions import NoProjectException
+from agilito.exceptions import NoProjectException, UserHasNoProjectException
 
 if BACKLOG_ARCHIVE:
     from dulwich.repo import Repo
@@ -123,9 +123,6 @@ def cached(f):
         return v
 
     return f_cached
-
-class UserHasNoProjectException(Exception):
-    pass
 
 class SideBar(SortedDict):
     class Sub(list):
