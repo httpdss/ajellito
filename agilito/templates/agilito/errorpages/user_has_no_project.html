@@ -1,0 +1,12 @@
+{% extends "agilito/errorpages/errorpage.html" %}
+{% load i18n %}
+
+{% block body %}
+{% url admin:agilito_project_add as admin_project_add %}
+{% url admin:app_list "agilito" as admin_agilito_list %}
+{% blocktrans %}
+<p>You are not assigned into any project.</p>
+<p>Go to the admin section in order to add a <a href="{{ admin_project_add }}">new project</a></p>
+<p><a href="{{ admin_agilito_list }}">Click Here</a> for agilito's admin section</p>
+{% endblocktrans %}
+{% endblock %}

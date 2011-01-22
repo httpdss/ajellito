@@ -1,10 +1,12 @@
 import csv, StringIO
-import time 
+import time
 import datetime
 import types
 import mimetypes
 import os
 from django.core.cache import cache
+from django.contrib import messages
+
 from django.contrib.sites.models import Site
 from agilito.reporting import Calc, HTML, Formula
 import agilito.reporting
@@ -251,16 +253,16 @@ def datelabels(dates, l):
 @login_required
 def index(request):
     """
-    Main index, constructs the url to the iteration one project and redirects 
+    Main index, constructs the url to the iteration one project and redirects
     to it.
     """
     try:
         context = AgilitoContext(request)
     except UserHasNoProjectException:
-        return render_to_response('agilito/errorpage.html',
-                                  context_instance=\
-                                    Context({'error_message' :
-                                             'You are not assigned into any project.',}))
+        messages.add_message(request, messages.ERROR,
+                ugettext("You are not assigned into any project."))
+        return render_to_response('agilito/errorpages/user_has_no_project.html',
+                                  context_instance=RequestContext(request,{}))
 
     return HttpResponseRedirect(reverse('current_iteration_status',
                                             args=[context['current_project'].id]))
@@ -314,8 +316,8 @@ def add_attachment(request, project_id, userstory_id, instance=None):
 
 @restricted
 def delete_attachment(request, project_id, userstory_id, attachment_id):
-    att = UserStoryAttachment.objects.get(id=attachment_id, 
-                                          user_story__id=userstory_id, 
+    att = UserStoryAttachment.objects.get(id=attachment_id,
+                                          user_story__id=userstory_id,
                                           user_story__project__id=project_id)
 
     # set the url to return to after deletion
@@ -329,8 +331,8 @@ def delete_attachment(request, project_id, userstory_id, attachment_id):
 def view_attachment(request, project_id, userstory_id, attachment_id):
     """borrowed from http://www.djangosnippets.org/snippets/1710/
     thanks to achimnol"""
-    att = UserStoryAttachment.objects.get(id=attachment_id, 
-                                          user_story__id=userstory_id, 
+    att = UserStoryAttachment.objects.get(id=attachment_id,
+                                          user_story__id=userstory_id,
                                           user_story__project__id=project_id)
     file_path = att.attachment.path
     original_filename = att.original_name
@@ -530,7 +532,7 @@ def userstory_delete(request, project_id, userstory_id):
 
     # set the url to return to after deletion
     url = request.GET.get('last_page', obj.get_container_url())
-    # check if you were on the details view of a us.    
+    # check if you were on the details view of a us.
     if url.find('userstory') != -1:
         url = obj.get_container_url()
 
@@ -542,7 +544,7 @@ def userstory_delete(request, project_id, userstory_id):
     for task in obj.task_set.all():
         tasks.append(task)
         tasklogs = list(task.tasklog_set.all())
-        if tasklogs: 
+        if tasklogs:
             tasks.append(tasklogs)
     if tasks:
         delobjs.extend(['Tasks', tasks])
@@ -810,7 +812,7 @@ def task_delete(request, project_id, userstory_id, task_id):
 
     # set the url to return to after deletion
     url = request.GET.get('last_page', task.get_container_url())
-    # check if you were on the details view of a us.    
+    # check if you were on the details view of a us.
     if url.find('task') != -1:
         url = task.get_container_url()
 
@@ -825,7 +827,7 @@ def task_delete(request, project_id, userstory_id, task_id):
 def testcase_create(request, project_id, userstory_id, instance=None):
     story = UserStory.objects.get(pk=userstory_id)
     if request.method == 'POST':
-        form = testcase_form_factory(request.POST, instance, project=story.project)   
+        form = testcase_form_factory(request.POST, instance, project=story.project)
         if form.is_valid():
             test_case = form.save(commit=False)
             if isinstance(form, TestCaseAddForm): # only set the user_story if
@@ -866,7 +868,7 @@ def testcase_detail(request, project_id, userstory_id, testcase_id):
         props={'class': "add-object"})
 
     context = AgilitoContext(request, {'sidebar': sidebar}, current_project=project_id, current_story=userstory_id)
-    queryset = TestCase.objects.filter(user_story__pk=userstory_id, 
+    queryset = TestCase.objects.filter(user_story__pk=userstory_id,
                                        user_story__project__pk=project_id)
 
     return object_detail(request, queryset=queryset, template_name='agilito/testcase_detail.html',
@@ -878,7 +880,7 @@ def testcase_delete(request, project_id, userstory_id, testcase_id):
 
     # set the url to return to after deletion
     url = request.GET.get('last_page', testcase.get_container_url())
-    # check if you were on the details view of a us.    
+    # check if you were on the details view of a us.
     if url.find('testcase') != -1:
         url = testcase.get_container_url()
 
@@ -896,7 +898,7 @@ def testresult_create(request, project_id, userstory_id, testcase_id, instance=N
     testcase = TestCase.objects.get(id=testcase_id, user_story__id=userstory_id,
                                     user_story__project__id=project_id)
     if request.method == 'POST':
-        form = TestResultForm(request.POST, instance=instance, 
+        form = TestResultForm(request.POST, instance=instance,
                               project=testcase.user_story.project)
         if form.is_valid():
             testresult = form.save()
@@ -938,12 +940,12 @@ def testresult_detail(request, project_id, userstory_id, testcase_id, testresult
 def testresult_delete(request, project_id, userstory_id, testcase_id, testresult_id):
     testresult = TestResult.objects.get(id=testresult_id,
                                         test_case__id=testcase_id,
-                                        test_case__user_story__id=userstory_id, 
+                                        test_case__user_story__id=userstory_id,
                                         test_case__user_story__project__id=project_id)
 
     # set the url to return to after deletion
     url = request.GET.get('last_page', testresult.get_container_url())
-    # check if you were on the details view of a us.    
+    # check if you were on the details view of a us.
     if url.find('testresult') != -1:
         url = testresult.get_container_url()
 
@@ -962,12 +964,12 @@ def search(request, project_id):
 
     AVAILABLE_MODELS = { 'User Story' : UserStory,
                          'Task' :   Task,
-                         'Test Case': TestCase,} 
+                         'Test Case': TestCase,}
 
     PREFIX = { 'User Story' : 'US',
                'Task' : 'TA',
                'Test Case': 'TC',
-             } 
+             }
 
     query_statement = request.GET.get('query', '')
     model = request.GET.get('model', '')
@@ -992,9 +994,10 @@ def search(request, project_id):
                                           'prefix' : prefix,
                                           }, current_project=project_id)
     except UserHasNoProjectException:
-        return render_to_response('agilito/errorpage.html',
-                                  context_instance=Context({'error_message' : 
-                                                            'You are not assigned into any project.',}))
+        messages.add_message(request, request.ERROR,
+                ugettext("You are not assigned into any project."))
+        return render_to_response('agilito/errorpages/user_has_no_project.html',
+                                  context_instance=RequestContext(request,{}))
 
     return object_list(request, queryset=queryset.order_by('id'), paginate_by=paginate_by,
                        template_name='agilito/search.html',
@@ -1003,7 +1006,7 @@ def search(request, project_id):
 
 def _get_iteration(project_id, date=None):
     # In case there are overlapping iterations we are going to pick
-    # the one with the latest start date.    
+    # the one with the latest start date.
     if date is None:
         date = datetime.date.today()
 
@@ -1016,7 +1019,7 @@ def _get_iteration(project_id, date=None):
         return Iteration.objects.filter(project__id=project_id, end_date__lte=date).latest('start_date')
     except Iteration.DoesNotExist:
         pass
- 
+
     return None
 
 @restricted
@@ -1082,7 +1085,7 @@ def iteration_status(request, project_id, iteration_id=None, template='agilito/i
         iteration = _get_iteration(project_id)
     else:
         try:
-            iteration = Iteration.objects.get(pk=iteration_id, project__pk=project_id)    
+            iteration = Iteration.objects.get(pk=iteration_id, project__pk=project_id)
         except Iteration.DoesNotExist:
             raise Http404
 
@@ -1194,7 +1197,7 @@ def iteration_hours(request, project_id, iteration_id=None):
     else:
         try:
             latest_iteration = Iteration.objects.get(pk=iteration_id,
-                                                     project__pk=project_id)    
+                                                     project__pk=project_id)
         except Iteration.DoesNotExist:
             raise Http404
 
@@ -1205,9 +1208,9 @@ def iteration_hours(request, project_id, iteration_id=None):
 
         rows = latest_iteration.users_total_status
         user_stories = latest_iteration.userstory_set.all().order_by('rank')
-        planned = sum(i.size for i in user_stories if i.size)         
+        planned = sum(i.size for i in user_stories if i.size)
 
-        inner_context = { 
+        inner_context = {
             'current_iteration' : latest_iteration,
             'rows_bill' : rows,
             'estimated_total': sum(u['estimated'] for u in rows),
@@ -1397,7 +1400,7 @@ def iteration_cards(request, project_id, iteration_id):
 def _ods_column(n):
     """
     Returns excel formated column number for n
-    
+
     Expects an int value greater than 0.
     """
 
@@ -1812,7 +1815,7 @@ def _parseTimelogCmd(spec):
 
     if not key in ['task', 'project']:
         return ('Invalid task/project specification "%s"' % spec, None)
-    
+
     try:
         id = int(id)
     except:
@@ -1871,7 +1874,7 @@ def timelog(request, project_id, task_id=None, instance=None):
                                       'message': message,
                                       'selectedTask': selectedTask},
                                     current_project=project_id)
-    
+
     return render_to_response('agilito/timelog.html', context_instance=context)
 
 @restricted
@@ -1920,11 +1923,11 @@ def _get_date_from_request(request, request_key, kwargs_dict, kwargs_key):
         try:
             kwargs_dict[kwargs_key] = _mk_time(date_str)
         except ValueError:
-            pass 
+            pass
 
 @restricted
-def csv_log(request, project_id, username):    
-    # create arguments for the query 
+def csv_log(request, project_id, username):
+    # create arguments for the query
 
     kwargs = dict(owner=User.objects.get(username=username),
                   task__user_story__project__id=project_id)
@@ -1938,27 +1941,27 @@ def csv_log(request, project_id, username):
     _get_date_from_request(request, 'to_date', kwargs, 'date__lte')
 
     tl_set = TaskLog.objects.filter(**kwargs).order_by('date')
-    
+
     response = HttpResponse(_gen(tl_set), mimetype='text/csv')
     response['Content-Disposition'] = 'attachment; filename=tasklogs-for-%s.csv' % username
-    
+
     return response
 
 @restricted
 def csv_log_for_project(request, project_id):
     kwargs = dict(task__user_story__project__id=project_id)
-    
+
     # additional arguments
     _get_date_from_request(request, 'from_date', kwargs, 'date__gte')
     _get_date_from_request(request, 'to_date', kwargs, 'date__lte')
 
     tl_set = TaskLog.objects.filter(**kwargs).order_by('date', 'owner')
-    
+
     response = HttpResponse(_gen(tl_set), mimetype='text/csv')
     response['Content-Disposition'] = 'attachment; filename=tasklogs-for-project.csv'
-    
+
     return response
-    
+
 @login_required
 def csv_log_all_projects(request):
     kwargs = dict()
@@ -1968,8 +1971,8 @@ def csv_log_all_projects(request):
     _get_date_from_request(request, 'to_date', kwargs, 'date__lte')
 
     tl_set = TaskLog.objects.filter(**kwargs).order_by('date', 'owner')
-    
+
     response = HttpResponse(_gen(tl_set), mimetype='text/csv')
     response['Content-Disposition'] = 'attachment; filename=tasklogs-for-all-projects.csv'
-    
+
     return response
