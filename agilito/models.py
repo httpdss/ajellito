@@ -202,7 +202,7 @@ class ClueModel(models.Model):
                 initial_set = klass.objects.filter(user_story__project__id=project_id)
             return sg.make_query(qstatement, init_q_set=initial_set)
         return sg.make_query(qstatement)
-    
+
     @models.permalink
     def get_absolute_url(self):
         # same comment here as for query and finding project id
@@ -222,7 +222,7 @@ class ClueModel(models.Model):
 
     def get_container_url(self):
         container = self.get_container_model()
-        if not (container is None):        
+        if not (container is None):
             return container.get_absolute_url()
         else:
             return None
