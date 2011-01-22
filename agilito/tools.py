@@ -7,7 +7,6 @@ except ImportError:
 
 from agilito.models import Project
 import html5lib
-import ooolib
 
 def restricted(f):
     @wraps(f)
