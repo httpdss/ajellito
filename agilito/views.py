@@ -10,6 +10,7 @@ from agilito.reporting import Calc, HTML, Formula
 import agilito.reporting
 
 from agilito import CACHE_ENABLED, UNRESTRICTED_SIZE, PRINTABLE_CARD_STOCK, CACHE_PREFIX, BACKLOG_ARCHIVE
+from agilito.exceptions import NoProjectException
 
 if BACKLOG_ARCHIVE:
     from dulwich.repo import Repo
@@ -340,13 +341,13 @@ def view_attachment(request, project_id, userstory_id, attachment_id):
     response = HttpResponse(fp.read())
     fp.close()
     type, encoding = mimetypes.guess_type(file_path)
-    
+
     if type is None:
         type = 'application/octet-stream'
-    
+
     response['Content-Type'] = type
     response['Content-Length'] = str(os.stat(file_path).st_size)
-    
+
     if encoding is not None:
         response['Content-Encoding'] = encoding
 
@@ -361,7 +362,7 @@ def view_attachment(request, project_id, userstory_id, attachment_id):
     else:
         # For others like Firefox, we follow RFC2231 (encoding extension in HTTP headers).
         filename_header = 'filename*=UTF-8\'\'%s' % urllib.quote(original_filename.encode('utf-8'))
-    
+
     response['Content-Disposition'] = 'attachment; ' + filename_header
     return response
 
@@ -525,7 +526,7 @@ def userstory_edit(request, project_id, userstory_id):
         return userstory_create(request, project_id,
                                 iteration_id=instance.iteration.id,
                                 instance=instance)
- 
+
 @restricted
 def userstory_delete(request, project_id, userstory_id):
     obj = UserStory.objects.get(id=userstory_id, project=project_id)
@@ -535,7 +536,7 @@ def userstory_delete(request, project_id, userstory_id):
     # check if you were on the details view of a us.    
     if url.find('userstory') != -1:
         url = obj.get_container_url()
-   
+
     delobjs = []
     attachments = list(obj.userstoryattachment_set.all())
     if attachments:
@@ -718,14 +719,14 @@ def userstory_detail(request, project_id, userstory_id):
 
     context = AgilitoContext(request, {'sidebar': sidebar}, current_project=project_id, current_story=userstory_id)
     queryset = UserStory.objects.filter(project__pk=project_id)
-    
+
     try:
         rv =  object_detail(request, queryset=queryset, template_name='agilito/userstory_detail.html',
                             object_id=userstory_id, extra_context=context)
         return rv
     except UserStory.DoesNotExist:
         raise Http404
-       
+
 
 
 #
@@ -915,7 +916,7 @@ def testresult_create(request, project_id, userstory_id, testcase_id, instance=N
 
     context = AgilitoContext(request, {'form': form,
                                       'testcase': testcase },
-                            current_project=project_id)    
+                            current_project=project_id)
     return render_to_response('agilito/testresult_create.html', context_instance=context)
 
 def testresult_edit(request, project_id, userstory_id, testcase_id, testresult_id):
@@ -960,7 +961,7 @@ def testresult_delete(request, project_id, userstory_id, testcase_id, testresult
 def search(request, project_id):
     """
     Search page
-    """    
+    """
 
     AVAILABLE_MODELS = { 'User Story' : UserStory,
                          'Task' :   Task,
@@ -979,7 +980,7 @@ def search(request, project_id):
         paginate_by = int(pageN)
     except ValueError:
         paginate_by = 20
-    
+
     # Not used right now
     querystring = urlencode(dict(query=query_statement))
 
