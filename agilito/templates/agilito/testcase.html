@@ -1,27 +1,27 @@
 {% load markup %}
-    <tr class="{% cycle even,odd%}">
-        <td>TC{{object.id}}</td>
-        <td><a href="{{object.get_absolute_url}}">{{object.name}}</a></td>
-        {% if object.testresult_set.all %}
-            {% with object.testresult_set.latest as testresult %}
-            <td {% if testresult.failed %} class="fail" {% endif %} ><a href="{{testresult.get_absolute_url}}">{{testresult.get_result_display}}</a></td>
-            {% endwith %}
-        {% else %}
-        <td> </td>        
-        {% endif %}
-        <td>{{object.get_priority_display}}</td>
-        <td class="description">{{object.description|safe}}</td>
-        <td id="add_testresult_{{object.id}}" class="">
-            <a href="{% url agilito.views.testresult_create current_project.id,current_story.id,object.id %}?last_page={{last_page}}">
-                <img src="{{ STATIC_URL }}agilito/images/add_.png" alt="add task" title="add test result" width="16" height="16" /></a></td>
-        <td id="edit_testcase_{{object.id}}" class="">
-            <a href="{% url agilito.views.testcase_edit current_project.id,current_story.id,object.id %}?last_page={{last_page}}">
-                <img src="{{ STATIC_URL }}agilito/images/pencil.png" alt="edit" title="edit" width="16" height="16" />
-            </a>
-        </td>
-        <td id="delete_testcase_{{object.id}}" class="">
-            <a href="{% url agilito.views.testcase_delete current_project.id,current_story.id,object.id %}?last_page={{last_page}}">
-                <img src="{{ STATIC_URL }}agilito/images/delete.png" alt="delete" title="delete" width="16" height="16" />
-            </a>
-        </td>
-    </tr>
+<tr class="{% cycle even,odd%}">
+    <td>TC{{object.id}}</td>
+    <td><a href="{{object.get_absolute_url}}">{{object.name}}</a></td>
+    {% if object.testresult_set.all %}
+    {% with object.testresult_set.latest as testresult %}
+    <td {% if testresult.failed %} class="fail" {% endif %} ><a href="{{testresult.get_absolute_url}}">{{testresult.get_result_display}}</a></td>
+    {% endwith %}
+    {% else %}
+    <td> </td>        
+    {% endif %}
+    <td>{{object.get_priority_display}}</td>
+    <td class="description">{{object.description|safe}}</td>
+    <td id="add_testresult_{{object.id}}" class="">
+        <a href="{% url agilito.views.testresult_create current_project.id,current_story.id,object.id %}?last_page={{last_page}}">
+            <img src="{{ STATIC_URL }}agilito/images/add_.png" alt="add task" title="add test result" width="16" height="16" /></a></td>
+    <td id="edit_testcase_{{object.id}}" class="">
+        <a href="{% url agilito.views.testcase_edit current_project.id,current_story.id,object.id %}?last_page={{last_page}}">
+            <img src="{{ STATIC_URL }}agilito/images/pencil.png" alt="edit" title="edit" width="16" height="16" />
+        </a>
+    </td>
+    <td id="delete_testcase_{{object.id}}" class="">
+        <a href="{% url agilito.views.testcase_delete current_project.id,current_story.id,object.id %}?last_page={{last_page}}">
+            <img src="{{ STATIC_URL }}agilito/images/delete.png" alt="delete" title="delete" width="16" height="16" />
+        </a>
+    </td>
+</tr>

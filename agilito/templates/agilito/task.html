@@ -1,14 +1,15 @@
-    <tr class="{% cycle even,odd %}">
-        <td><span class="{% if task.is_archived %}archived{% endif %}">TA{{task.id}}</span></td>
-        <td class="name"><span class="{% if task.is_archived %}archived{% endif %}"><a href="{{task.get_absolute_url}}">{{task.name}}</a></span></td>
-        <td class="state">{{task.get_state_display}}</td>
-        <td class="planned">{{task.planned}}</td>
-        <td class="estimated">{{task.estimate}}</td>
-        <td class="todo">{{task.remaining}}</td>
-        <td class="actuals">{{task.actuals}}</td>
-        <td class="owner">{{task.owner}}</td>
-        <td class=""><a id="task_edit_{{task.id}}" href="{% url agilito.views.task_edit current_project.id,current_story.id,task.id %}?last_page={{last_page}}"><img src="{{ STATIC_URL }}agilito/images/pencil.png" alt="edit" title="edit" width="16" height="16" /></a></td>
-        <td class=""><a id="task_del_{{task.id}}" href="{% url agilito.views.task_delete current_project.id,current_story.id,task.id %}?last_page={{last_page}}"><img src="{{ STATIC_URL }}agilito/images/delete.png" alt="delete" title="delete" width="16" height="16" /></a></td>
-        <td class="">{% if not task.is_archived %}<a target="_tasklog"
-        id="task_log_{{task.id}}" href="{% url agilito.views.timelog_task current_project.id,task.id %}"><img src="{{ STATIC_URL }}agilito/images/log.png" alt="log" title="log" width="16" height="16" /></a>{% endif %}</td>
-    </tr>
+{% load i18n %}
+<tr class="{% cycle even,odd %}">
+    <td><span class="{% if task.is_archived %}archived{% endif %}">TA{{task.id}}</span></td>
+    <td class="name"><span class="{% if task.is_archived %}archived{% endif %}"><a href="{{task.get_absolute_url}}">{{task.name}}</a></span></td>
+    <td class="state">{{task.get_state_display}}</td>
+    <td class="planned">{{task.planned}}</td>
+    <td class="estimated">{{task.estimate}}</td>
+    <td class="todo">{{task.remaining}}</td>
+    <td class="actuals">{{task.actuals}}</td>
+    <td class="owner">{{task.owner}}</td>
+    <td class=""><a id="task_edit_{{task.id}}" href="{% url agilito.views.task_edit current_project.id,current_story.id,task.id %}?last_page={{last_page}}"><img src="{{ STATIC_URL }}agilito/images/pencil.png" alt="edit" title="edit" width="16" height="16" /></a></td>
+    <td class=""><a id="task_del_{{task.id}}" href="{% url agilito.views.task_delete current_project.id,current_story.id,task.id %}?last_page={{last_page}}"><img src="{{ STATIC_URL }}agilito/images/delete.png" alt="delete" title="delete" width="16" height="16" /></a></td>
+    <td class="">{% if not task.is_archived %}<a target="_tasklog"
+            id="task_log_{{task.id}}" href="{% url agilito.views.timelog_task current_project.id,task.id %}"><img src="{{ STATIC_URL }}agilito/images/log.png" alt="log" title="log" width="16" height="16" /></a>{% endif %}</td>
+</tr>

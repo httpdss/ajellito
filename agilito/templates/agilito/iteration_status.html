@@ -1,4 +1,5 @@
 {% extends "agilito/base.html" %}
+{% load i18n %}
 {% load agilito_utils %}
 
 {% block body_class %}iteration{% endblock %}
@@ -14,7 +15,7 @@
     <!--[if IE]><script language="javascript" type="text/javascript" src="{{ STATIC_URL }}agilito/js/jquery.jqplot/excanvas.js"></script><![endif]-->
     <script language="javascript" type="text/javascript" src="{{ STATIC_URL }}agilito/js/jquery.jqplot/jquery.jqplot.js"></script>
     <script language="javascript" type="text/javascript" src="{{ STATIC_URL }}agilito/js/jquery.jqplot/plugins/jqplot.highlighter.js"></script>
-    {% include "burndown.js" %}
+    {% include "agilito/burndown.js" %}
 
 <script type="text/javascript">
 $(window).ready(function(){
@@ -77,7 +78,7 @@ function highlightTag(ids)
     {% if current_iteration %}
         {{current_iteration.name}}
     {% else %}
-        There are no iterations in this project.
+    {% trans "There are no iterations in this project." %}
     {% endif %}
 {% endblock %}
 
@@ -95,14 +96,14 @@ function highlightTag(ids)
     <table summary="stories and tasks" id="user-story-list" cellspacing="0" cellpadding="2">
         <thead>
             <tr>
-                <th>Rank</th>
-                <th>Id</th>
-                <th>Name</th>
-                <th>State</th>
-                <th>Size</th>
-                <th>Tasks</th>
-                <th>To-Do</th>
-                <th>Failures</th>
+                <th>{% trans "Rank" %}</th>
+                <th>{% trans "Id" %}</th>
+                <th>{% trans "Name" %}</th>
+                <th>{% trans "State" %}</th>
+                <th>{% trans "Size" %}</th>
+                <th>{% trans "Tasks" %}</th>
+                <th>{% trans "To-Do" %}</th>
+                <th>{% trans "Failures" %}</th>
                 <th></th>
                 <th></th>
                 <th></th>
@@ -217,14 +218,14 @@ function highlightTag(ids)
     </table>
     
     {% if impediments.open or impediments.resolved %}
-        <h3>Impediments</h3>
+        <h3>{% trans "Impediments" %}</h3>
         <table id="impediment-list" cellspacing="0" cellpadding="2">
             <thead>
                 <tr>
-                    <th>Id</th>
-                    <th>Tasks</th>
-                    <th>Risk</th>
-                    <th>Name</th>
+                    <th>{% trans "Id" %}</th>
+                    <th>{% trans "Tasks" %}</th>
+                    <th>{% trans "Risk" %}</th>
+                    <th>{% trans "Name" %}</th>
                 </tr>
             </thead>
 
@@ -256,7 +257,7 @@ function highlightTag(ids)
                         <td>&nbsp;</td>
                         <td>{{ impediments.resolved.count }}</a></td>
                         <td>&nbsp;</td>
-                        <td>Resolved</td>
+                        <td>{% trans "Resolved" %}</td>
                     </tr>
     
                     {% for impediment in impediments.resolved %}

@@ -1,3 +1,4 @@
+{% load i18n %}
 {% load humanize %}
 {% load markup %}
 {% if current_iteration %}
@@ -23,41 +24,41 @@
                     {% endifnotequal %}
                     {% endwith %}
                     {% endif %}
-                    {% if current_iteration.release.name %}<span> &raquo; Release: {{current_iteration.release.name}}</span>{% endif %}
+                    {% if current_iteration.release.name %}<span> &raquo; {% trans "Release:" %} {{current_iteration.release.name}}</span>{% endif %}
 
                     <p>&nbsp;</p>
-                    <span>Start date: <strong>{{current_iteration.start_date|naturalday}}</strong> </span> |
-                    <span>End date : <strong>{{current_iteration.end_date|naturalday}}</strong> </span>
+                    <span>{% trans "Start date:" %} <strong>{{current_iteration.start_date|naturalday}}</strong> </span> |
+                    <span>{% trans "End date:" %} <strong>{{current_iteration.end_date|naturalday}}</strong> </span>
                     <div class="description">{{current_iteration.description|safe}}</div>
                 </td>
             </tr>
 
             <tr>
-                <td>Accepted</td>
+                <td>{% trans "Accepted" %}</td>
                 <td>{{us_accepted_percentage|floatformat:0 }} %</td>
             </tr>
 
             <tr>
-                <td>Stories</td>
+                <td>{% trans "Stories" %}</td>
                 <td>{{ stories|length }}</td>
             </tr>
 
             {% if velocity.planned %}
             <tr>
-                <td>Velocity</td>
-                <td>currently {{ velocity.actual|default_if_none:"unknown" }} vs {{ velocity.planned }} planned</td>
+                <td>{% trans "Velocity" %}</td>
+                <td>{% trans "currently" %} {{ velocity.actual|default_if_none:"unknown" }} vs {{ velocity.planned }} {% trans "planned" %}</td>
             </tr>
             {% endif %}
 
             {% if unsized %}
             <tr class="starved">
-                <td colspan=2>This iteration has unsized stories -- the story points burndown will be off</td>
+                <td colspan=2>{% trans "This iteration has unsized stories -- the story points burndown will be off" %}</td>
             </tr>
             {% endif %}
 
             {% regroup tags|dictsort:"tag" by tag as grouped_tags %}
             <tr>
-                <td>Tags</td>
+                <td>{% trans "Tags" %}</td>
                 <td>
                     <ul class="tags">
                         {% for tag in grouped_tags %}

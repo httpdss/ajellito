@@ -1,108 +1,110 @@
 {% extends "agilito/base.html" %}
+{% load i18n %}
 {% load humanize %}
 
 {% block body_class %}hours{% endblock %}
 
 {% block head_title %}
     {% if current_iteration %}
-        {{current_iteration.name}} Hours
+    {% blocktrans %}{{current_iteration.name}} Hours{% endblocktrans %}
     {% else %}
-        There are no iterations in this project.
+       {% trans "There are no iterations in this project." %}
     {% endif %}
 {% endblock %}
 
 {% block select_tab %} "hours" {% endblock %}
 
 {% block body %}
-    {% if current_iteration %}
-        <table>
-            <tr>
-                <td colspan="2">
-                    {{ current_project.name }} &raquo;
-                    {% if current_project.iteration_set.all %}
-                        {% with current_project.iteration_set.all as itset %}
-                            {% ifnotequal itset.count 1 %}
-                                    <select id="iteration-selection" style="width:10em">
-                                        {%for iteration in itset %}
-                                            <option {% ifequal iteration.id current_iteration.id %} selected="selected" {%endifequal%}
-                                                value="{% url agilito.views.iteration_hours current_project.id,iteration.id %}">{{ iteration.name }}</option>
-                                        {%endfor%}
-                                    </select>
-                            {% else %}
-                                    {% with itset.0 as iteration %}
-                                        {{ iteration.name }}
-                                    {% endwith %}
-                            {% endifnotequal %}
-                        {% endwith %}
-                    {% endif %}
-                    {% if current_iteration.release.name %}<span> &raquo; Release: {{current_iteration.release.name}}</span>{% endif %}
+{% if current_iteration %}
+<table>
+    <tr>
+        <td colspan="2">
+            {{ current_project.name }} &raquo;
+            {% if current_project.iteration_set.all %}
+            {% with current_project.iteration_set.all as itset %}
+            {% ifnotequal itset.count 1 %}
+            <select id="iteration-selection" style="width:10em">
+                {%for iteration in itset %}
+                <option {% ifequal iteration.id current_iteration.id %} selected="selected" {%endifequal%}
+                value="{% url agilito.views.iteration_hours current_project.id,iteration.id %}">{{ iteration.name }}</option>
+                {%endfor%}
+            </select>
+            {% else %}
+            {% with itset.0 as iteration %}
+            {{ iteration.name }}
+            {% endwith %}
+            {% endifnotequal %}
+            {% endwith %}
+            {% endif %}
+            {% if current_iteration.release.name %}<span> &raquo; {% trans "Release:" %} {{current_iteration.release.name}}</span>{% endif %}
 
-                    <p/>
-                    <span>Start date: <strong>{{current_iteration.start_date|naturalday}}</strong> </span> |
-                    <span>End date : <strong>{{current_iteration.end_date|naturalday}}</strong> </span>
-                    <div class="description">{{current_iteration.description|safe}}</div>
-                </td>
-            </tr>
-            
-            <tr>
-                <td>Plan estimate</td>
-                <td>{{ planned }} %</td>
-            </tr>
-            <tr>
-                <td>Accepted</td>
-                <td>{{current_iteration.us_accepted}} ({{current_iteration.us_accepted_percentage|floatformat:0 }} %)</td>
-            </tr>
-            <tr>
-                <td>Task Estimated:</td> 
-                <td>{{estimated_total}}</td>
-            </tr>
-            <tr>
-                <td>Actuals:</td> 
-                <td>{{progress_total}}</td>
-            </tr>
+            <p/>
+            <span>{% trans "Start date:" %} <strong>{{current_iteration.start_date|naturalday}}</strong> </span> |
+            <span>{% trans "End date:" %} <strong>{{current_iteration.end_date|naturalday}}</strong> </span>
+            <div class="description">{{current_iteration.description|safe}}</div>
+        </td>
+    </tr>
 
-            <tr>
-                <td>Stories</td>
-                <td>
-                    {% if user_stories %}
-                        {{ user_stories.count }} 
-                    {% endif %}
-                </td>
-            </tr>
-        </table>
+    <tr>
+        <td>{% trans "Plan estimate" %}</td>
+        <td>{{ planned }} %</td>
+    </tr>
+    <tr>
+        <td>{% trans "Accepted" %}</td>
+        <td>{{current_iteration.us_accepted}} ({{current_iteration.us_accepted_percentage|floatformat:0 }} %)</td>
+    </tr>
+    <tr>
+        <td>{% trans "Task Estimated:" %}</td> 
+        <td>{{estimated_total}}</td>
+    </tr>
+    <tr>
+        <td>{% trans "Actuals:" %}</td> 
+        <td>{{progress_total}}</td>
+    </tr>
 
-        {% if rows_bill %}
-            <table cellspacing="0" cellpadding="2">
-                <thead>
-                    <tr>
-                        <th>Team Status</th>
-                        <th>Task Estimates</th>
-                        <th>Task Actuals</th>
-                    </tr>
-                </thead>
+    <tr>
+        <td>{% trans "Stories" %}</td>
+        <td>
+            {% if user_stories %}
+            {{ user_stories.count }} 
+            {% endif %}
+        </td>
+    </tr>
+</table>
 
-                <tbody>
-                    <tr class="totals">
-                        <td></td>
-                        <td class="total">{{estimated_total}}</td>
-                        <td class="total">{{progress_total}}</td>
-                    </tr> 
+{% if rows_bill %}
+<table cellspacing="0" cellpadding="2">
+    <thead>
+        <tr>
+            <th>{% trans "Team Status" %}</th>
+            <th>{% trans "Task Estimates" %}</th>
+            <th>{% trans "Task Actuals" %}</th>
+        </tr>
+    </thead>
 
-                    {% for r in rows_bill %}
-                        <tr class="{% cycle even,odd %} {%if object.is_blocked%}blocked{% endif %}">
-                            <td class="name">{{r.name}}</td>
-                            <td class="estimated">{{r.estimated}}</td>
-                            <td class="progress">{{r.progress}}</td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+    <tbody>
+        <tr class="totals">
+            <td></td>
+            <td class="total">{{estimated_total}}</td>
+            <td class="total">{{progress_total}}</td>
+        </tr> 
 
-        {% else%}
-            There are no members on this project
-        {% endif%}
+        {% for r in rows_bill %}
+        <tr class="{% cycle even,odd %} {%if object.is_blocked%}blocked{% endif %}">
+            <td class="name">{{r.name}}</td>
+            <td class="estimated">{{r.estimated}}</td>
+            <td class="progress">{{r.progress}}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
 
-    {% else %}
+{% else%}
+{% trans "There are no members on this project" %}
 
-    {% endif %}
+{% endif%}
+
+{% else %}
+
+{% endif %}
 {% endblock %}

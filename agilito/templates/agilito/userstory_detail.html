@@ -1,4 +1,5 @@
 {% extends "agilito/base.html" %}
+{% load i18n %}
 {% load markup %}
 {% block head_title %}{{object.name}}{% endblock %}
 
@@ -6,9 +7,9 @@
 <ul class="breadcrumbs">
     <li id="breadcrumb-project">{{ object.project.name }} &gt; </li>
     {% if object.iteration %}
-        <li id="breadcrumb-iteration"><a href="{{ object.iteration.get_absolute_url }}">{{ object.iteration.name }}</a> &gt; </li> 
+    <li id="breadcrumb-iteration"><a href="{{ object.iteration.get_absolute_url }}">{{ object.iteration.name }}</a> &gt; </li> 
     {% else %}
-        <li id="breadcrumb-backlog"><a href="/{{ object.project_id }}/backlog">Backlog</a> &gt; </li>
+    <li id="breadcrumb-backlog"><a href="/{{ object.project_id }}/backlog">{% trans "Backlog" %}</a> &gt; </li>
     {% endif %}
     <li id="breadcrumb-story">{{ object.name }}</li>
     <li class="visualClear" />
@@ -16,11 +17,9 @@
 
 
 <div id="us-head" {%if object.is_blocked%}class="blocked"{% endif %}> 
-    <h2>
-    {{ object }}
-    </h2>
+    <h2>{{ object }}</h2>
     
-    <span id="state" class="{{ object.get_state_display|slugify }}">State: {{object.get_state_display}} {% if object.is_blocked %}blocked{% endif %}</span>
+    <span id="state" class="{{ object.get_state_display|slugify }}">{% trans "State:" %} {{object.get_state_display}} {% if object.is_blocked %}{% trans "blocked" %}{% endif %}</span>
 {% if object.is_blocked %}
 <span style="display:none" id="blocked">{{object.is_blocked}}</span>
 {% endif %}
@@ -28,38 +27,34 @@
 </div>
 
 <div id="us-resume">
-<p>
-{% if object.rank %}
-<span>Rank: <strong id="rank">{{ object.rank }} </strong></span>
+    <p>
+    {% if object.rank %}
+    <span>{% trans "Rank:" %} <strong id="rank">{{ object.rank }} </strong></span>
 
-&nbsp;
-&nbsp;
-{% endif %} 
-<span>Time :</span>
-<span id="estimate">Estimate: <strong>{{object.estimated}}</strong></span> |
-<span id="actuals">Actuals: <strong>{{object.actuals}}</strong></span> |
-<span id="remaining">Remaining: <strong>{{object.remaining}} </strong></span>
-<span id="planned">
-{% if object.planned %}
-Planned :
-<strong>{{object.planned}}</strong>
-{% endif %}
-</span>
-
-</p>
+    &nbsp;
+    &nbsp;
+    {% endif %} 
+    <span>{% trans "Time:" %}</span>
+    <span id="estimate">{% trans "Estimate:" %} <strong>{{object.estimated}}</strong></span> |
+    <span id="actuals">{% trans "Actuals:" %} <strong>{{object.actuals}}</strong></span> |
+    <span id="remaining">{% trans "Remaining:" %} <strong>{{object.remaining}} </strong></span>
+    <span id="planned">{% if object.planned %}{% trans "Planned:" %} <strong>{{object.planned}}</strong>
+        {% endif %}
+    </span>
+    </p>
 </div>
 
 <div id="description" class="description">{{object.description|safe}}</div>
 <!--Object's attachments-->
 
 
-<h4>Attachments :</h4>
+<h4>{% trans "Attachments:" %}</h4>
 {% if object.userstoryattachment_set.all %}
 <table>
 <thead>
     <tr>
-        <th>Name</th>
-        <th>Description</th>
+        <th>{% trans "Name" %}</th>
+        <th>{% trans "Description" %}</th>
     </tr>
 </thead>
 <tbody>
@@ -88,60 +83,58 @@ Planned :
 </tbody>
 </table>
 {% else%}
-<p>No attachments for this user story</p>
+<p>{% trans "No attachments for this user story" %}</p>
 {% endif %}
 
 
 <!-- Related items -->
 
-<h3>Related to US{{ object.id }}</h3>
+<h3>{% trans "Related to" %} US{{ object.id }}</h3>
 
-<h4 id="tasks">Tasks</h4>
+<h4 id="tasks">{% trans "Tasks" %}</h4>
   {% if object.task_set.all %}
 
-<table>
+  <table>
 
-<thead>
-    <tr>
-        <th>Id</th>
-        <th>Task Name</th>
-        <th>State</th>
-        <th>Planned</th>
-        <th>Estimate</th>
-        <th>To do</th>
-        <th>Actuals</th>
-        <th>Owner</th>
-        <th></th>
-        <th></th>
-        <th></th>
-    </tr>
-</thead>
+      <thead>
+          <tr>
+              <th>{% trans "Id" %}</th>
+              <th>{% trans "Task Name" %}</th>
+              <th>{% trans "State" %}</th>
+              <th>{% trans "Planned" %}</th>
+              <th>{% trans "Estimate" %}</th>
+              <th>{% trans "To do" %}</th>
+              <th>{% trans "Actuals" %}</th>
+              <th>{% trans "Owner" %}</th>
+              <th></th>
+              <th></th>
+              <th></th>
+          </tr>
+      </thead>
 
-<tbody>
-{% for task in object.task_set.all %}
-    {% include "agilito/task.html" %}
-{%endfor%}
-</tbody>
-
-
-</table>
+      <tbody>
+          {% for task in object.task_set.all %}
+          {% include "agilito/task.html" %}
+          {%endfor%}
+      </tbody>
+  </table>
 
 {% else %}
-<p>No tasks for this user story</p>
+<p>{% trans "No tasks for this user story" %}</p>
 {% endif %}
 
 
-<h4 id="test-cases">Test Cases</h4>
+<h4 id="test-cases">{% trans "Test Cases" %}</h4>
 
 {% if object.testcase_set.all %}
 <table>
 <thead>
     <tr>
-        <th>Id</th>
-        <th>Test Name</th>
-        <th>Result</th>
-        <th>Priority</th>
-        <th>Description</th>
+        <th>{% trans "Id" %}</th>
+        <th>{% trans "Test Name" %}</th>
+        <th>{% trans "Result" %}</th>
+        <th>{% trans "Priority" %}</th>
+        <th>{% trans "Description" %}</th>
     </tr>
 </thead>
 
@@ -152,7 +145,7 @@ Planned :
 </tbody>
 </table>
 {% else %}
-<p>No tests for this user story</p>
+<p>{% trans "No tests for this user story" %}</p>
 {% endif %}
 
 

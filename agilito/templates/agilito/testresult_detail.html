@@ -1,26 +1,21 @@
 {% extends "agilito/base.html" %}
-{% block head_title %} {{ object.name }} {% endblock %}
+{% load i18n %}
+{% block head_title %}{{ object.name }}{% endblock %}
 
 {% block body %}
-
 <table>
-<thead>
-    <tr>
-        <th>Id</th>
-        <th>Test Name</th>
-        <th>Test Result</th>
-        <th>Date</th>
-        <th>Tester</th>
-        <th>Comments</th>
-
-    </tr>
-</thead>
-
-<tbody>
-
-{% include "agilito/testresult.html" %}
-
-</tbody>
+    <thead>
+        <tr>
+            <th>{% trans "Id" %}</th>
+            <th>{% trans "Test Name" %}</th>
+            <th>{% trans "Test Result" %}</th>
+            <th>{% trans "Date" %}</th>
+            <th>{% trans "Tester" %}</th>
+            <th>{% trans "Comments" %}</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% include "agilito/testresult.html" %}
+    </tbody>
 </table>
-
 {% endblock %}

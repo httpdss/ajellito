@@ -1,13 +1,14 @@
+{% load i18n %}
 {% load threadedcommentstags %}
 {% load agilito_utils %}
 
 <div>
     {% if comment_on %}
-    <h1>Comments</h1>
+    <h1>{% trans "Comments" %}</h1>
     {% get_threaded_comment_tree for comment_on as tree %}
     {% for comment in tree %}
     <div style="margin-left: {{ comment.depth }}em;" class="commentbox {% ifnotequal comment.depth 0 %}reply{% endifnotequal %}">
-        <quote>{{ comment.user|fullusername }} {% ifequal comment.depth 0 %}said{% else %}replied{% endifequal %}: (<a id="c{{ comment.id }}" href="javascript:show_reply_form('c{{ comment.id }}','{% get_comment_url comment_on comment %}','{{ comment.user|fullusername }}')">reply</a>)</quote><br/>
+        <quote>{{ comment.user|fullusername }} {% ifequal comment.depth 0 %}said{% else %}replied{% endifequal %}: (<a id="c{{ comment.id }}" href="javascript:show_reply_form('c{{ comment.id }}','{% get_comment_url comment_on comment %}','{{ comment.user|fullusername }}')">{% trans "reply" %}</a>)</quote><br/>
         <cite>{% auto_transform_markup comment %}</cite>
     </div>
     {% endfor %}
@@ -33,7 +34,7 @@
                     </td>
                 </tr>
                 <tr><td colspan="2">
-                        <input type="submit" value="Submit" />
+                        <input type="submit" value="{% trans "Submit" %}" />
                         {{ comment_form.markup }}
                 </td></tr>
             </table>

@@ -1,27 +1,27 @@
 {% extends "agilito/base.html" %}
-
-{% block head_title %} Search {% if query %} Results {% endif %} {% endblock %}
+{% load i18n %}
+{% block head_title %} {% trans "Search" %} {% if query %} {% trans "Results" %} {% endif %} {% endblock %}
 {% block select_tab %} "search" {% endblock %}
 
 {% block body %}
   
-  <h2>Search for Uses Stories, Tasks, Test Cases</h2>
+  <h2>{% trans "Search for Uses Stories, Tasks, Test Cases" %}</h2>
 
   <form action="." method="GET">
   <p>
-    <label for="query"> Search: </label>
+    <label for="query"> {% trans "Search:" %} </label>
     <input size="20" type="text" name="query" value="{{ query|escape }}"/>
   </p>
   <p>
-    <label for="model" >Search for: </label>
+    <label for="model" >{% trans "Search for:" %} </label>
         <select name="model">
-            <option value="User Story">User Stories</option>
-            <option value="Task">Tasks</option>
-            <option value="Test Case">Test Cases</option>
+            <option value="User Story">{% trans "User Stories" %}</option>
+            <option value="Task">{% trans "Tasks" %}</option>
+            <option value="Test Case">{% trans "Test Cases" %}</option>
         </select>
   </p>
   <p>
-    <label for="pagesize">Page size: </label>
+    <label for="pagesize">{% trans "Page size:" %}</label>
         <select name="pagesize">
         <option>10</option>
         <option>20</option>
@@ -30,7 +30,7 @@
         <option>200</option>
         </select>
   </p>
-  <input type="submit" value="Search"/>
+  <input type="submit" value="{% trans "Search" %}"/>
   </form>
   
   {% include "agilito/searchresults.html" %}

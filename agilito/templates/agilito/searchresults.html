@@ -1,66 +1,58 @@
+{% load i18n %}
 {% if query %}
-
     {% if notice %}
     <p> <strong> {{ notice }} </strong> </p>
     {% endif %}
 
     {% if object_list %}
-      {% include "agilito/pager.html" %}
-<table id="user-story-list" cellspacing="0" cellpadding="2">
-<thead>
-    <tr>
-        <th>Id</th>
-        <th>Name</th>
-        {% ifnotequal prefix "TC" %}  
-        <th>State</th>
-        {% else %}
-        <th>Test Results</th>
-        {% endifnotequal %}
+    {% include "agilito/pager.html" %}
+    <table id="user-story-list" cellspacing="0" cellpadding="2">
+        <thead>
+            <tr>
+                <th>{% trans "Id" %}</th>
+                <th>{% trans "Name" %}</th>
+                {% ifnotequal prefix "TC" %}  
+                <th>{% trans "State" %}</th>
+                {% else %}
+                <th>{% trans "Test Results" %}</th>
+                {% endifnotequal %}
 
-        <th>Iteration</th>
-    </tr>
-</thead>
-<tbody>
-        {% for object in object_list %}
-    <tr class="{% cycle even,odd %}{% if object.is_blocked %} blocked{% endif %}">
-        <td class="id">{{prefix}}{{object.id}}</td>
-        <td class="name"><a href="{{object.get_absolute_url}}">{{object.name}}</a></td>
-        {% ifnotequal prefix "TC" %}  
-        <td class="state {{ object.get_state_display|slugify }}">{{object.get_state_display}}</td>
-        {% else %}
-        <td class="">
-        {% if object.testresult_set.all %}
-            {% with object.testresult_set.latest as testresult %}
-            <a href="{{testresult.get_absolute_url}}">{{testresult.get_result_display}}</a>
-            {% endwith %}
-        {% else %}
-            not tested
-        {% endif %}
-        </td>
-        {% endifnotequal %}
-        {% ifequal prefix "US" %}
-        <td class="iteration">{{object.iteration}}</td>
-        {% endifequal %}
-        {% ifequal prefix "TC" %}
-        <td class="iteration">{{object.user_story.iteration}}</td>
-        {% endifequal %}
-        {% ifequal prefix "TA" %}
-        <td class="iteration">{{object.user_story.iteration}}</td>
-        {% endifequal %}
-
-    </tr> 
-
-
-
-        {% endfor %}
-</tbody>
-</table>
-        {% include "agilito/pager.html" %}
+                <th>{% trans "Iteration" %}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for object in object_list %}
+            <tr class="{% cycle even,odd %}{% if object.is_blocked %} blocked{% endif %}">
+                <td class="id">{{prefix}}{{object.id}}</td>
+                <td class="name"><a href="{{object.get_absolute_url}}">{{object.name}}</a></td>
+                {% ifnotequal prefix "TC" %}  
+                <td class="state {{ object.get_state_display|slugify }}">{{object.get_state_display}}</td>
+                {% else %}
+                <td class="">
+                    {% if object.testresult_set.all %}
+                    {% with object.testresult_set.latest as testresult %}
+                    <a href="{{testresult.get_absolute_url}}">{{testresult.get_result_display}}</a>
+                    {% endwith %}
+                    {% else %}
+                    {% trans "not tested" %}
+                    {% endif %}
+                </td>
+                {% endifnotequal %}
+                {% ifequal prefix "US" %}
+                <td class="iteration">{{object.iteration}}</td>
+                {% endifequal %}
+                {% ifequal prefix "TC" %}
+                <td class="iteration">{{object.user_story.iteration}}</td>
+                {% endifequal %}
+                {% ifequal prefix "TA" %}
+                <td class="iteration">{{object.user_story.iteration}}</td>
+                {% endifequal %}
+            </tr> 
+            {% endfor %}
+        </tbody>
+    </table>
+    {% include "agilito/pager.html" %}
     {% else %}
-      <p> <strong> No use story not found </strong> </p>
+    <p><strong>{% trans "No use story not found" %}</strong></p>
     {% endif %}
-
 {% endif %}
-
-
-

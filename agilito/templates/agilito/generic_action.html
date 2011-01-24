@@ -1,4 +1,5 @@
 {% extends "agilito/base.html" %}
+{% load i18n %}
 {% block head_title %}{{object.name}}{% endblock %}
 {% block body %}
 
@@ -19,7 +20,7 @@
                 <td class="form-label">
                     <span>
                         {{ field.label_tag }}
-                        {% if field.field.required and not field.errors %}<br/><span class="required-text">required</span>{%endif%}
+                        {% if field.field.required and not field.errors %}<br/><span class="required-text">{% trans "required" %}</span>{%endif%}
                     </span>
                 </td>
                 <td class="form-entry">
@@ -32,6 +33,6 @@
         {% endfor %}
     </table>
 
-    <input type="submit" class="save" value="Save"/>
+    <input type="submit" class="save" value="{% trans "Save" %}"/>
 </form>
 {% endblock %}

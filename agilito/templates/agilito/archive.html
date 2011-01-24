@@ -1,14 +1,16 @@
 {% extends "agilito/base.html" %}
+{% load i18n %}
 {% block head_title %}{{object.name}}{% endblock %}
 {% block body %}
 
-<h2>Archiving {{ object }}</h2>
-<p>Are you sure you want to archive this?
-{% if deleted_objects %}All of the following related items will be archived:
+<h2>{% trans "Archiving" %} {{ object }}</h2>
+<p>{% trans "Are you sure you want to archive this?" %}<p/>
+{% if deleted_objects %}
+<p>{% trans "All of the following related items will be archived:" %}</p>
 <ul>{{ deleted_objects|unordered_list }}</ul>{% endif %}
 <form method="post">
 <div>
   <input type="hidden" name="post" value="yes" />
-  <input type="submit" value="Yes, I'm sure" />
+  <input type="submit" value="{% trans "Yes, I'm sure" %}" />
 </div></form>
 {% endblock %}

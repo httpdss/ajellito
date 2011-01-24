@@ -1,4 +1,5 @@
 {% extends "agilito/base.html" %}
+{% load i18n %}
 {% block js %}
 <script type="text/javascript">
 $(window).ready(function(){
@@ -10,10 +11,10 @@ $(window).ready(function(){
 {% block body %}
 
 
-<h2>Add / Edit Impediment</h2>
+<h2>{% trans "Add / Edit Impediment" %}</h2>
 
 <form method="post">
     {% include "agilito/generic_form.html" %}
-    <input type="submit" class="save" value="Save"/>
+    <input type="submit" class="save" value="{% trans "Save" %}"/>
 </form>
 {% endblock %}

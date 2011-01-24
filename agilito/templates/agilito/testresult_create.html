@@ -1,10 +1,10 @@
 {% extends "agilito/base.html" %}
-{% block head_title %}Adding / Editing a Test Result to {{ testcase }}{% endblock %}
+{% block head_title %}{% trans "Adding / Editing a Test Result to" %} {{ testcase }}{% endblock %}
 {% block body %}
 
-<h2><small>Adding / Editing a Test Result to</small><br /> {{ testcase }}</h2>
+<h2><small>{% trans "Adding / Editing a Test Result to" %}</small><br /> {{ testcase }}</h2>
 <form method="post">
-{% include "agilito/generic_form.html" %}
-<input type="submit" class="save" value="Save"/>
+    {% include "agilito/generic_form.html" %}
+    <input type="submit" class="save" value="{% trans "Save" %}"/>
 </form>
 {% endblock %}

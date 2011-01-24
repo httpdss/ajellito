@@ -1,14 +1,15 @@
 {% extends "agilito/base.html" %}
-{% block head_title %}Adding / Editing an attachment to {{ story }}{% endblock %}
-{% block body %}
+{% load i18n %}
+{% block head_title %}{% trans "Adding / Editing an attachment to {{ story }}" %}{% endblock %}
 
-<h2><small>Adding / Editing an attachment to</small><br /> {{ story }}</h2>
+{% block body %}
+<h2><small>{% trans "Adding / Editing an attachment to" %}</small><br /> {{ story }}</h2>
 {% if form.is_multipart %}
     <form enctype="multipart/form-data" method="post">
 {% else %}
     <form method="post">
 {% endif %}
 {% include "agilito/generic_form.html" %}
-<input type="submit" class="save" value="Save"/>
+<input type="submit" class="save" value="{% trans "Save" %}"/>
 </form>
 {% endblock %}

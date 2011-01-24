@@ -1,3 +1,4 @@
+{% load i18n %}
 {% if form.non_field_errors  %}
     {{ form.non_field_errors }}
 {% endif %}
@@ -13,7 +14,7 @@
         <td class="form-label">
             <span>
                 {{ field.label_tag }}
-                {% if field.field.required and not field.errors %}<br/><span class="required-text">required</span>{%endif%}
+                {% if field.field.required and not field.errors %}<br/><span class="required-text">{% trans "required" %}</span>{%endif%}
             </span>
         </td>
         <td class="form-entry">

@@ -1,23 +1,27 @@
-
+{% load i18n %}
 <h2>
     {% if current_project %}
     {{ current_project.name }} &raquo;
     {% endif %}
 
-    Backlog
+    {% trans "Backlog" %}
 </h2>
 
 {% if backlog %}
 <div id="us-resume">
-    <span>Number of US in Backlog: <strong>{{ user_stories }}</strong> </span> 
+    <span>{% trans "Number of US in Backlog:" %} <strong>{{ user_stories }}</strong> </span> 
     {% if velocity.sprint_length %}
-    <div>Velocity: {{ velocity.actual }} vs. {{ velocity.planned }} (avg sprint length {{ velocity.sprint_length|floatformat:0 }} days)</div>
+    <div>
+        {% blocktrans %}Velocity: {{ velocity.actual }} vs. {{ velocity.planned }} (avg sprint length {{ velocity.sprint_length|floatformat:0 }} days){% endblocktrans %}
+        </div>
     {% endif %}
     {% if suggestions %}
-    <div>Sizing accuracy: {{ suggestions.accuracy|floatformat:0 }}%, based on {{ suggestions.base }}</div>
+    <div>
+        {% blocktrans %}Sizing accuracy: {{ suggestions.accuracy|floatformat:0 }}%, based on {{ suggestions.base }}{% endblocktrans %}
+    </div>
     {% endif %}
     {% else %}
-    No user stories in the backlog.
+    {% trans "No user stories in the backlog." %}
     {% endif %}
     <div>
         <form name="states" action="#">

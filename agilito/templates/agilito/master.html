@@ -6,20 +6,20 @@
     <head>
         <meta http-equiv="content-type" content="text/html; charset=iso-8859-1"/>
 
-        <link rel="stylesheet" type="text/css" href="/agilito/theme/indigo/default.css" />
+        <link rel="stylesheet" type="text/css" href="{{STATIC_URL}}agilito/theme/indigo/default.css" />
 
-        <link rel="stylesheet" type="text/css" href="/agilito/css/zoomable.css" />
+        <link rel="stylesheet" type="text/css" href="{{STATIC_URL}}agilito/css/zoomable.css" />
 
-        <link rel="stylesheet" type="text/css" href="/agilito/css/content.css" />
-        <link rel="stylesheet" type="text/css" href="/agilito/css/tables.css" />
-        <link rel="stylesheet" type="text/css" href="/agilito/css/forms.css" />
+        <link rel="stylesheet" type="text/css" href="{{STATIC_URL}}agilito/css/content.css" />
+        <link rel="stylesheet" type="text/css" href="{{STATIC_URL}}agilito/css/tables.css" />
+        <link rel="stylesheet" type="text/css" href="{{STATIC_URL}}agilito/css/forms.css" />
 
-        <link rel="stylesheet" href="/agilito/jquery-ui/css/ui-lightness/jquery-ui-1.7.2.css" type="text/css" media="screen" />
-        <link rel="stylesheet" href="/agilito/treeTable/src/stylesheets/jquery.treeTable.css" type="text/css" media="screen" />
-        <link rel="stylesheet" href="/agilito/css/clickmenu.css" type="text/css" media="screen" />
+        <link rel="stylesheet" href="{{STATIC_URL}}agilito/jquery-ui/css/ui-lightness/jquery-ui-1.7.2.css" type="text/css" media="screen" />
+        <link rel="stylesheet" href="{{STATIC_URL}}agilito/treeTable/src/stylesheets/jquery.treeTable.css" type="text/css" media="screen" />
+        <link rel="stylesheet" href="{{STATIC_URL}}agilito/css/clickmenu.css" type="text/css" media="screen" />
 
         {% if comment_on %}
-            <link rel="stylesheet" type="text/css" href="/agilito/css/comments.css" />
+        <link rel="stylesheet" type="text/css" href="{{STATIC_URL}}agilito/css/comments.css" />
         {% endif %}
 
         <title>{% block head_title %}{% endblock %} - Agilito Project Managment App (release {% agilitorelease %})</title>
@@ -28,7 +28,7 @@
         {% block css %} {% endblock %}
 
         <!-- tinyMCE -->
-        <script language="javascript" type="text/javascript" src="/agilito/js/tiny_mce/tiny_mce.js"></script>
+        <script language="javascript" type="text/javascript" src="{{STATIC_URL}}agilito/js/tiny_mce/tiny_mce.js"></script>
         <script language="javascript" type="text/javascript">
             // Notice: The simple theme does not use all options some of
             // them are limited to the advanced theme
@@ -46,13 +46,13 @@
         </script>
         <!-- /tinyMCE -->
 
-        <script type="text/javascript" src="/agilito/jquery-ui/js/jquery-1.3.2.min.js"></script>
-        <script type="text/javascript" src="/agilito/jquery-ui/js/jquery-ui-1.7.2.min.js"></script>
-        <script type="text/javascript" src="/agilito/js/json2.js"></script>
-        <script type="text/javascript" src="/agilito/js/jquery.cookie.js"></script>
+        <script type="text/javascript" src="{{STATIC_URL}}agilito/jquery-ui/js/jquery-1.3.2.min.js"></script>
+        <script type="text/javascript" src="{{STATIC_URL}}agilito/jquery-ui/js/jquery-ui-1.7.2.min.js"></script>
+        <script type="text/javascript" src="{{STATIC_URL}}agilito/js/json2.js"></script>
+        <script type="text/javascript" src="{{STATIC_URL}}agilito/js/jquery.cookie.js"></script>
 
-        <script type="text/javascript" src="/agilito/js/jquery.clickmenu.js"></script>
-        <script type="text/javascript" src="/agilito/treeTable/src/javascripts/jquery.treeTable.js"></script>
+        <script type="text/javascript" src="{{STATIC_URL}}agilito/js/jquery.clickmenu.js"></script>
+        <script type="text/javascript" src="{{STATIC_URL}}agilito/treeTable/src/javascripts/jquery.treeTable.js"></script>
         <script type="text/javascript">
             function popup(link, id)
             {

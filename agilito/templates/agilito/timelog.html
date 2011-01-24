@@ -1,4 +1,5 @@
 {% extends "agilito/base.html" %}
+{% load i18n %}
 
 {% block body_class %}timelog{% endblock %}
 
@@ -65,21 +66,19 @@ $(window).ready(function(){
 {% block select_tab %} "timelog" {% endblock %}
 
 {% block body %}
-<h2>Log your hours!</h2>
+<h2>{% trans "Log your hours!" %}</h2>
 {% if message %}
 <p class="notice">{{ message }}</p>
 {% endif %}
 <form method="post" action="">
     <div id="timelog-wrapper">
         <div>
-                {{ form.taskmenu }}
+            {{ form.taskmenu }}
         </div>
         <table id="timelog" class="formfields">
             <tr>
                 <td class="form-label">
-                    <span>
-                        Story
-                    </span>
+                    <span>{% trans "Story" %}</span>
                 </td>
                 <td class="form-entry">
                     <p id="story-name"></p>
@@ -87,21 +86,19 @@ $(window).ready(function(){
             </tr>
             <tr>
                 <td class="form-label">
-                    <span>
-                        Task
-                    </span>
+                    <span>{% trans "Task" %}</span>
                 </td>
                 <td class="form-entry">
                     <p id="task-name"></p>
                 </td>
             </tr>
-        {% for field in form %}
-        {% ifnotequal field.name "taskmenu" %}
+            {% for field in form %}
+            {% ifnotequal field.name "taskmenu" %}
             <tr class="{% if field.errors %}errors {% endif %} {% if field.field.required %}required{%endif%}">
                 <td class="form-label">
                     <span>
                         {{ field.label_tag }}
-                        {% if field.field.required and not field.errors %}<br/><span class="required-text">required</span>{%endif%}
+                        {% if field.field.required and not field.errors %}<br/><span class="required-text">{% trans "required" %}</span>{%endif%}
                     </span>
                 </td>
                 <td class="form-entry">
@@ -110,13 +107,10 @@ $(window).ready(function(){
                     {% if field.errors %}{{ field.errors }}{% endif %}
                 </td>
             </tr>
-        {% endifnotequal %}
-        {% endfor %}
+            {% endifnotequal %}
+            {% endfor %}
         </table>
     </div>
-<input type="submit" value="Apply">
+    <input type="submit" value="{% trans "Apply" %}">
 </form>
-
-
-
 {% endblock %}

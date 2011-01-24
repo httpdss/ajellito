@@ -1,12 +1,13 @@
 {% extends "agilito/base.html" %}
+{% load i18n %}
 {% block head_title %}{{object.name}}{% endblock %}
 {% block body %}
 
 
-<h2>Add / Edit User Story</h2>
+<h2>{% trans "Add / Edit User Story" %}</h2>
 
 <form method="post">
     {% include "agilito/generic_form.html" %}
-    <input type="submit" class="save" value="Save"/>
+    <input type="submit" class="save" value="{% trans "Save" %}"/>
 </form>
 {% endblock %}

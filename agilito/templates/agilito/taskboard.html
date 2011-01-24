@@ -1,71 +1,71 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+{% load i18n %}
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<head>
-    <title>{% block head_title %}Agilito Project Managment App{% endblock %}</title>
-    <link rel="stylesheet" href="/agilito/css/taskboard.css" type="text/css" />
+    <head>
+        <title>{% block head_title %}{% trans "Agilito Project Managment App" %}{% endblock %}</title>
+        <link rel="stylesheet" href="{{STATIC_URL}}agilito/css/taskboard.css" type="text/css" />
 
-    <link rel="stylesheet" href="/agilito/css/forms.css" type="text/css" />
-    <link rel="stylesheet" href="/agilito/css/tables.css" type="text/css" />
-    {% block css%} {%endblock%}
-    <script type="text/javascript" src="/agilito/js/jquery.js"></script>
-    <script type="text/javascript" src="/agilito/js/ui.js"></script>
-</head>
+        <link rel="stylesheet" href="{{STATIC_URL}}agilito/css/forms.css" type="text/css" />
+        <link rel="stylesheet" href="{{STATIC_URL}}agilito/css/tables.css" type="text/css" />
+        {% block css%} {%endblock%}
+        <script type="text/javascript" src="{{STATIC_URL}}agilito/js/jquery.js"></script>
+        <script type="text/javascript" src="{{STATIC_URL}}agilito/js/ui.js"></script>
+    </head>
 
-<body>
-<h3>Taskboard</h3>
-<table id="taskboard" cellspacing="0" cellpadding="2">
-<thead>
-    <tr>
-        <th>Story</th>
-        <th>To do</th>
-        <th>In progress</th>
-        <th>Done</th>
-    </tr>
-</thead>
+    <body>
+        <h3>{% trans "Taskboard" %}</h3>
+        <table id="taskboard" cellspacing="0" cellpadding="2">
+            <thead>
+                <tr>
+                    <th>{% trans "Story" %}</th>
+                    <th>{% trans "To do" %}</th>
+                    <th>{% trans "In progress" %}</th>
+                    <th>{% trans "Done" %}</th>
+                </tr>
+            </thead>
 
-<tbody>
-{% for us in stories %}
-    <tr>
-        <td>
-            <ul class="story">
-                <li class="id"><span>{{ us.id }}</span></li>
-                <li class="rank"><span>rank: {{ us.relative_rank }}</span></li>
-                <li class="remaining"><span>remaining: {{ us.remaining|default_if_none:"-" }}</span></li>
-                <li class="name"><span>{{ us.name }}</span></li>
-            </ul>
-        </td>
-        <td>
-            {% for ta in us.tasks.todo %}
-                <ul class="task">
-                    <li class="id"><span>{{ ta.id }}</span></li>
-                    <li class="remaining"><span>remaining: {{ ta.remaining|default_if_none:"-" }}</span></li>
-                    <li class="name"><span>{{ ta.name }}</span></li>
-                </ul>
-            {% endfor %}
-        </td>
-        <td>
-            {% for ta in us.tasks.in_progress %}
-                <ul class="task">
-                    <li class="id"><span>{{ ta.id }}</span></li>
-                    <li class="remaining"><span>remaining: {{ ta.remaining|default_if_none:"-" }}</span></li>
-                    <li class="name"><span>{{ ta.name }}</span></li>
-                </ul>
-            {% endfor %}
-        </td>
-        <td>
-            {% for ta in us.tasks.done %}
-                <ul class="task">
-                    <li class="id"><span>{{ ta.id }}</span></li>
-                    <li class="remaining"><span>remaining: {{ ta.remaining|default_if_none:"-" }}</span></li>
-                    <li class="name"><span>{{ ta.name }}</span></li>
-                </ul>
-            {% endfor %}
-        </td>
-    </tr>
-{% endfor %}
-</tbody>
-</table>
+            <tbody>
+                {% for us in stories %}
+                <tr>
+                    <td>
+                        <ul class="story">
+                            <li class="id"><span>{{ us.id }}</span></li>
+                            <li class="rank"><span>{% trans "rank:" %} {{ us.relative_rank }}</span></li>
+                            <li class="remaining"><span>{% trans "remaining:" %} {{ us.remaining|default_if_none:"-" }}</span></li>
+                            <li class="name"><span>{{ us.name }}</span></li>
+                        </ul>
+                    </td>
+                    <td>
+                        {% for ta in us.tasks.todo %}
+                        <ul class="task">
+                            <li class="id"><span>{{ ta.id }}</span></li>
+                            <li class="remaining"><span>{% trans "remaining:" %} {{ ta.remaining|default_if_none:"-" }}</span></li>
+                            <li class="name"><span>{{ ta.name }}</span></li>
+                        </ul>
+                        {% endfor %}
+                    </td>
+                    <td>
+                        {% for ta in us.tasks.in_progress %}
+                        <ul class="task">
+                            <li class="id"><span>{{ ta.id }}</span></li>
+                            <li class="remaining"><span>{% trans "remaining:" %} {{ ta.remaining|default_if_none:"-" }}</span></li>
+                            <li class="name"><span>{{ ta.name }}</span></li>
+                        </ul>
+                        {% endfor %}
+                    </td>
+                    <td>
+                        {% for ta in us.tasks.done %}
+                        <ul class="task">
+                            <li class="id"><span>{{ ta.id }}</span></li>
+                            <li class="remaining"><span>{% trans "remaining:" %} {{ ta.remaining|default_if_none:"-" }}</span></li>
+                            <li class="name"><span>{{ ta.name }}</span></li>
+                        </ul>
+                        {% endfor %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
 
-</body>
+    </body>
 </html>
