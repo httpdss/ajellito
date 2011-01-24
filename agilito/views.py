@@ -513,7 +513,7 @@ def userstory_move(request, project_id, userstory_id):
     else:
         form = UserStoryMoveForm(instance=instance, project=project)
 
-    context = AgilitoContext(request, {"object": instance, "action": "Copy/Move User Story", "form": form}, current_project=project_id)
+    context = AgilitoContext(request, {"object": instance, "action": _("Copy/Move User Story"), "form": form}, current_project=project_id)
     return render_to_response("agilito/generic_action.html", context_instance=context)
 
 @restricted
