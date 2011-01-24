@@ -147,26 +147,26 @@ function highlightTag(ids)
                     <td id="add_task_us_{{us.id}}" class="">
                         {% if not us.is_archived %}
                             <a href="{% url agilito.views.task_create current_project.id,us.id %}?last_page={{last_page}}"><img
-                                src="{{ STATIC_URL }}agilito/images/add.png" alt="add task" title="add task" width="16" height="16" /></a>
+                                src="{{ STATIC_URL }}agilito/img/add.png" alt="add task" title="add task" width="16" height="16" /></a>
                         {% endif %}
                     </td>
 
                     <td id="edit_us_{{us.id}}" class="">
                         <a href="{% url agilito.views.userstory_edit current_project.id,us.id %}?last_page={{last_page}}"><img
-                            src="{{ STATIC_URL }}agilito/images/pencil.png" alt="edit" title="edit" width="16" height="16" /></a>
+                            src="{{ STATIC_URL }}agilito/img/pencil.png" alt="edit" title="edit" width="16" height="16" /></a>
                     </td>
 
                     <td id="delete_us_{{us.id}}" class="">
                         {% if not us.is_archived %}
                             <a href="{% url agilito.views.userstory_delete current_project.id,us.id %}?last_page={{last_page}}"><img
-                                src="{{ STATIC_URL }}agilito/images/delete.png" alt="delete" title="delete" width="16" height="16" /></a>
+                                src="{{ STATIC_URL }}agilito/img/delete.png" alt="delete" title="delete" width="16" height="16" /></a>
                         {% endif %}
                     </td>
 
                     <td id="move_us_{{us.id}}" class="">
                         <a href="{% url agilito.views.userstory_move current_project.id,us.id %}?last_page={{last_page}}"
                             onclick="popup(this, 'us-move'); return false"><img
-                            src="{{ STATIC_URL }}agilito/images/bullet_go.png" alt="move" title="move" width="16" height="16" /></a>
+                            src="{{ STATIC_URL }}agilito/img/bullet_go.png" alt="move" title="move" width="16" height="16" /></a>
                     </td>
                 </tr> 
 
@@ -190,7 +190,7 @@ function highlightTag(ids)
                             {% if not ta.is_archived %}
                                 <a href="{% url agilito.views.timelog_task current_project.id,ta.id %}?last_page={{last_page}}"
                                     onclick="popup(this, 'timelog'); return false"><img
-                                    src="{{ STATIC_URL }}agilito/images/log.png" alt="log" title="log" width="16" height="16" /></a>
+                                    src="{{ STATIC_URL }}agilito/img/log.png" alt="log" title="log" width="16" height="16" /></a>
                             {% endif %}
                         </td>
                         <td>
@@ -198,7 +198,7 @@ function highlightTag(ids)
                                 <a id="task_edit_{{ta.id}}"
                                     onclick="popup(this, 'taskedit'); return false"
                                     href="{% url agilito.views.task_edit current_project.id,us.id,ta.id %}?last_page={{last_page}}"><img
-                                    src="{{ STATIC_URL }}agilito/images/pencil.png" alt="edit"
+                                    src="{{ STATIC_URL }}agilito/img/pencil.png" alt="edit"
                                     title="edit" width="16" height="16" /></a>
                             {% endif %}
                         </td>
@@ -207,7 +207,7 @@ function highlightTag(ids)
                                 <a id="task_del_{{ta.id}}"
                                     onclick="popup(this, 'taskdel'); return false"
                                     href="{% url agilito.views.task_delete current_project.id,us.id,ta.id %}?last_page={{last_page}}"><img
-                                    src="{{ STATIC_URL }}agilito/images/delete.png" alt="delete" title="delete" width="16" height="16" /></a>
+                                    src="{{ STATIC_URL }}agilito/img/delete.png" alt="delete" title="delete" width="16" height="16" /></a>
                             {% endif %}
                         </td>
                         <td></td>

@@ -347,21 +347,21 @@
                                     <td class="size {% if story.suggestion.is_benchmark %}size-benchmark{% endif %}">{{story.suggestion.size|storysize}}</td>
                                 {% endif %}
                                 <td class="state">
-                                    <img src="{{ STATIC_URL }}agilito/images/backlog-state/{{ story.backlog_state }}.png"
+                                    <img src="{{ STATIC_URL }}agilito/img/backlog-state/{{ story.backlog_state }}.png"
                                         title="{{ story.backlog_state }}" alt="{{ story.backlog_state }}" />
                                 </td>
                                 <td id="edit_us_{{story.id}}" class="edit-button">
                                     <a href="{% url agilito.views.userstory_edit current_project.id,story.id %}?last_page={{last_page}}">
-                                    <img src="{{ STATIC_URL }}agilito/images/pencil.png" alt="edit" title="edit" width="16" height="16" /></a>
+                                    <img src="{{ STATIC_URL }}agilito/img/pencil.png" alt="edit" title="edit" width="16" height="16" /></a>
                                 </td>
                                 <td id="move_us_{{story.id}}" class="edit-button">
                                     <a href="{% url agilito.views.userstory_move current_project.id,story.id %}?last_page={{last_page}}"
                                         onclick="popup(this, 'us-move'); return false">
-                                    <img src="{{ STATIC_URL }}agilito/images/bullet_go.png" alt="move" title="move" width="16" height="16" /></a>
+                                    <img src="{{ STATIC_URL }}agilito/img/bullet_go.png" alt="move" title="move" width="16" height="16" /></a>
                                 </td>
                                 <td id="delete_us_{{story.id}}" class="edit-button">
                                     <a href="{% url agilito.views.userstory_delete current_project.id,story.id %}?last_page={{last_page}}">
-                                    <img src="{{ STATIC_URL }}agilito/images/delete.png" alt="delete" title="delete" width="16" height="16" /></a>
+                                    <img src="{{ STATIC_URL }}agilito/img/delete.png" alt="delete" title="delete" width="16" height="16" /></a>
                                 </td>
                             </tr>
                         {% endifequal %}
@@ -376,12 +376,12 @@
 
                                         <td id="edit_re_{{release.id}}" class="edit-button">
                                             <a href="{% url agilito.views.release_edit current_project.id,release.id %}?last_page={{last_page}}">
-                                                <img src="{{ STATIC_URL }}agilito/images/pencil.png" alt="edit" title="edit" width="16" height="16" /></a>
+                                                <img src="{{ STATIC_URL }}agilito/img/pencil.png" alt="edit" title="edit" width="16" height="16" /></a>
                                             </td>
                                         <td><!-- move --></td>
                                         <td id="delete_re_{{release.id}}" class="edit-button">
                                             <a href="{% url agilito.views.release_delete current_project.id,release.id %}?last_page={{last_page}}">
-                                                <img src="{{ STATIC_URL }}agilito/images/delete.png" alt="delete" title="delete" width="16" height="16" /></a>
+                                                <img src="{{ STATIC_URL }}agilito/img/delete.png" alt="delete" title="delete" width="16" height="16" /></a>
                                         </td>
                                     </tr>
                                 {% endwith %}

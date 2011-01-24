@@ -28,7 +28,7 @@
             {% for state in states %}
             <input type="checkbox" id="story_state_{{state.state}}" name="story_state_{{state.state}}" value="{{ state.state }}" />&nbsp;<label class="inline" for="story_state_{{state.state}}">{{state.name}}</label>
             {% endfor %}
-            <input onclick="select_states(); return false" type="image" src="{{ STATIC_URL }}agilito/images/bullet_go.png" alt="Submit Form" />
+            <input onclick="select_states(); return false" type="image" src="{{ STATIC_URL }}agilito/img/bullet_go.png" alt="Submit Form" />
         </form>
     </div>
     {% if backlog %}
