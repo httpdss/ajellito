@@ -240,7 +240,7 @@ class Project(ClueModel):
 
     class Meta:
         permissions = (
-            ("view", "Can view the project."),
+            ("view", _("Can view the project.")),
         )
         ordering = ("id",)
 
@@ -593,7 +593,7 @@ class Release(ClueModel):
 
     class Meta:
         permissions = (
-            ("view", "Can view the project."),
+            ("view", _("Can view the project.")),
         )
         ordering = ("rank",)
 
@@ -975,7 +975,7 @@ class Iteration(ClueModel):
         
     class Meta:
         permissions = (
-            ("view", "Can view the iteration."),
+            ("view", _("Can view the iteration.")),
         )
         ordering = ("start_date",)
 
@@ -1005,29 +1005,28 @@ class UserStoryAttachment(ClueModel):
         verbose_name_plural = _(u"US Attachments")
 
         permissions = (
-            ("view", "Can view the user stories."),
+            ("view", _("Can view the user stories.")),
         )
 
 class UserStory(ClueModel):
     STATES = FieldChoices(
-                (10, "Defined"),
-                (15, "Specified"),
-                (20, "In Progress"),
-                (30, "Completed"),
-                (40, "Accepted"),
-                (50, "Failed"),
-                )
+                (10, _("Defined")),
+                (15, _("Specified")),
+                (20, _("In Progress")),
+                (30, _("Completed")),
+                (40, _("Accepted")),
+                (50, _("Failed")))
     ENDSTATES = (STATES.ACCEPTED, STATES.FAILED)
 
     SIZES = FieldChoices(
-                (1,  "XXS"),
-                (2,  "XS"),
-                (3,  "S"),
-                (5,  "M"),
-                (8,  "L"),
-                (13, "XL"),
-                (21, "XXL"),
-                (1000,  "Infinity"))
+                (1, _("XXS")),
+                (2, _("XS")),
+                (3, _("S")),
+                (5, _("M")),
+                (8, _("L")),
+                (13,_("XL")),
+                (21,_("XXL")),
+                (1000, _("Infinity")))
 
     project = models.ForeignKey(Project)
 
@@ -1163,7 +1162,7 @@ class UserStory(ClueModel):
         verbose_name_plural = _(u"User Stories")
 
         permissions = (
-            ("view", "Can view the user stories."),
+            ("view", _("Can view the user stories.")),
         )
 
         ordering = ("rank", "id")
@@ -1182,12 +1181,12 @@ class UserStory(ClueModel):
 
 class UserProfile(models.Model):
     CATEGORIES = FieldChoices(
-                    (10, "Client"),
-                    (20, "Project Manager"),
-                    (30, "Developer"),
-                    (40, "Designer"),
-                    (50, "Tester"),
-                    (99, "Other"))
+                    (10, _("Client")),
+                    (20, _("Project Manager")),
+                    (30, _("Developer")),
+                    (40, _("Designer")),
+                    (50, _("Tester")),
+                    (99, _("Other")))
 
     hours_per_week = models.SmallIntegerField()
     category = models.SmallIntegerField(choices=CATEGORIES.choices())
@@ -1206,17 +1205,17 @@ class UserProfile(models.Model):
 
 class Task(ClueModel):
     STATES = FieldChoices(
-                (10, "Defined"),
-                (20, "In Progress"),
-                (30, "Completed"))
+                (10, _("Defined")),
+                (20, _("In Progress")),
+                (30, _("Completed")))
 
     CATEGORIES = FieldChoices(
-                ( 0, "Undefined"),
-                (10, "UI"),
-                (20, "Design"),
-                (30, "Development"),
-                (40, "Testing"),
-                (99, "Other"))
+                ( 0, _("Undefined")),
+                (10, _("UI")),
+                (20, _("Design")),
+                (30, _("Development")),
+                (40, _("Testing")),
+                (99, _("Other")))
 
     estimate = models.FloatField(blank=True, null=True)
     remaining = models.FloatField(blank=True, null=True)
@@ -1292,20 +1291,20 @@ class Task(ClueModel):
 
     class Meta:
         permissions = (
-            ("view", "Can view the task."),
+            ("view", _("Can view the task.")),
         )
         ordering = ("user_story__rank", "user_story__id", "id")
 
 class TestCase(ClueModel):
     KINDS = FieldChoices(
-                (10, "Acceptance"),
-                (20, "Functional"),
-                (99, "Other"))
+                (10, _("Acceptance")),
+                (20, _("Functional")),
+                (99, _("Other")))
 
     PRIORITIES = FieldChoices(
-                (10, "Useful"),
-                (20, "Important"),
-                (30, "Critical"))
+                (10, _("Useful")),
+                (20, _("Important")),
+                (30, _("Critical")))
 
     user_story = models.ForeignKey("UserStory")
 
@@ -1328,16 +1327,16 @@ class TestCase(ClueModel):
         ordering = ("-priority",)
 
         permissions = (
-            ("view", "Can view the test cases."),
+            ("view", _("Can view the test cases.")),
         )
 #tagging.register(Task)
 
 class TestResult(models.Model):
     RESULTS = FieldChoices(
-                (0, "Fail"),
-                (1, "Pass"),
-                (2, "Error"),
-                (3, "Inconclusive"))
+                (0, _("Fail")),
+                (1, _("Pass")),
+                (2, _("Error")),
+                (3, _("Inconclusive")))
 
     result = models.SmallIntegerField(choices=RESULTS.choices())
     comments = models.TextField(blank=True)
@@ -1375,7 +1374,7 @@ class TestResult(models.Model):
         verbose_name_plural = _(u"Test Results")
 
         permissions = (
-            ("view", "Can view the test results."),
+            ("view", _("Can view the test results.")),
         )
 
 class Impediment(models.Model):
@@ -1403,7 +1402,7 @@ class Impediment(models.Model):
         verbose_name_plural = _(u"Impediments")
 
         permissions = (
-            ("view", "Can view the impediments."),
+            ("view", _("Can view the impediments.")),
         )
 
 class TaskLog(models.Model):
@@ -1453,7 +1452,7 @@ class TaskLog(models.Model):
         get_latest_by = "date"
 
         permissions = (
-            ("view", "Can view the task log."),
+            ("view", _("Can view the task log.")),
         )
 
 class ArchivedBacklog(models.Model):
