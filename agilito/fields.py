@@ -31,4 +31,3 @@ class GroupedChoiceField(forms.ChoiceField):
         if value not in valid_values:
             raise forms.ValidationError(self.error_messages['invalid_choice'] % {'value': value})
         return value
-        

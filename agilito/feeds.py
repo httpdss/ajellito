@@ -4,6 +4,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from agilito.models import Project, Iteration as Sprint, UserStory, Task, TaskLog
 import datetime
 from django.contrib.syndication.views import feed as unauthenticated_feed
+from django.utils.translation import ugettext as _
 
 from django.http import HttpResponse
 import base64
@@ -32,7 +33,7 @@ class Backlog(Feed):
         return get_project(self.request.user, bits[0])
 
     def title(self, project):
-        return "Agilito: Backlog for %s" % project.name
+        return _("Agilito: Backlog for %s") % project.name
 
     def link(self, project):
         if not project:
@@ -40,7 +41,7 @@ class Backlog(Feed):
         return project.get_absolute_url()
 
     def description(self, project):
-        return "Product backlog for %s" % project.name
+        return _("Product backlog for %s") % project.name
 
     def items(self, project):
        return project.backlog()
@@ -75,7 +76,7 @@ class Iteration(Feed):
     def title(self, iteration):
         it = iteration.name
         pr = iteration.project.name
-        return "Agilito: Iteration backlog for %s (%s) " % (it, pr)
+        return _("Agilito: Iteration backlog for %s (%s) ") % (it, pr)
 
     def link(self, iteration):
         if not iteration:
@@ -85,7 +86,7 @@ class Iteration(Feed):
     def description(self, iteration):
         it = iteration.name
         pr = iteration.project.name
-        return "Iteration backlog for %s (%s) " % (it, pr)
+        return _("Iteration backlog for %s (%s) ") % (it, pr)
 
     def items(self, iteration):
         tasks = []

@@ -43,7 +43,7 @@ class UserProfileAdmin(admin.ModelAdmin):
 
 class UserStoryAttachmentAdmin(admin.ModelAdmin):
     list_display = ('name',)
-    list_display_links = ('name',)    
+    list_display_links = ('name',)
 
 class UserStoryAdmin(admin.ModelAdmin):
     inlines = [UserStoryAttachmentInLine, TestCaseInLine, TaskInLine]
@@ -60,7 +60,7 @@ class UserStoryAdmin(admin.ModelAdmin):
 
 class TaskAdmin(admin.ModelAdmin):
     inlines = [ImpedimentInLine]
-    list_display = ('name', 'estimate', 'actuals', 'remaining', 
+    list_display = ('name', 'estimate', 'actuals', 'remaining',
                     'state', 'category', 'owner', 'user_story')
     list_display_links = ('name', 'owner', 'user_story')
     fieldsets = ((None, { 'fields': ('name', 'description', 'user_story',
@@ -74,7 +74,7 @@ class TestCaseAdmin(admin.ModelAdmin):
                 }),
                 ('Advanced', {
                 'classes': 'collapse',
-                'fields': ('priority', 'precondition', 'steps', 
+                'fields': ('priority', 'precondition', 'steps',
                             'postcondition',),
                 }),
                 )

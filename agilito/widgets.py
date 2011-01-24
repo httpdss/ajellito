@@ -4,6 +4,8 @@ from django import forms
 from django.utils.encoding import force_unicode
 from django.utils.html import escape, conditional_escape
 from django.utils.safestring import mark_safe
+from django.conf import settings
+
 
 from tagging.models import Tag
 
@@ -194,12 +196,12 @@ class AutoCompleteTagInput(forms.TextInput):
 
     class Media:
         css = {
-            'all': ('/agilito/jquery-autocomplete/jquery.autocomplete.css',)
+            'all': (settings.STATIC_URL + 'agilito/jquery-autocomplete/jquery.autocomplete.css',)
         }
         js = (
-            '/agilito/jquery-autocomplete/lib/jquery.bgiframe.min.js',
-            '/agilito/jquery-autocomplete/lib/jquery.ajaxQueue.js',
-            '/agilito/jquery-autocomplete/jquery.autocomplete.js'
+           settings.STATIC_URL + 'agilito/jquery-autocomplete/lib/jquery.bgiframe.min.js',
+           settings.STATIC_URL + 'agilito/jquery-autocomplete/lib/jquery.ajaxQueue.js',
+           settings.STATIC_URL + 'agilito/jquery-autocomplete/jquery.autocomplete.js'
         )
 
     def render(self, name, value, attrs=None):
