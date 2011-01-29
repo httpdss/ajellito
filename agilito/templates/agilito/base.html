@@ -37,10 +37,20 @@
 {% endblock %}
 
 {% block extra_body %}
+<script type="text/javascript" src="{{STATIC_URL}}agilito/js/treeTable/src/javascripts/jquery.treeTable.js"></script>
 {% block js %}{% endblock %}
 {% endblock %}
 
 {% block extra_head %}
+<link rel="stylesheet" href="{{STATIC_URL}}agilito/js/treeTable/src/stylesheets/jquery.treeTable.css" type="text/css" media="screen" />
+<link rel="stylesheet" href="{{STATIC_URL}}agilito/css/tables.css" type="text/css" media="screen" />
+<link rel="stylesheet" href="{{STATIC_URL}}agilito/css/clickmenu.css" type="text/css" media="screen" />
+<link rel="stylesheet" href="{{STATIC_URL}}agilito/css/comments.css" type="text/css" media="screen" />
+<link rel="stylesheet" href="{{STATIC_URL}}agilito/css/content.css" type="text/css" media="screen" />
+<link rel="stylesheet" href="{{STATIC_URL}}agilito/css/forms.css" type="text/css" media="screen" />
+<link rel="stylesheet" href="{{STATIC_URL}}agilito/css/taskboard.css" type="text/css" media="screen" />
+<link rel="stylesheet" href="{{STATIC_URL}}agilito/css/zoomable.css" type="text/css" media="screen" />
+<link rel="stylesheet" href="{{STATIC_URL}}agilito/css/ui.datepicker.css" type="text/css" media="screen" />
 {% block link %}{% endblock %}
 {% block css %}{% endblock %}
 {% endblock %}
