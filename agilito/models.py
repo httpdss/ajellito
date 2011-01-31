@@ -622,8 +622,8 @@ class Iteration(ClueModel):
     def get_absolute_url(self):
         return "iteration_status_with_id", (), {"project_id": self.project.id,
                                                 "iteration_id": self.id }
-                                                
-    def user_estimated(self, userid):    
+
+    def user_estimated(self, userid):
         tasks = Task.objects.filter(owner__id=userid, user_story__iteration__pk=self.id)
 
         return sum(t.estimate or 0 for t in tasks)
@@ -972,7 +972,7 @@ class Iteration(ClueModel):
         if self.release is None:
             return self.project
         return self.release
-        
+
     class Meta:
         permissions = (
             ("view", _("Can view the iteration.")),
@@ -988,7 +988,7 @@ def attachment_path(instance, filename):
     name = string.join(random.sample(chars, 30), "")
 
     return "%s/%s.%s" % (dir, name, extension)
-    
+
 class UserStoryAttachment(ClueModel):
     attachment = models.FileField(upload_to=attachment_path)
     original_name = models.CharField(max_length=200)
@@ -1112,10 +1112,10 @@ class UserStory(ClueModel):
                 tf = t.testresult_set.latest()
                 if tf.result<>1:
                     out +=1
-                
+
             except TestResult.DoesNotExist:
                 pass
-               
+
         return out
 
     def copy_to_iteration(self, iteration, copy_tasks, state):
@@ -1149,7 +1149,7 @@ class UserStory(ClueModel):
 
     def get_container_url(self):
         if self.iteration is None:
-            return "/%s/backlog" % self.project.id         
+            return "/%s/backlog" % self.project.id
         else:
             return self.iteration.get_absolute_url()
 
@@ -1191,7 +1191,7 @@ class UserProfile(models.Model):
     hours_per_week = models.SmallIntegerField()
     category = models.SmallIntegerField(choices=CATEGORIES.choices())
     user = models.ForeignKey(User, unique=True)
-    
+
     def __unicode__(self):
         return u"%s: %s" % (self.user.username, self.get_category_display())
 
@@ -1361,14 +1361,14 @@ class TestResult(models.Model):
 
     def get_container_model(self):
         return self.test_case
-    
+
     def get_container_url(self):
         return self.test_case.get_absolute_url()
 
     class Meta:
-        ordering = ("-date",)        
-        
-        get_latest_by = "date"        
+        ordering = ("-date",)
+
+        get_latest_by = "date"
 
         verbose_name = _(u"Test Result")
         verbose_name_plural = _(u"Test Results")
@@ -1396,8 +1396,8 @@ class Impediment(models.Model):
         return self.tasks.all()[0].user_story.project
 
     class Meta:
-        ordering = ("-opened",)        
-        
+        ordering = ("-opened",)
+
         verbose_name = _(u"Impediment")
         verbose_name_plural = _(u"Impediments")
 
@@ -1415,7 +1415,7 @@ class TaskLog(models.Model):
     old_remaining = models.FloatField(null=True, blank=True)
 
     def __unicode__(self):
-        return "Task Log: [%s, %s, %s, %s, %s]" % (self.iteration, self.date, 
+        return "Task Log: [%s, %s, %s, %s, %s]" % (self.iteration, self.date,
                                                    self.task,
                                                    self.time_on_task,
                                                    self.owner.username)

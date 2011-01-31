@@ -146,7 +146,7 @@ class IterationImportForm(forms.Form):
         story_order = []
         for rn, rowdata in enumerate(rows[3:]):
             rn = 'row %d: ' % rownum[rn + 3]
-            
+
             for i, cell in enumerate(rowdata):
                 if cell and i >= len(rows[2]):
                     raise forms.ValidationError(rn + _('unexpected "%s" in sprint data' ) % cell)

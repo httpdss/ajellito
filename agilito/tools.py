@@ -1,5 +1,6 @@
 from django.contrib.auth.decorators import login_required
 from django.http import Http404
+from django.utils.datastructures import SortedDict
 try:
     from functools import wraps
 except ImportError:
@@ -8,6 +9,64 @@ except ImportError:
 from agilito.models import Project
 import html5lib
 
+class SideBar(SortedDict):
+    class Sub(list):
+        pass
+
+    def __init__(self, request):
+        super(SideBar, self).__init__(self)
+        self.request = request
+
+    def add(self, section, label, url, redirect=False, popup="", props=None):
+        if section.find("#") >= 0:
+            sid, section = section.split('#', 2)
+        else:
+            sid = None
+
+        if not self.has_key(section):
+            self[section] = SideBar.Sub()
+
+        if sid:
+            self[section].id = sid
+
+        if redirect:
+            if isinstance(redirect, basestring):
+                url = "%s?last_page=%s" % (url, redirect)
+            else:
+                url = "%s?last_page=%s" % (url, self.request.path)
+
+        entry = {"url": url, "label": label, "properties": props}
+        if popup:
+            entry["popup"] = popup
+
+        self[section].append(entry)
+
+    def enabled(self):
+        return (len(self) > 0)
+
+    def ifenabled(self):
+        if self.enabled():
+            return self
+        return None
+
+    def flattened(self):
+        f = []
+
+        for k, v in self.items():
+            nv = v[:]
+            if hasattr(self[k], "id"):
+                id = self[k].id
+                for i in range(len(nv)):
+                    if nv[i]["properties"] is None:
+                        nv[i]["properties"] = {}
+                    if not nv[i]["properties"].has_key("id"):
+                        if i == 0:
+                            nv[i]["properties"]["id"] = id
+                        else:
+                            nv[i]["properties"]["id"] = ("%s-%d" % (id, i))
+            f.extend(nv)
+
+        return f
 def restricted(f):
     @wraps(f)
     @login_required
