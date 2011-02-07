@@ -1,13 +1,14 @@
 {% load i18n %}
+{% load uni_form_tags %}
 <h1>{% trans "Search" %}</h1>
-<form action="{% url agilito.views.search current_project.id %}">
-    <div>
-        <input type="text" name="query" class="styled" value="{{ query|escape }}" size=40/>
+<form class="uniForm" action="{% url agilito.views.search current_project.id %}">
+    <div class="ctrlHolder">
+        <input type="text" name="query" class="textInput styled" value="{{ query|escape }}" size=40/>
         <select name="model">
             <option value="User Story">{% trans "User Stories" %}</option>
             <option value="Task">{% trans "Tasks" %}</option>
             <option value="Test Case">{% trans "Test Cases" %}</option>
         </select>
-        <input type="submit" value="{% trans "Search" %}" class="button" />
+        <input type="submit" value="{% trans "Search" %}" class="primaryAction button" />
     </div>
 </form>

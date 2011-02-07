@@ -1,5 +1,6 @@
 {% extends "agilito/base.html" %}
 {% load i18n %}
+{% load uni_form_tags %}
 {% block head_title %} {% trans "Search" %} {% if query %} {% trans "Results" %} {% endif %} {% endblock %}
 {% block select_tab %} "search" {% endblock %}
 
@@ -7,30 +8,34 @@
   
   <h2>{% trans "Search for Uses Stories, Tasks, Test Cases" %}</h2>
 
-  <form action="." method="GET">
-  <p>
-    <label for="query"> {% trans "Search:" %} </label>
-    <input size="20" type="text" name="query" value="{{ query|escape }}"/>
-  </p>
-  <p>
-    <label for="model" >{% trans "Search for:" %} </label>
-        <select name="model">
-            <option value="User Story">{% trans "User Stories" %}</option>
-            <option value="Task">{% trans "Tasks" %}</option>
-            <option value="Test Case">{% trans "Test Cases" %}</option>
-        </select>
-  </p>
-  <p>
-    <label for="pagesize">{% trans "Page size:" %}</label>
-        <select name="pagesize">
-        <option>10</option>
-        <option>20</option>
-        <option>50</option>
-        <option>100</option>
-        <option>200</option>
-        </select>
-  </p>
-  <input type="submit" value="{% trans "Search" %}"/>
+  <form action="." method="GET" class="uniForm">
+      <div class="inlineLabels">
+          <div class="ctrlHolder">
+              <label for="query">{% trans "Search:" %}</label>
+              <input class="textInput" size="20" type="text" name="query" value="{{ query|escape }}"/>
+          </div>
+          <div class="ctrlHolder">
+              <label for="model" >{% trans "Search for:" %} </label>
+              <select class="selectInput" name="model">
+                  <option value="User Story">{% trans "User Stories" %}</option>
+                  <option value="Task">{% trans "Tasks" %}</option>
+                  <option value="Test Case">{% trans "Test Cases" %}</option>
+              </select>
+          </div>
+          <div class="ctrlHolder">
+              <label for="pagesize">{% trans "Page size:" %}</label>
+              <select class="selectInput" name="pagesize">
+                  <option>10</option>
+                  <option>20</option>
+                  <option>50</option>
+                  <option>100</option>
+                  <option>200</option>
+              </select>
+          </div>
+      </div>
+      <div class="buttonHolder">
+          <input class="primaryAction" type="submit" value="{% trans "Search" %}"/>
+      </div>
   </form>
   
   {% include "agilito/searchresults.html" %}

@@ -7,10 +7,12 @@
 {% if form.is_multipart %}
     <form enctype="multipart/form-data" method="post">
 {% else %}
-    <form method="post">
+    <form method="post" class="uniForm">
 {% endif %}{% csrf_token %}
 
 {% include "agilito/generic_form.html" %}
-<input type="submit" class="save" value="{% trans "Save" %}"/>
+<div class="buttonHolder">
+    <input type="submit" class="save primaryAction" value="{% trans "Save" %}"/>
+</div>
 </form>
 {% endblock %}

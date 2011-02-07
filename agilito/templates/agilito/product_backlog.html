@@ -394,8 +394,9 @@
             </table>
             {% if earliest_archive %}
                 <form name="archive" action="{%  url agilito.views.backlog_archived current_project.id %}" method="post">{% csrf_token %}
-
-                    <input type="submit" id="archivefetch" disabled="disabled" class="save" value="{% trans "Fetch" %}" />
+                    <div class="buttonHolder">
+                        <input type="submit" id="archivefetch" disabled="disabled" class="primaryAction save" value="{% trans "Fetch" %}" />
+                    </div>
                      {% trans "backlog as it was on" %}
                         <input onchange="enableArchive()" id="archivedate" name="archivedate"
                             value="" maxlength="10" size="10" type="text" />
@@ -404,7 +405,9 @@
             <form style="display:none" name="queuesubmit" id="queuesubmit" action="{% url backlog_save current_project.id %}?last_page={{last_page}}" method="post">{% csrf_token %}
 
                 <textarea name="command-queue" id="command-queue" class="mceNoEditor"></textarea>
-                <input type="submit" class="save" value="{% trans "Save" %}" />
+                <div class="buttonHolder">
+                    <input  type="submit" class="primaryAction save" value="{% trans "Save" %}" />
+                </div>
             </form>
         {% endif %}
     {% endblock %}

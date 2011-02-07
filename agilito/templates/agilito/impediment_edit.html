@@ -13,9 +13,10 @@ $(window).ready(function(){
 
 <h2>{% trans "Add / Edit Impediment" %}</h2>
 
-<form method="post">{% csrf_token %}
-
+<form method="post" class="uniForm">{% csrf_token %}
     {% include "agilito/generic_form.html" %}
-    <input type="submit" class="save" value="{% trans "Save" %}"/>
+    <div class="buttonHolder">
+        <input  type="submit" class="primaryAction save" value="{% trans "Save" %}"/>
+    </div>
 </form>
 {% endblock %}

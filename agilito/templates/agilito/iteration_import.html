@@ -5,12 +5,13 @@
 
 <h2><small>{% blocktrans %}Import iteration into {% endblocktrans %}</small><br /> {{ project }}</h2>
 {% if form.is_multipart %}
-    <form enctype="multipart/form-data" method="post">
+<form enctype="multipart/form-data" method="post">
 {% else %}
-    <form method="post">
-{% endif %}{% csrf_token %}
-
-{% include "agilito/generic_form.html" %}
-<input type="submit" class="save" value="{% trans "Save" %}"/>
+<form method="post" class="uniForm">
+    {% endif %}{% csrf_token %}
+    {% include "agilito/generic_form.html" %}
+    <div class="buttonHolder">
+        <input  type="submit" class="primaryAction save" value="{% trans "Save" %}"/>
+    </div>
 </form>
 {% endblock %}

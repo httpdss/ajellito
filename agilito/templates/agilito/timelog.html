@@ -70,7 +70,7 @@ $(window).ready(function(){
 {% if message %}
 <p class="notice">{{ message }}</p>
 {% endif %}
-<form method="post" action="">{% csrf_token %}
+<form method="post" action="" class="uniForm">{% csrf_token %}
 
     <div id="timelog-wrapper">
         <div>
@@ -112,6 +112,9 @@ $(window).ready(function(){
             {% endfor %}
         </table>
     </div>
-    <input type="submit" value="{% trans "Apply" %}">
+
+    <div class="buttonHolder">
+        <input type="submit" class="primaryAction save" value="{% trans "Apply" %}"/>
+    </div>
 </form>
 {% endblock %}

@@ -1,30 +1,11 @@
 {% load i18n %}
+{% load uni_form_tags %}
 {% if form.non_field_errors  %}
     {{ form.non_field_errors }}
 {% endif %}
-{% for field in form %}
-    {% if field.is_hidden %}
-        {{ field }}
-    {% endif %}
-{% endfor %}
-<table class="formfields">
+<fieldset class="inlineLabels">
     {% for field in form %}
-    {% if not field.is_hidden %}
-    <tr class="{% if field.errors %}errors {% endif %} {% if field.field.required %}required{%endif%}">
-        <td class="form-label">
-            <span>
-                {{ field.label_tag }}
-                {% if field.field.required and not field.errors %}<br/><span class="required-text">{% trans "required" %}</span>{%endif%}
-            </span>
-        </td>
-        <td class="form-entry">
-            <p> {{ field }} </p>
-            {% if field.help_text %}<p class="discreet">{{ field.help_text }}</p>{% endif %}
-            {% if field.errors %}{{ field.errors }}{% endif %}
-        </td>
-    </tr>
-    {% endif %}
+        {{ field|as_uni_field }}
     {% endfor %}
-
-</table>
+</fieldset>
 

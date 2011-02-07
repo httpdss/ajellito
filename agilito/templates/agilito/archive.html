@@ -9,9 +9,9 @@
 <p>{% trans "All of the following related items will be archived:" %}</p>
 <ul>{{ deleted_objects|unordered_list }}</ul>{% endif %}
 <form method="post">{% csrf_token %}
-
-<div>
   <input type="hidden" name="post" value="yes" />
-  <input type="submit" value="{% trans "Yes, I'm sure" %}" />
-</div></form>
+  <div class="buttonHolder">
+      <input class="primaryAction" type="submit" value="{% trans "Yes, I'm sure" %}" />
+  </div>
+</form>
 {% endblock %}
