@@ -31,7 +31,6 @@ try:
     from collections import defaultdict
 except ImportError:
     from agilito.tools import defaultdict
-    
 
 from urllib import quote_plus
 
@@ -61,6 +60,14 @@ from agilito.forms import UserStoryForm, UserStoryShortForm, gen_TaskLogForm,\
     UserStoryMoveForm, IterationImportForm, ReleaseForm, IterationForm
 
 from agilito.tools import restricted
+
+
+if "notification" in getattr(settings, "INSTALLED_APPS"):
+    from notification import models as notification
+else:
+    notification = None
+
+
 
 def cached(f):
     def f_cached(*args, **kwargs):
@@ -302,7 +309,7 @@ def impediment_create(request, project_id, iteration_id, instance=None):
 
     else:
 
-        url = "/%s/iteration/%s/" % (it.project.id, it.id)
+        url = reverse("iteration_status_with_id", args=[it.project.id, it.id])
         form = ImpedimentForm(iteration=it, initial={"http_referer" : url}, instance=instance)
 
     context = AgilitoContext(request, {"form": form})
@@ -320,7 +327,7 @@ def release_create(request, project_id, instance=None):
         form.save()
         return HttpResponseRedirect(form.cleaned_data["http_referer"])
     else:
-        url = request.GET.get("last_page", "/%s/backlog/" % project_id)
+        url = request.GET.get("last_page",reverse("agilito.views.backlog", args=[project_id]))
         form = ReleaseForm(initial={"http_referer" : url}, project=Project.objects.get(id=project_id), instance=instance)
 
     context = AgilitoContext(request, {"form": form}, current_project=project_id)
