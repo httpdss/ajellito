@@ -6,6 +6,8 @@ import mimetypes
 import os
 from django.core.cache import cache
 from django.contrib import messages
+from django.conf import settings
+
 
 from django.contrib.sites.models import Site
 from agilito.reporting import Calc, HTML, Formula
