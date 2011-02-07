@@ -7,7 +7,7 @@
 <h2>{{ action }}</h2>
 <h3>{{ object.name }}</h3>
 
-<form method="post">
+<form method="post">{% csrf_token %}
     {% for field in form %}
         {% if field.is_hidden %}
             {{ field }}

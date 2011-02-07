@@ -70,7 +70,8 @@ $(window).ready(function(){
 {% if message %}
 <p class="notice">{{ message }}</p>
 {% endif %}
-<form method="post" action="">
+<form method="post" action="">{% csrf_token %}
+
     <div id="timelog-wrapper">
         <div>
             {{ form.taskmenu }}

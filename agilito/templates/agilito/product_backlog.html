@@ -274,8 +274,10 @@
         {% include "agilito/product_backlog_body_header.html" %}
     </div>
         {% if backlog %}
-            <form id="filter-form" action="#">{% trans "Filter:" %} <input name="filter" id="filter" value="" maxlength="30" size="30" type="text" /></form>
-            <form id="iteration-form" action="#">
+            <form id="filter-form" action="#">{% trans "Filter:" %} <input name="filter" id="filter" value="" maxlength="30" size="30" type="text" />{% csrf_token %}
+</form>
+            <form id="iteration-form" action="#">{% csrf_token %}
+
                 {% trans "Assign marked stories to" %}
                     <select onchange="iterationDetails(this)" id="selected-iteration" class="resize">
                         <option value="new">{% trans "New iteration" %}</option>
@@ -391,14 +393,16 @@
                 </tbody>
             </table>
             {% if earliest_archive %}
-                <form name="archive" action="{%  url agilito.views.backlog_archived current_project.id %}" method="post">
+                <form name="archive" action="{%  url agilito.views.backlog_archived current_project.id %}" method="post">{% csrf_token %}
+
                     <input type="submit" id="archivefetch" disabled="disabled" class="save" value="{% trans "Fetch" %}" />
                      {% trans "backlog as it was on" %}
                         <input onchange="enableArchive()" id="archivedate" name="archivedate"
                             value="" maxlength="10" size="10" type="text" />
                 </form>
             {% endif %}
-            <form style="display:none" name="queuesubmit" id="queuesubmit" action="{% url backlog_save current_project.id %}?last_page={{last_page}}" method="post">
+            <form style="display:none" name="queuesubmit" id="queuesubmit" action="{% url backlog_save current_project.id %}?last_page={{last_page}}" method="post">{% csrf_token %}
+
                 <textarea name="command-queue" id="command-queue" class="mceNoEditor"></textarea>
                 <input type="submit" class="save" value="{% trans "Save" %}" />
             </form>

@@ -7,7 +7,8 @@
 <p>{% trans "Are you sure you want to delete this?" %}
 {% if deleted_objects %}{% trans "All of the following related items will be deleted:" %}
 <ul>{{ deleted_objects|unordered_list }}</ul>{% endif %}
-<form method="post">
+<form method="post">{% csrf_token %}
+
 <div>
   <input type="hidden" name="post" value="yes" />
   <input type="submit" value="{% trans "Yes, I'm sure" %}" />

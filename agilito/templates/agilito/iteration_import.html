@@ -8,7 +8,8 @@
     <form enctype="multipart/form-data" method="post">
 {% else %}
     <form method="post">
-{% endif %}
+{% endif %}{% csrf_token %}
+
 {% include "agilito/generic_form.html" %}
 <input type="submit" class="save" value="{% trans "Save" %}"/>
 </form>
