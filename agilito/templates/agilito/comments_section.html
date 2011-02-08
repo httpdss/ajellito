@@ -1,6 +1,7 @@
 {% load i18n %}
 {% load threadedcommentstags %}
 {% load agilito_utils %}
+{% load uni_form_tags %}
 
 <div>
     {% if comment_on %}
@@ -12,32 +13,15 @@
         <cite>{% auto_transform_markup comment %}</cite>
     </div>
     {% endfor %}
-    <form method="POST" action="{% get_comment_url comment_on%}">
+    <form class="uniForm" method="POST" action="{% get_comment_url comment_on%}">{% csrf_token %}
         {% get_threaded_comment_form as comment_form %}
         <div id="comment-form">
-            <table class="formfields">
-                {% if comment_form.non_field_errors  %}
-                {{ comment_form.non_field_errors }}
-                {% endif %}
-
-                <tr class="{% if comment_form.comment.errors %}errors {% endif %} {% if comment_form.comment.field.required %}required{%endif%}">
-                    <td class="form-label">
-                        <span>
-                            {{ comment_form.comment.label_tag }}
-                            {% if comment_form.comment.field.required and not comment_form.comment.errors %}<br/><span class="required-text">required</span>{%endif%}
-                        </span>
-                    </td>
-                    <td class="form-entry">
-                        <textarea class="mceNoEditor" id="id_comment" rows="10" cols="40" name="comment"></textarea>
-                        {% if comment_form.comment.help_text %}<p class="discreet">{{ comment_form.comment.help_text }}</p>{% endif %}
-                        {% if comment_form.comment.errors %}{{ comment_form.comment.errors }}{% endif %}
-                    </td>
-                </tr>
-                <tr><td colspan="2">
-                        <input type="submit" value="{% trans "Submit" %}" />
-                        {{ comment_form.markup }}
-                </td></tr>
-            </table>
+            <fieldset class="inlineLabels">
+                {{ comment_form|as_uni_form }}
+                <div class="buttonHolder">
+                    <input class="primaryAction" type="submit" value="{% trans "Submit" %}" />
+                </div>
+            </fieldset>
         </div>
     </form>
     {% endif %}
