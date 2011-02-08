@@ -270,7 +270,7 @@ class ImpedimentForm(HiddenHttpRefererForm):
         fields = 'name', 'description', 'state', 'tasks'
 
 class UserStoryForm(HiddenHttpRefererForm):
-    tags = TagField(widget=AutoCompleteTagInput(model=UserStory), required=False)
+    tags = TagField(required=False)
 
     def __init__(self,*args, **kwargs):
         try:
@@ -343,7 +343,7 @@ class UserStoryMoveForm(forms.ModelForm):
 
 class TaskForm(HiddenHttpRefererForm):
     actuals = forms.CharField(widget=forms.HiddenInput, required=False)
-    tags = TagField(widget=AutoCompleteTagInput(model=Task), required=False)
+    tags = TagField(required=False)
 
     def __init__(self,*args, **kwargs):
         try:
