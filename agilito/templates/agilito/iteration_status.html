@@ -184,8 +184,8 @@ function highlightTag(ids)
                     </td>
                     <td class="state {{ ta.state|taskstate|slugify }}">{{ta.state|taskstate}}</td>
                     <td>{{ta.owner|default_if_none:""}}</td>
-                    <td>{{ta.estimate|default_if_none:"-"}}</td>
-                    <td>{{ta.remaining|default_if_none:"-"}}</td>
+                    <td class="estimated">{{ta.estimate|default_if_none:"-"}}</td>
+                    <td class="todo">{{ta.remaining|default_if_none:"-"}}</td>
                     <td></td><!-- failures -->
                     <td>
                         {% if not ta.is_archived %}

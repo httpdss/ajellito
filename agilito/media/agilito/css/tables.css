@@ -1,4 +1,4 @@
-table#user-story-list {
+table#user-story-list, table#implement-list {
     width:100%;
     clear:both;
 }
@@ -35,6 +35,11 @@ tbody td {
     vertical-align:top;
 }
 
+table#user-story-list tbody td {
+    height:35px;
+    vertical-align:middle;
+}
+
 .mceEditor tbody td {
     padding:0;
 }
@@ -44,16 +49,16 @@ form tbody td {
 }
 
 tr.even td { 
-    background: #67e8ff;
+    background: #ddeeff;
 }
 tr.child.even td { 
-    background: #b2f3ff;
+    background: #ecf4fc;
 }
 tr.odd td { 
-    background: #abedf9;
+    background: #d8e9f9;
 }
 tr.child.odd td { 
-    background: #e0f5f9;
+    background: #fffefb;
 }
 
 .estimates th {
@@ -61,10 +66,10 @@ tr.child.odd td {
 }
 
 .totals td {
-    border-bottom:2px solid #063;
+    border-bottom:2px solid #565d63;
 }
 .totals td.total {
-    background:#9e9;
+    background:#c9e27d;
     text-align:center;
 }
 
