@@ -23,7 +23,7 @@ if BACKLOG_ARCHIVE:
 import decimal
 
 from django.core.xheaders import populate_xheaders
-from django.utils.translation import ugettext
+from django.utils.translation import ugettext as _
 
 from dateutil.rrule import rrule, WEEKLY, DAILY, MO, TU, WE, TH, FR
 
