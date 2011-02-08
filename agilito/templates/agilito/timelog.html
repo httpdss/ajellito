@@ -1,5 +1,6 @@
 {% extends "agilito/base.html" %}
 {% load i18n %}
+{% load uni_form_tags  %}
 
 {% block body_class %}timelog{% endblock %}
 
@@ -76,41 +77,17 @@ $(window).ready(function(){
         <div>
             {{ form.taskmenu }}
         </div>
-        <table id="timelog" class="formfields">
-            <tr>
-                <td class="form-label">
-                    <span>{% trans "Story" %}</span>
-                </td>
-                <td class="form-entry">
+        <fieldset id="timelog" class="inlineLabels">
+                    <p>{% trans "Story" %}</p>
                     <p id="story-name"></p>
-                </td>
-            </tr>
-            <tr>
-                <td class="form-label">
-                    <span>{% trans "Task" %}</span>
-                </td>
-                <td class="form-entry">
+                    <p>{% trans "Task" %}</p>
                     <p id="task-name"></p>
-                </td>
-            </tr>
             {% for field in form %}
             {% ifnotequal field.name "taskmenu" %}
-            <tr class="{% if field.errors %}errors {% endif %} {% if field.field.required %}required{%endif%}">
-                <td class="form-label">
-                    <span>
-                        {{ field.label_tag }}
-                        {% if field.field.required and not field.errors %}<br/><span class="required-text">{% trans "required" %}</span>{%endif%}
-                    </span>
-                </td>
-                <td class="form-entry">
-                    <p> {{ field }} </p>
-                    {% if field.help_text %}<p class="discreet">{{ field.help_text }}</p>{% endif %}
-                    {% if field.errors %}{{ field.errors }}{% endif %}
-                </td>
-            </tr>
+                {{ field|as_uni_field }}
             {% endifnotequal %}
             {% endfor %}
-        </table>
+        </fieldset>
     </div>
 
     <div class="buttonHolder">
