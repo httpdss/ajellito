@@ -1,4 +1,4 @@
-table#user-story-list, table#implement-list {
+table#user-story-list, table#impediment-list {
     width:100%;
     clear:both;
 }
@@ -35,9 +35,12 @@ tbody td {
     vertical-align:top;
 }
 
-table#user-story-list tbody td {
+table#user-story-list tbody td, table#impediment-list tbody td {
     height:35px;
     vertical-align:middle;
+}
+tr#resolved-impediments td {
+ background-color:#C9E27D;
 }
 
 .mceEditor tbody td {
@@ -65,7 +68,7 @@ tr.child.odd td {
     font-size:80%;
 }
 
-.totals td {
+.totals td, table#impediment-list thead th {
     border-bottom:2px solid #565d63;
 }
 .totals td.total {
