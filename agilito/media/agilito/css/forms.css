@@ -59,3 +59,15 @@ select {
     font-size:80%;
 }
 
+.comments_section label {
+    display:none;
+}
+
+.comments_section textarea {
+    width:80%;
+    height:70px;
+}
+
+.comments_section .ctrlHolder {
+    margin-bottom:5px;
+}

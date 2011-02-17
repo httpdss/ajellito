@@ -1,5 +1,8 @@
-.commentbox quote {
-    font-size: smaller;
+.commentbox .author {
+    position:absolute;
+    right:5px;
+    margin-left:10px;
+    margin-bottom:10px;
 }
 
 .commentbox cite {
@@ -8,7 +11,12 @@
 }
 
 .commentbox {
-    padding-top: 5px;
+    padding: 5px;
+    margin-top:5px;
+    margin-bottom:5px;
+    border:1px solid #CCC;
+    position:relative;
+    min-height:40px;
 
 }
 .commentbox.reply {
@@ -18,3 +26,4 @@
 #comment-form {
     padding-top: 10px;
 }
+
