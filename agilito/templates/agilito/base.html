@@ -15,9 +15,6 @@
             {% for k, v in entry.properties.items %}
             {{k}}="{{v}}"
             {% endfor %}
-            {% if entry.popup %}
-            onclick="popup(this, '{{entry.popup}}'); return false"
-            {% endif %}
             >{{entry.label}}</a></li>
     {% endfor %}
 </ul>
@@ -38,6 +35,85 @@
 
 {% block extra_body %}
 <script type="text/javascript" src="{{STATIC_URL}}agilito/js/treeTable/src/javascripts/jquery.treeTable.js"></script>
+<script type="text/javascript" src="{{STATIC_URL}}agilito/js/jquery.clickmenu.js"></script>
+
+
+<script type="text/javascript" src="{{STATIC_URL}}agilito/js/json2.js"></script>
+<script type="text/javascript" src="{{STATIC_URL}}agilito/js/jquery.cookie.js"></script>
+
+<script type="text/javascript" src="{{STATIC_URL}}agilito/js/jquery.clickmenu.js"></script>
+<script type="text/javascript">
+
+$(document).ready(function(){
+        target = "/"
+        $("#project-selection").change(function(){
+            var location = window.location.href.split('/');
+            if (location.length >=5 && location[4] in {'backlog': '', 'iteration': '', 'taskboard': '', 'search': '', 'log': ''}) {
+            location = '/' + location[4];
+            } else {
+            location = '/backlog/';
+            }
+            window.location= target+$(this).find(":selected").attr("value")+location;
+            })
+
+        $("#iteration-selection").change(function(){
+            window.location= $(this).find(":selected").attr("value")
+            })
+
+        var selected_tab = {% block select_tab %} null {% endblock %};
+        if (selected_tab != null) {
+        $("#navtab-" + selected_tab).addClass("selected");
+        }
+
+
+        //$(".show-datepicker").datepicker({ dateFormat: 'yy-mm-dd' });
+
+        $("#zoombutton").click(function() {
+                $("#zoomable").toggleClass("zoomed");
+                $.cookie('zoomed', ($("#zoomable").is('.zoomed')).toString(), { path: '/' })
+                });
+
+        if ($.cookie('zoomed') == 'true') {
+            $("#zoomable").addClass("zoomed");
+        }
+})
+
+{% if comment_on %}
+function show_reply_form(comment_id, url, person_name) {
+    var comment_reply = $('#' + comment_id);
+    var to_add = $( new Array(
+                '<div class="response"><p>Reply to ' + person_name + ':</p>',
+                '<form method="POST" action="' + url + '">',
+                $('#comment-form').html(),
+                '</form>',
+                '</div>').join(''));
+
+    to_add.css("display", "none");
+
+    comment_reply.after(to_add);
+
+    to_add.slideDown(function() {
+            comment_reply.replaceWith(new Array('<a id="',
+                    comment_id,'" href="javascript:hide_reply_form(\'',
+                        comment_id, '\',\'', url, '\',\'', person_name,
+                        '\')">Stop Replying</a>').join(''));
+            });
+}
+
+function hide_reply_form(comment_id, url, person_name) {
+    var comment_reply = $('#' + comment_id);
+    comment_reply.next().slideUp(function (){
+            comment_reply.next('.response').remove();
+            comment_reply.replaceWith(new Array('<a id="',
+                    comment_id,'" href="javascript:show_reply_form(\'',
+                        comment_id, '\',\'', url, '\',\'', person_name,
+                        '\')">reply</a>').join(''));
+            });
+}
+{% endif %}
+</script>
+
+
 {% block js %}{% endblock %}
 {% endblock %}
 
