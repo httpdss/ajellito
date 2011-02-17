@@ -1,8 +1,6 @@
 .commentbox .author {
     position:absolute;
     right:5px;
-    margin-left:10px;
-    margin-bottom:10px;
 }
 
 .commentbox cite {
@@ -17,13 +15,13 @@
     border:1px solid #CCC;
     position:relative;
     min-height:40px;
-
-}
-.commentbox.reply {
-    padding-top: 0;
 }
 
 #comment-form {
     padding-top: 10px;
 }
+
+.commentbox > div {
+    padding-right: 50px;
+} 
 
