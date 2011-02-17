@@ -39,7 +39,7 @@ $(window).ready(function(){
         $(this).toggleClass("shown").next().toggle("blind", {direction:"vertical"}, 200);
     });
     $("#timelog .level0:not(:first) dt").toggleClass("shown").next().toggle();
-    $("#id_date").datepicker({dateFormat: "yy-mm-dd", duration: "fast", mandatory: true});
+   // $("#id_date").datepicker({dateFormat: "yy-mm-dd", duration: "fast", mandatory: true});
     $("input.tasks-select").click(task_details);
 
     $.fn.clickMenu.setDefaults({arrowSrc:'/agilito/right.gif'});
