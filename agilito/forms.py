@@ -10,7 +10,7 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.utils.translation import ugettext as _
 from agilito.models import UserStory, Task, TestCase, TaskLog, TestResult,\
-    UserProfile, UserStoryAttachment, Impediment, Iteration, Release
+    UserProfile, UserStoryAttachment, Impediment, Iteration, Release, Project
 
 from agilito.widgets import HierarchicRadioSelect, TaskHierarchy
 from agilito.fields import GroupedChoiceField
@@ -433,6 +433,10 @@ class UserStoryShortForm(HiddenHttpRefererForm):
     class Meta:
         model = UserStory
         fields = 'name', 'description'
+
+class ProjectForm(HiddenHttpRefererForm):
+    class Meta:
+        model = Project
 
 class TaskField(forms.IntegerField):
     def clean(self, value):
