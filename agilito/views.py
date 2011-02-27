@@ -59,7 +59,8 @@ from agilito.models import Project, Iteration, UserStory, Task, TestCase,\
 from agilito.forms import UserStoryForm, UserStoryShortForm, gen_TaskLogForm,\
     TaskForm, TestCaseAddForm, TestCaseEditForm, testcase_form_factory,\
     TestResultForm, UserStoryAttachmentForm, ImpedimentForm, \
-    UserStoryMoveForm, IterationImportForm, ReleaseForm, IterationForm
+    UserStoryMoveForm, IterationImportForm, ReleaseForm, IterationForm, \
+    ProjectForm
 
 from agilito.tools import restricted
 
@@ -1925,3 +1926,45 @@ def csv_log_all_projects(request):
     response["Content-Disposition"] = "attachment; filename=tasklogs-for-all-projects.csv"
 
     return response
+
+@login_required
+def project_create(request):
+    if request.POST:
+        project_form = ProjectForm(request.POST)
+        if project_form.is_valid():
+            pass
+        else:
+            pass
+    else:
+        project_form = ProjectForm()
+        pass
+
+    return render_to_response('agilito/project_create.html', {
+        "form":project_form,
+        "current_project" : None
+        }, context_instance=RequestContext(request)
+    )
+
+@login_required
+def project_delete(request, id):
+    pass
+
+@login_required
+def project_edit(request, id):
+    pass
+
+@login_required
+def project_details(request, id):
+    pass
+
+def project_list(request):
+    queryset = Project.objects.all()
+    paginate_by=10
+    context = AgilitoContext(request, {"current_project":None, })
+
+    return object_list(request, queryset=queryset.order_by("id"), paginate_by=paginate_by,
+                       template_name="agilito/project_list.html",
+                       extra_context=context)
+    
+
+
