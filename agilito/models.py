@@ -245,7 +245,7 @@ class Project(ClueModel):
         ordering = ("id",)
 
     def get_absolute_url(self):
-        return "/%s/backlog/" % self.id
+        return reverse("agilito.views.backlog", args=[self.id])
 
     @classmethod
     def get_current_project(klass):
