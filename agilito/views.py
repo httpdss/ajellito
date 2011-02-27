@@ -245,7 +245,11 @@ def delete_attachment(request, project_id, userstory_id, attachment_id):
     return create_update.delete_object(request, object_id=attachment_id,
                                        model=UserStoryAttachment,
                                        template_name="agilito/userstory_delete.html",
-                                       post_delete_redirect=url)
+                                       post_delete_redirect=url,
+                                       extra_context = {
+                                           "current_project":att.user_story.project
+                                           }
+                                       )
 
 @restricted
 def view_attachment(request, project_id, userstory_id, attachment_id):
@@ -350,7 +354,11 @@ def release_delete(request, project_id, release_id):
     return create_update.delete_object(request, object_id=release_id,
                                        model=Release,
                                        template_name="agilito/userstory_delete.html",
-                                       post_delete_redirect=url)
+                                       post_delete_redirect=url,
+                                       extra_context = {
+                                           "current_project":release.project
+                                           }
+                                       )
 
 @restricted
 def iteration_create(request, project_id, instance=None):
@@ -383,7 +391,9 @@ def iteration_delete(request, project_id, iteration_id):
                                        model=Iteration,
                                        template_name="agilito/userstory_delete.html",
                                        post_delete_redirect=url,
-                                       extra_context={"title": "Are you sure you want to delete this iteration? This iteration has these stories attached", "deleted_objects": delobjs})
+                                       extra_context={"title": _("Are you sure you want to delete this iteration? This iteration has these stories attached"),
+                                           "deleted_objects": delobjs,
+                                           "current_project":iteration.project })
 
 @restricted
 def userstory_create(request, project_id, iteration_id=None, instance=None):
@@ -449,6 +459,7 @@ def userstory_edit(request, project_id, userstory_id):
 @restricted
 def userstory_delete(request, project_id, userstory_id):
     obj = UserStory.objects.get(id=userstory_id, project=project_id)
+    current_project = Project.objects.get(id=project_id)
 
     # set the url to return to after deletion
     url = request.GET.get("last_page", obj.get_container_url())
@@ -481,7 +492,9 @@ def userstory_delete(request, project_id, userstory_id):
                                        model=UserStory,
                                        template_name="agilito/userstory_delete.html",
                                        post_delete_redirect=url,
-                                       extra_context={"deleted_objects": delobjs})
+                                       extra_context={"deleted_objects": delobjs,
+                                           "current_project":current_project
+                                           })
 
 @restricted
 def backlog(request, project_id, states=None, suggest=None):
@@ -741,7 +754,9 @@ def task_delete(request, project_id, userstory_id, task_id):
                                        model=Task,
                                        template_name="agilito/userstory_delete.html",
                                        post_delete_redirect=url,
-                                       extra_context={"deleted_objects": tasklogs})
+                                       extra_context={"deleted_objects": tasklogs,
+                                           "current_project":task.user_story.project
+                                           })
 
 @restricted
 def testcase_create(request, project_id, userstory_id, instance=None):
@@ -810,7 +825,9 @@ def testcase_delete(request, project_id, userstory_id, testcase_id):
                                        model=TestCase,
                                        template_name="agilito/testcase_delete.html",
                                        post_delete_redirect=url,
-                                       extra_context={"deleted_objects": testresults})
+                                       extra_context={"deleted_objects": testresults,
+                                           "current_project" : testcase.user_story.project,
+                                           })
 
 # ToDo: Remove the userstory_id field? Makes sense?
 @restricted
@@ -872,7 +889,10 @@ def testresult_delete(request, project_id, userstory_id, testcase_id, testresult
     return create_update.delete_object(request, object_id=testresult_id,
                                        model=TestResult,
                                        template_name="agilito/userstory_delete.html",
-                                       post_delete_redirect=url)
+                                       post_delete_redirect=url,
+                                       extra_context = {
+                                           "current_project" : testresult.testcase.user_story.project,
+                                           })
 
 
 
