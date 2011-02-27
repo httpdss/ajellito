@@ -15,7 +15,10 @@
             <div class="author">{% avatar comment.user 40 %}</div>
             {% auto_transform_markup comment as comment_markup %}{{ comment_markup|smartlinks }}
         </div>
-<a id="c{{ comment.id }}" href="javascript:show_reply_form('c{{ comment.id }}','{% get_comment_url comment_on comment %}','{{ comment.user|fullusername }}')">{% trans "reply" %}</a>
+        {% ifequal user comment.user %}
+        <a id="d{{ comment.id }}" href="{% url tc_comment_delete comment.id %}">{% trans "delete" %}</a>
+        {% endifequal %}
+        <a id="c{{ comment.id }}" href="javascript:show_reply_form('c{{ comment.id }}','{% get_comment_url comment_on comment %}','{{ comment.user|fullusername }}')">{% trans "reply" %}</a>
     </div>
     {% endfor %}
     <form method="POST" action="{% get_comment_url comment_on%}">
