@@ -280,7 +280,7 @@ def view_attachment(request, project_id, userstory_id, attachment_id):
         filename_header = ""
     else:
         # For others like Firefox, we follow RFC2231 (encoding extension in HTTP headers).
-        filename_header = "filename*=UTF-8\'\'%s" % urllib.quote(original_filename.encode("utf-8"))
+        filename_header = "filename*=UTF-8\'\'%s" % quote(original_filename.encode("utf-8"))
 
     response["Content-Disposition"] = "attachment; " + filename_header
     return response
