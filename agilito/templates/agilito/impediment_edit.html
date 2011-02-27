@@ -1,12 +1,5 @@
 {% extends "agilito/base.html" %}
 {% load i18n %}
-{% block js %}
-<script type="text/javascript">
-$(window).ready(function(){
-    $("#id_tasks").treeTable({initialState: "expanded"});
-});
-</script>
-{% endblock %}
 {% block head_title %}{{object.name}}{% endblock %}
 {% block body %}
 

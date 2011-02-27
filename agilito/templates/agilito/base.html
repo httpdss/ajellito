@@ -78,6 +78,7 @@ $(document).ready(function(){
         if ($.cookie('zoomed') == 'true') {
             $("#zoomable").addClass("zoomed");
         }
+    $("#id_tasks").treeTable({initialState: "expanded"});
 })
 
 {% if comment_on %}
