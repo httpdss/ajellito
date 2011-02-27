@@ -1,8 +1,9 @@
-table#user-story-list, table#impediment-list {
+table.pretty-table, table#user-story-list, table#impediment-list {
     width:100%;
     clear:both;
+
 }
-table#user-story-list .state {
+table#user-story-list .state, table.pretty-table .state {
     text-align: center;
 }
 
@@ -20,10 +21,6 @@ td img {
     vertical-align:middle;
 }
 
-td a {
-    color: black;
-}
-
 td.name {
     min-width:20em;
     width:50%;
@@ -35,7 +32,7 @@ tbody td {
     vertical-align:top;
 }
 
-table#user-story-list tbody td, table#impediment-list tbody td {
+table#user-story-list tbody td, table#impediment-list tbody td, table.pretty-table tbody td {
     height:35px;
     vertical-align:middle;
 }

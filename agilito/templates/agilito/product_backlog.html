@@ -15,249 +15,249 @@
 <script type="text/javascript" src="{{STATIC_URL}}agilito/js/jquery.tablednd_0_5.js"></script>
 <script type="text/javascript" src="{{STATIC_URL}}agilito/js/jquery.uitablefilter.js"></script>
 
-    <script type="text/javascript">
-        function reset_states()
-        {
-            {% for state in states %}
-                $('#story_state_{{state.state}}').attr('checked', {% if state.selected %} true {% else %} false {% endif %});
-            {% endfor %}
+<script type="text/javascript">
+    function reset_states()
+{
+    {% for state in states %}
+    $('#story_state_{{state.state}}').attr('checked', {% if state.selected %} true {% else %} false {% endif %});
+    {% endfor %}
+}
+
+function select_states() {
+    var states = [];
+    {% for state in states %}
+    if ($("#story_state_{{state.state}}").is(':checked')) {
+        states.push('{{state.state}}');
+    }
+    {% endfor %}
+    states = '/states=' + states.join(':');
+
+    reset_states();
+    window.location = window.location.href.replace(/\/states=[^/]+/, states);
+}
+
+var marked = {};
+var resize = {};
+var reorder_queue = [];
+var last_order = '';
+{% for obj in backlog %}
+{% ifequal obj.whatami "UserStory" %}
+marked['{{obj.id}}'] = false;
+resize['{{obj.id}}'] = ["{{obj.size|default_if_none:"null"}}", "{{obj.size|default_if_none:"null"}}"];
+last_order += ':us_{{obj.id}}';
+{% endifequal %}
+{% ifequal obj.whatami "Release" %}
+last_order += ':re_{{obj.id}}';
+{% endifequal %}
+{% endfor %}
+
+function isDirty(checkValid)
+{
+    if (reorder_queue.length != 0) {
+        return true;
+    }
+    for (story in marked) {
+        if (marked[story]) {
+            if (!checkValid) { return true; }
+            if ($('#selected-iteration').val() != 'new') { return true; }
+            return ($('#iterationname').val() != '' && $('#iterationstarts').val() != '' && $('#iterationends').val() != '');
         }
-
-        function select_states() {
-            var states = [];
-            {% for state in states %}
-                if ($("#story_state_{{state.state}}").is(':checked')) {
-                    states.push('{{state.state}}');
-                }
-            {% endfor %}
-            states = '/states=' + states.join(':');
-
-            reset_states();
-            window.location = window.location.href.replace(/\/states=[^/]+/, states);
+    }
+    for (story in resize) {
+        if (resize[story][0] != resize[story][1]) {
+            return true;
         }
+    }
 
-        var marked = {};
-        var resize = {};
-        var reorder_queue = [];
-        var last_order = '';
-        {% for obj in backlog %}
-            {% ifequal obj.whatami "UserStory" %}
-                marked['{{obj.id}}'] = false;
-                resize['{{obj.id}}'] = ["{{obj.size|default_if_none:"null"}}", "{{obj.size|default_if_none:"null"}}"];
-                last_order += ':us_{{obj.id}}';
-            {% endifequal %}
-            {% ifequal obj.whatami "Release" %}
-                last_order += ':re_{{obj.id}}';
-            {% endifequal %}
-        {% endfor %}
+    return false;
+}
 
-        function isDirty(checkValid)
-        {
-            if (reorder_queue.length != 0) {
-                return true;
+function iterationDetails(it)
+{
+    if (it[it.selectedIndex].value == 'new') {
+        $("#new-iteration").show();
+    } else {
+        $("#new-iteration").hide();
+    }
+
+    showSave();
+}
+
+window.onbeforeunload = askConfirm;
+function askConfirm()
+{
+    if (isDirty(false)) {
+        return "You have unsaved changes.";
+    }
+}
+
+function enableArchive()
+{
+    {% if earliest_archive %}
+    $('#archivefetch').attr("disabled", $('#archivedate').val() == '' || isDirty(false));
+    {% endif %}
+}
+
+function showSave()
+{
+    if (isDirty(true)) {
+        $("#save-changes").show();
+    } else {
+        $("#save-changes").hide();
+    }
+
+    enableArchive();
+}
+
+function savechanges()
+{
+    var queue = reorder_queue.slice();
+
+    it = {
+        'command':  'set-iteration',
+        'id':       $('#selected-iteration').val(),
+        'name':     $('#iterationname').val(),
+        'starts':   $('#iterationstarts').val(),
+        'ends':     $('#iterationends').val()
+    };
+    for (story in marked) {
+        if (marked[story]) {
+            if (it != null) {
+                queue.push(it);
+                it = null;
             }
-            for (story in marked) {
-                if (marked[story]) {
-                    if (!checkValid) { return true; }
-                    if ($('#selected-iteration').val() != 'new') { return true; }
-                    return ($('#iterationname').val() != '' && $('#iterationstarts').val() != '' && $('#iterationends').val() != '');
-                }
-            }
-            for (story in resize) {
-                if (resize[story][0] != resize[story][1]) {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
-        function iterationDetails(it)
-        {
-            if (it[it.selectedIndex].value == 'new') {
-                $("#new-iteration").show();
-            } else {
-                $("#new-iteration").hide();
-            }
-
-            showSave();
-        }
-
-        window.onbeforeunload = askConfirm;
-        function askConfirm()
-        {
-            if (isDirty(false)) {
-                return "You have unsaved changes.";
-            }
-        }
-
-        function enableArchive()
-        {
-            {% if earliest_archive %}
-                $('#archivefetch').attr("disabled", $('#archivedate').val() == '' || isDirty(false));
-            {% endif %}
-        }
-
-        function showSave()
-        {
-            if (isDirty(true)) {
-                $("#save-changes").show();
-            } else {
-                $("#save-changes").hide();
-            }
-
-            enableArchive();
-        }
-
-        function savechanges()
-        {
-            var queue = reorder_queue.slice();
-
-            it = {
-                'command':  'set-iteration',
-                'id':       $('#selected-iteration').val(),
-                'name':     $('#iterationname').val(),
-                'starts':   $('#iterationstarts').val(),
-                'ends':     $('#iterationends').val()
-            };
-            for (story in marked) {
-                if (marked[story]) {
-                    if (it != null) {
-                        queue.push(it);
-                        it = null;
-                    }
-                    queue.push({
-                        'command':  'assign-story',
-                        'id':       story
+            queue.push({
+                    'command':  'assign-story',
+                    'id':       story
                     });
-                }
-            }
-            for (story in resize) {
-                if (resize[story][0] != resize[story][1]) {
-                    queue.push({
-                        'command':  'set-size',
-                        'id':       story,
-                        'size':     resize[story][1]
+        }
+    }
+    for (story in resize) {
+        if (resize[story][0] != resize[story][1]) {
+            queue.push({
+                    'command':  'set-size',
+                    'id':       story,
+                    'size':     resize[story][1]
                     });
-                }
+        }
+    }
+
+    $('#command-queue').val(JSON.stringify(queue));
+
+    reorder_queue = [];
+    marked = {}
+    resize = {}
+    document.queuesubmit.submit();
+}
+
+function showIteration()
+{
+    for (story in marked) {
+        if (marked[story]) {
+            $("#iteration-form").show();
+            return;
+        }
+    }
+    $("#iteration-form").hide();
+}
+
+function mark(cb, story)
+{
+    marked[story] = cb.checked;
+    showSave();
+    showIteration();
+}
+
+function setsize(sel, story)
+{
+    resize[story][1] = sel[sel.selectedIndex].value;
+    showSave();
+}
+
+function backlogClass(c) {
+    if (c.substring(0, 3) == 're_') { return 'Release'; }
+    if (c.substring(0, 3) == 'us_') { return 'UserStory'; }
+    return null;
+}
+
+$(document).ready(function() {
+        reset_states();
+        showSave();
+
+        $("#iteration-form").hide();
+
+        $(".storysize").bind("dblclick", function() {
+            var id = this.id.substring("toggle-size-".length);
+
+            var sel = $('#s' + id);
+            sel.toggle();
+
+            if (!sel.is(':visible')) {
+            resize[id][1] = resize[id][0];
+            sel.val(resize[id][0]);
+            showSave();
             }
-
-            $('#command-queue').val(JSON.stringify(queue));
-
-            reorder_queue = [];
-            marked = {}
-            resize = {}
-            document.queuesubmit.submit();
-        }
-
-        function showIteration()
-        {
-            for (story in marked) {
-                if (marked[story]) {
-                    $("#iteration-form").show();
-                    return;
-                }
-            }
-            $("#iteration-form").hide();
-        }
-
-        function mark(cb, story)
-        {
-            marked[story] = cb.checked;
-            showSave();
-            showIteration();
-        }
-
-        function setsize(sel, story)
-        {
-            resize[story][1] = sel[sel.selectedIndex].value;
-            showSave();
-        }
-
-        function backlogClass(c) {
-            if (c.substring(0, 3) == 're_') { return 'Release'; }
-            if (c.substring(0, 3) == 'us_') { return 'UserStory'; }
-            return null;
-        }
-
-        $(document).ready(function() {
-            reset_states();
-            showSave();
-
-            $("#iteration-form").hide();
-
-            $(".storysize").bind("dblclick", function() {
-                var id = this.id.substring("toggle-size-".length);
-
-                var sel = $('#s' + id);
-                sel.toggle();
-
-                if (!sel.is(':visible')) {
-                    resize[id][1] = resize[id][0];
-                    sel.val(resize[id][0]);
-                    showSave();
-                }
             });
 
-            $("#iterationstarts").datepicker({ dateFormat: 'yy-mm-dd' });
-            $("#iterationends").datepicker({ dateFormat: 'yy-mm-dd' });
-            {% if earliest_archive %}
-                $("#archivedate").datepicker({
-                    dateFormat: 'yy-mm-dd',
-                    minDate: new Date({{earliest_archive.stamp.year}}, {{earliest_archive.stamp.month|add:"-1"}}, {{earliest_archive.stamp.day}})
-                    });
-            {% endif %}
+        //$("#iterationstarts").datepicker({ dateFormat: 'yy-mm-dd' });
+        //$("#iterationends").datepicker({ dateFormat: 'yy-mm-dd' });
+        {% if earliest_archive %}
+        //$("#archivedate").datepicker({
+          //  dateFormat: 'yy-mm-dd',
+            //minDate: new Date({{earliest_archive.stamp.year}}, {{earliest_archive.stamp.month|add:"-1"}}, {{earliest_archive.stamp.day}})
+            //});
+        {% endif %}
 
-            $("#user-story-list").tableDnD({
-                onDragClass: "dragging",
+$("#user-story-list").tableDnD({
+onDragClass: "dragging",
 
-                onDrop: function(table, row) {
-                    var rows = table.tBodies[0].rows;
+onDrop: function(table, row) {
+var rows = table.tBodies[0].rows;
 
-                    var pred = '___first';
-                    var pred_found = false;
-                    var prefix;
-                    var id;
-                    var new_order = '';
-                    for (var i=0; i<rows.length; i++) {
-                        id = rows[i].id;
-                        if (backlogClass(id) == null) {
-                            continue;
-                        }
+var pred = '___first';
+var pred_found = false;
+var prefix;
+var id;
+var new_order = '';
+for (var i=0; i<rows.length; i++) {
+id = rows[i].id;
+if (backlogClass(id) == null) {
+continue;
+}
 
-                        if (row.id == id) {
-                            pred_found = true;
-                        }
-                        if (!pred_found) {
-                            pred = id;
-                        }
+if (row.id == id) {
+pred_found = true;
+}
+if (!pred_found) {
+    pred = id;
+}
 
-                        new_order += ':' + id;
-                    }
+new_order += ':' + id;
+}
 
-                    //var goto = window.location.href + '/reorder/' + row.id + '/' + pred + '/';
-                    //window.location = goto;
+//var goto = window.location.href + '/reorder/' + row.id + '/' + pred + '/';
+//window.location = goto;
 
-                    if (new_order != last_order) {
-                        last_order = new_order;
-                        reorder_queue.push({
-                            'command':  'rank',
-                            'target':   {'class': backlogClass(row.id), 'id': row.id.substring(3)},
-                            'after':   {'class': backlogClass(pred), 'id': pred.substring(3)}
-                        })
-                    }
-
-                    showSave();
-                }
-            });
-
-            var pbl = $('#user-story-list')
-
-            $("#filter").keyup(function() {
-                $.uiTableFilter( pbl, this.value );
+if (new_order != last_order) {
+    last_order = new_order;
+    reorder_queue.push({
+            'command':  'rank',
+            'target':   {'class': backlogClass(row.id), 'id': row.id.substring(3)},
+            'after':   {'class': backlogClass(pred), 'id': pred.substring(3)}
             })
-        });
-    </script>
+}
+
+showSave();
+}
+});
+
+var pbl = $('#user-story-list')
+
+$("#filter").keyup(function() {
+        $.uiTableFilter( pbl, this.value );
+        })
+});
+</script>
 {% endblock %}
 
 {% block head_title %} {% trans "User Stories in the Backlog" %} {% endblock %}

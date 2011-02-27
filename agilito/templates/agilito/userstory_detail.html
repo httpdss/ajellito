@@ -50,11 +50,13 @@
 
 <h4>{% trans "Attachments:" %}</h4>
 {% if object.userstoryattachment_set.all %}
-<table>
+<table class="pretty-table" >
 <thead>
     <tr>
-        <th>{% trans "Name" %}</th>
-        <th>{% trans "Description" %}</th>
+        <th style="width:20%;">{% trans "Name" %}</th>
+        <th style="width:74%;">{% trans "Description" %}</th>
+        <th style="width:3%;"></th>
+        <th style="width:3%;"></th>
     </tr>
 </thead>
 <tbody>
@@ -94,7 +96,7 @@
 <h4 id="tasks">{% trans "Tasks" %}</h4>
   {% if object.task_set.all %}
 
-  <table>
+  <table class="pretty-table">
 
       <thead>
           <tr>
@@ -127,7 +129,7 @@
 <h4 id="test-cases">{% trans "Test Cases" %}</h4>
 
 {% if object.testcase_set.all %}
-<table>
+<table class="pretty-table" >
 <thead>
     <tr>
         <th>{% trans "Id" %}</th>

@@ -5,7 +5,7 @@
 {% block body %}
 <h2><small>{% trans "Adding / Editing an attachment to" %}</small><br /> {{ story }}</h2>
 {% if form.is_multipart %}
-    <form enctype="multipart/form-data" method="post">
+    <form class="uniForm" enctype="multipart/form-data" method="post">
 {% else %}
     <form method="post" class="uniForm">
 {% endif %}{% csrf_token %}

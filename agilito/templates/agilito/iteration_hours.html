@@ -16,7 +16,7 @@
 
 {% block body %}
 {% if current_iteration %}
-<table>
+<table class="pretty-table">
     <tr>
         <td colspan="2">
             {{ current_project.name }} &raquo;
@@ -73,7 +73,7 @@
 </table>
 
 {% if rows_bill %}
-<table cellspacing="0" cellpadding="2">
+<table class="pretty-table" cellspacing="0" cellpadding="2">
     <thead>
         <tr>
             <th>{% trans "Team Status" %}</th>
