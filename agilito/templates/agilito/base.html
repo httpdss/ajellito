@@ -46,7 +46,7 @@
 <script type="text/javascript">
 
 $(document).ready(function(){
-        target = "/"
+        target = {% url agilito_index %};
         $("#project-selection").change(function(){
             var location = window.location.href.split('/');
             if (location.length >=5 && location[4] in {'backlog': '', 'iteration': '', 'taskboard': '', 'search': '', 'log': ''}) {
