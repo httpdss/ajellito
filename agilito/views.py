@@ -739,9 +739,11 @@ def task_detail(request, project_id, userstory_id, task_id):
         redirect=reverse("agilito.views.userstory_detail", args=[project_id, userstory_id]),
         props={"class": "delete-object"})
 
-    context = AgilitoContext(request, {"sidebar": sidebar}, current_project=project_id, current_story=userstory_id)
     queryset = Task.objects.filter(user_story__project__pk=project_id, user_story__id=userstory_id)
 
+    task = queryset.get(pk=task_id)
+
+    context = AgilitoContext(request, {"sidebar": sidebar, "comment_on":task }, current_project=project_id, current_story=userstory_id)
     return object_detail(request, queryset=queryset, template_name="agilito/task_detail.html",
                          template_object_name="task",
                          object_id=task_id, extra_context=context)
