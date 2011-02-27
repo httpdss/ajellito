@@ -944,7 +944,7 @@ def search(request, project_id):
                                           "prefix" : prefix,
                                           }, current_project=project_id)
     except UserHasNoProjectException:
-        messages.add_message(request, request.ERROR,
+        messages.add_message(request, messages.ERROR,
                 ugettext("You are not assigned into any project."))
         return render_to_response("agilito/errorpages/user_has_no_project.html",
                                   context_instance=RequestContext(request,{}))
@@ -1775,16 +1775,17 @@ def _parseTimelogCmd(spec):
 
 @restricted
 def timelog(request, project_id, task_id=None, instance=None):
-    message = None
     if not task_id is None:
         try:
             task_id = int(task_id)
         except ValueError:
-            message = "Invalid task ID"
+            messages.add_message(request, messages.ERROR,
+                    ugettext("Invalid task ID"))
+            return HttpResponseRedirect(reverse("agilito.views.backlog", args=[project_id]))
 
     TaskLogForm = gen_TaskLogForm(request.user)
 
-    if message is None and request.method == "POST":
+    if request.method == "POST":
         form = TaskLogForm(request.POST, instance=instance)
         if form.is_valid():
             tasklog = form.save(commit=False)
@@ -1809,7 +1810,8 @@ def timelog(request, project_id, task_id=None, instance=None):
             else:
                 story.state = UserStory.STATES.IN_PROGRESS
             story.save()
-            message = "Task %d updated! More?" % form.cleaned_data["task"].id
+            messages.add_message(request, messages.ERROR,
+                    ugettext("Task %d updated! More?" % form.cleaned_data["task"].id))
             form = gen_TaskLogForm(request.user)()
     else:
         form = TaskLogForm(instance=instance)
@@ -1929,7 +1931,7 @@ def csv_log_all_projects(request):
 
 @login_required
 def project_create(request):
-    if request.POST:
+    if request.method == "POST":
         project_form = ProjectForm(request.POST)
         if project_form.is_valid():
             pass
@@ -1965,6 +1967,5 @@ def project_list(request):
     return object_list(request, queryset=queryset.order_by("id"), paginate_by=paginate_by,
                        template_name="agilito/project_list.html",
                        extra_context=context)
-    
 
 
