@@ -359,7 +359,7 @@ def iteration_create(request, project_id, instance=None):
         form.save()
         return HttpResponseRedirect(form.cleaned_data["http_referer"])
     else:
-        url = request.GET.get("last_page", "/%s/backlog/" % project_id)
+        url = request.GET.get("last_page", reverse("agilito.views.backlog", args=[project_id]))
         form = IterationForm(initial={"http_referer" : url}, instance=instance, project=Project.objects.get(id=project_id))
 
     context = AgilitoContext(request, {"form": form}, current_project=project_id)
@@ -395,7 +395,7 @@ def userstory_create(request, project_id, iteration_id=None, instance=None):
             story.save()
             return HttpResponseRedirect(form.cleaned_data["http_referer"])
     else:
-        fallback_url = "/%s/backlog/" % project_id
+        fallback_url = reverse("agilito.views.backlog", args=[project_id])
         if not (iteration_id is None):
             fallback_url = Iteration.objects.get(id=iteration_id).get_absolute_url()
         url = request.GET.get("last_page", fallback_url)
