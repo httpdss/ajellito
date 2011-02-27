@@ -1,3 +1,4 @@
+{% load pagination_tags %}
 {% load i18n %}
 {% if query %}
     {% if notice %}
@@ -5,7 +6,7 @@
     {% endif %}
 
     {% if object_list %}
-    {% include "agilito/pager.html" %}
+    {% autopaginate object_list 20 %}
     <table class="pretty-table" id="user-story-list" cellspacing="0" cellpadding="2">
         <thead>
             <tr>
@@ -51,7 +52,7 @@
             {% endfor %}
         </tbody>
     </table>
-    {% include "agilito/pager.html" %}
+    {% paginate %}
     {% else %}
     <p><strong>{% trans "No results found" %}</strong></p>
     {% endif %}
