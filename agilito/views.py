@@ -1823,7 +1823,6 @@ def timelog(request, project_id, task_id=None, instance=None):
         project_id = Task.objects.get(id=task_id).user_story.project.id
         selectedTask = str(task_id)
     context = AgilitoContext(request, {"form": form,
-                                      "message": message,
                                       "selectedTask": selectedTask},
                                     current_project=project_id)
 
