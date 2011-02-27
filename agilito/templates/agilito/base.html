@@ -67,7 +67,8 @@ $(document).ready(function(){
         }
 
 
-        //$(".show-datepicker").datepicker({ dateFormat: 'yy-mm-dd' });
+        $(".show-datepicker").datepicker({ dateFormat: 'yy-mm-dd' });
+        $(".ui-datepicker-inline").hide();
 
         $("#zoombutton").click(function() {
                 $("#zoomable").toggleClass("zoomed");
