@@ -669,8 +669,9 @@ def userstory_detail(request, project_id, userstory_id):
 def task_create(request, project_id, userstory_id, instance=None):
     story = UserStory.objects.get(id=userstory_id)
     if request.method == "POST":
+        project = Project.objects.get(pk=project_id)
         form = TaskForm(request.POST, instance=instance,
-                        project=Project.objects.get(pk=project_id))
+                        project=project)
         if form.is_valid():
             task = form.save(commit=False)
             task.user_story = story
@@ -690,6 +691,12 @@ def task_create(request, project_id, userstory_id, instance=None):
                                         # but not log hours.
 
             task.save(user=request.user)
+            if  notification:
+                notify_list = project.project_members.all()
+                notification.send(notify_list,
+                        "agilito_task_create",
+                        {'creator': request.user,
+                            'task':task,})
 
             # this code has changed compared to what is in the timelog
             story = task.user_story
