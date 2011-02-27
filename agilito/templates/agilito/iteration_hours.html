@@ -6,7 +6,7 @@
 
 {% block head_title %}
     {% if current_iteration %}
-    {% blocktrans %}{{current_iteration.name}} Hours{% endblocktrans %}
+    {% trans "Hours for" %} {{current_iteration.name}}
     {% else %}
        {% trans "There are no iterations in this project." %}
     {% endif %}
@@ -15,6 +15,13 @@
 {% block select_tab %} "hours" {% endblock %}
 
 {% block body %}
+<h1>
+    {% if current_iteration %}
+    {% trans "Hours for" %} {{current_iteration.name}}
+    {% else %}
+       {% trans "There are no iterations in this project." %}
+    {% endif %}
+</h1>
 {% if current_iteration %}
 <table class="pretty-table">
     <tr>
