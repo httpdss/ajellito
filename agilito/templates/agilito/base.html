@@ -121,6 +121,7 @@ function hide_reply_form(comment_id, url, person_name) {
 
 {% block extra_head %}
 <link rel="stylesheet" href="{{STATIC_URL}}agilito/js/treeTable/src/stylesheets/jquery.treeTable.css" type="text/css" media="screen" />
+<link rel="stylesheet" href="{{STATIC_URL}}agilito/css/base.css" type="text/css" media="screen" />
 <link rel="stylesheet" href="{{STATIC_URL}}agilito/css/tables.css" type="text/css" media="screen" />
 <link rel="stylesheet" href="{{STATIC_URL}}agilito/css/clickmenu.css" type="text/css" media="screen" />
 <link rel="stylesheet" href="{{STATIC_URL}}agilito/css/comments.css" type="text/css" media="screen" />
@@ -131,4 +132,22 @@ function hide_reply_form(comment_id, url, person_name) {
 <link rel="stylesheet" href="{{STATIC_URL}}agilito/css/ui-lightness/jquery-ui-1.8.9.custom.css" type="text/css" media="screen" />
 {% block link %}{% endblock %}
 {% block css %}{% endblock %}
+{% endblock %}
+
+{% block left_tabs %}
+{% if user.is_authenticated %}
+    {% endif %}
+        <ul class="tabs">{% spaceless %}
+            <li id="tab_backlog"><a href="{% url product_backlog current_project.pk %}">{% trans "Backlog" %}</a></li>
+            <li id="tab_iteration"><a href="{% url current_iteration_status current_project.pk %}">{% trans "Iteration" %}</a></li>
+            <li id="tab_timelog"><a href="{% url timelog current_project.pk %}">{% trans "Log" %}</a></li>
+            <li id="tab_hours"><a href="{% url current_iteration_hours current_project.pk %}">{% trans "Hours" %}</a></li>
+        {% endspaceless %}</ul>
+    {% if project_list and current_project %}
+    <select id="project-selection">
+        {% for project in project_list %}
+        <option {% ifequal project.id current_project.id %} selected="selected" {% endifequal %} value="{{project.id}}">{{project.name}}</option>
+        {% endfor %}
+    </select>
+{% endif %}
 {% endblock %}
