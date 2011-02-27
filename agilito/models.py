@@ -229,11 +229,17 @@ class ClueModel(models.Model):
 
 # Create your models here.
 class Project(ClueModel):
+    prefix = "P"
+
     project_members = models.ManyToManyField(User, null=True, blank=True)
 
     @property
     def project(self):
         return self
+
+    @property
+    def code(self):
+        return u"P%s" % (self.id)
 
     def __unicode__(self):
         return u"P%s: %s" % (self.id, self.name)
@@ -584,9 +590,14 @@ class Project(ClueModel):
         Project.touch_cache(self.id)
 
 class Release(ClueModel):
+    prefix = "RE"
     project = models.ForeignKey(Project)
     rank = models.IntegerField(null=True, blank=True)
     deadline = models.DateField(null=True, blank=True)
+
+    @property
+    def code(self):
+        return u"RE%s" % (self.id)
 
     def __unicode__(self):
         return u"RE%s: %s" % (self.id, self.name)
@@ -609,11 +620,17 @@ class Release(ClueModel):
         self.project.reorder_backlog("release", self.id, self.rank)
 
 class Iteration(ClueModel):
+    prefix = "I"
+
     start_date = models.DateField()
     end_date = models.DateField()
 
     release = models.ForeignKey("Release", null=True, blank=True)
     project = models.ForeignKey("Project")
+
+    @property
+    def code(self):
+        return u"IT%s" % (self.id)
 
     def __unicode__(self):
         return u"IT%s: %s" % (self.id, self.name)
@@ -1009,6 +1026,8 @@ class UserStoryAttachment(ClueModel):
         )
 
 class UserStory(ClueModel):
+    prefix = "US"
+
     STATES = FieldChoices(
                 (10, _("Defined")),
                 (15, _("Specified")),
@@ -1050,6 +1069,10 @@ class UserStory(ClueModel):
     @property
     def taglist(self):
         return parse_tag_input(self.tags)
+
+    @property
+    def code(self):
+        return u"US%s" % (self.id)
 
     def __unicode__(self):
         return u"US%s: %s" % (self.id, self.name)
@@ -1204,6 +1227,8 @@ class UserProfile(models.Model):
         verbose_name_plural = _(u"User Profiles")
 
 class Task(ClueModel):
+    prefix = "TA"
+
     STATES = FieldChoices(
                 (10, _("Defined")),
                 (20, _("In Progress")),
@@ -1258,6 +1283,10 @@ class Task(ClueModel):
     def is_defined(self):
         return (self.state == Task.STATES.DEFINED)
 
+    @property
+    def code(self):
+        return u"TA%s" % (self.id)
+
     def __unicode__(self):
         return u"TA%s: %s" % (self.id, self.name)
 
@@ -1296,6 +1325,7 @@ class Task(ClueModel):
         ordering = ("user_story__rank", "user_story__id", "id")
 
 class TestCase(ClueModel):
+    prefix = "TC"
     KINDS = FieldChoices(
                 (10, _("Acceptance")),
                 (20, _("Functional")),
@@ -1313,6 +1343,10 @@ class TestCase(ClueModel):
     precondition = models.TextField(blank=True)
     steps = models.TextField(blank=True)
     postcondition = models.TextField(blank=True)
+
+    @property
+    def code(self):
+        return u"TC%s" % (self.id)
 
     def __unicode__(self):
         return u"TC%s: %s" % (self.id, self.name)
@@ -1332,6 +1366,8 @@ class TestCase(ClueModel):
 #tagging.register(Task)
 
 class TestResult(models.Model):
+    prefix = "TR"
+
     RESULTS = FieldChoices(
                 (0, _("Fail")),
                 (1, _("Pass")),
@@ -1343,6 +1379,11 @@ class TestResult(models.Model):
     date = models.DateTimeField()
     tester = models.ForeignKey(User)
     test_case = models.ForeignKey(TestCase)
+
+
+    @property
+    def code(self):
+        return u"TR%s" % self.id
 
     def __unicode__(self):
         return u"TR%s: [%s, %s, %s, %s]" % (self.id,
@@ -1378,6 +1419,8 @@ class TestResult(models.Model):
         )
 
 class Impediment(models.Model):
+    prefix = "IM"
+
     name = models.CharField(max_length=200)
     description = models.TextField(blank=True)
     opened = models.DateField(default=datetime.datetime.now)
@@ -1394,6 +1437,10 @@ class Impediment(models.Model):
     @property
     def project(self):
         return self.tasks.all()[0].user_story.project
+
+    @property
+    def code(self):
+        return u"IM%s" % self.id
 
     class Meta:
         ordering = ("-opened",)
