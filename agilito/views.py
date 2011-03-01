@@ -181,7 +181,7 @@ def index(request):
         context = AgilitoContext(request)
     except UserHasNoProjectException:
         messages.add_message(request, messages.ERROR,
-                ugettext("You are not assigned into any project."))
+                _("You are not assigned into any project."))
         return render_to_response("agilito/errorpages/user_has_no_project.html",
                                   context_instance=RequestContext(request,{}))
 
