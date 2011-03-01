@@ -227,11 +227,17 @@ class ClueModel(models.Model):
         else:
             return None
 
+VISIBILITY_CHOICE = (
+        (1, _("Public")),
+        (2, _("Private"))
+        )
+
 # Create your models here.
 class Project(ClueModel):
     prefix = "P"
 
     project_members = models.ManyToManyField(User, null=True, blank=True)
+    visibility = models.IntegerField(choices=VISIBILITY_CHOICE, default=2)
 
     @property
     def project(self):
