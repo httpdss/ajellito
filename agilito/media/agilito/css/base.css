@@ -1,3 +1,17 @@
+select[multiple="multiple"] {
+  background: url("../img/form-shadow.png") repeat-x scroll left top #F3F3F3;
+  border-color: #C6C6C6 #C6C6C6 #E3E3E3;
+  border-style: solid;
+  border-width: 1px;
+  color: #666666;
+  font-size: 12pt;
+  margin: 3px;
+  padding: 3px;
+}
+
+
+
+
 #left_tabs .tabs{
     float:left;
 }
