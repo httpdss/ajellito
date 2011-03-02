@@ -1,6 +1,8 @@
 from django.conf.urls.defaults import *
 from django.contrib import admin
 from agilito.feeds import Backlog, Iteration
+from tastypie.api import Api
+from agilito.api import ProjectResource
 
 admin.autodiscover()
 
@@ -13,10 +15,15 @@ feeds = {
     'iteration': Iteration,
     }
 
+v1_api = Api(api_name='v1')
+v1_api.register(ProjectResource())
+
 urlpatterns = patterns('agilito.views',
     url(r'^$', 'index', name = "agilito_index"),
 
     (r'^(?P<project_id>\d+)/touch/$', 'touch_cache'),
+
+    url(r"^api/", include(v1_api.urls)),
 
     url(r"^projects/list/$", "project_list", name="project_list"),
     url(r"^projects/add/$", "project_create", name="project_create"),
@@ -105,7 +112,6 @@ urlpatterns = patterns('agilito.views',
 )
 
 urlpatterns += patterns('',
-#    (r'^admin/(.*)', admin.site.root),
 #    (r'^agilito/(?P<path>.*)$', 'django.views.static.serve', {'document_root': media_root}),
     (r'^xmlrpc/', 'agilito.xmlrpc.xmlrpc.view', {'module':'agilito.xmlrpc'}),
 #    (r'^(rsd.xml)$', 'django.views.static.serve', {'document_root': media_root}),
