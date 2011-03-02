@@ -115,14 +115,15 @@ class AgilitoContext(RequestContext):
         self.request = request
 
         if request.user.is_authenticated():
-            project_list = request.user.project_set.all().extra(select={"lower_name": "lower(name)"}).order_by("lower_name")
-            if project_list is None or project_list.count() == 0:
-                raise UserHasNoProjectException
+            project_list = request.user.project_set\
+                                .all()\
+                                .extra(select={"lower_name": "lower(name)"})\
+                                .order_by("lower_name")
         else:
             raise UserHasNoProjectException
 
         if current_project is None:
-            current_project = project_list[0]
+            current_project = project_list[0] or None
         else:
             current_project = Project.objects.get(pk=current_project)
 
@@ -163,9 +164,6 @@ def touch_cache(request, project_id):
     else:
         response.write("Caching is disabled")
     return response
-
-def close_window(request):
-    return render_to_response("agilito/close_window.html", context_instance=Context())
 
 def datelabels(dates, l):
     label = ["mo", "tu", "we", "th", "fr", "sa", "su"]
