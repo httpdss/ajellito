@@ -1,46 +1,74 @@
-#taskboard {
-    border-width: 2px 2px 2px 2px;
-    border-spacing: 0px;
-    border-style: solid solid solid solid;
-    border-color: blue blue blue blue;
-    border-collapse: separate;
-    background-color: white;
+html, body, .taskboard, .division.bg, .bg .lane {
+    height:100%;
 }
-#taskboard th {
-    border-width: 1px 1px 1px 1px;
-    padding: 4px 4px 4px 4px;
-    border-style: dotted dotted dotted dotted;
-    border-color: blue blue blue blue;
-    background-color: white;
-    -moz-border-radius: 0px 0px 0px 0px;
+
+.cont {
+    position:absolute;
+    width:100%;
 }
-#taskboard td {
-    border-width: 1px 1px 1px 1px;
-    padding: 4px 4px 4px 4px;
-    border-style: dotted dotted dotted dotted;
-    border-color: blue blue blue blue;
-    background-color: white;
-    -moz-border-radius: 0px 0px 0px 0px;
+
+.division.bg {
+    position:absolute;
 }
-#taskboard ul {
-    border: 1px solid gray;
-    margin: 2px;
-    padding: 2px;
-    /* display: inline; */
-    display: compact;
+
+body {
+    color: #333333;
+    font-family: "Helvetica Neue",Arial,sans-serif;    
+    margin:0;
+    padding:0;
 }
-#taskboard li {
-    list-style-type: none;
+.taskboard {
+    width:98%;
+    margin-right:1%;
+    margin-left:1%;
 }
-#taskboard .task li {
-    display: inline;
+.lane .color {
+    width:100%;
+    border-right:1px dashed #CCC;
+    height:100%;
 }
-#taskboard .task li.name {
-    display: block;
+.taskboard .division {
+    width:100%;
+    border-bottom:1px dashed #CCC;
 }
-#taskboard li.name span {
-    font-weight: bold;
+.taskboard, .taskboard .division{
+    float:left;
+    position:relative;
+    clear:both;
 }
-#taskboard li.id span {
-    font-style: italic;
+
+.taskboard .division.head {
+    text-align:center;
+} 
+
+.taskboard .lane {
+    width:25%;
+    float:left;
+    position:relative;
+}
+
+.taskboard .story, .taskboard .task {
+    margin:5px 15px;
+    min-height:90px;
+    padding:5px;
+}
+
+.taskboard .story {
+    background-color:#C9E27D;
+}
+
+.taskboard .task {
+    background-color:#D8E9F9;
+}
+
+.remaining {
+    position:absolute;
+    bottom:10px;
+    right:25px;
+}
+
+.rank {
+    position:absolute;
+    bottom:10px;
+    left:25px;
 }
