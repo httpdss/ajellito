@@ -20,9 +20,9 @@ urlpatterns = patterns('agilito.views',
 
     url(r"^projects/list/$", "project_list", name="project_list"),
     url(r"^projects/add/$", "project_create", name="project_create"),
-    url(r"^projects/(?P<project_id>\d+)edit/$", "project_edit", name="project_edit"),
-    url(r"^projects/(?P<project_id>\d+)delete/$", "project_delete", name="project_delete"),
-    url(r"^projects/(?P<project_id>\d+)details/$", "project_details", name="project_delete"),
+    url(r"^projects/(?P<project_id>\d+)/edit/$", "project_edit", name="project_edit"),
+    url(r"^projects/(?P<project_id>\d+)/delete/$", "project_delete", name="project_delete"),
+    url(r"^projects/(?P<project_id>\d+)/details/$", "project_details", name="project_delete"),
 
     url(r'^(?P<project_id>\d+)/backlog/$', 'backlog', name='product_backlog'),
     url(r'^(?P<project_id>\d+)/backlog/states=(?P<states>\d+(:\d+)*)/$', 'backlog', name='product_backlog_states'),
