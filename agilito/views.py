@@ -39,7 +39,7 @@ from urllib import quote_plus
 from django.template import RequestContext, Context, loader, Template
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseRedirect
-from django.shortcuts import render_to_response
+from django.shortcuts import render_to_response, get_object_or_404
 from django.views.generic.list_detail import object_list, object_detail
 from django.views.generic import create_update
 from django.utils import simplejson
@@ -122,9 +122,7 @@ class AgilitoContext(RequestContext):
         else:
             raise UserHasNoProjectException
 
-        if current_project is None:
-            current_project = project_list[0] or None
-        else:
+        if not current_project is None:
             current_project = Project.objects.get(pk=current_project)
 
         if current_story is not None:
@@ -182,7 +180,8 @@ def index(request):
                 _("You are not assigned into any project."))
         return render_to_response("agilito/errorpages/user_has_no_project.html",
                                   context_instance=RequestContext(request,{}))
-
+    if context["current_project"] is None:
+        return HttpResponseRedirect(reverse("project_list"))
     return HttpResponseRedirect(reverse("current_iteration_status",
                                             args=[context["current_project"].id]))
 
@@ -1928,16 +1927,12 @@ def csv_log_all_projects(request):
 
 @login_required
 def project_create(request):
-    if request.method == "POST":
-        project_form = ProjectForm(request.POST)
-        if project_form.is_valid():
-            pass
-        else:
-            pass
-    else:
-        project_form = ProjectForm()
-        pass
-
+    project_form = ProjectForm(request.POST or None)
+    if project_form.is_valid():
+        project_form.save()
+        messages.add_message(request, messages.SUCCESS,
+                _("Project has been added successfully"))
+        return HttpResponseRedirect(reverse("project_list"))
     return render_to_response('agilito/project_create.html', {
         "form":project_form,
         "current_project" : None
@@ -1945,8 +1940,14 @@ def project_create(request):
     )
 
 @login_required
-def project_delete(request, id):
-    pass
+def project_delete(request, project_id):
+    project = get_object_or_404(Project, pk=project_id)
+
+    if (request.user in project.project_members.all()):
+        project.delete()
+        messages.add_message(request, messages.SUCCESS,
+                _("Project has been deleted"))
+        return HttpResponseRedirect(reverse("project_list"))
 
 @login_required
 def project_edit(request, id):
