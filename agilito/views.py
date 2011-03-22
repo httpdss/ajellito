@@ -1807,7 +1807,7 @@ def timelog(request, project_id, task_id=None, instance=None):
             else:
                 story.state = UserStory.STATES.IN_PROGRESS
             story.save()
-            messages.add_message(request, messages.ERROR,
+            messages.add_message(request, messages.SUCCESS,
                     _("Task %d updated! More?" % form.cleaned_data["task"].id))
             form = gen_TaskLogForm(request.user)()
     else:
