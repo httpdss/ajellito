@@ -942,7 +942,7 @@ def search(request, project_id):
                                           }, current_project=project_id)
     except UserHasNoProjectException:
         messages.add_message(request, messages.ERROR,
-                ugettext("You are not assigned into any project."))
+                _("You are not assigned into any project."))
         return render_to_response("agilito/errorpages/user_has_no_project.html",
                                   context_instance=RequestContext(request,{}))
 
@@ -1777,7 +1777,7 @@ def timelog(request, project_id, task_id=None, instance=None):
             task_id = int(task_id)
         except ValueError:
             messages.add_message(request, messages.ERROR,
-                    ugettext("Invalid task ID"))
+                    _("Invalid task ID"))
             return HttpResponseRedirect(reverse("agilito.views.backlog", args=[project_id]))
 
     TaskLogForm = gen_TaskLogForm(request.user)
@@ -1808,7 +1808,7 @@ def timelog(request, project_id, task_id=None, instance=None):
                 story.state = UserStory.STATES.IN_PROGRESS
             story.save()
             messages.add_message(request, messages.ERROR,
-                    ugettext("Task %d updated! More?" % form.cleaned_data["task"].id))
+                    _("Task %d updated! More?" % form.cleaned_data["task"].id))
             form = gen_TaskLogForm(request.user)()
     else:
         form = TaskLogForm(instance=instance)
