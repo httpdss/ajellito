@@ -92,7 +92,7 @@ class TaskLogAdmin(admin.ModelAdmin):
     ordering = ('-date',)
 
 class ImpedimentAdmin(admin.ModelAdmin):
-    list_display = ('name', 'description', 'opened', 'resolved', 'tasks')
+    list_display = ('name', 'description', 'opened', 'resolved')
     ordering = ('-opened',)
 
 admin.site.register(Project, ProjectAdmin)
