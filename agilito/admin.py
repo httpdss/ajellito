@@ -18,10 +18,6 @@ class TaskInLine(admin.TabularInline):
     model = Task
     extra = 1
 
-class ImpedimentInLine(admin.TabularInline):
-    model = Impediment
-    extra = 1
-
 class ProjectAdmin(admin.ModelAdmin):
     filter_horizontal = ('project_members',)
 
@@ -59,7 +55,6 @@ class UserStoryAdmin(admin.ModelAdmin):
                                    ('rank', 'state', 'size', ))}), )
 
 class TaskAdmin(admin.ModelAdmin):
-    inlines = [ImpedimentInLine]
     list_display = ('name', 'estimate', 'actuals', 'remaining',
                     'state', 'category', 'owner', 'user_story')
     list_display_links = ('name', 'owner', 'user_story')
@@ -110,4 +105,4 @@ admin.site.register(Task, TaskAdmin)
 admin.site.register(TestCase, TestCaseAdmin)
 admin.site.register(TestResult, TestResultAdmin)
 admin.site.register(TaskLog, TaskLogAdmin)
-#admin.site.register(Impediment, ImpedimentAdmin)
+admin.site.register(Impediment, ImpedimentAdmin)
