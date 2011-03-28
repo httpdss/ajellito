@@ -17,12 +17,12 @@
                 axes:{
                     // xaxis:{min:1, max:{{burndown.days}}, tickInterval:1, tickOptions:{formatString:'%d'}}, 
                     xaxis:{min:1, max:{{burndown.days|default:0}}, tickInterval:1, ticks:xticks}, 
-                    y2axis:{min:0, max:{% if burndown.max.points %}{{burndown.max.points}}  * 1.01{% else %}1{% endif %}, tickOptions:{formatString:'%d'}},
-                    yaxis:{min:0, max:{% if burndown.max.hours %}{{burndown.max.hours}} * 1.01{% else %}1{% endif %}, tickOptions:{formatString:'%d'}}
+                    y2axis:{min:0, max:{% if burndown.max.points %}{{burndown.max.points}} {% else %}1{% endif %}, tickOptions:{formatString:'%4.2f'}},
+                    yaxis:{min:0, max:{% if burndown.max.hours %}{{burndown.max.hours}}{% else %}1{% endif %}, tickOptions:{formatString:'%4.2f'}}
                     },
                 highlighter:{
                     tooltipAxes: 'y',
-                    formatString: '%s'
+                    formatString: '%4.2f'
                 }
             });
         }
