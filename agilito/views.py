@@ -7,6 +7,8 @@ import os
 from django.core.cache import cache
 from django.contrib import messages
 from django.conf import settings
+from django.db.models import Q
+
 
 
 from django.contrib.sites.models import Site
@@ -1958,7 +1960,7 @@ def project_details(request, id):
     pass
 
 def project_list(request):
-    queryset = Project.objects.all()
+    queryset = Project.objects.filter(Q(project_members__pk=request.user.id) | Q(visibility=1))
     paginate_by=10
     context = AgilitoContext(request, {"current_project":None, })
 
