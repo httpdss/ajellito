@@ -1,0 +1,8 @@
+South
+django-tastypie
+dulwich
+odfpy
+html5lib
+django-tagging
+django-tagging-ext
+django-avatar
