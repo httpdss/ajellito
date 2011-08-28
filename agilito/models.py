@@ -1022,7 +1022,7 @@ class UserStoryAttachment(ClueModel):
 
     def get_container_model(self):
         return self.user_story
-
+    
     class Meta:
         verbose_name = _(u"US Attachment")
         verbose_name_plural = _(u"US Attachments")
@@ -1030,6 +1030,7 @@ class UserStoryAttachment(ClueModel):
         permissions = (
             ("view", _("Can view the user stories.")),
         )
+        
 
 class UserStory(ClueModel):
     prefix = "US"
