@@ -47,14 +47,14 @@
 <div id="description" class="description">{{object.description|safe}}</div>
 <!--Object's attachments-->
 
-
 <h4>{% trans "Attachments:" %}</h4>
 {% if object.userstoryattachment_set.all %}
-<table class="pretty-table" >
+<table class="pretty-table attachments" >
 <thead>
     <tr>
-        <th style="width:20%;">{% trans "Name" %}</th>
-        <th style="width:74%;">{% trans "Description" %}</th>
+        <th style="width:3%;"></th>
+        <th style="width:20%;"></th>
+        <th style="width:71%;"></th>
         <th style="width:3%;"></th>
         <th style="width:3%;"></th>
     </tr>
@@ -62,20 +62,21 @@
 <tbody>
 {% for attach in object.userstoryattachment_set.all %}
     <tr class="{% cycle even,odd %}">
-        <td class=""> 
+    <td><span rel="{{attach.attachment}}" class="icon"></span></td>
+        <td>
             <a href="{% url agilito.views.view_attachment current_project.id,object.id,attach.id %}"> 
                 {{attach.name}}
             </a>
         </td>
-        <td class="">
+        <td>
             {{attach.description|safe}}
         </td>
-        <td class="">
+        <td>
             <a id="att_dwld" href="{{attach.attachment.url}}"> 
                 <img src="{{ STATIC_URL }}agilito/img/save.png" alt="download this file" />
             </a>
         </td>
-        <td class="">
+        <td>
             <a id="att_del" href="{% url agilito.views.delete_attachment current_project.id,object.id,attach.id %}?last_page={{last_page}}">
             <img src="{{ STATIC_URL }}agilito/img/delete.png" alt="delete" title="delete" width="16" height="16" />
         </a>
