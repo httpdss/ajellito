@@ -1958,14 +1958,17 @@ def project_edit(request, id):
 @login_required
 def project_details(request, id):
     pass
+    
 
-def project_list(request):
-    queryset = Project.objects.filter(Q(project_members__pk=request.user.id) | Q(visibility=1))
-    paginate_by=10
-    context = AgilitoContext(request, {"current_project":None, })
+from django.views.generic import ListView
 
-    return object_list(request, queryset=queryset.order_by("id"), paginate_by=paginate_by,
-                       template_name="agilito/project_list.html",
-                       extra_context=context)
-
-
+class ProjectList(ListView):
+    """docstring for ProjectList"""
+    paginate_by = 10
+    template_name = "agilito/project_list.html"
+    
+    def get_queryset(self):
+        """docstring for get_queryset"""
+        return Project.objects.filter(Q(project_members__pk=self.request.user.id) | Q(visibility=1)).order_by("id")
+        
+    

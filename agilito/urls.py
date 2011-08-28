@@ -1,6 +1,7 @@
 from django.conf.urls.defaults import *
 from django.contrib import admin
 from agilito.feeds import Backlog, Iteration
+from agilito.views import ProjectList
 
 admin.autodiscover()
 
@@ -18,7 +19,7 @@ urlpatterns = patterns('agilito.views',
 
     (r'^(?P<project_id>\d+)/touch/$', 'touch_cache'),
 
-    url(r"^projects/list/$", "project_list", name="project_list"),
+    url(r"^projects/list/$", ProjectList.as_view(), name="project_list"),
     url(r"^projects/add/$", "project_create", name="project_create"),
     url(r"^projects/(?P<project_id>\d+)/edit/$", "project_edit", name="project_edit"),
     url(r"^projects/(?P<project_id>\d+)/delete/$", "project_delete", name="project_delete"),
