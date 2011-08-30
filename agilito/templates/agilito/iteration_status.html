@@ -1,6 +1,8 @@
 {% extends "agilito/base.html" %}
 {% load i18n %}
 {% load agilito_utils %}
+{% load humanize %}
+{% load markup %}
 
 {% block body_class %}iteration agilito{% endblock %}
 
@@ -71,9 +73,6 @@ function highlightTag(ids)
 <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}agilito/js/jquery.jqplot/jquery.jqplot.css" />
 {% endblock %}
 
-{% load humanize %}
-{% load markup %}
-
 {% block head_title %}
     {% if current_iteration %}
         {{current_iteration.name}}
@@ -81,8 +80,6 @@ function highlightTag(ids)
     {% trans "There are no iterations in this project." %}
     {% endif %}
 {% endblock %}
-
-{% block select_tab %} "iteration" {% endblock %}
 
 {% block body_header %}
 {% include "agilito/iteration_status_header.html" %}
@@ -233,7 +230,7 @@ function highlightTag(ids)
             <tbody>
                 {% if impediments.open %}
                 {% for impediment in impediments.open %}
-                <tr "class="{% cycle even,odd %}" id="impediment-{{ impediment.id }}">
+                <tr class="{% cycle even,odd %}" id="impediment-{{ impediment.id }}">
                     <td><a onclick="popup(this, 'impediment'); return false"
                             href="{{ impediment.get_absolute_url }}?last_page={{last_page}}">IM{{ impediment.id }}</a></td>
                     <td>{{ impediment.tasks.count }}</a></td>
@@ -286,6 +283,7 @@ function highlightTag(ids)
         {% endif %}
 
     </div>
+
     {% include "agilito/comments_section.html" %}
     {% else %}
     <p>{% trans "There are no iterations in this project." %}</p>

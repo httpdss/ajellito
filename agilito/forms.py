@@ -267,7 +267,7 @@ class ImpedimentForm(HiddenHttpRefererForm):
 
     class Meta:
         model = Impediment
-        fields = 'name', 'description', 'state', 'tasks'
+        fields = 'name', 'description', 'tasks'
 
 class UserStoryForm(HiddenHttpRefererForm):
     tags = TagField(required=False)

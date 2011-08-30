@@ -1816,7 +1816,7 @@ def timelog(request, project_id, task_id=None, instance=None):
         form = TaskLogForm(instance=instance)
 
     if task_id is None:
-        selectedTask = "current_project=project_id"
+        selectedTask = ''
         project_id = None
     else:
         project_id = Task.objects.get(id=task_id).user_story.project.id
@@ -1927,20 +1927,51 @@ def csv_log_all_projects(request):
 
     return response
 
-@login_required
-def project_create(request):
-    project_form = ProjectForm(request.POST or None)
-    if project_form.is_valid():
-        project_form.save()
-        messages.add_message(request, messages.SUCCESS,
-                _("Project has been added successfully"))
-        return HttpResponseRedirect(reverse("project_list"))
-    return render_to_response('agilito/project_create.html', {
-        "form":project_form,
-        "current_project" : None
-        }, context_instance=RequestContext(request)
-    )
+from django.views.generic.edit import CreateView
 
+class NotifyMixin(object):
+    
+    valid_type = messages.SUCCESS
+    valid_message = None
+    valid_flash = True
+
+    invalid_type = messages.ERROR
+    invalid_message = _("Some validation errors where found on the submitted form.")
+    invalid_flash = True
+    
+    notify_list = None
+    notify_template = None
+    
+    def show_invalid_flash(self):
+        if self.invalid_flash:
+            messages.add_message(self.request, self.invalid_type, self.invalid_message)
+            
+    def show_valid_flash(self):
+        self.valid_message = _("The %s has been added successfully" % self.object._meta.verbose_name)
+        if self.valid_flash:
+            messages.add_message(self.request, self.valid_type, self.valid_message)
+    
+    def send_notification(self):
+        if notification and self.notify_list and self.notify_template:
+            notification.send(self.notify_list,
+                              self.notify_template,
+                              self.get_context_data())
+    
+class NotifyCreateView(CreateView, NotifyMixin):
+    def form_valid(self, form):
+        ret = super(NotifyCreateView, self).form_valid(form)
+        self.show_valid_flash()
+        self.send_notification()
+        return ret
+        
+    def form_invalid(self, form, **kwargs):
+        show_invalid_flash()
+        return self.render_to_response(self.get_context_data(form=form))
+
+class ProjectCreate(NotifyCreateView):
+    login_required = True
+    form_class = ProjectForm
+    
 @login_required
 def project_delete(request, project_id):
     project = get_object_or_404(Project, pk=project_id)
@@ -1950,14 +1981,6 @@ def project_delete(request, project_id):
         messages.add_message(request, messages.SUCCESS,
                 _("Project has been deleted"))
         return HttpResponseRedirect(reverse("project_list"))
-
-@login_required
-def project_edit(request, id):
-    pass
-
-@login_required
-def project_details(request, id):
-    pass
     
 
 from django.views.generic import ListView

@@ -42,11 +42,12 @@ $(window).ready(function(){
    // $("#id_date").datepicker({dateFormat: "yy-mm-dd", duration: "fast", mandatory: true});
     $("input.tasks-select").click(task_details);
 
-    $.fn.clickMenu.setDefaults({arrowSrc:'/agilito/right.gif'});
+    $.fn.clickMenu.setDefaults({arrowSrc:'{{ STATIC_URL }}agilito/img/right.gif'});
     $('#tasks-select').clickMenu({
         onClick: function() {
             $(this).find('span').each(function() {
                 if (this.id) {
+
                     task = this.id.toLowerCase().match(/.*-[a-z][a-z]([0-9]+)$/)[1]
                     task_details(task);
                 }
@@ -64,7 +65,7 @@ $(window).ready(function(){
 </script>
 {% endblock %}
 
-{% block select_tab %} "timelog" {% endblock %}
+{% block body_class %}timelog agilito{% endblock %}
 
 {% block body %}
 <h2>{% trans "Log your hours!" %}</h2>

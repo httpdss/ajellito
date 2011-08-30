@@ -1,7 +1,10 @@
 from django.conf.urls.defaults import *
 from django.contrib import admin
+from django.contrib.auth.decorators import login_required
+
 from agilito.feeds import Backlog, Iteration
-from agilito.views import ProjectList
+from agilito.views import ProjectList, ProjectCreate
+
 
 admin.autodiscover()
 
@@ -19,11 +22,11 @@ urlpatterns = patterns('agilito.views',
 
     (r'^(?P<project_id>\d+)/touch/$', 'touch_cache'),
 
-    url(r"^projects/list/$", ProjectList.as_view(), name="project_list"),
-    url(r"^projects/add/$", "project_create", name="project_create"),
-    url(r"^projects/(?P<project_id>\d+)/edit/$", "project_edit", name="project_edit"),
-    url(r"^projects/(?P<project_id>\d+)/delete/$", "project_delete", name="project_delete"),
-    url(r"^projects/(?P<project_id>\d+)/details/$", "project_details", name="project_delete"),
+    url(r"^project/$", login_required(ProjectList.as_view()),   name="project_list"),
+    url(r"^project/create/$",  login_required(ProjectCreate.as_view()), name="project_create"),
+    #url(r"^projects/(?P<project_id>\d+)/edit/$", "project_edit", name="project_edit"),
+    #url(r"^projects/(?P<project_id>\d+)/delete/$", "project_delete", name="project_delete"),
+    
 
     url(r'^(?P<project_id>\d+)/backlog/$', 'backlog', name='product_backlog'),
     url(r'^(?P<project_id>\d+)/backlog/states=(?P<states>\d+(:\d+)*)/$', 'backlog', name='product_backlog_states'),
