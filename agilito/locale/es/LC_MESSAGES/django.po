@@ -1,0 +1,1285 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2011-09-04 15:18-0400\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1)\n"
+
+#: feeds.py:36
+#, python-format
+msgid "Agilito: Backlog for %s"
+msgstr ""
+
+#: feeds.py:44
+#, python-format
+msgid "Product backlog for %s"
+msgstr ""
+
+#: feeds.py:79
+msgid "Agilito: Iteration backlog for %{it} (%{pr}) "
+msgstr ""
+
+#: feeds.py:89
+msgid "Iteration backlog for %{it} (%{pr}) "
+msgstr ""
+
+#: forms.py:71
+msgid "Create new iteration"
+msgstr ""
+
+#: forms.py:72
+msgid "Create new stories"
+msgstr ""
+
+#: forms.py:94 forms.py:140
+msgid "unexpected header \"%{h1}\", expected \"%{h2}\""
+msgstr ""
+
+#: forms.py:98
+#, python-format
+msgid "Unexpected \"%s\" in iteration data"
+msgstr ""
+
+#: forms.py:101
+msgid "You must specify at least an iteration id or name"
+msgstr ""
+
+#: forms.py:104
+msgid "You are creating a new iteration, please specify start and end date"
+msgstr ""
+
+#: forms.py:110
+#, python-format
+msgid "unexpected iteration ID \"%s\" (must be numeric)"
+msgstr ""
+
+#: forms.py:115
+#, python-format
+msgid "Iteration %d does not exist"
+msgstr ""
+
+#: forms.py:119
+msgid "An iteration with the same name exists"
+msgstr ""
+
+#: forms.py:126
+#, python-format
+msgid "unexpected date \"%s\""
+msgstr ""
+
+#: forms.py:143
+#, python-format
+msgid "missing header, expected \"%s\""
+msgstr ""
+
+#: forms.py:152
+#, python-format
+msgid "unexpected \"%s\" in sprint data"
+msgstr ""
+
+#: forms.py:159
+msgid "you must specify at least a story id or name"
+msgstr ""
+
+#: forms.py:162
+msgid "you must specify a task name"
+msgstr ""
+
+#: forms.py:168
+#, python-format
+msgid "unexpected story ID \"%s\" (must be numeric)"
+msgstr ""
+
+#: forms.py:173
+#, python-format
+msgid "story %d does not exist"
+msgstr ""
+
+#: forms.py:185
+msgid "conflicting names for same story"
+msgstr ""
+
+#: forms.py:188
+msgid "you must specify a task estimate"
+msgstr ""
+
+#: forms.py:192
+#, python-format
+msgid "unexpected task estimate \"%s\" (must be numeric)"
+msgstr ""
+
+#: forms.py:199
+#, python-format
+msgid "user %s does not exist"
+msgstr ""
+
+#: forms.py:225
+msgid ""
+"You are creating a new iteration. Please check the appropriate checkbox to "
+"confirm."
+msgstr ""
+
+#: forms.py:230
+msgid ""
+"You are creating a new story. Please check the appropriate checkbox to "
+"confirm."
+msgstr ""
+
+#: forms.py:260
+msgid "Invalid state selected"
+msgstr ""
+
+#: forms.py:265
+msgid "You must select at least one task."
+msgstr ""
+
+#: forms.py:307
+msgid "Copy tasks"
+msgstr ""
+
+#: forms.py:320
+msgid "Copy and Fail original"
+msgstr ""
+
+#: forms.py:323
+msgid "Copy"
+msgstr ""
+
+#: forms.py:327 forms.py:329
+msgid "Move"
+msgstr ""
+
+#: forms.py:457
+msgid "Recent"
+msgstr ""
+
+#: forms.py:458
+msgid "My tasks"
+msgstr ""
+
+#: forms.py:459
+msgid "In progress"
+msgstr ""
+
+#: management.py:9
+msgid "Task Added"
+msgstr ""
+
+#: management.py:9
+msgid "a task has been added"
+msgstr ""
+
+#: management.py:10 management.py:11
+msgid "Task Edited"
+msgstr ""
+
+#: management.py:10 management.py:11
+msgid "a task has been edited"
+msgstr ""
+
+#: management.py:13 management.py:14
+msgid "Comment Added"
+msgstr ""
+
+#: management.py:13
+msgid "a comment has been added"
+msgstr ""
+
+#: management.py:14
+msgid "a comment has been deleted"
+msgstr ""
+
+#: management.py:16 management.py:17 management.py:18
+msgid "User Story Added"
+msgstr ""
+
+#: management.py:16
+msgid "an user story has been added"
+msgstr ""
+
+#: management.py:17
+msgid "an user story has been edited"
+msgstr ""
+
+#: management.py:18
+msgid "an user story has been deleted"
+msgstr ""
+
+#: management.py:20 management.py:21 management.py:22
+msgid "Iteration Added"
+msgstr ""
+
+#: management.py:20
+msgid "an iteration has been added"
+msgstr ""
+
+#: management.py:21
+msgid "an iteration has been edited"
+msgstr ""
+
+#: management.py:22
+msgid "an iteration has been deleted"
+msgstr ""
+
+#: management.py:24 management.py:25 management.py:26
+msgid "Impediment Added"
+msgstr ""
+
+#: management.py:24
+msgid "an impediment has been added"
+msgstr ""
+
+#: management.py:25
+msgid "an impediment has been edited"
+msgstr ""
+
+#: management.py:26
+msgid "an impediment has been deleted"
+msgstr ""
+
+#: management.py:28 management.py:29 management.py:30
+msgid "Attachment Added"
+msgstr ""
+
+#: management.py:28
+msgid "an attachment has been added"
+msgstr ""
+
+#: management.py:29
+msgid "an attachment has been edited"
+msgstr ""
+
+#: management.py:30
+msgid "an attachment has been deleted"
+msgstr ""
+
+#: management.py:32
+msgid "User Story Moved"
+msgstr ""
+
+#: management.py:32
+msgid "an user story has been moved"
+msgstr ""
+
+#: management.py:34 management.py:35 management.py:36
+msgid "Test Case Added"
+msgstr ""
+
+#: management.py:34
+msgid "a test case has been added"
+msgstr ""
+
+#: management.py:35
+msgid "a test case has been edited"
+msgstr ""
+
+#: management.py:36
+msgid "a test case has been deleted"
+msgstr ""
+
+#: management.py:38 management.py:39 management.py:40
+msgid "Test Result Added"
+msgstr ""
+
+#: management.py:38
+msgid "a test result has been added"
+msgstr ""
+
+#: management.py:39
+msgid "a test result has been edited"
+msgstr ""
+
+#: management.py:40
+msgid "a test result has been deleted"
+msgstr ""
+
+#: management.py:42
+msgid "Backlog saved"
+msgstr ""
+
+#: management.py:42
+msgid "backlog has been saved"
+msgstr ""
+
+#: models.py:231
+msgid "Public"
+msgstr ""
+
+#: models.py:232
+msgid "Private"
+msgstr ""
+
+#: models.py:255 models.py:613
+msgid "Can view the project."
+msgstr ""
+
+#: models.py:298
+msgid "suggestions"
+msgstr ""
+
+#: models.py:326 models.py:894
+msgid "velocity"
+msgstr ""
+
+#: models.py:386
+msgid "iteration"
+msgstr ""
+
+#: models.py:420 models.py:425
+msgid "release_date"
+msgstr ""
+
+#: models.py:673
+msgid "burndown"
+msgstr ""
+
+#: models.py:747 models.py:940
+msgid "tmp"
+msgstr ""
+
+#: models.py:888
+msgid "remaining"
+msgstr ""
+
+#: models.py:891
+msgid "max"
+msgstr ""
+
+#: models.py:919
+msgid "impediments"
+msgstr ""
+
+#: models.py:1001
+msgid "Can view the iteration."
+msgstr ""
+
+#: models.py:1027
+msgid "US Attachment"
+msgstr ""
+
+#: models.py:1028
+msgid "US Attachments"
+msgstr ""
+
+#: models.py:1031 models.py:1195
+msgid "Can view the user stories."
+msgstr ""
+
+#: models.py:1039 models.py:1240
+msgid "Defined"
+msgstr ""
+
+#: models.py:1040
+msgid "Specified"
+msgstr ""
+
+#: models.py:1041 models.py:1241 templates/agilito/taskboard.html:25
+msgid "In Progress"
+msgstr ""
+
+#: models.py:1042 models.py:1242
+msgid "Completed"
+msgstr ""
+
+#: models.py:1043 templates/agilito/iteration_hours.html:60
+#: templates/agilito/iteration_status_header.html:37
+msgid "Accepted"
+msgstr ""
+
+#: models.py:1044
+msgid "Failed"
+msgstr ""
+
+#: models.py:1048
+msgid "XXS"
+msgstr ""
+
+#: models.py:1049
+msgid "XS"
+msgstr ""
+
+#: models.py:1050
+msgid "S"
+msgstr ""
+
+#: models.py:1051
+msgid "M"
+msgstr ""
+
+#: models.py:1052
+msgid "L"
+msgstr ""
+
+#: models.py:1053
+msgid "XL"
+msgstr ""
+
+#: models.py:1054
+msgid "XXL"
+msgstr ""
+
+#: models.py:1055
+msgid "Infinity"
+msgstr ""
+
+#: models.py:1191
+msgid "User Story"
+msgstr ""
+
+#: models.py:1192 templates/agilito/search.html:20
+#: templates/agilito/search_box.html:8
+msgid "User Stories"
+msgstr ""
+
+#: models.py:1214
+msgid "Client"
+msgstr ""
+
+#: models.py:1215
+msgid "Project Manager"
+msgstr ""
+
+#: models.py:1216
+msgid "Developer"
+msgstr ""
+
+#: models.py:1217
+msgid "Designer"
+msgstr ""
+
+#: models.py:1218 templates/agilito/testcase_detail.html:55
+#: templates/agilito/testresult_detail.html:13
+msgid "Tester"
+msgstr ""
+
+#: models.py:1219 models.py:1250 models.py:1339
+msgid "Other"
+msgstr ""
+
+#: models.py:1233
+msgid "User Profile"
+msgstr ""
+
+#: models.py:1234
+msgid "User Profiles"
+msgstr ""
+
+#: models.py:1245
+msgid "Undefined"
+msgstr ""
+
+#: models.py:1246
+msgid "UI"
+msgstr ""
+
+#: models.py:1247
+msgid "Design"
+msgstr ""
+
+#: models.py:1248
+msgid "Development"
+msgstr ""
+
+#: models.py:1249
+msgid "Testing"
+msgstr ""
+
+#: models.py:1330
+msgid "Can view the task."
+msgstr ""
+
+#: models.py:1337
+msgid "Acceptance"
+msgstr ""
+
+#: models.py:1338
+msgid "Functional"
+msgstr ""
+
+#: models.py:1342
+msgid "Useful"
+msgstr ""
+
+#: models.py:1343
+msgid "Important"
+msgstr ""
+
+#: models.py:1344
+msgid "Critical"
+msgstr ""
+
+#: models.py:1365
+msgid "Test Case"
+msgstr ""
+
+#: models.py:1366 templates/agilito/search.html:22
+#: templates/agilito/search_box.html:10
+#: templates/agilito/userstory_detail.html:130
+msgid "Test Cases"
+msgstr ""
+
+#: models.py:1371
+msgid "Can view the test cases."
+msgstr ""
+
+#: models.py:1379
+msgid "Fail"
+msgstr ""
+
+#: models.py:1380
+msgid "Pass"
+msgstr ""
+
+#: models.py:1381
+msgid "Error"
+msgstr ""
+
+#: models.py:1382
+msgid "Inconclusive"
+msgstr ""
+
+#: models.py:1421 templates/agilito/testcase_detail.html:53
+#: templates/agilito/testresult_detail.html:11
+msgid "Test Result"
+msgstr ""
+
+#: models.py:1422 templates/agilito/searchresults.html:18
+#: templates/agilito/testcase_detail.html:46
+msgid "Test Results"
+msgstr ""
+
+#: models.py:1425
+msgid "Can view the test results."
+msgstr ""
+
+#: models.py:1455
+msgid "Impediment"
+msgstr ""
+
+#: models.py:1456 templates/agilito/iteration_status.html:219
+msgid "Impediments"
+msgstr ""
+
+#: models.py:1459
+msgid "Can view the impediments."
+msgstr ""
+
+#: models.py:1504
+msgid "Task Log"
+msgstr ""
+
+#: models.py:1505
+msgid "Task Logs"
+msgstr ""
+
+#: models.py:1509
+msgid "Can view the task log."
+msgstr ""
+
+#: threadedcommentsviews.py:57
+msgid "Comment added succesfully"
+msgstr ""
+
+#: views.py:182 views.py:1009
+msgid "You are not assigned into any project."
+msgstr ""
+
+#: views.py:439
+msgid ""
+"Are you sure you want to delete this iteration? This iteration has these "
+"stories attached"
+msgstr ""
+
+#: views.py:508
+msgid "Copy/Move User Story"
+msgstr ""
+
+#: views.py:1844
+msgid "Invalid task ID"
+msgstr ""
+
+#: views.py:1875
+#, python-format
+msgid "Task %d updated! More?"
+msgstr ""
+
+#: views.py:2001
+msgid "Some validation errors where found on the submitted form."
+msgstr ""
+
+#: views.py:2012
+#, python-format
+msgid "The %s has been added successfully"
+msgstr ""
+
+#: views.py:2045
+msgid "Project has been deleted"
+msgstr ""
+
+#: templates/agilito/404.html:4
+msgid "Not Found"
+msgstr ""
+
+#: templates/agilito/404.html:7
+msgid "Page Not Found"
+msgstr ""
+
+#: templates/agilito/404.html:8
+msgid ""
+"\n"
+"<p>Sorry, you do not have access to view this page because\n"
+"either the project or object does not exist or you have not been\n"
+"assigned to the project.</p>\n"
+"<p>If you think it's the latter, and you believe you <em>should</em>\n"
+"have access, please contact that project's administrator.</p>\n"
+msgstr ""
+
+#: templates/agilito/add_attachment.html:3
+msgid "Adding / Editing an attachment to {{ story }}"
+msgstr ""
+
+#: templates/agilito/add_attachment.html:6
+msgid "Adding / Editing an attachment to"
+msgstr ""
+
+#: templates/agilito/add_attachment.html:15
+#: templates/agilito/generic_action.html:21
+#: templates/agilito/impediment_edit.html:12
+#: templates/agilito/iteration_import.html:14
+#: templates/agilito/product_backlog.html:409
+#: templates/agilito/project_form.html:13
+#: templates/agilito/task_create.html:11
+#: templates/agilito/testcase_create.html:11
+#: templates/agilito/testresult_create.html:11
+#: templates/agilito/userstory_edit.html:9
+msgid "Save"
+msgstr ""
+
+#: templates/agilito/archive.html:6
+msgid "Archiving"
+msgstr ""
+
+#: templates/agilito/archive.html:7
+msgid "Are you sure you want to archive this?"
+msgstr ""
+
+#: templates/agilito/archive.html:9
+msgid "All of the following related items will be archived:"
+msgstr ""
+
+#: templates/agilito/archive.html:14 templates/agilito/testcase_delete.html:13
+#: templates/agilito/userstory_delete.html:13
+msgid "Yes, I'm sure"
+msgstr ""
+
+#: templates/agilito/backlog_evolution.html:6
+msgid "Backlog evolution"
+msgstr ""
+
+#: templates/agilito/base.html:138 templates/agilito/project_list.html:11
+#: templates/agilito/project_list.html:16
+msgid "Projects"
+msgstr ""
+
+#: templates/agilito/base.html:140
+#: templates/agilito/product_backlog_body_header.html:7
+#: templates/agilito/userstory_detail.html:12
+msgid "Backlog"
+msgstr ""
+
+#: templates/agilito/base.html:141 templates/agilito/searchresults.html:21
+msgid "Iteration"
+msgstr ""
+
+#: templates/agilito/base.html:142
+msgid "Log"
+msgstr ""
+
+#: templates/agilito/base.html:143
+msgid "Hours"
+msgstr ""
+
+#: templates/agilito/comments_section.html:10
+#: templates/agilito/testcase_detail.html:56
+#: templates/agilito/testresult_detail.html:14
+msgid "Comments"
+msgstr ""
+
+#: templates/agilito/comments_section.html:19
+msgid "delete"
+msgstr ""
+
+#: templates/agilito/comments_section.html:21
+msgid "reply"
+msgstr ""
+
+#: templates/agilito/comments_section.html:29
+msgid "Submit"
+msgstr ""
+
+#: templates/agilito/impediment_edit.html:7
+msgid "Add / Edit Impediment"
+msgstr ""
+
+#: templates/agilito/iteration_hours.html:9
+#: templates/agilito/iteration_hours.html:20
+msgid "Hours for"
+msgstr ""
+
+#: templates/agilito/iteration_hours.html:11
+#: templates/agilito/iteration_hours.html:22
+#: templates/agilito/iteration_status.html:80
+#: templates/agilito/iteration_status.html:289
+msgid "There are no iterations in this project."
+msgstr ""
+
+#: templates/agilito/iteration_hours.html:46
+#: templates/agilito/iteration_status_header.html:27
+msgid "Release:"
+msgstr ""
+
+#: templates/agilito/iteration_hours.html:49
+#: templates/agilito/iteration_status_header.html:30
+msgid "Start date:"
+msgstr ""
+
+#: templates/agilito/iteration_hours.html:50
+#: templates/agilito/iteration_status_header.html:31
+msgid "End date:"
+msgstr ""
+
+#: templates/agilito/iteration_hours.html:56
+msgid "Plan estimate"
+msgstr ""
+
+#: templates/agilito/iteration_hours.html:64
+msgid "Task Estimated:"
+msgstr ""
+
+#: templates/agilito/iteration_hours.html:68
+#: templates/agilito/task_detail.html:27
+#: templates/agilito/userstory_detail.html:39
+msgid "Actuals:"
+msgstr ""
+
+#: templates/agilito/iteration_hours.html:73
+#: templates/agilito/iteration_status_header.html:42
+msgid "Stories"
+msgstr ""
+
+#: templates/agilito/iteration_hours.html:86
+msgid "Team Status"
+msgstr ""
+
+#: templates/agilito/iteration_hours.html:87
+msgid "Task Estimates"
+msgstr ""
+
+#: templates/agilito/iteration_hours.html:88
+msgid "Task Actuals"
+msgstr ""
+
+#: templates/agilito/iteration_hours.html:110
+msgid "There are no members on this project"
+msgstr ""
+
+#: templates/agilito/iteration_import.html:6
+msgid "Import iteration into "
+msgstr ""
+
+#: templates/agilito/iteration_status.html:97
+#: templates/agilito/product_backlog.html:298
+msgid "Rank"
+msgstr ""
+
+#: templates/agilito/iteration_status.html:98
+#: templates/agilito/iteration_status.html:223
+#: templates/agilito/product_backlog.html:299
+#: templates/agilito/searchresults.html:13
+#: templates/agilito/testcase_detail.html:52
+#: templates/agilito/testresult_detail.html:9
+#: templates/agilito/userstory_detail.html:104
+#: templates/agilito/userstory_detail.html:136
+msgid "Id"
+msgstr ""
+
+#: templates/agilito/iteration_status.html:99
+#: templates/agilito/iteration_status.html:226
+#: templates/agilito/product_backlog.html:300
+#: templates/agilito/searchresults.html:14
+msgid "Name"
+msgstr ""
+
+#: templates/agilito/iteration_status.html:100
+#: templates/agilito/product_backlog.html:305
+#: templates/agilito/searchresults.html:16
+#: templates/agilito/userstory_detail.html:106
+msgid "State"
+msgstr ""
+
+#: templates/agilito/iteration_status.html:101
+msgid "Size"
+msgstr ""
+
+#: templates/agilito/iteration_status.html:102
+#: templates/agilito/iteration_status.html:224
+#: templates/agilito/search.html:21 templates/agilito/search_box.html:9
+#: templates/agilito/userstory_detail.html:97
+msgid "Tasks"
+msgstr ""
+
+#: templates/agilito/iteration_status.html:103
+msgid "To-Do"
+msgstr ""
+
+#: templates/agilito/iteration_status.html:104
+msgid "Failures"
+msgstr ""
+
+#: templates/agilito/iteration_status.html:225
+msgid "Risk"
+msgstr ""
+
+#: templates/agilito/iteration_status.html:258
+msgid "Resolved"
+msgstr ""
+
+#: templates/agilito/iteration_status.html:290
+msgid "Want to add its first iteration?"
+msgstr ""
+
+#: templates/agilito/iteration_status.html:290
+msgid "Click Here"
+msgstr ""
+
+#: templates/agilito/iteration_status_header.html:48
+msgid "Velocity"
+msgstr ""
+
+#: templates/agilito/iteration_status_header.html:49
+msgid "currently"
+msgstr ""
+
+#: templates/agilito/iteration_status_header.html:49
+msgid "planned"
+msgstr ""
+
+#: templates/agilito/iteration_status_header.html:55
+msgid ""
+"This iteration has unsized stories -- the story points burndown will be off"
+msgstr ""
+
+#: templates/agilito/iteration_status_header.html:61
+msgid "Tags"
+msgstr ""
+
+#: templates/agilito/product_backlog.html:10
+msgid "Product backlog for"
+msgstr ""
+
+#: templates/agilito/product_backlog.html:263
+msgid "User Stories in the Backlog"
+msgstr ""
+
+#: templates/agilito/product_backlog.html:277
+msgid "Filter:"
+msgstr ""
+
+#: templates/agilito/product_backlog.html:281
+msgid "Assign marked stories to"
+msgstr ""
+
+#: templates/agilito/product_backlog.html:283
+msgid "New iteration"
+msgstr ""
+
+#: templates/agilito/product_backlog.html:289
+msgid "Name:"
+msgstr ""
+
+#: templates/agilito/product_backlog.html:290
+msgid "Starts:"
+msgstr ""
+
+#: templates/agilito/product_backlog.html:291
+msgid "Ends:"
+msgstr ""
+
+#: templates/agilito/product_backlog.html:297
+msgid "Mark"
+msgstr ""
+
+#: templates/agilito/product_backlog.html:301
+#, python-format
+msgid "Size (%(size)s total)"
+msgstr ""
+
+#: templates/agilito/product_backlog.html:303
+msgid "Suggested size"
+msgstr ""
+
+#: templates/agilito/product_backlog.html:376
+msgid "deadline:"
+msgstr ""
+
+#: templates/agilito/product_backlog.html:376
+msgid "projected release date:"
+msgstr ""
+
+#: templates/agilito/product_backlog.html:398
+msgid "Fetch"
+msgstr ""
+
+#: templates/agilito/product_backlog.html:400
+msgid "backlog as it was on"
+msgstr ""
+
+#: templates/agilito/product_backlog_body_header.html:12
+msgid "Number of US in Backlog:"
+msgstr ""
+
+#: templates/agilito/product_backlog_body_header.html:15
+#, python-format
+msgid ""
+"Velocity: %(velocity.actual)s vs. %(velocity.planned)s (avg sprint length %"
+"(velocity.sprint_length|floatformat:0)s days)"
+msgstr ""
+
+#: templates/agilito/product_backlog_body_header.html:20
+#, python-format
+msgid ""
+"Sizing accuracy: %(suggestions.accuracy|floatformat:0)s%%, based on %"
+"(suggestions.base)s"
+msgstr ""
+
+#: templates/agilito/product_backlog_body_header.html:24
+msgid "No user stories in the backlog."
+msgstr ""
+
+#: templates/agilito/project_form.html:6
+msgid "Adding/Editing a project"
+msgstr ""
+
+#: templates/agilito/project_form.html:9
+msgid "adding/editing a project"
+msgstr ""
+
+#: templates/agilito/project_list.html:6
+msgid "Add Project"
+msgstr ""
+
+#: templates/agilito/project_list.html:38
+#: templates/agilito/searchresults.html:57
+msgid "No results found"
+msgstr ""
+
+#: templates/agilito/search.html:4 templates/agilito/search.html.py:37
+#: templates/agilito/search_box.html:3 templates/agilito/search_box.html:12
+msgid "Search"
+msgstr ""
+
+#: templates/agilito/search.html:4
+msgid "Results"
+msgstr ""
+
+#: templates/agilito/search.html:9
+msgid "Search for Uses Stories, Tasks, Test Cases"
+msgstr ""
+
+#: templates/agilito/search.html:14
+msgid "Search:"
+msgstr ""
+
+#: templates/agilito/search.html:18
+msgid "Search for:"
+msgstr ""
+
+#: templates/agilito/search.html:26
+msgid "Page size:"
+msgstr ""
+
+#: templates/agilito/searchresults.html:38
+msgid "not tested"
+msgstr ""
+
+#: templates/agilito/task_create.html:3
+msgid "Adding/Editing a task"
+msgstr ""
+
+#: templates/agilito/task_create.html:6
+msgid "adding/editing a task to"
+msgstr ""
+
+#: templates/agilito/task_detail.html:19
+#: templates/agilito/userstory_detail.html:22
+msgid "State:"
+msgstr ""
+
+#: templates/agilito/task_detail.html:24
+#: templates/agilito/userstory_detail.html:41
+msgid "Planned:"
+msgstr ""
+
+#: templates/agilito/task_detail.html:25
+#: templates/agilito/userstory_detail.html:38
+msgid "Estimate:"
+msgstr ""
+
+#: templates/agilito/task_detail.html:26
+msgid "To Do:"
+msgstr ""
+
+#: templates/agilito/task_detail.html:29 templates/agilito/task_detail.html:31
+msgid "Owner:"
+msgstr ""
+
+#: templates/agilito/task_detail.html:31
+msgid "No owner"
+msgstr ""
+
+#: templates/agilito/taskboard.html:5
+msgid "Taskboard"
+msgstr ""
+
+#: templates/agilito/taskboard.html:23 templates/agilito/timelog.html:80
+msgid "Story"
+msgstr ""
+
+#: templates/agilito/taskboard.html:24
+msgid "To Do"
+msgstr ""
+
+#: templates/agilito/taskboard.html:26
+msgid "Done"
+msgstr ""
+
+#: templates/agilito/testcase_create.html:6
+msgid "adding a testcase to"
+msgstr ""
+
+#: templates/agilito/testcase_delete.html:6
+#: templates/agilito/userstory_delete.html:6
+msgid "deleting"
+msgstr ""
+
+#: templates/agilito/testcase_delete.html:7
+#: templates/agilito/userstory_delete.html:7
+msgid "Are you sure you want to delete this?"
+msgstr ""
+
+#: templates/agilito/testcase_delete.html:8
+#: templates/agilito/userstory_delete.html:8
+msgid "All of the following related items will be deleted:"
+msgstr ""
+
+#: templates/agilito/testcase_detail.html:21
+msgid "Priority:"
+msgstr ""
+
+#: templates/agilito/testcase_detail.html:28
+msgid "Last Test Result"
+msgstr ""
+
+#: templates/agilito/testcase_detail.html:39
+msgid "Precondition"
+msgstr ""
+
+#: templates/agilito/testcase_detail.html:42
+msgid "Steps"
+msgstr ""
+
+#: templates/agilito/testcase_detail.html:47
+msgid "add a test result"
+msgstr ""
+
+#: templates/agilito/testcase_detail.html:54
+#: templates/agilito/testresult_detail.html:12
+msgid "Date"
+msgstr ""
+
+#: templates/agilito/testresult_create.html:3
+#: templates/agilito/testresult_create.html:6
+msgid "Adding / Editing a Test Result to"
+msgstr ""
+
+#: templates/agilito/testresult_detail.html:10
+#: templates/agilito/userstory_detail.html:137
+msgid "Test Name"
+msgstr ""
+
+#: templates/agilito/timelog.html:69
+msgid "Log your hours!"
+msgstr ""
+
+#: templates/agilito/timelog.html:82
+msgid "Task"
+msgstr ""
+
+#: templates/agilito/timelog.html:93
+msgid "Apply"
+msgstr ""
+
+#: templates/agilito/userstory_detail.html:22
+msgid "blocked"
+msgstr ""
+
+#: templates/agilito/userstory_detail.html:32
+msgid "Rank:"
+msgstr ""
+
+#: templates/agilito/userstory_detail.html:37
+msgid "Time:"
+msgstr ""
+
+#: templates/agilito/userstory_detail.html:40
+msgid "Remaining:"
+msgstr ""
+
+#: templates/agilito/userstory_detail.html:50
+msgid "Attachments:"
+msgstr ""
+
+#: templates/agilito/userstory_detail.html:89
+msgid "No attachments for this user story"
+msgstr ""
+
+#: templates/agilito/userstory_detail.html:95
+msgid "Related to"
+msgstr ""
+
+#: templates/agilito/userstory_detail.html:105
+msgid "Task Name"
+msgstr ""
+
+#: templates/agilito/userstory_detail.html:107
+msgid "Planned"
+msgstr ""
+
+#: templates/agilito/userstory_detail.html:108
+msgid "Estimate"
+msgstr ""
+
+#: templates/agilito/userstory_detail.html:109
+msgid "To do"
+msgstr ""
+
+#: templates/agilito/userstory_detail.html:110
+msgid "Actuals"
+msgstr ""
+
+#: templates/agilito/userstory_detail.html:111
+msgid "Owner"
+msgstr ""
+
+#: templates/agilito/userstory_detail.html:126
+msgid "No tasks for this user story"
+msgstr ""
+
+#: templates/agilito/userstory_detail.html:138
+msgid "Result"
+msgstr ""
+
+#: templates/agilito/userstory_detail.html:139
+msgid "Priority"
+msgstr ""
+
+#: templates/agilito/userstory_detail.html:140
+msgid "Description"
+msgstr ""
+
+#: templates/agilito/userstory_detail.html:151
+msgid "No tests for this user story"
+msgstr ""
+
+#: templates/agilito/userstory_edit.html:5
+msgid "Add / Edit User Story"
+msgstr ""
+
+#: templates/agilito/errorpages/user_has_no_project.html:7
+#, python-format
+msgid ""
+"\n"
+"<p>You are not assigned into any project.</p>\n"
+"<p>Go to the admin section in order to add a <a href=\"%(admin_project_add)s"
+"\">new project</a></p>\n"
+"<p><a href=\"%(admin_agilito_list)s\">Click Here</a> to reach the agilito's "
+"admin section</p>\n"
+msgstr ""
+
+#: templates/notification/agilito_attachment_create/notice.html:5
+#, python-format
+msgid ""
+"\n"
+"    <a href=\"%(creator_url)s\">%(creator_display)s</a> has added an "
+"attachment '%(attachment)s' to story <a href=\"%(story_url)s\">%(story_name)"
+"s</a>.\n"
+msgstr ""
+
+#: templates/notification/agilito_attachment_delete/notice.html:5
+#: templates/notification/agilito_attachment_edit/notice.html:5
+#: templates/notification/agilito_backlog_save/notice.html:5
+#: templates/notification/agilito_comment_delete/notice.html:5
+#: templates/notification/agilito_impediment_create/notice.html:5
+#: templates/notification/agilito_impediment_create/agilito_task_create/notice.html:5
+#: templates/notification/agilito_impediment_edit/notice.html:5
+#: templates/notification/agilito_iteration_create/notice.html:5
+#: templates/notification/agilito_iteration_delete/notice.html:5
+#: templates/notification/agilito_iteration_edit/notice.html:5
+#: templates/notification/agilito_task_create/notice.html:5
+#: templates/notification/agilito_task_delete/notice.html:5
+#: templates/notification/agilito_task_edit/notice.html:5
+#: templates/notification/agilito_testcase_create/notice.html:5
+#: templates/notification/agilito_testcase_delete/notice.html:5
+#: templates/notification/agilito_testcase_edit/notice.html:5
+#: templates/notification/agilito_testresult_create/notice.html:5
+#: templates/notification/agilito_testresult_delete/notice.html:5
+#: templates/notification/agilito_testresult_edit/notice.html:5
+#: templates/notification/agilito_user_story_delete/notice.html:5
+#, python-format
+msgid ""
+"<a href=\"%(creator_url)s\">%(creator_display)s</a> has added a task '<a "
+"href=\"%(task_url)s\">%(task)s</a>'."
+msgstr ""
+
+#: templates/notification/agilito_comment_create/notice.html:5
+#, python-format
+msgid ""
+"<a href=\"%(creator_url)s\">%(creator_display)s</a> has added a comment '<a "
+"href=\"\">%(comment)s</a>'."
+msgstr ""
+
+#: templates/notification/agilito_user_story_create/notice.html:5
+#, python-format
+msgid ""
+"\n"
+"    <a href=\"%(creator_url)s\">%(creator_display)s</a> has added an user "
+"story '<a href=\"%(story_url)s\">%(story)s</a>'.\n"
+msgstr ""
+
+#: templates/notification/agilito_user_story_edit/notice.html:5
+#, python-format
+msgid ""
+"\n"
+"    <a href=\"%(creator_url)s\">%(creator_display)s</a> has edited an user "
+"story '<a href=\"%(story_url)s\">%(story)s</a>'.\n"
+msgstr ""
+
+#: templates/notification/agilito_user_story_move/notice.html:5
+#, python-format
+msgid ""
+"\n"
+"<a href=\"%(creator_url)s\">%(creator_display)s</a> has moved an user story "
+"'<a href=\"%(story_url)s\">%(story)s</a>'.\n"
+msgstr ""
