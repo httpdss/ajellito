@@ -1,7 +1,5 @@
 {% extends "agilito/base.html" %}
 {% load i18n %}
-{% load pagination_tags %}
-
 {% block subnav %}
 <ul>
 	<li>
@@ -18,7 +16,6 @@
   <h2>{% trans "Projects" %}</h2>
 
     {% if object_list %}
-    {% autopaginate object_list 10 %}
     <table class="pretty-table" id="user-story-list" cellspacing="0" cellpadding="2">
         <tbody>
             {% for object in object_list %}
@@ -28,8 +25,14 @@
             {% endfor %}
         </tbody>
     </table>
+    {% if page_range %}
+    <ul>
+        {% for page in page_range %}
+            <li><a href="{% url 'project_list' %}?page={{page}}">{{ page }}</a></li>
+        {% endfor %}
+    </ul>        
+    {% endif %}
 
-    {% paginate %}
 
     {% else %}
     <p><strong>{% trans "No results found" %}</strong></p>

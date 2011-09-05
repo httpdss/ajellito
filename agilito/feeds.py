@@ -33,7 +33,7 @@ class Backlog(Feed):
         return get_project(self.request.user, bits[0])
 
     def title(self, project):
-        return _("Agilito: Backlog for %s") % project.name
+        return _("Agilito: Backlog for %s" % project.name)
 
     def link(self, project):
         if not project:
@@ -41,7 +41,7 @@ class Backlog(Feed):
         return project.get_absolute_url()
 
     def description(self, project):
-        return _("Product backlog for %s") % project.name
+        return _("Product backlog for %s" % project.name)
 
     def items(self, project):
        return project.backlog()
@@ -76,7 +76,7 @@ class Iteration(Feed):
     def title(self, iteration):
         it = iteration.name
         pr = iteration.project.name
-        return _("Agilito: Iteration backlog for %s (%s) ") % (it, pr)
+        return _("Agilito: Iteration backlog for %{it} (%{pr}) " % (it=it, pr=pr))
 
     def link(self, iteration):
         if not iteration:
@@ -86,7 +86,7 @@ class Iteration(Feed):
     def description(self, iteration):
         it = iteration.name
         pr = iteration.project.name
-        return _("Iteration backlog for %s (%s) ") % (it, pr)
+        return _("Iteration backlog for %{it} (%{pr}) " % (it=it, pr=pr))
 
     def items(self, iteration):
         tasks = []

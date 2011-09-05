@@ -1,0 +1,7 @@
+{% load i18n %}
+{% load account_tags %}
+{% user_display creator as creator_display %}
+{% url profile_detail username=creator.username as creator_url %}
+{% blocktrans %}
+    <a href="{{ creator_url }}">{{ creator_display }}</a> has added an attachment '{{ attachment }}' to story <a href="{{story_url}}">{{story_name}}</a>.
+{% endblocktrans %}

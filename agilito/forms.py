@@ -91,7 +91,7 @@ class IterationImportForm(forms.Form):
         # validate iteration header
         for i, s in enumerate(['id', 'name', 'start', 'end']):
             if rows[0][i].lower() != s:
-                raise forms.ValidationError(_('unexpected header "%s", expected "%s"' ) % (rows[0][i], s))
+                raise forms.ValidationError(_('unexpected header "%{h1}", expected "%{h2}"' ) % (h1=rows[0][i], h2=s))
 
         for i, cell in enumerate(rows[1]):
             if cell and i >= len(rows[0]):
@@ -137,7 +137,7 @@ class IterationImportForm(forms.Form):
         for i, s in enumerate(['id', 'story', 'task', 'estimate', 'owner', 'tags']):
             try:
                 if rows[2][i].lower() != s:
-                    raise forms.ValidationError(_('unexpected header "%s", expected "%s"' ) % (rows[2][i], s))
+                    raise forms.ValidationError(_('unexpected header "%{h1}", expected "%{h2}"' ) % (h1=rows[2][i], h2=s))
             except IndexError:
                 if i <= 3:
                     raise forms.ValidationError(_('missing header, expected "%s"' ) % s)

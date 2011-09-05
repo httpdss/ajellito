@@ -215,6 +215,15 @@ def add_attachment(request, project_id, userstory_id, instance=None):
             attachment.user_story = story
             attachment.original_name = request.FILES["attachment"].name
             attachment.save()
+            
+            if  notification:
+                notify_list = story.project.project_members.all()
+                notification.send(notify_list,
+                        "agilito_attachment_create",
+                        {'creator': request.user,
+                         'story_name':story.name,
+                         'story_url':story.get_absolute_url(),
+                         'attachment':attachment,})
             return HttpResponseRedirect(form.cleaned_data["http_referer"])
         else:
             print "form invalid: \n", form
@@ -248,7 +257,9 @@ def delete_attachment(request, project_id, userstory_id, attachment_id):
                                        post_delete_redirect=url,
                                        extra_context = {
                                            "current_project":att.user_story.project
-                                           }
+                                           },
+                                           login_required=True  
+                                           
                                        )
 
 @restricted
@@ -310,7 +321,14 @@ def impediment_create(request, project_id, iteration_id, instance=None):
 
             impediment.save()
             form.save_m2m()
-
+            if  notification:
+                notify_list = impediment.project.project_members.all()
+                notification.send(notify_list,
+                        "agilito_impediment_create",
+                        {'creator': request.user,
+                         'iteration_name':it.name,
+                         'iteration_url':it.get_absolute_url(),
+                         'impediment':impediment,})
             return HttpResponseRedirect(form.cleaned_data["http_referer"])
 
     else:
@@ -327,14 +345,29 @@ def impediment_edit(request, project_id, iteration_id, impediment_id):
     return impediment_create(request, project_id, iteration_id, instance)
 
 @restricted
-def release_create(request, project_id, instance=None):
+def release_create(request, project_id, instance=None, is_edit=False):
+    project = Project.objects.get(id=project_id)
+    backlog_url = reverse("agilito.views.backlog", args=[project_id])
     if request.method == "POST":
-        form = ReleaseForm(request.POST, instance=instance, project=Project.objects.get(id=project_id))
+        form = ReleaseForm(request.POST, instance=instance, project=project)
         form.save()
+        
+        if  notification:
+            notify_list = project.project_members.all()
+            if is_edit:
+                notify_name = "agilito_release_edit"
+            else:
+                notify_name = "agilito_release_create"
+            notification.send(notify_list,
+                    notify_name,
+                    {'creator': request.user,
+                     'project_name':project.name,
+                     'backlog_url':backlog_url,
+                     'release': form,})
         return HttpResponseRedirect(form.cleaned_data["http_referer"])
     else:
-        url = request.GET.get("last_page",reverse("agilito.views.backlog", args=[project_id]))
-        form = ReleaseForm(initial={"http_referer" : url}, project=Project.objects.get(id=project_id), instance=instance)
+        url = request.GET.get("last_page", backlog_url)
+        form = ReleaseForm(initial={"http_referer" : url}, project=project, instance=instance)
 
     context = AgilitoContext(request, {"form": form}, current_project=project_id)
     return render_to_response("agilito/generic_action.html", context_instance=context)
@@ -342,7 +375,7 @@ def release_create(request, project_id, instance=None):
 @restricted
 def release_edit(request, project_id, release_id):
     instance = Release.objects.get(id=release_id)
-    return release_create(request, project_id, instance)
+    return release_create(request, project_id, instance, is_edit=True)
 
 @restricted
 def release_delete(request, project_id, release_id):
@@ -361,10 +394,22 @@ def release_delete(request, project_id, release_id):
                                        )
 
 @restricted
-def iteration_create(request, project_id, instance=None):
+def iteration_create(request, project_id, instance=None, is_edit=False):
     if request.method == "POST":
         form = IterationForm(request.POST, instance=instance, project=Project.objects.get(id=project_id))
         form.save()
+        
+        if  notification:
+            notify_list = form.project.project_members.all()
+            if is_edit:
+                notify_name = "agilito_iteration_edit"
+            else:
+                notify_name = "agilito_iteration_create"
+            notification.send(notify_list,
+                    notify_name,
+                    {'creator': request.user,
+                     'project_name':form.project.name,
+                     'iteration': form,})
         return HttpResponseRedirect(form.cleaned_data["http_referer"])
     else:
         url = request.GET.get("last_page", reverse("agilito.views.backlog", args=[project_id]))
@@ -376,7 +421,7 @@ def iteration_create(request, project_id, instance=None):
 @restricted
 def iteration_edit(request, project_id, iteration_id):
     instance = Iteration.objects.get(id=iteration_id)
-    return iteration_create(request, project_id, instance)
+    return iteration_create(request, project_id, instance, is_edit=True)
 
 @restricted
 def iteration_delete(request, project_id, iteration_id):
@@ -396,13 +441,24 @@ def iteration_delete(request, project_id, iteration_id):
                                            "current_project":iteration.project })
 
 @restricted
-def userstory_create(request, project_id, iteration_id=None, instance=None):
+def userstory_create(request, project_id, iteration_id=None, instance=None, is_edit=False):
     if request.method == "POST":
         form = UserStoryForm(request.POST, instance=instance, project=Project.objects.get(id=project_id))
         if form.is_valid():
             story = form.save(commit=False)
             story.project_id = project_id
             story.save()
+            
+            if  notification:
+                notify_list = story.project.project_members.all()
+                if is_edit:
+                    notify_name = "agilito_user_story_edit"
+                else:
+                    notify_name = "agilito_user_story_create"
+                notification.send(notify_list,
+                        notify_name,
+                        {'creator': request.user,
+                         'story': story,})             
             return HttpResponseRedirect(form.cleaned_data["http_referer"])
     else:
         fallback_url = reverse("agilito.views.backlog", args=[project_id])
@@ -437,7 +493,13 @@ def userstory_move(request, project_id, userstory_id):
                     state = UserStory.STATES.DEFINED
 
                 story.copy_to_iteration(data["iteration"], data["copy_tasks"], state)
-
+            
+            if  notification:
+                notify_list = story.project.project_members.all()
+                notification.send(notify_list,
+                        "agilito_user_story_move",
+                        {'creator': request.user,
+                         'story': instance,})
             url = request.GET.get("last_page", story.get_absolute_url())
             return HttpResponseRedirect(url)
     else:
@@ -450,11 +512,11 @@ def userstory_move(request, project_id, userstory_id):
 def userstory_edit(request, project_id, userstory_id):
     instance = UserStory.objects.get(pk=userstory_id, project__pk=project_id)
     if instance.iteration is None:
-        return userstory_create(request, project_id, instance=instance)
+        return userstory_create(request, project_id, instance=instance, is_edit=True)
     else:
         return userstory_create(request, project_id,
                                 iteration_id=instance.iteration.id,
-                                instance=instance)
+                                instance=instance, is_edit=True)
 
 @restricted
 def userstory_delete(request, project_id, userstory_id):
@@ -1971,6 +2033,7 @@ class NotifyCreateView(CreateView, NotifyMixin):
 class ProjectCreate(NotifyCreateView):
     login_required = True
     form_class = ProjectForm
+    template_name = "agilito/project_form.html"
     
 @login_required
 def project_delete(request, project_id):
@@ -1985,13 +2048,18 @@ def project_delete(request, project_id):
 
 from django.views.generic import ListView
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 class ProjectList(ListView):
-    """docstring for ProjectList"""
-    paginate_by = 10
+    """Generic view to show the list of projects"""
+    paginate_by = 1
     template_name = "agilito/project_list.html"
     
     def get_queryset(self):
         """docstring for get_queryset"""
+        logger.error("getting querystring")
         return Project.objects.filter(Q(project_members__pk=self.request.user.id) | Q(visibility=1)).order_by("id")
         
     

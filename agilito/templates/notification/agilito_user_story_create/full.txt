@@ -1,0 +1,12 @@
+{% load i18n %}
+{% load account_tags %}
+{% user_display creator as creator_display %}
+{% blocktrans %}{{ creator_display }} has added an user story '{{ story }}'.{% endblocktrans %}
+
+
+Task details:
+{{ story.description }}
+
+{% blocktrans with story.tags as story_tags %}Tags: {{ story_tags }}{% endblocktrans %}
+
+Link: http://{{ current_site }}{{ story.get_absolute_url }}

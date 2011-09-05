@@ -21,7 +21,7 @@
         <a id="c{{ comment.id }}" href="javascript:show_reply_form('c{{ comment.id }}','{% get_comment_url comment_on comment %}','{{ comment.user|fullusername }}')">{% trans "reply" %}</a>
     </div>
     {% endfor %}
-    <form method="POST" action="{% get_comment_url comment_on%}">
+    <form method="POST" action="{% get_comment_url comment_on %}">
         {% get_threaded_comment_form as comment_form %}
         <div id="comment-form">{% csrf_token %}
                 {{ comment_form|as_uni_form }}
