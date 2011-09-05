@@ -25,23 +25,23 @@ msgstr ""
 #: feeds.py:44
 #, python-format
 msgid "Product backlog for %s"
-msgstr ""
+msgstr "Product backlog para %s"
 
 #: feeds.py:79
 msgid "Agilito: Iteration backlog for %{it} (%{pr}) "
-msgstr ""
+msgstr "Agilito: Backlog de la iteración para %{it} (%{pr}) "
 
 #: feeds.py:89
 msgid "Iteration backlog for %{it} (%{pr}) "
-msgstr ""
+msgstr "Backlog de la iteración para %{it} (%{pr}) "
 
 #: forms.py:71
 msgid "Create new iteration"
-msgstr ""
+msgstr "Crear nueva iteración"
 
 #: forms.py:72
 msgid "Create new stories"
-msgstr ""
+msgstr "Crear nuevas historias"
 
 #: forms.py:94 forms.py:140
 msgid "unexpected header \"%{h1}\", expected \"%{h2}\""
@@ -58,7 +58,7 @@ msgstr ""
 
 #: forms.py:104
 msgid "You are creating a new iteration, please specify start and end date"
-msgstr ""
+msgstr "Estás creando una nueva iteración, por favor ingresá las fechas de comienzo y fin"
 
 #: forms.py:110
 #, python-format
@@ -68,11 +68,11 @@ msgstr ""
 #: forms.py:115
 #, python-format
 msgid "Iteration %d does not exist"
-msgstr ""
+msgstr "La iteración %d no existe"
 
 #: forms.py:119
 msgid "An iteration with the same name exists"
-msgstr ""
+msgstr "Ya existe una iteración con el mismo nombre"
 
 #: forms.py:126
 #, python-format
@@ -95,7 +95,7 @@ msgstr ""
 
 #: forms.py:162
 msgid "you must specify a task name"
-msgstr ""
+msgstr "debes especificar un nombre para la tarea"
 
 #: forms.py:168
 #, python-format
@@ -105,7 +105,7 @@ msgstr ""
 #: forms.py:173
 #, python-format
 msgid "story %d does not exist"
-msgstr ""
+msgstr "la historia %d no existe"
 
 #: forms.py:185
 msgid "conflicting names for same story"
@@ -113,7 +113,7 @@ msgstr ""
 
 #: forms.py:188
 msgid "you must specify a task estimate"
-msgstr ""
+msgstr "debes especificar una estimación para la tarea"
 
 #: forms.py:192
 #, python-format
@@ -123,7 +123,7 @@ msgstr ""
 #: forms.py:199
 #, python-format
 msgid "user %s does not exist"
-msgstr ""
+msgstr "el usuario %s no existe"
 
 #: forms.py:225
 msgid ""
@@ -147,47 +147,47 @@ msgstr ""
 
 #: forms.py:307
 msgid "Copy tasks"
-msgstr ""
+msgstr "Copiar tarea"
 
 #: forms.py:320
 msgid "Copy and Fail original"
-msgstr ""
+msgstr "Copiar e invalidar original"
 
 #: forms.py:323
 msgid "Copy"
-msgstr ""
+msgstr "Copiar"
 
 #: forms.py:327 forms.py:329
 msgid "Move"
-msgstr ""
+msgstr "Mover"
 
 #: forms.py:457
 msgid "Recent"
-msgstr ""
+msgstr "Reciente"
 
 #: forms.py:458
 msgid "My tasks"
-msgstr ""
+msgstr "Mis tareas"
 
 #: forms.py:459
 msgid "In progress"
-msgstr ""
+msgstr "En progreso"
 
 #: management.py:9
 msgid "Task Added"
-msgstr ""
+msgstr "Tarea Agregada"
 
 #: management.py:9
 msgid "a task has been added"
-msgstr ""
+msgstr "una tarea ha sido agregada"
 
 #: management.py:10 management.py:11
 msgid "Task Edited"
-msgstr ""
+msgstr "Tarea Editada "
 
 #: management.py:10 management.py:11
 msgid "a task has been edited"
-msgstr ""
+msgstr "una tarea ha sido editada"
 
 #: management.py:13 management.py:14
 msgid "Comment Added"
@@ -327,19 +327,19 @@ msgstr ""
 
 #: models.py:298
 msgid "suggestions"
-msgstr ""
+msgstr "sugerecias"
 
 #: models.py:326 models.py:894
 msgid "velocity"
-msgstr ""
+msgstr "velocidad"
 
 #: models.py:386
 msgid "iteration"
-msgstr ""
+msgstr "iteracion"
 
 #: models.py:420 models.py:425
 msgid "release_date"
-msgstr ""
+msgstr "fecha_de_lanzamiento"
 
 #: models.py:673
 msgid "burndown"
