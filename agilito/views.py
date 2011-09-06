@@ -524,7 +524,7 @@ def userstory_delete(request, project_id, userstory_id):
     current_project = Project.objects.get(id=project_id)
 
     # set the url to return to after deletion
-    url = request.GET.get("last_page", obj.get_container_url())
+    url = request.GET.get("last_page", reverse("agilito.views.backlog", args=[project_id]))
     # check if you were on the details view of a us.
     if url.find("userstory") != -1:
         url = obj.get_container_url()

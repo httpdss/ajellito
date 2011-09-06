@@ -76,7 +76,7 @@ class Iteration(Feed):
     def title(self, iteration):
         it = iteration.name
         pr = iteration.project.name
-        return _("Agilito: Iteration backlog for %{it} (%{pr}) " % (it=it, pr=pr))
+        return _("Agilito: Iteration backlog for %{0} (%{1}) ").format(it, pr)
 
     def link(self, iteration):
         if not iteration:
@@ -86,7 +86,7 @@ class Iteration(Feed):
     def description(self, iteration):
         it = iteration.name
         pr = iteration.project.name
-        return _("Iteration backlog for %{it} (%{pr}) " % (it=it, pr=pr))
+        return _("Iteration backlog for %{0} (%{1}) ").format(it, pr)
 
     def items(self, iteration):
         tasks = []
