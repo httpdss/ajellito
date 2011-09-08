@@ -343,23 +343,23 @@ msgstr "fecha_de_lanzamiento"
 
 #: models.py:673
 msgid "burndown"
-msgstr ""
+msgstr "burndown"
 
 #: models.py:747 models.py:940
 msgid "tmp"
-msgstr ""
+msgstr "tmp"
 
 #: models.py:888
 msgid "remaining"
-msgstr ""
+msgstr "faltan"
 
 #: models.py:891
 msgid "max"
-msgstr ""
+msgstr "max"
 
 #: models.py:919
 msgid "impediments"
-msgstr ""
+msgstr "impedimientos"
 
 #: models.py:1001
 msgid "Can view the iteration."
@@ -379,28 +379,28 @@ msgstr ""
 
 #: models.py:1039 models.py:1240
 msgid "Defined"
-msgstr ""
+msgstr "Definida"
 
 #: models.py:1040
 msgid "Specified"
-msgstr ""
+msgstr "Especificada"
 
 #: models.py:1041 models.py:1241 templates/agilito/taskboard.html:25
 msgid "In Progress"
-msgstr ""
+msgstr "En progreso"
 
 #: models.py:1042 models.py:1242
 msgid "Completed"
-msgstr ""
+msgstr "Completada"
 
 #: models.py:1043 templates/agilito/iteration_hours.html:60
 #: templates/agilito/iteration_status_header.html:37
 msgid "Accepted"
-msgstr ""
+msgstr "Aceptada"
 
 #: models.py:1044
 msgid "Failed"
-msgstr ""
+msgstr "Rechazada"
 
 #: models.py:1048
 msgid "XXS"
@@ -432,41 +432,41 @@ msgstr ""
 
 #: models.py:1055
 msgid "Infinity"
-msgstr ""
+msgstr "Infinito"
 
 #: models.py:1191
 msgid "User Story"
-msgstr ""
+msgstr "Historia de Usuario"
 
 #: models.py:1192 templates/agilito/search.html:20
 #: templates/agilito/search_box.html:8
 msgid "User Stories"
-msgstr ""
+msgstr "Historia de Usuario"
 
 #: models.py:1214
 msgid "Client"
-msgstr ""
+msgstr "Cliente"
 
 #: models.py:1215
 msgid "Project Manager"
-msgstr ""
+msgstr "Gestor de Proyectos"
 
 #: models.py:1216
 msgid "Developer"
-msgstr ""
+msgstr "Desarrollador"
 
 #: models.py:1217
 msgid "Designer"
-msgstr ""
+msgstr "Diseñador"
 
 #: models.py:1218 templates/agilito/testcase_detail.html:55
 #: templates/agilito/testresult_detail.html:13
 msgid "Tester"
-msgstr ""
+msgstr "Tester"
 
 #: models.py:1219 models.py:1250 models.py:1339
 msgid "Other"
-msgstr ""
+msgstr "Otro"
 
 #: models.py:1233
 msgid "User Profile"
@@ -478,23 +478,23 @@ msgstr ""
 
 #: models.py:1245
 msgid "Undefined"
-msgstr ""
+msgstr "Indefinido"
 
 #: models.py:1246
 msgid "UI"
-msgstr ""
+msgstr "UI"
 
 #: models.py:1247
 msgid "Design"
-msgstr ""
+msgstr "Diseño"
 
 #: models.py:1248
 msgid "Development"
-msgstr ""
+msgstr "Desarrollo"
 
 #: models.py:1249
 msgid "Testing"
-msgstr ""
+msgstr "Pruebas"
 
 #: models.py:1330
 msgid "Can view the task."
@@ -502,33 +502,33 @@ msgstr ""
 
 #: models.py:1337
 msgid "Acceptance"
-msgstr ""
+msgstr "Aceptación"
 
 #: models.py:1338
 msgid "Functional"
-msgstr ""
+msgstr "Funcional"
 
 #: models.py:1342
 msgid "Useful"
-msgstr ""
+msgstr "Servible"
 
 #: models.py:1343
 msgid "Important"
-msgstr ""
+msgstr "Importante"
 
 #: models.py:1344
 msgid "Critical"
-msgstr ""
+msgstr "Critico"
 
 #: models.py:1365
 msgid "Test Case"
-msgstr ""
+msgstr "Caso de Prueba"
 
 #: models.py:1366 templates/agilito/search.html:22
 #: templates/agilito/search_box.html:10
 #: templates/agilito/userstory_detail.html:130
 msgid "Test Cases"
-msgstr ""
+msgstr "Casos de Prueba"
 
 #: models.py:1371
 msgid "Can view the test cases."

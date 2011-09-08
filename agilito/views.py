@@ -2054,7 +2054,7 @@ logger = logging.getLogger(__name__)
 
 class ProjectList(ListView):
     """Generic view to show the list of projects"""
-    paginate_by = 1
+    paginate_by = 20
     template_name = "agilito/project_list.html"
     
     def get_queryset(self):
