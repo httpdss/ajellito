@@ -1,639 +1,646 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
-# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
-#
-#, fuzzy
+# 
+# Translators:
 msgid ""
 msgstr ""
-"Project-Id-Version: PACKAGE VERSION\n"
-"Report-Msgid-Bugs-To: \n"
+"Project-Id-Version: ajellito\n"
+"Report-Msgid-Bugs-To: http://github.com/httpdss/ajellito/issues\n"
 "POT-Creation-Date: 2011-09-08 12:49-0400\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"PO-Revision-Date: 2011-09-08 16:51+0000\n"
+"Last-Translator: httpdss <kenny@belitzky.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Language: en\n"
+"Plural-Forms: nplurals=2; plural=(n != 1)\n"
 
 #: feeds.py:36
 #, python-format
 msgid "Agilito: Backlog for %s"
-msgstr ""
+msgstr "Agilito: Backlog for %s"
 
 #: feeds.py:44
 #, python-format
 msgid "Product backlog for %s"
-msgstr ""
+msgstr "Product backlog for %s"
 
 #: feeds.py:79
 msgid "Agilito: Iteration backlog for %{0} (%{1}) "
-msgstr ""
+msgstr "Agilito: Iteration backlog for %{0} (%{1}) "
 
 #: feeds.py:89
 msgid "Iteration backlog for %{0} (%{1}) "
-msgstr ""
+msgstr "Iteration backlog for %{0} (%{1}) "
 
 #: forms.py:71
 msgid "Create new iteration"
-msgstr ""
+msgstr "Create new iteration"
 
 #: forms.py:72
 msgid "Create new stories"
-msgstr ""
+msgstr "Create new stories"
 
 #: forms.py:94 forms.py:140
 msgid "unexpected header \"%{h1}\", expected \"%{h2}\""
-msgstr ""
+msgstr "unexpected header \"%{h1}\", expected \"%{h2}\""
 
 #: forms.py:98
 #, python-format
 msgid "Unexpected \"%s\" in iteration data"
-msgstr ""
+msgstr "Unexpected \"%s\" in iteration data"
 
 #: forms.py:101
 msgid "You must specify at least an iteration id or name"
-msgstr ""
+msgstr "You must specify at least an iteration id or name"
 
 #: forms.py:104
 msgid "You are creating a new iteration, please specify start and end date"
-msgstr ""
+msgstr "You are creating a new iteration, please specify start and end date"
 
 #: forms.py:110
 #, python-format
 msgid "unexpected iteration ID \"%s\" (must be numeric)"
-msgstr ""
+msgstr "unexpected iteration ID \"%s\" (must be numeric)"
 
 #: forms.py:115
 #, python-format
 msgid "Iteration %d does not exist"
-msgstr ""
+msgstr "Iteration %d does not exist"
 
 #: forms.py:119
 msgid "An iteration with the same name exists"
-msgstr ""
+msgstr "An iteration with the same name exists"
 
 #: forms.py:126
 #, python-format
 msgid "unexpected date \"%s\""
-msgstr ""
+msgstr "unexpected date \"%s\""
 
 #: forms.py:143
 #, python-format
 msgid "missing header, expected \"%s\""
-msgstr ""
+msgstr "missing header, expected \"%s\""
 
 #: forms.py:152
 #, python-format
 msgid "unexpected \"%s\" in sprint data"
-msgstr ""
+msgstr "unexpected \"%s\" in sprint data"
 
 #: forms.py:159
 msgid "you must specify at least a story id or name"
-msgstr ""
+msgstr "you must specify at least a story id or name"
 
 #: forms.py:162
 msgid "you must specify a task name"
-msgstr ""
+msgstr "you must specify a task name"
 
 #: forms.py:168
 #, python-format
 msgid "unexpected story ID \"%s\" (must be numeric)"
-msgstr ""
+msgstr "unexpected story ID \"%s\" (must be numeric)"
 
 #: forms.py:173
 #, python-format
 msgid "story %d does not exist"
-msgstr ""
+msgstr "story %d does not exist"
 
 #: forms.py:185
 msgid "conflicting names for same story"
-msgstr ""
+msgstr "conflicting names for same story"
 
 #: forms.py:188
 msgid "you must specify a task estimate"
-msgstr ""
+msgstr "you must specify a task estimate"
 
 #: forms.py:192
 #, python-format
 msgid "unexpected task estimate \"%s\" (must be numeric)"
-msgstr ""
+msgstr "unexpected task estimate \"%s\" (must be numeric)"
 
 #: forms.py:199
 #, python-format
 msgid "user %s does not exist"
-msgstr ""
+msgstr "user %s does not exist"
 
 #: forms.py:225
 msgid ""
 "You are creating a new iteration. Please check the appropriate checkbox to "
 "confirm."
 msgstr ""
+"You are creating a new iteration. Please check the appropriate checkbox to "
+"confirm."
 
 #: forms.py:230
 msgid ""
 "You are creating a new story. Please check the appropriate checkbox to "
 "confirm."
 msgstr ""
+"You are creating a new story. Please check the appropriate checkbox to "
+"confirm."
 
 #: forms.py:260
 msgid "Invalid state selected"
-msgstr ""
+msgstr "Invalid state selected"
 
 #: forms.py:265
 msgid "You must select at least one task."
-msgstr ""
+msgstr "You must select at least one task."
 
 #: forms.py:307
 msgid "Copy tasks"
-msgstr ""
+msgstr "Copy tasks"
 
 #: forms.py:320
 msgid "Copy and Fail original"
-msgstr ""
+msgstr "Copy and Fail original"
 
 #: forms.py:323
 msgid "Copy"
-msgstr ""
+msgstr "Copy"
 
 #: forms.py:327 forms.py:329
 msgid "Move"
-msgstr ""
+msgstr "Move"
 
 #: forms.py:457
 msgid "Recent"
-msgstr ""
+msgstr "Recent"
 
 #: forms.py:458
 msgid "My tasks"
-msgstr ""
+msgstr "My tasks"
 
 #: forms.py:459
 msgid "In progress"
-msgstr ""
+msgstr "In progress"
 
 #: management.py:9
 msgid "Task Added"
-msgstr ""
+msgstr "Task Added"
 
 #: management.py:9
 msgid "a task has been added"
-msgstr ""
+msgstr "a task has been added"
 
 #: management.py:10 management.py:11
 msgid "Task Edited"
-msgstr ""
+msgstr "Task Edited"
 
 #: management.py:10 management.py:11
 msgid "a task has been edited"
-msgstr ""
+msgstr "a task has been edited"
 
 #: management.py:13 management.py:14
 msgid "Comment Added"
-msgstr ""
+msgstr "Comment Added"
 
 #: management.py:13
 msgid "a comment has been added"
-msgstr ""
+msgstr "a comment has been added"
 
 #: management.py:14
 msgid "a comment has been deleted"
-msgstr ""
+msgstr "a comment has been deleted"
 
 #: management.py:16 management.py:17 management.py:18
 msgid "User Story Added"
-msgstr ""
+msgstr "User Story Added"
 
 #: management.py:16
 msgid "an user story has been added"
-msgstr ""
+msgstr "an user story has been added"
 
 #: management.py:17
 msgid "an user story has been edited"
-msgstr ""
+msgstr "an user story has been edited"
 
 #: management.py:18
 msgid "an user story has been deleted"
-msgstr ""
+msgstr "an user story has been deleted"
 
 #: management.py:20 management.py:21 management.py:22
 msgid "Iteration Added"
-msgstr ""
+msgstr "Iteration Added"
 
 #: management.py:20
 msgid "an iteration has been added"
-msgstr ""
+msgstr "an iteration has been added"
 
 #: management.py:21
 msgid "an iteration has been edited"
-msgstr ""
+msgstr "an iteration has been edited"
 
 #: management.py:22
 msgid "an iteration has been deleted"
-msgstr ""
+msgstr "an iteration has been deleted"
 
 #: management.py:24 management.py:25 management.py:26
 msgid "Impediment Added"
-msgstr ""
+msgstr "Impediment Added"
 
 #: management.py:24
 msgid "an impediment has been added"
-msgstr ""
+msgstr "an impediment has been added"
 
 #: management.py:25
 msgid "an impediment has been edited"
-msgstr ""
+msgstr "an impediment has been edited"
 
 #: management.py:26
 msgid "an impediment has been deleted"
-msgstr ""
+msgstr "an impediment has been deleted"
 
 #: management.py:28 management.py:29 management.py:30
 msgid "Attachment Added"
-msgstr ""
+msgstr "Attachment Added"
 
 #: management.py:28
 msgid "an attachment has been added"
-msgstr ""
+msgstr "an attachment has been added"
 
 #: management.py:29
 msgid "an attachment has been edited"
-msgstr ""
+msgstr "an attachment has been edited"
 
 #: management.py:30
 msgid "an attachment has been deleted"
-msgstr ""
+msgstr "an attachment has been deleted"
 
 #: management.py:32
 msgid "User Story Moved"
-msgstr ""
+msgstr "User Story Moved"
 
 #: management.py:32
 msgid "an user story has been moved"
-msgstr ""
+msgstr "an user story has been moved"
 
 #: management.py:34 management.py:35 management.py:36
 msgid "Test Case Added"
-msgstr ""
+msgstr "Test Case Added"
 
 #: management.py:34
 msgid "a test case has been added"
-msgstr ""
+msgstr "a test case has been added"
 
 #: management.py:35
 msgid "a test case has been edited"
-msgstr ""
+msgstr "a test case has been edited"
 
 #: management.py:36
 msgid "a test case has been deleted"
-msgstr ""
+msgstr "a test case has been deleted"
 
 #: management.py:38 management.py:39 management.py:40
 msgid "Test Result Added"
-msgstr ""
+msgstr "Test Result Added"
 
 #: management.py:38
 msgid "a test result has been added"
-msgstr ""
+msgstr "a test result has been added"
 
 #: management.py:39
 msgid "a test result has been edited"
-msgstr ""
+msgstr "a test result has been edited"
 
 #: management.py:40
 msgid "a test result has been deleted"
-msgstr ""
+msgstr "a test result has been deleted"
 
 #: management.py:42
 msgid "Backlog saved"
-msgstr ""
+msgstr "Backlog saved"
 
 #: management.py:42
 msgid "backlog has been saved"
-msgstr ""
+msgstr "backlog has been saved"
 
 #: models.py:231
 msgid "Public"
-msgstr ""
+msgstr "Public"
 
 #: models.py:232
 msgid "Private"
-msgstr ""
+msgstr "Private"
 
 #: models.py:255 models.py:613
 msgid "Can view the project."
-msgstr ""
+msgstr "Can view the project."
 
 #: models.py:298
 msgid "suggestions"
-msgstr ""
+msgstr "suggestions"
 
 #: models.py:326 models.py:894
 msgid "velocity"
-msgstr ""
+msgstr "velocity"
 
 #: models.py:386
 msgid "iteration"
-msgstr ""
+msgstr "iteration"
 
 #: models.py:420 models.py:425
 msgid "release_date"
-msgstr ""
+msgstr "release_date"
 
 #: models.py:673
 msgid "burndown"
-msgstr ""
+msgstr "burndown"
 
 #: models.py:747 models.py:940
 msgid "tmp"
-msgstr ""
+msgstr "tmp"
 
 #: models.py:888
 msgid "remaining"
-msgstr ""
+msgstr "remaining"
 
 #: models.py:891
 msgid "max"
-msgstr ""
+msgstr "max"
 
 #: models.py:919
 msgid "impediments"
-msgstr ""
+msgstr "impediments"
 
 #: models.py:1001
 msgid "Can view the iteration."
-msgstr ""
+msgstr "Can view the iteration."
 
 #: models.py:1027
 msgid "US Attachment"
-msgstr ""
+msgstr "US Attachment"
 
 #: models.py:1028
 msgid "US Attachments"
-msgstr ""
+msgstr "US Attachments"
 
 #: models.py:1031 models.py:1195
 msgid "Can view the user stories."
-msgstr ""
+msgstr "Can view the user stories."
 
 #: models.py:1039 models.py:1240
 msgid "Defined"
-msgstr ""
+msgstr "Defined"
 
 #: models.py:1040
 msgid "Specified"
-msgstr ""
+msgstr "Specified"
 
 #: models.py:1041 models.py:1241 templates/agilito/taskboard.html:25
 msgid "In Progress"
-msgstr ""
+msgstr "In Progress"
 
 #: models.py:1042 models.py:1242
 msgid "Completed"
-msgstr ""
+msgstr "Completed"
 
 #: models.py:1043 templates/agilito/iteration_hours.html:60
 #: templates/agilito/iteration_status_header.html:37
 msgid "Accepted"
-msgstr ""
+msgstr "Accepted"
 
 #: models.py:1044
 msgid "Failed"
-msgstr ""
+msgstr "Failed"
 
 #: models.py:1048
 msgid "XXS"
-msgstr ""
+msgstr "XXS"
 
 #: models.py:1049
 msgid "XS"
-msgstr ""
+msgstr "XS"
 
 #: models.py:1050
 msgid "S"
-msgstr ""
+msgstr "S"
 
 #: models.py:1051
 msgid "M"
-msgstr ""
+msgstr "M"
 
 #: models.py:1052
 msgid "L"
-msgstr ""
+msgstr "L"
 
 #: models.py:1053
 msgid "XL"
-msgstr ""
+msgstr "XL"
 
 #: models.py:1054
 msgid "XXL"
-msgstr ""
+msgstr "XXL"
 
 #: models.py:1055
 msgid "Infinity"
-msgstr ""
+msgstr "Infinity"
 
 #: models.py:1191
 msgid "User Story"
-msgstr ""
+msgstr "User Story"
 
 #: models.py:1192 templates/agilito/search.html:20
 #: templates/agilito/search_box.html:8
 msgid "User Stories"
-msgstr ""
+msgstr "User Stories"
 
 #: models.py:1214
 msgid "Client"
-msgstr ""
+msgstr "Client"
 
 #: models.py:1215
 msgid "Project Manager"
-msgstr ""
+msgstr "Project Manager"
 
 #: models.py:1216
 msgid "Developer"
-msgstr ""
+msgstr "Developer"
 
 #: models.py:1217
 msgid "Designer"
-msgstr ""
+msgstr "Designer"
 
 #: models.py:1218 templates/agilito/testcase_detail.html:55
 #: templates/agilito/testresult_detail.html:13
 msgid "Tester"
-msgstr ""
+msgstr "Tester"
 
 #: models.py:1219 models.py:1250 models.py:1339
 msgid "Other"
-msgstr ""
+msgstr "Other"
 
 #: models.py:1233
 msgid "User Profile"
-msgstr ""
+msgstr "User Profile"
 
 #: models.py:1234
 msgid "User Profiles"
-msgstr ""
+msgstr "User Profiles"
 
 #: models.py:1245
 msgid "Undefined"
-msgstr ""
+msgstr "Undefined"
 
 #: models.py:1246
 msgid "UI"
-msgstr ""
+msgstr "UI"
 
 #: models.py:1247
 msgid "Design"
-msgstr ""
+msgstr "Design"
 
 #: models.py:1248
 msgid "Development"
-msgstr ""
+msgstr "Development"
 
 #: models.py:1249
 msgid "Testing"
-msgstr ""
+msgstr "Testing"
 
 #: models.py:1330
 msgid "Can view the task."
-msgstr ""
+msgstr "Can view the task."
 
 #: models.py:1337
 msgid "Acceptance"
-msgstr ""
+msgstr "Acceptance"
 
 #: models.py:1338
 msgid "Functional"
-msgstr ""
+msgstr "Functional"
 
 #: models.py:1342
 msgid "Useful"
-msgstr ""
+msgstr "Useful"
 
 #: models.py:1343
 msgid "Important"
-msgstr ""
+msgstr "Important"
 
 #: models.py:1344
 msgid "Critical"
-msgstr ""
+msgstr "Critical"
 
 #: models.py:1365
 msgid "Test Case"
-msgstr ""
+msgstr "Test Case"
 
 #: models.py:1366 templates/agilito/search.html:22
 #: templates/agilito/search_box.html:10
 #: templates/agilito/userstory_detail.html:130
 msgid "Test Cases"
-msgstr ""
+msgstr "Test Cases"
 
 #: models.py:1371
 msgid "Can view the test cases."
-msgstr ""
+msgstr "Can view the test cases."
 
 #: models.py:1379
 msgid "Fail"
-msgstr ""
+msgstr "Fail"
 
 #: models.py:1380
 msgid "Pass"
-msgstr ""
+msgstr "Pass"
 
 #: models.py:1381
 msgid "Error"
-msgstr ""
+msgstr "Error"
 
 #: models.py:1382
 msgid "Inconclusive"
-msgstr ""
+msgstr "Inconclusive"
 
 #: models.py:1421 templates/agilito/testcase_detail.html:53
 #: templates/agilito/testresult_detail.html:11
 msgid "Test Result"
-msgstr ""
+msgstr "Test Result"
 
 #: models.py:1422 templates/agilito/searchresults.html:18
 #: templates/agilito/testcase_detail.html:46
 msgid "Test Results"
-msgstr ""
+msgstr "Test Results"
 
 #: models.py:1425
 msgid "Can view the test results."
-msgstr ""
+msgstr "Can view the test results."
 
 #: models.py:1455
 msgid "Impediment"
-msgstr ""
+msgstr "Impediment"
 
 #: models.py:1456 templates/agilito/iteration_status.html:219
 msgid "Impediments"
-msgstr ""
+msgstr "Impediments"
 
 #: models.py:1459
 msgid "Can view the impediments."
-msgstr ""
+msgstr "Can view the impediments."
 
 #: models.py:1504
 msgid "Task Log"
-msgstr ""
+msgstr "Task Log"
 
 #: models.py:1505
 msgid "Task Logs"
-msgstr ""
+msgstr "Task Logs"
 
 #: models.py:1509
 msgid "Can view the task log."
-msgstr ""
+msgstr "Can view the task log."
 
 #: threadedcommentsviews.py:57
 msgid "Comment added succesfully"
-msgstr ""
+msgstr "Comment added succesfully"
 
 #: views.py:182 views.py:1009
 msgid "You are not assigned into any project."
-msgstr ""
+msgstr "You are not assigned into any project."
 
 #: views.py:439
 msgid ""
 "Are you sure you want to delete this iteration? This iteration has these "
 "stories attached"
 msgstr ""
+"Are you sure you want to delete this iteration? This iteration has these "
+"stories attached"
 
 #: views.py:508
 msgid "Copy/Move User Story"
-msgstr ""
+msgstr "Copy/Move User Story"
 
 #: views.py:1844
 msgid "Invalid task ID"
-msgstr ""
+msgstr "Invalid task ID"
 
 #: views.py:1875
 #, python-format
 msgid "Task %d updated! More?"
-msgstr ""
+msgstr "Task %d updated! More?"
 
 #: views.py:2001
 msgid "Some validation errors where found on the submitted form."
-msgstr ""
+msgstr "Some validation errors where found on the submitted form."
 
 #: views.py:2012
 #, python-format
 msgid "The %s has been added successfully"
-msgstr ""
+msgstr "The %s has been added successfully"
 
 #: views.py:2045
 msgid "Project has been deleted"
-msgstr ""
+msgstr "Project has been deleted"
 
 #: templates/agilito/404.html:4
 msgid "Not Found"
-msgstr ""
+msgstr "Not Found"
 
 #: templates/agilito/404.html:7
 msgid "Page Not Found"
-msgstr ""
+msgstr "Page Not Found"
 
 #: templates/agilito/404.html:8
 msgid ""
@@ -644,14 +651,20 @@ msgid ""
 "<p>If you think it's the latter, and you believe you <em>should</em>\n"
 "have access, please contact that project's administrator.</p>\n"
 msgstr ""
+"\n"
+"<p>Sorry, you do not have access to view this page because\n"
+"either the project or object does not exist or you have not been\n"
+"assigned to the project.</p>\n"
+"<p>If you think it's the latter, and you believe you <em>should</em>\n"
+"have access, please contact that project's administrator.</p>\n"
 
 #: templates/agilito/add_attachment.html:3
 msgid "Adding / Editing an attachment to {{ story }}"
-msgstr ""
+msgstr "Adding / Editing an attachment to {{ story }}"
 
 #: templates/agilito/add_attachment.html:6
 msgid "Adding / Editing an attachment to"
-msgstr ""
+msgstr "Adding / Editing an attachment to"
 
 #: templates/agilito/add_attachment.html:15
 #: templates/agilito/generic_action.html:21
@@ -664,144 +677,144 @@ msgstr ""
 #: templates/agilito/testresult_create.html:11
 #: templates/agilito/userstory_edit.html:9
 msgid "Save"
-msgstr ""
+msgstr "Save"
 
 #: templates/agilito/archive.html:6
 msgid "Archiving"
-msgstr ""
+msgstr "Archiving"
 
 #: templates/agilito/archive.html:7
 msgid "Are you sure you want to archive this?"
-msgstr ""
+msgstr "Are you sure you want to archive this?"
 
 #: templates/agilito/archive.html:9
 msgid "All of the following related items will be archived:"
-msgstr ""
+msgstr "All of the following related items will be archived:"
 
 #: templates/agilito/archive.html:14 templates/agilito/testcase_delete.html:13
 #: templates/agilito/userstory_delete.html:13
 msgid "Yes, I'm sure"
-msgstr ""
+msgstr "Yes, I'm sure"
 
 #: templates/agilito/backlog_evolution.html:6
 msgid "Backlog evolution"
-msgstr ""
+msgstr "Backlog evolution"
 
 #: templates/agilito/base.html:138 templates/agilito/project_list.html:11
 #: templates/agilito/project_list.html:16
 msgid "Projects"
-msgstr ""
+msgstr "Projects"
 
 #: templates/agilito/base.html:140
 #: templates/agilito/product_backlog_body_header.html:7
 #: templates/agilito/userstory_detail.html:12
 msgid "Backlog"
-msgstr ""
+msgstr "Backlog"
 
 #: templates/agilito/base.html:141 templates/agilito/searchresults.html:21
 msgid "Iteration"
-msgstr ""
+msgstr "Iteration"
 
 #: templates/agilito/base.html:142
 msgid "Log"
-msgstr ""
+msgstr "Log"
 
 #: templates/agilito/base.html:143
 msgid "Hours"
-msgstr ""
+msgstr "Hours"
 
 #: templates/agilito/comments_section.html:10
 #: templates/agilito/testcase_detail.html:56
 #: templates/agilito/testresult_detail.html:14
 msgid "Comments"
-msgstr ""
+msgstr "Comments"
 
 #: templates/agilito/comments_section.html:19
 msgid "delete"
-msgstr ""
+msgstr "delete"
 
 #: templates/agilito/comments_section.html:21
 msgid "reply"
-msgstr ""
+msgstr "reply"
 
 #: templates/agilito/comments_section.html:29
 msgid "Submit"
-msgstr ""
+msgstr "Submit"
 
 #: templates/agilito/impediment_edit.html:7
 msgid "Add / Edit Impediment"
-msgstr ""
+msgstr "Add / Edit Impediment"
 
 #: templates/agilito/iteration_hours.html:9
 #: templates/agilito/iteration_hours.html:20
 msgid "Hours for"
-msgstr ""
+msgstr "Hours for"
 
 #: templates/agilito/iteration_hours.html:11
 #: templates/agilito/iteration_hours.html:22
 #: templates/agilito/iteration_status.html:80
 #: templates/agilito/iteration_status.html:289
 msgid "There are no iterations in this project."
-msgstr ""
+msgstr "There are no iterations in this project."
 
 #: templates/agilito/iteration_hours.html:46
 #: templates/agilito/iteration_status_header.html:27
 msgid "Release:"
-msgstr ""
+msgstr "Release:"
 
 #: templates/agilito/iteration_hours.html:49
 #: templates/agilito/iteration_status_header.html:30
 msgid "Start date:"
-msgstr ""
+msgstr "Start date:"
 
 #: templates/agilito/iteration_hours.html:50
 #: templates/agilito/iteration_status_header.html:31
 msgid "End date:"
-msgstr ""
+msgstr "End date:"
 
 #: templates/agilito/iteration_hours.html:56
 msgid "Plan estimate"
-msgstr ""
+msgstr "Plan estimate"
 
 #: templates/agilito/iteration_hours.html:64
 msgid "Task Estimated:"
-msgstr ""
+msgstr "Task Estimated:"
 
 #: templates/agilito/iteration_hours.html:68
 #: templates/agilito/task_detail.html:27
 #: templates/agilito/userstory_detail.html:39
 msgid "Actuals:"
-msgstr ""
+msgstr "Actuals:"
 
 #: templates/agilito/iteration_hours.html:73
 #: templates/agilito/iteration_status_header.html:42
 msgid "Stories"
-msgstr ""
+msgstr "Stories"
 
 #: templates/agilito/iteration_hours.html:86
 msgid "Team Status"
-msgstr ""
+msgstr "Team Status"
 
 #: templates/agilito/iteration_hours.html:87
 msgid "Task Estimates"
-msgstr ""
+msgstr "Task Estimates"
 
 #: templates/agilito/iteration_hours.html:88
 msgid "Task Actuals"
-msgstr ""
+msgstr "Task Actuals"
 
 #: templates/agilito/iteration_hours.html:110
 msgid "There are no members on this project"
-msgstr ""
+msgstr "There are no members on this project"
 
 #: templates/agilito/iteration_import.html:6
 msgid "Import iteration into "
-msgstr ""
+msgstr "Import iteration into "
 
 #: templates/agilito/iteration_status.html:97
 #: templates/agilito/product_backlog.html:298
 msgid "Rank"
-msgstr ""
+msgstr "Rank"
 
 #: templates/agilito/iteration_status.html:98
 #: templates/agilito/iteration_status.html:223
@@ -812,419 +825,426 @@ msgstr ""
 #: templates/agilito/userstory_detail.html:104
 #: templates/agilito/userstory_detail.html:136
 msgid "Id"
-msgstr ""
+msgstr "Id"
 
 #: templates/agilito/iteration_status.html:99
 #: templates/agilito/iteration_status.html:226
 #: templates/agilito/product_backlog.html:300
 #: templates/agilito/searchresults.html:14
 msgid "Name"
-msgstr ""
+msgstr "Name"
 
 #: templates/agilito/iteration_status.html:100
 #: templates/agilito/product_backlog.html:305
 #: templates/agilito/searchresults.html:16
 #: templates/agilito/userstory_detail.html:106
 msgid "State"
-msgstr ""
+msgstr "State"
 
 #: templates/agilito/iteration_status.html:101
 msgid "Size"
-msgstr ""
+msgstr "Size"
 
 #: templates/agilito/iteration_status.html:102
 #: templates/agilito/iteration_status.html:224
 #: templates/agilito/search.html:21 templates/agilito/search_box.html:9
 #: templates/agilito/userstory_detail.html:97
 msgid "Tasks"
-msgstr ""
+msgstr "Tasks"
 
 #: templates/agilito/iteration_status.html:103
 msgid "To-Do"
-msgstr ""
+msgstr "To-Do"
 
 #: templates/agilito/iteration_status.html:104
 msgid "Failures"
-msgstr ""
+msgstr "Failures"
 
 #: templates/agilito/iteration_status.html:225
 msgid "Risk"
-msgstr ""
+msgstr "Risk"
 
 #: templates/agilito/iteration_status.html:258
 msgid "Resolved"
-msgstr ""
+msgstr "Resolved"
 
 #: templates/agilito/iteration_status.html:290
 msgid "Want to add its first iteration?"
-msgstr ""
+msgstr "Want to add its first iteration?"
 
 #: templates/agilito/iteration_status.html:290
 msgid "Click Here"
-msgstr ""
+msgstr "Click Here"
 
 #: templates/agilito/iteration_status_header.html:48
 msgid "Velocity"
-msgstr ""
+msgstr "Velocity"
 
 #: templates/agilito/iteration_status_header.html:49
 msgid "currently"
-msgstr ""
+msgstr "currently"
 
 #: templates/agilito/iteration_status_header.html:49
 msgid "planned"
-msgstr ""
+msgstr "planned"
 
 #: templates/agilito/iteration_status_header.html:55
 msgid ""
 "This iteration has unsized stories -- the story points burndown will be off"
 msgstr ""
+"This iteration has unsized stories -- the story points burndown will be off"
 
 #: templates/agilito/iteration_status_header.html:61
 msgid "Tags"
-msgstr ""
+msgstr "Tags"
 
 #: templates/agilito/product_backlog.html:10
 msgid "Product backlog for"
-msgstr ""
+msgstr "Product backlog for"
 
 #: templates/agilito/product_backlog.html:263
 msgid "User Stories in the Backlog"
-msgstr ""
+msgstr "User Stories in the Backlog"
 
 #: templates/agilito/product_backlog.html:277
 msgid "Filter:"
-msgstr ""
+msgstr "Filter:"
 
 #: templates/agilito/product_backlog.html:281
 msgid "Assign marked stories to"
-msgstr ""
+msgstr "Assign marked stories to"
 
 #: templates/agilito/product_backlog.html:283
 msgid "New iteration"
-msgstr ""
+msgstr "New iteration"
 
 #: templates/agilito/product_backlog.html:289
 msgid "Name:"
-msgstr ""
+msgstr "Name:"
 
 #: templates/agilito/product_backlog.html:290
 msgid "Starts:"
-msgstr ""
+msgstr "Starts:"
 
 #: templates/agilito/product_backlog.html:291
 msgid "Ends:"
-msgstr ""
+msgstr "Ends:"
 
 #: templates/agilito/product_backlog.html:297
 msgid "Mark"
-msgstr ""
+msgstr "Mark"
 
 #: templates/agilito/product_backlog.html:301
 #, python-format
 msgid "Size (%(size)s total)"
-msgstr ""
+msgstr "Size (%(size)s total)"
 
 #: templates/agilito/product_backlog.html:303
 msgid "Suggested size"
-msgstr ""
+msgstr "Suggested size"
 
 #: templates/agilito/product_backlog.html:376
 msgid "deadline:"
-msgstr ""
+msgstr "deadline:"
 
 #: templates/agilito/product_backlog.html:376
 msgid "projected release date:"
-msgstr ""
+msgstr "projected release date:"
 
 #: templates/agilito/product_backlog.html:398
 msgid "Fetch"
-msgstr ""
+msgstr "Fetch"
 
 #: templates/agilito/product_backlog.html:400
 msgid "backlog as it was on"
-msgstr ""
+msgstr "backlog as it was on"
 
 #: templates/agilito/product_backlog_body_header.html:12
 msgid "Number of US in Backlog:"
-msgstr ""
+msgstr "Number of US in Backlog:"
 
 #: templates/agilito/product_backlog_body_header.html:15
 #, python-format
 msgid ""
-"Velocity: %(velocity.actual)s vs. %(velocity.planned)s (avg sprint length %"
-"(velocity.sprint_length|floatformat:0)s days)"
+"Velocity: %(velocity.actual)s vs. %(velocity.planned)s (avg sprint length "
+"%(velocity.sprint_length|floatformat:0)s days)"
 msgstr ""
+"Velocity: %(velocity.actual)s vs. %(velocity.planned)s (avg sprint length "
+"%(velocity.sprint_length|floatformat:0)s days)"
 
 #: templates/agilito/product_backlog_body_header.html:20
 #, python-format
 msgid ""
-"Sizing accuracy: %(suggestions.accuracy|floatformat:0)s%%, based on %"
-"(suggestions.base)s"
+"Sizing accuracy: %(suggestions.accuracy|floatformat:0)s%%, based on "
+"%(suggestions.base)s"
 msgstr ""
+"Sizing accuracy: %(suggestions.accuracy|floatformat:0)s%%, based on "
+"%(suggestions.base)s"
 
 #: templates/agilito/product_backlog_body_header.html:24
 msgid "No user stories in the backlog."
-msgstr ""
+msgstr "No user stories in the backlog."
 
 #: templates/agilito/project_form.html:6
 msgid "Adding/Editing a project"
-msgstr ""
+msgstr "Adding/Editing a project"
 
 #: templates/agilito/project_form.html:9
 msgid "adding/editing a project"
-msgstr ""
+msgstr "adding/editing a project"
 
 #: templates/agilito/project_list.html:6
 msgid "Add Project"
-msgstr ""
+msgstr "Add Project"
 
 #: templates/agilito/project_list.html:38
 #: templates/agilito/searchresults.html:57
 msgid "No results found"
-msgstr ""
+msgstr "No results found"
 
 #: templates/agilito/search.html:4 templates/agilito/search.html.py:37
 #: templates/agilito/search_box.html:3 templates/agilito/search_box.html:12
 msgid "Search"
-msgstr ""
+msgstr "Search"
 
 #: templates/agilito/search.html:4
 msgid "Results"
-msgstr ""
+msgstr "Results"
 
 #: templates/agilito/search.html:9
 msgid "Search for Uses Stories, Tasks, Test Cases"
-msgstr ""
+msgstr "Search for Uses Stories, Tasks, Test Cases"
 
 #: templates/agilito/search.html:14
 msgid "Search:"
-msgstr ""
+msgstr "Search:"
 
 #: templates/agilito/search.html:18
 msgid "Search for:"
-msgstr ""
+msgstr "Search for:"
 
 #: templates/agilito/search.html:26
 msgid "Page size:"
-msgstr ""
+msgstr "Page size:"
 
 #: templates/agilito/searchresults.html:38
 msgid "not tested"
-msgstr ""
+msgstr "not tested"
 
 #: templates/agilito/task_create.html:3
 msgid "Adding/Editing a task"
-msgstr ""
+msgstr "Adding/Editing a task"
 
 #: templates/agilito/task_create.html:6
 msgid "adding/editing a task to"
-msgstr ""
+msgstr "adding/editing a task to"
 
 #: templates/agilito/task_detail.html:19
 #: templates/agilito/userstory_detail.html:22
 msgid "State:"
-msgstr ""
+msgstr "State:"
 
 #: templates/agilito/task_detail.html:24
 #: templates/agilito/userstory_detail.html:41
 msgid "Planned:"
-msgstr ""
+msgstr "Planned:"
 
 #: templates/agilito/task_detail.html:25
 #: templates/agilito/userstory_detail.html:38
 msgid "Estimate:"
-msgstr ""
+msgstr "Estimate:"
 
 #: templates/agilito/task_detail.html:26
 msgid "To Do:"
-msgstr ""
+msgstr "To Do:"
 
 #: templates/agilito/task_detail.html:29 templates/agilito/task_detail.html:31
 msgid "Owner:"
-msgstr ""
+msgstr "Owner:"
 
 #: templates/agilito/task_detail.html:31
 msgid "No owner"
-msgstr ""
+msgstr "No owner"
 
 #: templates/agilito/taskboard.html:5
 msgid "Taskboard"
-msgstr ""
+msgstr "Taskboard"
 
 #: templates/agilito/taskboard.html:23 templates/agilito/timelog.html:80
 msgid "Story"
-msgstr ""
+msgstr "Story"
 
 #: templates/agilito/taskboard.html:24
 msgid "To Do"
-msgstr ""
+msgstr "To Do"
 
 #: templates/agilito/taskboard.html:26
 msgid "Done"
-msgstr ""
+msgstr "Done"
 
 #: templates/agilito/testcase_create.html:6
 msgid "adding a testcase to"
-msgstr ""
+msgstr "adding a testcase to"
 
 #: templates/agilito/testcase_delete.html:6
 #: templates/agilito/userstory_delete.html:6
 msgid "deleting"
-msgstr ""
+msgstr "deleting"
 
 #: templates/agilito/testcase_delete.html:7
 #: templates/agilito/userstory_delete.html:7
 msgid "Are you sure you want to delete this?"
-msgstr ""
+msgstr "Are you sure you want to delete this?"
 
 #: templates/agilito/testcase_delete.html:8
 #: templates/agilito/userstory_delete.html:8
 msgid "All of the following related items will be deleted:"
-msgstr ""
+msgstr "All of the following related items will be deleted:"
 
 #: templates/agilito/testcase_detail.html:21
 msgid "Priority:"
-msgstr ""
+msgstr "Priority:"
 
 #: templates/agilito/testcase_detail.html:28
 msgid "Last Test Result"
-msgstr ""
+msgstr "Last Test Result"
 
 #: templates/agilito/testcase_detail.html:39
 msgid "Precondition"
-msgstr ""
+msgstr "Precondition"
 
 #: templates/agilito/testcase_detail.html:42
 msgid "Steps"
-msgstr ""
+msgstr "Steps"
 
 #: templates/agilito/testcase_detail.html:47
 msgid "add a test result"
-msgstr ""
+msgstr "add a test result"
 
 #: templates/agilito/testcase_detail.html:54
 #: templates/agilito/testresult_detail.html:12
 msgid "Date"
-msgstr ""
+msgstr "Date"
 
 #: templates/agilito/testresult_create.html:3
 #: templates/agilito/testresult_create.html:6
 msgid "Adding / Editing a Test Result to"
-msgstr ""
+msgstr "Adding / Editing a Test Result to"
 
 #: templates/agilito/testresult_detail.html:10
 #: templates/agilito/userstory_detail.html:137
 msgid "Test Name"
-msgstr ""
+msgstr "Test Name"
 
 #: templates/agilito/timelog.html:69
 msgid "Log your hours!"
-msgstr ""
+msgstr "Log your hours!"
 
 #: templates/agilito/timelog.html:82
 msgid "Task"
-msgstr ""
+msgstr "Task"
 
 #: templates/agilito/timelog.html:93
 msgid "Apply"
-msgstr ""
+msgstr "Apply"
 
 #: templates/agilito/userstory_detail.html:22
 msgid "blocked"
-msgstr ""
+msgstr "blocked"
 
 #: templates/agilito/userstory_detail.html:32
 msgid "Rank:"
-msgstr ""
+msgstr "Rank:"
 
 #: templates/agilito/userstory_detail.html:37
 msgid "Time:"
-msgstr ""
+msgstr "Time:"
 
 #: templates/agilito/userstory_detail.html:40
 msgid "Remaining:"
-msgstr ""
+msgstr "Remaining:"
 
 #: templates/agilito/userstory_detail.html:50
 msgid "Attachments:"
-msgstr ""
+msgstr "Attachments:"
 
 #: templates/agilito/userstory_detail.html:89
 msgid "No attachments for this user story"
-msgstr ""
+msgstr "No attachments for this user story"
 
 #: templates/agilito/userstory_detail.html:95
 msgid "Related to"
-msgstr ""
+msgstr "Related to"
 
 #: templates/agilito/userstory_detail.html:105
 msgid "Task Name"
-msgstr ""
+msgstr "Task Name"
 
 #: templates/agilito/userstory_detail.html:107
 msgid "Planned"
-msgstr ""
+msgstr "Planned"
 
 #: templates/agilito/userstory_detail.html:108
 msgid "Estimate"
-msgstr ""
+msgstr "Estimate"
 
 #: templates/agilito/userstory_detail.html:109
 msgid "To do"
-msgstr ""
+msgstr "To do"
 
 #: templates/agilito/userstory_detail.html:110
 msgid "Actuals"
-msgstr ""
+msgstr "Actuals"
 
 #: templates/agilito/userstory_detail.html:111
 msgid "Owner"
-msgstr ""
+msgstr "Owner"
 
 #: templates/agilito/userstory_detail.html:126
 msgid "No tasks for this user story"
-msgstr ""
+msgstr "No tasks for this user story"
 
 #: templates/agilito/userstory_detail.html:138
 msgid "Result"
-msgstr ""
+msgstr "Result"
 
 #: templates/agilito/userstory_detail.html:139
 msgid "Priority"
-msgstr ""
+msgstr "Priority"
 
 #: templates/agilito/userstory_detail.html:140
 msgid "Description"
-msgstr ""
+msgstr "Description"
 
 #: templates/agilito/userstory_detail.html:151
 msgid "No tests for this user story"
-msgstr ""
+msgstr "No tests for this user story"
 
 #: templates/agilito/userstory_edit.html:5
 msgid "Add / Edit User Story"
-msgstr ""
+msgstr "Add / Edit User Story"
 
 #: templates/agilito/errorpages/user_has_no_project.html:7
 #, python-format
 msgid ""
 "\n"
 "<p>You are not assigned into any project.</p>\n"
-"<p>Go to the admin section in order to add a <a href=\"%(admin_project_add)s"
-"\">new project</a></p>\n"
-"<p><a href=\"%(admin_agilito_list)s\">Click Here</a> to reach the agilito's "
-"admin section</p>\n"
+"<p>Go to the admin section in order to add a <a href=\"%(admin_project_add)s\">new project</a></p>\n"
+"<p><a href=\"%(admin_agilito_list)s\">Click Here</a> to reach the agilito's admin section</p>\n"
 msgstr ""
+"\n"
+"<p>You are not assigned into any project.</p>\n"
+"<p>Go to the admin section in order to add a <a href=\"%(admin_project_add)s\">new project</a></p>\n"
+"<p><a href=\"%(admin_agilito_list)s\">Click Here</a> to reach the agilito's admin section</p>\n"
 
 #: templates/notification/agilito_attachment_create/notice.html:5
 #, python-format
 msgid ""
 "\n"
-"    <a href=\"%(creator_url)s\">%(creator_display)s</a> has added an "
-"attachment '%(attachment)s' to story <a href=\"%(story_url)s\">%(story_name)"
-"s</a>.\n"
+"    <a href=\"%(creator_url)s\">%(creator_display)s</a> has added an attachment '%(attachment)s' to story <a href=\"%(story_url)s\">%(story_name)s</a>.\n"
 msgstr ""
+"\n"
+"    <a href=\"%(creator_url)s\">%(creator_display)s</a> has added an attachment '%(attachment)s' to story <a href=\"%(story_url)s\">%(story_name)s</a>.\n"
 
 #: templates/notification/agilito_attachment_delete/notice.html:5
 #: templates/notification/agilito_attachment_edit/notice.html:5
@@ -1251,6 +1271,8 @@ msgid ""
 "<a href=\"%(creator_url)s\">%(creator_display)s</a> has added a task '<a "
 "href=\"%(task_url)s\">%(task)s</a>'."
 msgstr ""
+"<a href=\"%(creator_url)s\">%(creator_display)s</a> has added a task '<a "
+"href=\"%(task_url)s\">%(task)s</a>'."
 
 #: templates/notification/agilito_comment_create/notice.html:5
 #, python-format
@@ -1258,27 +1280,34 @@ msgid ""
 "<a href=\"%(creator_url)s\">%(creator_display)s</a> has added a comment '<a "
 "href=\"\">%(comment)s</a>'."
 msgstr ""
+"<a href=\"%(creator_url)s\">%(creator_display)s</a> has added a comment '<a "
+"href=\"\">%(comment)s</a>'."
 
 #: templates/notification/agilito_user_story_create/notice.html:5
 #, python-format
 msgid ""
 "\n"
-"    <a href=\"%(creator_url)s\">%(creator_display)s</a> has added an user "
-"story '<a href=\"%(story_url)s\">%(story)s</a>'.\n"
+"    <a href=\"%(creator_url)s\">%(creator_display)s</a> has added an user story '<a href=\"%(story_url)s\">%(story)s</a>'.\n"
 msgstr ""
+"\n"
+"    <a href=\"%(creator_url)s\">%(creator_display)s</a> has added an user story '<a href=\"%(story_url)s\">%(story)s</a>'.\n"
 
 #: templates/notification/agilito_user_story_edit/notice.html:5
 #, python-format
 msgid ""
 "\n"
-"    <a href=\"%(creator_url)s\">%(creator_display)s</a> has edited an user "
-"story '<a href=\"%(story_url)s\">%(story)s</a>'.\n"
+"    <a href=\"%(creator_url)s\">%(creator_display)s</a> has edited an user story '<a href=\"%(story_url)s\">%(story)s</a>'.\n"
 msgstr ""
+"\n"
+"    <a href=\"%(creator_url)s\">%(creator_display)s</a> has edited an user story '<a href=\"%(story_url)s\">%(story)s</a>'.\n"
 
 #: templates/notification/agilito_user_story_move/notice.html:5
 #, python-format
 msgid ""
 "\n"
-"<a href=\"%(creator_url)s\">%(creator_display)s</a> has moved an user story "
-"'<a href=\"%(story_url)s\">%(story)s</a>'.\n"
+"<a href=\"%(creator_url)s\">%(creator_display)s</a> has moved an user story '<a href=\"%(story_url)s\">%(story)s</a>'.\n"
 msgstr ""
+"\n"
+"<a href=\"%(creator_url)s\">%(creator_display)s</a> has moved an user story '<a href=\"%(story_url)s\">%(story)s</a>'.\n"
+
+

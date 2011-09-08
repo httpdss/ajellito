@@ -125,8 +125,8 @@ class AgilitoContext(RequestContext):
             raise UserHasNoProjectException
 
         if not current_project is None:
+            
             current_project = Project.objects.get(pk=current_project)
-
         if current_story is not None:
             try:
                 current_story = UserStory.objects.get(id=current_story)
@@ -1879,13 +1879,13 @@ def timelog(request, project_id, task_id=None, instance=None):
 
     if task_id is None:
         selectedTask = ''
-        project_id = None
+        project_id = project_id
     else:
         project_id = Task.objects.get(id=task_id).user_story.project.id
         selectedTask = str(task_id)
     context = AgilitoContext(request, {"form": form,
                                       "selectedTask": selectedTask},
-                                    current_project=project_id)
+                                      current_project=project_id)
 
     return render_to_response("agilito/timelog.html", context_instance=context)
 
