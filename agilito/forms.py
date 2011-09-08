@@ -28,7 +28,7 @@ class HiddenHttpRefererForm(forms.ModelForm):
 
 class IterationForm(HiddenHttpRefererForm):
     def __init__(self, *args, **kwargs):
-        project = kwargs.pop('project')
+        self.project = kwargs.pop('project')
         super(IterationForm, self).__init__(*args, **kwargs)
         self.fields['start_date'].widget.attrs['class'] = 'show-datepicker'
         self.fields['end_date'].widget.attrs['class'] = 'show-datepicker'
@@ -38,7 +38,7 @@ class IterationForm(HiddenHttpRefererForm):
 
 class ReleaseForm(HiddenHttpRefererForm):
     def __init__(self, *args, **kwargs):
-        project = kwargs.pop('project')
+        self.project = kwargs.pop('project')
         super(ReleaseForm, self).__init__(*args, **kwargs)
         self.fields['deadline'].widget.attrs['class'] = 'show-datepicker'
 
