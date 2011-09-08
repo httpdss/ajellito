@@ -351,7 +351,7 @@ def release_create(request, project_id, instance=None, is_edit=False):
     if request.method == "POST":
         form = ReleaseForm(request.POST, instance=instance, project=project)
         form.save()
-        
+        """
         if  notification:
             notify_list = project.project_members.all()
             if is_edit:
@@ -364,6 +364,7 @@ def release_create(request, project_id, instance=None, is_edit=False):
                      'project_name':project.name,
                      'backlog_url':backlog_url,
                      'release': form,})
+                     """
         return HttpResponseRedirect(form.cleaned_data["http_referer"])
     else:
         url = request.GET.get("last_page", backlog_url)
