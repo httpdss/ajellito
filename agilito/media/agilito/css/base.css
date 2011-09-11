@@ -9,9 +9,6 @@ select[multiple="multiple"] {
   padding: 3px;
 }
 
-
-
-
 #left_tabs .tabs{
     float:left;
 }
@@ -19,6 +16,10 @@ select[multiple="multiple"] {
 #left_tabs select {
     margin-left:5px;
     margin-bottom:2px;
+}
+
+.comments_section {
+    margin:10px 0;
 }
 
 
