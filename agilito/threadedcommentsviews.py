@@ -52,7 +52,6 @@ def comment(*args, **kwargs):
     """
     Thin wrapper around threadedviews.comment which checks for project membership
     """
-    #assert False
     http_response = threadedcomments.views.comment(*args, **kwargs)
     messages.add_message(args[0], messages.SUCCESS , _("Comment added succesfully"))
     if notification:
@@ -62,7 +61,8 @@ def comment(*args, **kwargs):
         notification.send(notify_list,
                          "agilito_comment_create",
                          {'creator': args[0].user,
-                          'comment'   : args[0].POST.get('comment'),})
+                          'comment': args[0].POST.get('comment'),
+                          'object_url': obj.get_absolute_url()})
     
 
         

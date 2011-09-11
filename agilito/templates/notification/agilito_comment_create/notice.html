@@ -2,4 +2,6 @@
 {% load account_tags %}
 {% user_display creator as creator_display %}
 {% url profile_detail username=creator.username as creator_url %}
-{% blocktrans %}<a href="{{ creator_url }}">{{ creator_display }}</a> has added a comment '<a href="">{{ comment }}</a>'.{% endblocktrans %}
+{% blocktrans %}
+    <a href="{{ creator_url }}">{{ creator_display }}</a> has added a comment '<a href="{{ object_url }}">{{comment}}</a>'.
+{% endblocktrans %}
