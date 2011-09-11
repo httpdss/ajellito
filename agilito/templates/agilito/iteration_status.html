@@ -126,9 +126,10 @@ function highlightTag(ids)
                 </tr> 
 
                 {% for us in stories %}
+                {% url agilito_userstory_detail current_project.id us.id as userstory_url %}
                 <tr id="us-{{us.id}}" class="userstory {% cycle even,odd %} {%if us.is_blocked%}blocked{% endif %} {%if us.is_starved%}starved{% endif %}">
                     <td class="rank">{{us.relative_rank}}</td>
-                    <td class="id"><a href="{{us.get_absolute_url}}">US{{us.id}}</a></td>
+                    <td class="id"><a href="{{userstory_url}}">US{{us.id}}</a></td>
                     <td class="name{% if us.is_archived %} archived{% endif %}"><a href="{{us.get_absolute_url}}">{{us.name}}</a></td>
                     <td class="state {{ us.state|storystate|slugify }}">{{us.state|storystate}}</td>
                     <td class="planned">{{us.size|storysize|default_if_none:"-"}}</td>
@@ -136,7 +137,7 @@ function highlightTag(ids)
                     <td class="todo">{{us.remaining|default_if_none:"-"}}</td>
                     <td class="failures {% if us.failures %} fail {% endif %}">
                         {% if us.failures %}
-                        <a href="{{us.get_absolute_url}}#test-cases">{{us.failures|default_if_none:"-"}}</a>
+                        <a href="{{userstory_url}}#test-cases">{{us.failures|default_if_none:"-"}}</a>
                         {% else %}
                         {{us.failures|default_if_none:"-"}}
                         {%endif%}
@@ -169,10 +170,11 @@ function highlightTag(ids)
                 </tr> 
 
                 {% for ta in us.tasks.all %}
+                {% url agilito_task_detail current_project.id us.id ta.id as task_url %}
                 <tr id="ta-{{ta.id}}" class="task child child-of-us-{{us.id}} {% cycle even,odd %} {%if ta.is_blocked%}blocked{% endif %}">
                     <td></td><!-- rank -->
-                    <td class="id"><a href="{{ta.get_absolute_url}}">TA{{ta.id}}</a></td>
-                    <td class="name"><a href="{{ta.get_absolute_url}}">{{ta.name}}</a>
+                    <td class="id"><a href="{{task_url}}">TA{{ta.id}}</a></td>
+                    <td class="name"><a href="{{task_url}}">{{ta.name}}</a>
                         <ul class="tags">
                             {% for tag in ta.taglist %}
                             <li><span class="small">{{ tag }}</span></li>
@@ -231,13 +233,14 @@ function highlightTag(ids)
                 {% if impediments.open %}
                 {% for impediment in impediments.open %}
                 <tr class="{% cycle even,odd %}" id="impediment-{{ impediment.id }}">
+                    {% url impediment_edit current_project.id current_iteration.id impediment.id as impediment_url %}
                     <td><a onclick="popup(this, 'impediment'); return false"
-                            href="{{ impediment.get_absolute_url }}?last_page={{last_page}}">IM{{ impediment.id }}</a></td>
+                            href="{{ impediment_url }}?last_page={{last_page}}">IM{{ impediment.id }}</a></td>
                     <td>{{ impediment.tasks.count }}</a></td>
-                <td>{{ impediment.risk }}</a></td>
-            <td><a onclick="popup(this, 'impediment'); return false"
-                    href="{{ impediment.get_absolute_url }}?last_page={{last_page}}">{{ impediment.name }}</a></td>
-        </tr>
+                    <td>{{ impediment.risk }}</a></td>
+                    <td><a onclick="popup(this, 'impediment'); return false"
+                            href="{{ impediment_url }}?last_page={{last_page}}">{{ impediment.name }}</a></td>
+                </tr>
 
         {% for task in impediment.tasks %}
         <tr id="impediment-{{ impediment.id }}-task-{{ task.id }}" class="child {% cycle even,odd %} child-of-impediment-{{ impediment.id }}">
