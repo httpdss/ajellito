@@ -2078,7 +2078,17 @@ class ProjectList(ListView):
     
     def get_queryset(self):
         """docstring for get_queryset"""
-        logger.error("getting querystring")
-        return Project.objects.filter(Q(project_members__pk=self.request.user.id) | Q(visibility=1)).order_by("id")
+        has_member = Q(project_members__pk=self.request.user.id)
+        is_visible = Q(visibility=1)
+        return Project.objects.filter(has_member | is_visible).order_by("id")
+
+class ProjectDetail(DetailView):
+    context_object_name = "project"
+    template_name = "agilito/project_detail.html"
         
+    def get_queryset(self):
+        """docstring for get_queryset"""
+        has_member = Q(project_members__pk=self.request.user.id)
+        is_visible = Q(visibility=1)
+        return Project.objects.filter(has_member | is_visible).order_by("id")
     
