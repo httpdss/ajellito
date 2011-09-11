@@ -7,7 +7,7 @@
 
 {% if comment_on %}
 <div class="comments_section">
-    <h1>{% trans "Comments" %}</h1>
+    <h2>{% trans "Comments" %}</h2>
     {% get_threaded_comment_tree for comment_on as tree %}
     {% for comment in tree %}
     <div style="margin-left: {{ comment.depth }}em;" class="commentbox {% ifnotequal comment.depth 0 %}reply{% endifnotequal %}">
