@@ -2,6 +2,49 @@
 {% load i18n %}
 {% load markup %}
 {% block head_title %}{{object.name}}{% endblock %}
+{% comment %}
+{% block subnav %}
+<ul>
+    <li><a href="{% url agilito_userstory_edit current_project.id current_story.id  %}">{% trans "Edit this story" %}</a></li>
+    <li><a href="{% url agilito_userstory_delete current_project.id current_story.id %}">{% trans "Delete this story" %}</a></li>
+    <li><a href="{% url agilito_add_attachment current_project.id current_story.id %}">{% trans "Add an attachment" %}</a></li>
+    <li><a href="{% url agilito_task_create current_project.id current_story.id %}">{% trans "Add a task" %}</a></li>
+    <li><a href="{% url agilito_testcase_create current_project.id current_story.id %}">{% trans "Add a test case" %}</a></li>
+</ul>
+{% endblock %}
+{% endcomment %}
+{% block css %}
+<style>
+    #us-head h2 span {
+        float:right;
+    }
+    #us-resume {
+        width:96%;
+        padding:0 2%;
+        margin:10px 0;
+        background-color:#ddeeff;
+    }
+    
+    #us-resume #rank {
+        font-size:30px;
+    }
+    
+    #us-resume .state, #us-resume .time {
+        float:left;
+        width:50%;
+    }
+    
+    #us-resume .state {
+        text-align:right;
+    }
+    
+    ul.time {
+        list-style:none;
+        padding:0;
+    }
+    
+</style>
+{% endblock %}
 
 {% block body %}
 <ul class="breadcrumbs">
@@ -14,40 +57,38 @@
     <li id="breadcrumb-story">{{ object.name }}</li>
     <li class="visualClear" />
 </ul>
-
-
 <div id="us-head" {%if object.is_blocked%}class="blocked"{% endif %}> 
     <h2>{{ object }}</h2>
-    
-    <span id="state" class="{{ object.get_state_display|slugify }}">{% trans "State:" %} {{object.get_state_display}} {% if object.is_blocked %}{% trans "blocked" %}{% endif %}</span>
-{% if object.is_blocked %}
-<span style="display:none" id="blocked">{{object.is_blocked}}</span>
-{% endif %}
+    <div class="visualClear"></div>
+</div>
+<div id="us-resume">
+    <ul class="time">
+        <li><span id="estimate">{% trans "Estimate:" %} <strong>{{object.estimated}}</strong></span></li>
+        <li><span id="actuals">{% trans "Actuals:" %} <strong>{{object.actuals}}</strong></span></li>
+        <li><span id="remaining">{% trans "Remaining:" %} <strong>{{object.remaining}} </strong></span></li>
+        {% if object.planned %}
+        <li><span id="planned">{% trans "Planned:" %} <strong>{{object.planned}}</strong></span></li>
+        {% endif %}
+    </ul>
+    <div class="state">
+        <p><strong id="rank">
+        {% if object.rank %}
+        {{ object.size_label }}
+        {% else %}
+        -
+        {% endif %}
+        </strong></p>
+        <p id="state" class="{{ object.get_state_display|slugify }}">{% trans "State:" %} {{object.get_state_display}} {% if object.is_blocked %}{% trans "blocked" %}{% endif %}</p>
+        {% if object.is_blocked %}
+        <span style="display:none" id="blocked">{{object.is_blocked}}</span>
+        {% endif %}
+    </div>  
     <div class="visualClear"></div>
 </div>
 
-<div id="us-resume">
-    <p>
-    {% if object.rank %}
-    <span>{% trans "Rank:" %} <strong id="rank">{{ object.rank }} </strong></span>
+    <div id="description" class="description">{{object.description|markdown}}</div>
 
-    &nbsp;
-    &nbsp;
-    {% endif %} 
-    <span>{% trans "Time:" %}</span>
-    <span id="estimate">{% trans "Estimate:" %} <strong>{{object.estimated}}</strong></span> |
-    <span id="actuals">{% trans "Actuals:" %} <strong>{{object.actuals}}</strong></span> |
-    <span id="remaining">{% trans "Remaining:" %} <strong>{{object.remaining}} </strong></span>
-    <span id="planned">{% if object.planned %}{% trans "Planned:" %} <strong>{{object.planned}}</strong>
-        {% endif %}
-    </span>
-    </p>
-</div>
-
-<div id="description" class="description">{{object.description|safe}}</div>
-<!--Object's attachments-->
-
-<h4>{% trans "Attachments:" %}</h4>
+<h3>{% trans "Attachments" %}</h3>
 {% if object.userstoryattachment_set.all %}
 <table class="pretty-table attachments" >
 <thead>
@@ -89,12 +130,7 @@
 <p>{% trans "No attachments for this user story" %}</p>
 {% endif %}
 
-
-<!-- Related items -->
-
-<h3>{% trans "Related to" %} US{{ object.id }}</h3>
-
-<h4 id="tasks">{% trans "Tasks" %}</h4>
+<h3 id="tasks">{% trans "Tasks" %}</h3>
   {% if object.task_set.all %}
 
   <table class="pretty-table">
@@ -127,7 +163,7 @@
 {% endif %}
 
 
-<h4 id="test-cases">{% trans "Test Cases" %}</h4>
+<h3 id="test-cases">{% trans "Test Cases" %}</h3>
 
 {% if object.testcase_set.all %}
 <table class="pretty-table" >
@@ -150,9 +186,4 @@
 {% else %}
 <p>{% trans "No tests for this user story" %}</p>
 {% endif %}
-
-
-
-
-
 {% endblock %}
