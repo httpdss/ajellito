@@ -1219,9 +1219,13 @@ def iteration_status(request, project_id, iteration_id=None, template="agilito/i
                              current_project=iteration.project)
     return render_to_response(template, context_instance=context)
 
+
 @restricted
 def taskboard(request, project_id, iteration_id=None):
-    return iteration_status(request, project_id, iteration_id=iteration_id, template="agilito/taskboard.html")
+    return iteration_status(request,
+                            project_id,
+                            iteration_id=iteration_id,
+                            template="agilito/taskboard.html")
 
 @restricted
 def iteration_hours(request, project_id, iteration_id=None):

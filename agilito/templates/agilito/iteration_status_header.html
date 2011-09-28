@@ -32,17 +32,14 @@
                     <div class="description">{{current_iteration.description|safe}}</div>
                 </td>
             </tr>
-
             <tr>
                 <td>{% trans "Accepted" %}</td>
                 <td>{{us_accepted_percentage|floatformat:0 }} %</td>
             </tr>
-
             <tr>
                 <td>{% trans "Stories" %}</td>
                 <td>{{ stories|length }}</td>
             </tr>
-
             {% if velocity.planned %}
             <tr>
                 <td>{% trans "Velocity" %}</td>
@@ -71,10 +68,8 @@
             </tr>
         </table>
     </div>
-
     <div id="burndown" style="width:320px; height:240px;">
     </div>
-
     <div style="clear: both"></div>
 </div>
 {% endif %}
