@@ -18,11 +18,11 @@ feeds = {
     }
 
 urlpatterns = patterns('agilito.views',
-    url(r'^$', 'index', name = "agilito_index"),
+    url(r'^$', 'index', name="agilito_index"),
 
     (r'^(?P<project_id>\d+)/touch/$', 'touch_cache'),
 
-    url(r"^project/$", login_required(ProjectList.as_view()),   name="project_list"),
+    url(r"^project/$", login_required(ProjectList.as_view()), name="project_list"),
     url(r"^project/create/$",  login_required(ProjectCreate.as_view()), name="project_create"),
     url(r"^project/(?P<pk>\d+)/$", login_required(ProjectDetail.as_view()), name="project_detail"),
     

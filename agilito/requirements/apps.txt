@@ -6,3 +6,5 @@ html5lib
 django-tagging
 django-tagging-ext
 django-avatar
+Markdown
+Pygments

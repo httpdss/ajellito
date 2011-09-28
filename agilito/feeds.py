@@ -1,7 +1,7 @@
 from django.contrib.syndication.feeds import Feed
 from django.contrib.syndication.feeds import FeedDoesNotExist
 from django.core.exceptions import ObjectDoesNotExist
-from agilito.models import Project, Iteration as Sprint, UserStory, Task, TaskLog
+from agilito.models import Project, Iteration, UserStory, Task, TaskLog
 import datetime
 from django.contrib.syndication.views import feed as unauthenticated_feed
 from django.utils.translation import ugettext as _
@@ -14,10 +14,9 @@ from tagging.utils import parse_tag_input
 
 def get_project(user, project):
     if user.is_superuser:
-        return Project.objects.get(id=project)
-
+        return Project.objects.get(pk=project)
     try:
-        project = user.project_set.get(id=project)
+        project = user.project_set.get(pk=project.id)
     except Project.DoesNotExist:
         raise ObjectDoesNotExist
 
@@ -44,11 +43,12 @@ class Backlog(Feed):
         return _("Product backlog for %s" % project.name)
 
     def items(self, project):
-       return project.backlog()
+        states = [k for (k,v) in UserStory.STATES.choices()]
+        return project.backlog(states).backlog
 
     def categories(self, project):
-        states = ['State:' + s[1] for s in UserStory.STATES.choices()]
-        sizes = ['Size:' + s[1] for s in UserStory.SIZES.choices()]
+        states = ['State: {0}'.format(s[1]) for s in UserStory.STATES.choices()]
+        sizes = ['Size: {0}'.format(s[1]) for s in UserStory.SIZES.choices()]
         return sizes + states
 
     def item_link(self, story):
@@ -71,7 +71,7 @@ class Iteration(Feed):
             raise ObjectDoesNotExist
         bits = [int(b) for b in bits]
         project = get_project(self.request.user, bits[0])
-        return Sprint.objects.get(project__id = project.id, id=bits[1])
+        return Iteration.objects.get(project__id = project.id, id=bits[1])
 
     def title(self, iteration):
         it = iteration.name
