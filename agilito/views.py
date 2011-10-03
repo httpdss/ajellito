@@ -1216,7 +1216,7 @@ def iteration_status(request, project_id, iteration_id=None, template="agilito/i
 
     context = AgilitoContext(request, 
                              inner_context,
-                             current_project=iteration.project)
+                             current_project=project_id)
     return render_to_response(template, context_instance=context)
 
 
