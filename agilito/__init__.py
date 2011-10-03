@@ -3,7 +3,7 @@ import string
 import os
 from dulwich.repo import Repo
 
-import settings
+from django.conf import settings
 
 try:
     settings.CACHE_BACKEND
