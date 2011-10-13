@@ -32,6 +32,6 @@
     {%endif%}
 </div>
 
-<p class="description">{{task.description|safe}}</p>
+<div class="description">{{task.description|markdown}}</div>
     {% include "agilito/comments_section.html" %}
 {% endblock %}
