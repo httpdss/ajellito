@@ -269,13 +269,26 @@ def delete_attachment(request, project_id, userstory_id, attachment_id):
                                            
                                        )
 
-@restricted
-def view_attachment(request, project_id, userstory_id, attachment_id):
+def view_attachment(request, project_id, userstory_id, attachment_id, secret=None):
     """borrowed from http://www.djangosnippets.org/snippets/1710/
     thanks to achimnol"""
     att = UserStoryAttachment.objects.get(id=attachment_id,
                                           user_story__id=userstory_id,
                                           user_story__project__id=project_id)
+                                          
+
+    if secret:
+        if att.get_secret_filepath() != secret:
+            raise Http404
+    else:
+        if request.user.is_anonymous():
+            raise Http404
+        elif not request.user.is_superuser:
+            try:
+                project = request.user.project_set.get(id=project_id)
+            except Project.DoesNotExist, msg:
+                raise Http404, msg
+
     file_path = att.attachment.path
     original_filename = att.original_name
     fp = open(file_path, "rb")

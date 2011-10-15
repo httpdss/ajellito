@@ -4,6 +4,7 @@ from django.utils.translation import ugettext as _
 from django.db.models import Q
 from django.core.cache import cache
 from django.db.models.signals import post_save, post_delete
+from django.conf import settings
 
 from tagging.fields import TagField
 import tagging
@@ -18,6 +19,7 @@ import datetime, time
 import math, re
 import sys
 import inspect
+import hashlib
 
 import random, string
 
@@ -1022,6 +1024,9 @@ class UserStoryAttachment(ClueModel):
 
     def get_container_model(self):
         return self.user_story
+
+    def get_secret_filepath(self):
+        return hashlib.md5("%s%s%s" % (self.pk, self.original_name, settings.SECRET_KEY)).hexdigest()
     
     class Meta:
         verbose_name = _(u"US Attachment")
@@ -1030,6 +1035,7 @@ class UserStoryAttachment(ClueModel):
         permissions = (
             ("view", _("Can view the user stories.")),
         )
+    
         
 
 class UserStory(ClueModel):

@@ -95,7 +95,8 @@
     <tr>
         <th style="width:3%;"></th>
         <th style="width:20%;"></th>
-        <th style="width:71%;"></th>
+        <th style="width:68%;"></th>
+        <th style="width:3%;"></th>
         <th style="width:3%;"></th>
         <th style="width:3%;"></th>
     </tr>
@@ -107,7 +108,7 @@
             <span rel="{{attach.attachment}}" class="icon">&nbsp;</span>
         </td>
         <td>
-            <a href="{% url agilito.views.view_attachment current_project.id,object.id,attach.id %}" rel="facebox"> 
+            <a href="{% url agilito_view_attachment current_project.id,object.id,attach.id %}" rel="facebox"> 
                 {{attach.name}}
             </a>
         </td>
@@ -117,6 +118,11 @@
         <td>
             <a id="att_dwld" href="{{attach.attachment.url}}"> 
                 <img src="{{ STATIC_URL }}agilito/img/save.png" alt="download this file" />
+            </a>
+        </td>
+        <td>
+            <a href="{% url agilito_view_attachment_secret current_project.id,object.id,attach.id,attach.get_secret_filepath %}" rel="facebox"> 
+                <img src="{{STATIC_URL}}pinax/img/silk/icons/link_go.png" alt="Public link" title="{% trans 'Public link' %}" />
             </a>
         </td>
         <td>
