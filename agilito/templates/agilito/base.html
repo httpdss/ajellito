@@ -113,6 +113,48 @@ function hide_reply_form(comment_id, url, person_name) {
 </script>
 
 
+{% if autocomplete_words %}
+<script type="text/javascript">
+    $(function() {
+            var availableTags = {{ autocomplete_words|safe }};
+            function split (val) {
+                return val.split(" ");
+            }
+            
+            function extract_last (term) {
+                return split(term).pop();
+            }
+            $("#id_tags")
+                .bind('keydown', function (event) {
+                    if (event.keyCode === $.ui.keyCode.TAB &&
+                        $(this).data('autocomplete').menu.active) {
+                            event.preventDefault();
+                        };
+                })
+                .autocomplete({
+                    minLength:0,
+                    source: function (req, res) {
+                        res($.ui.autocomplete.filter(
+                            availableTags, extract_last(req.term)));
+                    },
+                    focus: function () {
+                        return false;
+                    },
+                    select: function (event, ui) {
+                        var terms = split(this.value);
+                        terms.pop();
+                        terms.push(ui.item.value);
+                        
+                        this.value = terms.join(" ");
+                        return false;
+                    }
+                    
+                    
+                });
+            });
+</script>
+{% endif %}
+
 {% block js %}{% endblock %}
 {% endblock %}
 

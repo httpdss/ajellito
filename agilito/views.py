@@ -14,6 +14,7 @@ from django.db.models import Q
 from django.contrib.sites.models import Site
 from agilito.reporting import Calc, HTML, Formula
 import agilito.reporting
+from tagging.models import Tag
 
 from agilito import CACHE_ENABLED, UNRESTRICTED_SIZE, PRINTABLE_CARD_STOCK, CACHE_PREFIX, BACKLOG_ARCHIVE
 from agilito.exceptions import NoProjectException, UserHasNoProjectException
@@ -479,7 +480,8 @@ def userstory_create(request, project_id, iteration_id=None, instance=None, is_e
                              instance=instance,
                              project=project)
 
-    context = AgilitoContext(request, {"form": form}, current_project=project)
+    context = AgilitoContext(request, {"form": form,
+                               "autocomplete_words": get_words()}, current_project=project)
     return render_to_response("agilito/userstory_edit.html", context_instance=context)
 
 @restricted
@@ -739,7 +741,12 @@ def userstory_detail(request, project_id, userstory_id):
     except UserStory.DoesNotExist:
         raise Http404
 
-
+def get_words():
+    """docstring for get_words"""
+    words = []                
+    for t in Tag.objects.all():
+        words.append('{0}'.format(t.name))
+    return words
 
 #
 # testcase_create and task_create are candidates for generalization and
@@ -798,7 +805,8 @@ def task_create(request, project_id, userstory_id, instance=None):
                         project=Project.objects.get(pk=project_id))
 
     context = AgilitoContext(request, {"form": form,
-                                      "story": story},
+                                      "story": story,
+                                      "autocomplete_words": get_words()},
                             current_project=project_id)
     return render_to_response("agilito/task_create.html", context_instance=context)
 
@@ -818,6 +826,11 @@ def task_detail(request, project_id, userstory_id, task_id):
         reverse("agilito.views.task_delete", args=[project_id, userstory_id, task_id]),
         redirect=reverse("agilito.views.userstory_detail", args=[project_id, userstory_id]),
         props={"class": "delete-object"})
+    sidebar.add("Actions", "Log this task",
+            reverse("agilito.views.timelog_task", args=[project_id, task_id]),
+            redirect=reverse("agilito.views.userstory_detail", args=[project_id,userstory_id]),
+            #redirect=reverse("agilito.views.task_detail", args=[project_id,userstory_id, task_id]),
+            props={"class": "log-object"})
 
     queryset = Task.objects.filter(user_story__project__pk=project_id, user_story__id=userstory_id)
 

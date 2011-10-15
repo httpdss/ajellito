@@ -4,7 +4,6 @@
     <head>
         <title>{% block head_title %}{% trans "Taskboard" %}{% endblock %}</title>
         <link rel="stylesheet" href="{{STATIC_URL}}agilito/css/taskboard.css" type="text/css" />
-
         <script src="{{ STATIC_URL }}pinax/js/jquery-1.5.2.js" type="text/javascript"></script>
         <script type="text/javascript">
         $(function(){
@@ -19,11 +18,9 @@
                        } else {
                            $('.filterable').show();
                        }
-                       
                    });
-                                      
                }
-           }); 
+           });
         });
         </script>
     </head>

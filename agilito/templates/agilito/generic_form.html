@@ -8,28 +8,3 @@
         {{ field|as_uni_field }}
     {% endfor %}
 </fieldset>
-
-
-{% block js %}
-    <script type="text/javascript" src="{{ STATIC_URL }}pinax/js/jquery.bgiframe.min.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}pinax/js/jquery.dimensions.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}pinax/js/jquery.ajaxQueue.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}pinax/js/jquery.autocomplete.min.js"></script>
-    <script type="text/javascript">
-        $(function() {
-
-                $("#id_tags").autocomplete(%s, {
-                    width: 150,
-                    max: 10,
-                    highlight: false,
-                    multiple: true,
-                    multipleSeparator: ", ",
-                    scroll: true,
-                    scrollHeight: 300,
-                    matchContains: true,
-                    autoFill: true,
-                    });
-                });
-    </script>
-
-{% endblock %}
