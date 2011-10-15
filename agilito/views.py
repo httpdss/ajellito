@@ -727,7 +727,7 @@ def userstory_detail(request, project_id, userstory_id):
         redirect=True,
         props={"class": "add-object"})
 
-    context = AgilitoContext(request, {"sidebar": sidebar}, current_project=story.project, current_story=story)
+    context = AgilitoContext(request,{"sidebar": sidebar, "comment_on":story }, current_project=story.project, current_story=story)
     queryset = stories.filter(project__pk=project_id)
 
     try:

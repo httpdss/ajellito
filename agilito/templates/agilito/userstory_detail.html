@@ -132,9 +132,7 @@
 
 <h3 id="tasks">{% trans "Tasks" %}</h3>
   {% if object.task_set.all %}
-
   <table class="pretty-table">
-
       <thead>
           <tr>
               <th>{% trans "Id" %}</th>
@@ -150,14 +148,12 @@
               <th></th>
           </tr>
       </thead>
-
       <tbody>
           {% for task in object.task_set.all %}
           {% include "agilito/task.html" %}
           {%endfor%}
       </tbody>
   </table>
-
 {% else %}
 <p>{% trans "No tasks for this user story" %}</p>
 {% endif %}
@@ -186,4 +182,5 @@
 {% else %}
 <p>{% trans "No tests for this user story" %}</p>
 {% endif %}
+{% include "agilito/comments_section.html" %}
 {% endblock %}
