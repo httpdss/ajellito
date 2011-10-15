@@ -100,4 +100,65 @@ table .release.error td {
 	color: #FFFFFF;
 }
 
+table span.icon {
+    display:block;
+    width:16px;
+    height:16px;
+    background-repeat:no-repeat;
+    background-position:0 0;
+    background-color:transparent;
+    background-image:url(../img/filetype/default.icon.gif);
+    cursor:pointer;
+}
+table .icon[rel$='.jpg'] {
+    background-image:url(../img/filetype/jpg.gif);
+}
 
+table .icon[rel$='.zip'] {
+    background-image:url(../img/filetype/zip.gif);
+}
+
+table .icon[rel$='.png'] {
+    background-image:url(../img/filetype/image.png);
+}
+
+table .icon[rel$='.gif'] {
+    background-image:url(../img/filetype/gif.gif);
+}
+
+table .icon[rel$='.ai'] {
+    background-image:url(../img/filetype/ai.gif);
+}
+
+table .icon[rel$='.doc'] {
+    background-image:url(../img/filetype/doc.gif);
+}
+
+table .icon[rel$='.htm'] {
+    background-image:url(../img/filetype/htm.gif);
+}
+
+table .icon[rel$='.html'] {
+    background-image:url(../img/filetype/html.gif);
+}
+
+table .icon[rel$='.js'] {
+    background-image:url(../img/filetype/js.gif);
+}
+
+table .icon[rel$='.pdf'] {
+    background-image:url(../img/filetype/pdf.gif);
+}
+
+table .icon[rel$='.ppt'] {
+    background-image:url(../img/filetype/ppt.gif);
+}
+table .icon[rel$='.txt'] {
+    background-image:url(../img/filetype/txt.gif);
+}
+table .icon[rel$='.xls'] {
+    background-image:url(../img/filetype/xls.gif);
+}
+table .icon[rel$='.xml'] {
+    background-image:url(../img/filetype/xml.gif);
+}

@@ -103,7 +103,9 @@
 <tbody>
 {% for attach in object.userstoryattachment_set.all %}
     <tr class="{% cycle even,odd %}">
-    <td><span rel="{{attach.attachment}}" class="icon"></span></td>
+        <td style="width:20px;">
+            <span rel="{{attach.attachment}}" class="icon">&nbsp;</span>
+        </td>
         <td>
             <a href="{% url agilito.views.view_attachment current_project.id,object.id,attach.id %}"> 
                 {{attach.name}}
