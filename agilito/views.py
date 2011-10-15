@@ -343,7 +343,7 @@ def impediment_create(request, project_id, iteration_id, instance=None):
         url = reverse("iteration_status_with_id", args=[it.project.id, it.id])
         form = ImpedimentForm(iteration=it, initial={"http_referer" : url}, instance=instance)
 
-    context = AgilitoContext(request, {"form": form})
+    context = AgilitoContext(request, {"form": form}, current_project=it.project.id)
     return render_to_response("agilito/impediment_edit.html", context_instance=context)
 
 @restricted
