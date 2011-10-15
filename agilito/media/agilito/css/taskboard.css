@@ -37,6 +37,10 @@ body {
     clear:both;
 }
 
+.taskboard .owner {
+    display:none;
+}
+
 .taskboard .division.head {
     text-align:center;
 } 
