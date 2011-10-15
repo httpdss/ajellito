@@ -14,6 +14,7 @@
 {% endblock %}
 {% endcomment %}
 {% block css %}
+    <link rel="stylesheet" href="{{ STATIC_URL }}pinax/css/facebox.css" />
 <style>
     #us-head h2 span {
         float:right;
@@ -42,7 +43,6 @@
         list-style:none;
         padding:0;
     }
-    
 </style>
 {% endblock %}
 
@@ -107,7 +107,7 @@
             <span rel="{{attach.attachment}}" class="icon">&nbsp;</span>
         </td>
         <td>
-            <a href="{% url agilito.views.view_attachment current_project.id,object.id,attach.id %}"> 
+            <a href="{% url agilito.views.view_attachment current_project.id,object.id,attach.id %}" rel="facebox"> 
                 {{attach.name}}
             </a>
         </td>
@@ -159,10 +159,7 @@
 {% else %}
 <p>{% trans "No tasks for this user story" %}</p>
 {% endif %}
-
-
 <h3 id="test-cases">{% trans "Test Cases" %}</h3>
-
 {% if object.testcase_set.all %}
 <table class="pretty-table" >
 <thead>
@@ -174,7 +171,6 @@
         <th>{% trans "Description" %}</th>
     </tr>
 </thead>
-
 <tbody>
 {% for object in object.testcase_set.all %}
 {% include "agilito/testcase.html" %}
@@ -185,4 +181,21 @@
 <p>{% trans "No tests for this user story" %}</p>
 {% endif %}
 {% include "agilito/comments_section.html" %}
+
 {% endblock %}
+
+{% block js %}
+    <script src="{{ STATIC_URL }}pinax/js/facebox.js" type="text/javascript"></script>
+    <script type="text/javascript">
+
+        $(function () {
+            $(".icon[rel$='.png'], .icon[rel$='.gif'], .icon[rel$='.jpg']").click(function () {
+                var img_path = $(this).closest('tr').find('a[rel*=facebox]').attr('href');                
+                $.facebox('<img src="'+img_path+'"/>');
+                $('#facebox .close_image').attr('src', '{{STATIC_URL}}pinax/img/facebox/closelabel.gif');
+                $('div.loading img').attr('src', '{{STATIC_URL}}pinax/img/facebox/loading.gif');
+            })
+
+        });
+    </script>
+{% endblock js %}
