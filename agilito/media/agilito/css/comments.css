@@ -23,5 +23,9 @@
 
 .commentbox > div {
     padding-right: 50px;
-} 
+}
+
+#comment-form ul {
+    list-style-type:none;
+}
 

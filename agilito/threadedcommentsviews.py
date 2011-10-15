@@ -55,15 +55,18 @@ def comment(*args, **kwargs):
     http_response = threadedcomments.views.comment(*args, **kwargs)
     messages.add_message(args[0], messages.SUCCESS , _("Comment added succesfully"))
     if notification:
-        ct = get_object_or_404(ContentType, id=int(kwargs['content_type']))
-        obj = ct.get_object_for_this_type(id=int(kwargs['object_id']))
-        notify_list = obj.project.project_members.all()
-        notification.send(notify_list,
-                         "agilito_comment_create",
-                         {'creator': args[0].user,
-                          'comment': args[0].POST.get('comment'),
-                          'object_url': obj.get_absolute_url()})
-    
+        sendto_ids = args[0].POST.get('sendto')
+        if sendto_ids:
+            ct = get_object_or_404(ContentType, id=int(kwargs['content_type']))
+            obj = ct.get_object_for_this_type(id=int(kwargs['object_id']))
+            
+            notify_list = obj.project.project_members.filter(pk__in=sendto_ids)
+            notification.send(notify_list,
+                             "agilito_comment_create",
+                             {'creator': args[0].user,
+                              'comment': args[0].POST.get('comment'),
+                              'object_url': obj.get_absolute_url()})
+        
 
         
     return http_response

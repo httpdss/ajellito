@@ -25,6 +25,14 @@
         {% get_threaded_comment_form as comment_form %}
         <div id="comment-form">{% csrf_token %}
                 {{ comment_form|as_uni_form }}
+                <div class="ctrlHolder">
+                    <p class="label">{% trans "Send to:" %}</p>
+                    <ul>
+                        {% for member in current_project.project_members.all %}
+                        <li><p for="member_{{member.id}}"><input type="checkbox" id="member_{{member.id}}" name="sendto" value="{{member.id}}"> {{member.email}}</p></li>                            
+                        {% endfor %}
+                    </ul>
+                </div>
                 <div class="buttonHolder">
                     <input class="primaryAction" type="submit" value="{% trans "Submit" %}" />
                 </div>
