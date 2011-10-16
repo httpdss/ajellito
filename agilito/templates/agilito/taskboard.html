@@ -70,35 +70,20 @@
                     <div class="lane todo">
                         &nbsp;
                         {% for ta in us.tasks.todo %}
-                        <div class="task filterable">
-                            <div class="name"><a href="{{ ta.get_absolute_url }}">a{{ ta.name }}</a></div>
-                            <div class="remaining" title="remaining">{{ ta.remaining|default_if_none:"-" }} </div>
-                            <div class="owner">{{ta.owner}}</div>
-                        </div>
+                        {% include "agilito/taskboard_task.html" %}
                         {% endfor %}
-
                     </div>
                     <div class="lane in_progress">
                         &nbsp;
                         {% for ta in us.tasks.in_progress %}
-                        <div class="task filterable">
-                            <div class="name" ><a href="{{ ta.get_absolute_url }}">b{{ ta.name }}</a></div>
-                            <div class="remaining" title="remaining">{{ ta.remaining|default_if_none:"-" }}</div>
-                            <div class="owner">{{ta.owner}}</div>
-                        </div>
+                        {% include "agilito/taskboard_task.html" %}
                         {% endfor %}
-
                     </div>
                     <div class="lane done">
                         &nbsp;
                         {% for ta in us.tasks.done %}
-                        <div class="task filterable">
-                            <div class="name"><a href="{{ ta.get_absolute_url }}">c{{ ta.name }}</a></div>
-                            <div class="remaining" title="remaining">{{ ta.remaining|default_if_none:"-" }}</div>
-                            <div class="owner">{{ta.owner}}</div>
-                        </div>
+                        {% include "agilito/taskboard_task.html" %}
                         {% endfor %}
-
                     </div>
                 </div>
                 {% endfor %}
