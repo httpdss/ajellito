@@ -3,6 +3,7 @@
 {% load agilito_utils %}
 {% load humanize %}
 {% load markup %}
+{% load avatar_tags %}
 
 {% block body_class %}iteration agilito{% endblock %}
 
@@ -27,6 +28,11 @@ $(window).ready(function(){
     {% if current_iteration %}
     burndown('burndown');
     {% endif %}
+    
+    $('.task-owner').each(function(){
+        $owner = $(this);
+        $owner.next().attr('title', $owner.html());
+    })
 });
 
 function highlightTag(ids)
@@ -185,10 +191,10 @@ function highlightTag(ids)
                         </ul>
                     </td>
                     <td class="state {{ ta.state|taskstate|slugify }}">{{ta.state|taskstate}}</td>
-                    <td>{{ta.owner|default_if_none:""}}</td>
+                    <td></td>
                     <td class="estimated">{{ta.estimate|default_if_none:"-"}}</td>
                     <td class="todo">{{ta.remaining|default_if_none:"-"}}</td>
-                    <td></td><!-- failures -->
+                    <td></td>
                     <td>
                         {% if not ta.is_archived %}
                         <a href="{% url agilito.views.timelog_task current_project.id,ta.id %}?last_page={{last_page}}">
@@ -213,7 +219,10 @@ function highlightTag(ids)
                             src="{{ STATIC_URL }}agilito/img/delete.png" alt="delete" title="delete" width="16" height="16" /></a>
                         {% endif %}
                     </td>
-                    <td></td>
+                    <td>
+                        <div class="task-owner" style="display:none;">{{ta.owner}}</div>
+                        {% if ta.owner %}{% avatar ta.owner 16 %}{% endif %}
+                    </td>
                 </tr> 
                 {% endfor %}
                 {% endfor %}
