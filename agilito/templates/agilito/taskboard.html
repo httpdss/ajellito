@@ -21,7 +21,7 @@
                     <div class="ctrlHolder">
                         <label for="owner_filter">Owner</label>
                         <select name="owner_filter" id="owner_filter">
-                                <option value="ALL" selected>{% trans "Select an owner..." %}</option>
+                                <option selected="selected" value="ALL">{% trans "Select an owner..." %}</option>
                             {% for member in current_project.project_members.all %}
                                 <option value="{{member.email}}">{{member.email}}</option>
                             {% endfor %}
@@ -57,19 +57,16 @@
                         </div>
                     </div>
                     <div class="lane todo">
-                        &nbsp;
                         {% for ta in us.tasks.todo %}
                         {% include "agilito/taskboard_task.html" %}
                         {% endfor %}
                     </div>
                     <div class="lane in_progress">
-                        &nbsp;
                         {% for ta in us.tasks.in_progress %}
                         {% include "agilito/taskboard_task.html" %}
                         {% endfor %}
                     </div>
                     <div class="lane done">
-                        &nbsp;
                         {% for ta in us.tasks.done %}
                         {% include "agilito/taskboard_task.html" %}
                         {% endfor %}
@@ -84,14 +81,14 @@
         $(function(){
            $('#owner_filter').change(function(){
                var current_value = $(this).val();
-               if (current_value == "ALL") {
+               if (current_value === "ALL") {
                    $('.filterable').show();
                } else {
                    $('.filterable').each(function() {
-                       if ($('.owner',this).html() != current_value) {
-                           $('.filterable').hide();
+                       if ($('.owner', this).html() != current_value) {
+                           $(this).hide();
                        } else {
-                           $('.filterable').show();
+                           $(this).show();
                        }
                    });
                }

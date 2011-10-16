@@ -49,6 +49,7 @@ body {
     width:25%;
     float:left;
     position:relative;
+    min-height:1px;
 }
 
 .taskboard .story, .taskboard .task {
@@ -59,26 +60,28 @@ body {
 
 .taskboard .story {
     background-color:#C9E27D;
+    position:relative;
 }
 
 .taskboard .task {
     background-color:#D8E9F9;
+    position:relative;
 }
 
 .remaining {
     position:absolute;
     bottom:10px;
-    right:25px;
+    right:10px;
 }
 
 .rank {
     position:absolute;
     bottom:10px;
-    left:25px;
+    left:10px;
 }
 
 .actions {
     position:absolute;
     bottom:10px;
-    left:25px;
+    left:10px;
 }
