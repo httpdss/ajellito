@@ -1,33 +1,16 @@
 {% load i18n %}
+{% load compress %}
 {% load analytics_tags %}
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
     <head>
         <title>{% block head_title %}{% trans "Taskboard" %}{% endblock %}</title>
+        {% compress css %}
         <link rel="stylesheet" href="{{ STATIC_URL }}pinax/css/base.css" />
         <link rel="stylesheet" href="{{ STATIC_URL }}pinax/css/tabs.css" />
         <link rel="stylesheet" href="{{STATIC_URL}}agilito/css/taskboard.css" type="text/css" />
-        <script src="{{ STATIC_URL }}pinax/js/jquery-1.5.2.js" type="text/javascript"></script>
-        <script type="text/javascript">
-        $(function(){
-           $('#owner_filter').change(function(){
-               var current_value = $(this).val();
-               if (current_value == "ALL") {
-                   $('.filterable').show();
-               } else {
-                   $('.filterable').each(function() {
-                       if ($('.owner',this).html() != current_value) {
-                           $('.filterable').hide();
-                       } else {
-                           $('.filterable').show();
-                       }
-                   });
-               }
-           });
-        });
-        </script>
+        {% endcompress %}
     </head>
-
     <body>
         {% block flash_messages %}{% include "_flash_messages.html" %}{% endblock %}
         <div class="filters">
@@ -93,6 +76,27 @@
                 {% endfor %}
             </div>
         </div>
+        {% compress js %}
+        <script src="{{ STATIC_URL }}pinax/js/jquery-1.5.2.js" type="text/javascript"></script>
+        <script type="text/javascript">
+        $(function(){
+           $('#owner_filter').change(function(){
+               var current_value = $(this).val();
+               if (current_value == "ALL") {
+                   $('.filterable').show();
+               } else {
+                   $('.filterable').each(function() {
+                       if ($('.owner',this).html() != current_value) {
+                           $('.filterable').hide();
+                       } else {
+                           $('.filterable').show();
+                       }
+                   });
+               }
+           });
+        });
+        </script>
         {% analytics %}
+        {% endcompress %}
     </body>
 </html>
