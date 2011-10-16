@@ -28,6 +28,22 @@ td {
     width: 50%;
 }
 
+#iteration-data .tags li {
+    padding:2px 6px;
+    margin:2px 2px;    
+}
+#iteration-data .tags li:hover, #iteration-data .tags li.selected {
+    background:#def;
+}
+
+#iteration-data .tags li a {
+    color:#333;
+}
+
+#iteration-data .tags li a:hover {
+    text-decoration:none;
+}
+
 #burndown {
     float: right;
 }
@@ -48,7 +64,7 @@ ul.tags {
     display: inline;
 }
 ul.tags li {
-    display: inline;
+    display: inline-block;
     list-style-type: none;
 }
 ul.tags span.big {
@@ -186,4 +202,12 @@ ul.breadcrumbs {
 
 .size-benchmark {
     border: 1px dotted grey;
+}
+.topline {
+    border-top:1px dotted #555;
+    margin-top:5px;
+}
+
+.topline td {
+    padding-top:10px;
 }

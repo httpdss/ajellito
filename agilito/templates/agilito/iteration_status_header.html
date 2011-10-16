@@ -54,7 +54,7 @@
             {% endif %}
 
             {% regroup tags|dictsort:"tag" by tag as grouped_tags %}
-            <tr>
+            <tr class="topline">
                 <td>{% trans "Tags" %}</td>
                 <td>
                     <ul class="tags">
