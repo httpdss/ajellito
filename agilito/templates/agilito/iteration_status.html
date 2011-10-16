@@ -188,9 +188,9 @@ function highlightTag(ids)
                     <td></td><!-- failures -->
                     <td>
                         {% if not ta.is_archived %}
-                        <a href="{% url agilito.views.timelog_task current_project.id,ta.id %}?last_page={{last_page}}"
-                            onclick="popup(this, 'timelog'); return false"><img
-                            src="{{ STATIC_URL }}agilito/img/log.png" alt="log" title="log" width="16" height="16" /></a>
+                        <a href="{% url agilito.views.timelog_task current_project.id,ta.id %}?last_page={{last_page}}">
+                            <img src="{{ STATIC_URL }}agilito/img/log.png" alt="log" title="log" width="16" height="16" />
+                        </a>
                         {% endif %}
                     </td>
                     <td>
