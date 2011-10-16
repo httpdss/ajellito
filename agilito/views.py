@@ -1843,7 +1843,7 @@ def hours_export(request, project_id, iteration_id):
         calc.write((r, 3), Formula("=SUM(%s%d:%s%d)" % (c1, r+1, c2, r+1), 0))
 
     response = HttpResponse(mimetype="application/vnd.oasis.opendocument.spreadsheet")
-    response["Content-Disposition"] = "attachment; filename=iteration.ods"
+    response["Content-Disposition"] = "attachment; filename=iteration-hours.ods"
 
     calc.save(response)
 
