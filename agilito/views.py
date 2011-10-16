@@ -1897,6 +1897,7 @@ def timelog(request, project_id, task_id=None, instance=None):
                     _("Invalid task ID"))
             return HttpResponseRedirect(reverse("agilito.views.backlog", args=[project_id]))
 
+    url = request.GET.get("last_page", reverse('agilito.views.timelog', args=[project_id]))
     TaskLogForm = gen_TaskLogForm(request.user)
 
     if request.method == "POST":
@@ -1926,9 +1927,11 @@ def timelog(request, project_id, task_id=None, instance=None):
             story.save()
             messages.add_message(request, messages.SUCCESS,
                     _("Task %d updated! More?" % form.cleaned_data["task"].id))
-            form = gen_TaskLogForm(request.user)()
+            return HttpResponseRedirect(form.cleaned_data["http_referer"])
+        else:
+            form = gen_TaskLogForm(request.user)(initial={"http_referer" : url})
     else:
-        form = TaskLogForm(instance=instance)
+        form = TaskLogForm(instance=instance, initial={"http_referer" : url})
 
     if task_id is None:
         selectedTask = ''

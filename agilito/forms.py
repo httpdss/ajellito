@@ -565,6 +565,6 @@ def gen_TaskLogForm(user):
                                         'state',
                                         'summary',
                                         'date',
-                                        ]
+                                        'http_referer']
 
     return TaskLogForm
