@@ -29,7 +29,11 @@ function remaining_change() {
         $("#id_time_on_task").val('' + tot);
     }
     if ($("#id_summary").val() == '') {
-        $("#id_summary").val('Spent ' + tot + ' hours');
+        $("#id_summary").val('{% trans "Spent" %} ' + tot + ' {% trans "hours" %}');
+    }
+    if (parseFloat($remaining.val()) == 0) {
+        $('#id_state option').removeAttr('selected');
+        $('#id_state option:last').attr('selected','selected');
     }
 }
 
@@ -47,7 +51,6 @@ $(window).ready(function(){
         onClick: function() {
             $(this).find('span').each(function() {
                 if (this.id) {
-
                     task = this.id.toLowerCase().match(/.*-[a-z][a-z]([0-9]+)$/)[1]
                     task_details(task);
                 }
