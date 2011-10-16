@@ -211,3 +211,7 @@ ul.breadcrumbs {
 .topline td {
     padding-top:10px;
 }
+
+.reset-tags {
+    cursor:pointer;
+}

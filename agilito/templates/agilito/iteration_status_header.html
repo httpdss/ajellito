@@ -55,7 +55,7 @@
 
             {% regroup tags|dictsort:"tag" by tag as grouped_tags %}
             <tr class="topline">
-                <td>{% trans "Tags" %}</td>
+                <td>{% trans "Tags" %} <img title="{% trans 'Reset tag filter' %}" src="{{STATIC_URL}}pinax/img/silk/icons/cancel.png" class="reset-tags" style="display:none;"/></td>
                 <td>
                     <ul class="tags">
                         {% for tag in grouped_tags %}

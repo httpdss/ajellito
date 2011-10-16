@@ -32,17 +32,26 @@ $(window).ready(function(){
     $('.task-owner').each(function(){
         $owner = $(this);
         $owner.next().attr('title', $owner.html());
+    });
+    $('.reset-tags').click(function(){
+        $(this).hide();
+        $("tr.userstory").show();
+        $("tr.task").show();
+        $('.task-tag').removeClass('selected');
+        $('.task-tag a').css({fontWeight:"normal"});
     })
 });
 
 function highlightTag(ids)
 {
+    $('.reset-tags').show();
     $("tr.userstory").each(function() {
         $(this).removeClass("expanded");
         $(this).collapse();
     });
     $("tr.task .name a, .task-tag a").each(function() {
         $(this).css({fontWeight:"normal"});
+        $(this).parent().removeClass('selected');
     });
     $("tr.userstory").hide();
     $("tr.task").hide();
@@ -71,6 +80,7 @@ function highlightTag(ids)
         }
         if (id.indexOf('tag-') == 0) {
             $("#" + id + " a").css({fontWeight:"bold"});
+            $("#" + id + " a").parent().addClass('selected');
         }
     }
 }
