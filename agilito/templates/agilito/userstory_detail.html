@@ -121,7 +121,7 @@
             </a>
         </td>
         <td>
-            <a href="{% url agilito_view_attachment_secret current_project.id,object.id,attach.id,attach.get_secret_filepath %}" rel="facebox"> 
+            <a href="{% url agilito_view_attachment_secret current_project.id,object.id,attach.id,attach.get_secret_filepath %}" class="copypaste"> 
                 <img src="{{STATIC_URL}}pinax/img/silk/icons/link_go.png" alt="Public link" title="{% trans 'Public link' %}" />
             </a>
         </td>
@@ -201,7 +201,12 @@
                 $('#facebox .close_image').attr('src', '{{STATIC_URL}}pinax/img/facebox/closelabel.gif');
                 $('div.loading img').attr('src', '{{STATIC_URL}}pinax/img/facebox/loading.gif');
             })
-
+            
+            $('.copypaste').click(function(event){
+                window.prompt ('{% trans "Copy to clipboard: Ctrl+C, Enter" %}', window.location.origin+$(this).attr('href'));
+                event.preventDefault();
+                return false;
+            });
         });
     </script>
 {% endblock js %}
