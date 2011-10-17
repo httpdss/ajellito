@@ -758,7 +758,7 @@ def get_words():
     """docstring for get_words"""
     words = []                
     for t in Tag.objects.all():
-        words.append('{0}'.format(t.name))
+        words.append('{0}'.format(t.name.encode('utf-8')))
     return words
 
 #

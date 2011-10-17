@@ -21,6 +21,7 @@
     {% include "agilito/burndown.js" %}
 
 <script type="text/javascript">
+var selected_tag_ids;
 $(window).ready(function(){
     $("#user-story-list").treeTable({initialState: "expanded", treeColumn: 1});
     $("#impediment-list").treeTable();
@@ -56,6 +57,8 @@ function highlightTag(ids)
     $("tr.userstory").hide();
     $("tr.task").hide();
     ids = ids.split(',');
+    
+    selected_tag_ids = ids
     for (i in ids) {
         id = ids[i];
         if (id.indexOf('us-') == 0) {
