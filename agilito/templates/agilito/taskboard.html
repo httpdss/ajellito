@@ -23,7 +23,11 @@
                         <select name="owner_filter" id="owner_filter">
                                 <option selected="selected" value="ALL">{% trans "Select an owner..." %}</option>
                             {% for member in current_project.project_members.all %}
+                                {% if member.first_name %}
+                                <option value="{{member.first_name}} {{member.last_name}}">{{member.first_name}} {{member.last_name}}</option>                                    
+                                {% else %}
                                 <option value="{{member.email}}">{{member.email}}</option>
+                                {% endif %}
                             {% endfor %}
                         </select>
                     </div>
