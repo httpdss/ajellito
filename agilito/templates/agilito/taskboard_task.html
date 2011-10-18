@@ -1,7 +1,7 @@
 <div class="task filterable">
     <div class="name"><a href="{{ ta.get_absolute_url }}">{{ ta.name }}</a></div>
     <div class="remaining" title="remaining">{{ ta.remaining|default_if_none:"-" }} </div>
-    <div class="owner">{{ta.owner}}</div>
+    <div class="owner">{{ta.owner.email}}</div>
     <div class="actions">
         <a href="{% url agilito.views.timelog_task current_project.id,ta.id %}?last_page={{last_page}}">
             <img src="{{ STATIC_URL }}agilito/img/log.png" alt="log" title="log" width="16" height="16" />
