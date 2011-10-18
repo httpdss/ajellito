@@ -31,48 +31,44 @@
             </form>
         </div>
         <div class="taskboard">
-            <div class="division bg">
-                <div class="lane"><div class="color"></div></div>
-                <div class="lane"><div class="color"></div></div>
-                <div class="lane"><div class="color"></div></div>
-                <div class="lane"><div class="color"></div></div>
-            </div>
-            <div class="cont">
+            <table>
                 {% for us in stories %}
                 {% if forloop.first %}
-                <div class="division head">
-                    <div class="lane">{% trans "Story" %}</div>
-                    <div class="lane">{% trans "To Do" %}</div>
-                    <div class="lane">{% trans "In Progress" %}</div>
-                    <div class="lane">{% trans "Done" %}</div>
-                </div>
+                <tr>
+                    <td>{% trans "Story" %}</td>
+                    <td>{% trans "To Do" %}</td>
+                    <td>{% trans "In Progress" %}</td>
+                    <td>{% trans "Done" %}</td>
+                </tr>
                 {% endif %}
-                <div class="division">
-                    <div class="lane">
+                <tr>
+                    <td>
                         <div class="story">
                             <div class="name"><a href="{{ us.get_absolute_url }}">{{ us.name }}</a></div>
                             <div class="id">{{ us.code }}</div>
                             <div class="rank" title="rank">{{ us.relative_rank }}</div>
                             <div class="remaining" title="remaining">{{ us.remaining|default_if_none:"-" }}</div>
                         </div>
-                    </div>
-                    <div class="lane todo">
+                    </td>
+                    <td>
                         {% for ta in us.tasks.todo %}
                         {% include "agilito/taskboard_task.html" %}
                         {% endfor %}
-                    </div>
-                    <div class="lane in_progress">
+                    </td>
+                    <td>
                         {% for ta in us.tasks.in_progress %}
                         {% include "agilito/taskboard_task.html" %}
                         {% endfor %}
-                    </div>
-                    <div class="lane done">
+                    </td>
+                    <td>
                         {% for ta in us.tasks.done %}
                         {% include "agilito/taskboard_task.html" %}
                         {% endfor %}
-                    </div>
-                </div>
+                    </td>
+                </tr>
                 {% endfor %}
+            </table>
+
             </div>
         </div>
         {% compress js %}

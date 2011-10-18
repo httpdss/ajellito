@@ -95,3 +95,20 @@ body {
       z-index: 100;
     */
 }
+table {
+    width:100%;
+}
+td {
+    width:25%;
+    min-height:1px;
+    border-right:1px dashed #ccc;
+    vertical-align:top;
+}
+
+td :last {
+    border-right:none;
+}
+
+tr {
+    border-bottom:1px dashed #ccc ;
+}
