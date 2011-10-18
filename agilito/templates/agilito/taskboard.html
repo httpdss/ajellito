@@ -36,41 +36,43 @@
         </div>
         <div class="taskboard">
             <table>
-                {% for us in stories %}
-                {% if forloop.first %}
-                <tr>
-                    <td>{% trans "Story" %}</td>
-                    <td>{% trans "To Do" %}</td>
-                    <td>{% trans "In Progress" %}</td>
-                    <td>{% trans "Done" %}</td>
-                </tr>
-                {% endif %}
-                <tr>
-                    <td>
-                        <div class="story">
-                            <div class="name"><a href="{{ us.get_absolute_url }}">{{ us.name }}</a></div>
-                            <div class="id">{{ us.code }}</div>
-                            <div class="rank" title="rank">{{ us.relative_rank }}</div>
-                            <div class="remaining" title="remaining">{{ us.remaining|default_if_none:"-" }}</div>
-                        </div>
-                    </td>
-                    <td>
-                        {% for ta in us.tasks.todo %}
-                        {% include "agilito/taskboard_task.html" %}
-                        {% endfor %}
-                    </td>
-                    <td>
-                        {% for ta in us.tasks.in_progress %}
-                        {% include "agilito/taskboard_task.html" %}
-                        {% endfor %}
-                    </td>
-                    <td>
-                        {% for ta in us.tasks.done %}
-                        {% include "agilito/taskboard_task.html" %}
-                        {% endfor %}
-                    </td>
-                </tr>
-                {% endfor %}
+                <thead>
+                    <tr>
+                        <td>{% trans "Story" %}</td>
+                        <td>{% trans "To Do" %}</td>
+                        <td>{% trans "In Progress" %}</td>
+                        <td>{% trans "Done" %}</td>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for us in stories %}
+                    <tr>
+                        <td>
+                            <div class="story">
+                                <div class="name"><a href="{{ us.get_absolute_url }}">{{ us.name }}</a></div>
+                                <div class="id">{{ us.code }}</div>
+                                <div class="rank" title="rank">{{ us.relative_rank }}</div>
+                                <div class="remaining" title="remaining">{{ us.remaining|default_if_none:"-" }}</div>
+                            </div>
+                        </td>
+                        <td>
+                            {% for ta in us.tasks.todo %}
+                            {% include "agilito/taskboard_task.html" %}
+                            {% endfor %}
+                        </td>
+                        <td>
+                            {% for ta in us.tasks.in_progress %}
+                            {% include "agilito/taskboard_task.html" %}
+                            {% endfor %}
+                        </td>
+                        <td>
+                            {% for ta in us.tasks.done %}
+                            {% include "agilito/taskboard_task.html" %}
+                            {% endfor %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
             </table>
 
             </div>

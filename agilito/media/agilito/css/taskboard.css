@@ -7,10 +7,6 @@ html, body, .taskboard, .division.bg, .bg .lane {
     width:100%;
 }
 
-.division.bg {
-    position:absolute;
-}
-
 body {
     color: #333333;
     font-family: "Helvetica Neue",Arial,sans-serif;    
@@ -27,23 +23,10 @@ body {
     border-right:1px dashed #CCC;
     height:100%;
 }
-.taskboard .division {
-    width:100%;
-    border-bottom:1px dashed #CCC;
-}
-.taskboard, .taskboard .division{
-    float:left;
-    position:relative;
-    clear:both;
-}
 
 .taskboard .owner {
     display:none;
 }
-
-.taskboard .division.head {
-    text-align:center;
-} 
 
 .taskboard .lane {
     width:25%;
@@ -95,9 +78,11 @@ body {
       z-index: 100;
     */
 }
+
 table {
     width:100%;
 }
+
 td {
     width:25%;
     min-height:1px;
@@ -105,10 +90,26 @@ td {
     vertical-align:top;
 }
 
-td :last {
+td:last-child {
     border-right:none;
 }
 
 tr {
     border-bottom:1px dashed #ccc ;
+}
+
+thead td {
+    text-align:center;
+    padding:5px 0;
+    font-weight:700;
+    font-size:14px;
+}
+
+tbody a {
+    color:#004a8f;
+    text-decoration:none;
+}
+
+tbody a:hover {
+    text-decoration:underline;
 }
