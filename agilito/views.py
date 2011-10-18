@@ -2120,10 +2120,16 @@ class FileList(ListView):
     paginate_by = 20
     template_name = "agilito/file_list.html"
 
+    def get_context_data(self, **kwargs):
+            context = super(FileList, self).get_context_data(**kwargs)
+            context['current_project'] = context['object_list'][0].user_story.project
+            return context
+    
+
     def get_queryset(self):
         """docstring for get_queryset"""
-        has_member = Q(project_members__pk=self.request.user.id)
-        return Project.objects.filter(has_member | is_visible).order_by("-id")
+        has_member = Q(user_story__project__project_members__pk=self.request.user.id)
+        return UserStoryAttachment.objects.filter(has_member).order_by("-id")
 
 class ProjectDetail(DetailView):
     context_object_name = "project"

@@ -3,7 +3,7 @@ from django.contrib import admin
 from django.contrib.auth.decorators import login_required
 
 from agilito.feeds import Backlog, Iteration
-from agilito.views import ProjectList, ProjectCreate, ProjectDetail
+from agilito.views import ProjectList, ProjectCreate, ProjectDetail, FileList
 
 
 admin.autodiscover()
@@ -28,6 +28,7 @@ urlpatterns = patterns('agilito.views',
     
 
     url(r'^(?P<project_id>\d+)/backlog/$', 'backlog', name='product_backlog'),
+    url(r'^(?P<project_id>\d+)/files/$', login_required(FileList.as_view()), name='agilito_project_files'),
     url(r'^(?P<project_id>\d+)/backlog/states=(?P<states>\d+(:\d+)*)/$', 'backlog', name='product_backlog_states'),
     url(r'^(?P<project_id>\d+)/backlog/states=(?P<states>\d+(:\d+)*)/suggest-(?P<suggest>actuals|estimates)/$', 'backlog',
         name='product_backlog_states_suggest'),

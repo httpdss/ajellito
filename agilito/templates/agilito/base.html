@@ -181,6 +181,7 @@ function hide_reply_form(comment_id, url, person_name) {
         <li id="tab_iteration"><a href="{% url current_iteration_status current_project.pk %}">{% trans "Iteration" %}</a></li>
         <li id="tab_timelog"><a href="{% url timelog current_project.pk %}">{% trans "Log" %}</a></li>
         <li id="tab_hours"><a href="{% url current_iteration_hours current_project.pk %}">{% trans "Hours" %}</a></li>
+        <li id="tab_files"><a href="{% url agilito_project_files current_project.pk %}">{% trans "Files" %}</a></li>
         {% endif %}
     {% endspaceless %}</ul>
     {% if project_list and current_project %}
