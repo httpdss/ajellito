@@ -1140,7 +1140,7 @@ def iteration_status(request, project_id, iteration_id=None, template="agilito/i
         iteration = _get_iteration(project_id)
     else:
         try:
-            iteration = Iteration.objects.select_related().get(pk=iteration_id, project__pk=project_id)
+            iteration = Iteration.objects.get(pk=iteration_id, project__pk=project_id)
         except Iteration.DoesNotExist:
             raise Http404
 
@@ -2113,7 +2113,17 @@ class ProjectList(ListView):
         """docstring for get_queryset"""
         has_member = Q(project_members__pk=self.request.user.id)
         is_visible = Q(visibility=1)
-        return Project.objects.filter(has_member | is_visible).order_by("id")
+        return Project.objects.filter(has_member | is_visible).order_by("-id")
+
+class FileList(ListView):
+    """Generic view to show the list of files"""
+    paginate_by = 20
+    template_name = "agilito/file_list.html"
+
+    def get_queryset(self):
+        """docstring for get_queryset"""
+        has_member = Q(project_members__pk=self.request.user.id)
+        return Project.objects.filter(has_member | is_visible).order_by("-id")
 
 class ProjectDetail(DetailView):
     context_object_name = "project"
