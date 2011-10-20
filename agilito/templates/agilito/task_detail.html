@@ -15,7 +15,7 @@
 </ul>
 
 <div id="us-head"> 
-    <h2> TA{{task.id}}: {{task.name}} </h2>
+    <h2> TA{{task.id}}: {{task.name}} {% include "agilito/short_url.html" with object=task %}</h2>
     <span class="{{task.get_state_display|slugify }}">{% trans "State:" %} {{task.get_state_display}}</span> 
     <div class="visualClear"></div>
 </div>

@@ -8,3 +8,4 @@ django-tagging-ext
 django-avatar
 Markdown
 Pygments
+django-shorturls

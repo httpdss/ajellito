@@ -58,7 +58,7 @@
     <li class="visualClear" />
 </ul>
 <div id="us-head" {%if object.is_blocked%}class="blocked"{% endif %}> 
-    <h2>{{ object }}</h2>
+    <h2>{{ object }} {% include "agilito/short_url.html" %}</h2>
     <div class="visualClear"></div>
 </div>
 <div id="us-resume">
@@ -200,12 +200,6 @@
                 $.facebox('<img src="'+img_path+'"/>');
                 $('#facebox .close_image').attr('src', '{{STATIC_URL}}pinax/img/facebox/closelabel.gif');
                 $('div.loading img').attr('src', '{{STATIC_URL}}pinax/img/facebox/loading.gif');
-            })
-            
-            $('.copypaste').click(function(event){
-                window.prompt ('{% trans "Copy to clipboard: Ctrl+C, Enter" %}', window.location.origin+$(this).attr('href'));
-                event.preventDefault();
-                return false;
             });
         });
     </script>

@@ -75,6 +75,11 @@ $(document).ready(function(){
             $("#zoomable").addClass("zoomed");
         }
     $("#id_tasks").treeTable({initialState: "expanded"});
+    $('.copypaste').click(function(event){
+        window.prompt ('{% trans "Copy to clipboard: Ctrl+C, Enter" %}', window.location.origin+$(this).attr('href'));
+        event.preventDefault();
+        return false;
+    });
 })
 
 {% if comment_on %}
@@ -151,6 +156,7 @@ function hide_reply_form(comment_id, url, person_name) {
                     
                     
                 });
+                
             });
 </script>
 {% endif %}
@@ -190,5 +196,5 @@ function hide_reply_form(comment_id, url, person_name) {
         <option {% ifequal project.id current_project.id %} selected="selected" {% endifequal %} value="{{project.id}}">{{project.name}}</option>
         {% endfor %}
     </select>
-{% endif %}
+    {% endif %}
 {% endblock %}
