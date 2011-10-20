@@ -322,7 +322,7 @@ def view_attachment(request, project_id, userstory_id, attachment_id, secret=Non
 
 
 @restricted
-def impediment_create(request, project_id, iteration_id, instance=None):
+def impediment_create(request, project_id, iteration_id, instance=None, task_id=None):
     it = Iteration.objects.get(pk=iteration_id)
 
     if request.method == "POST":
@@ -741,6 +741,12 @@ def userstory_detail(request, project_id, userstory_id):
         reverse("agilito.views.testcase_create", args=[project_id, userstory_id]),
         redirect=True,
         props={"class": "add-object"})
+        
+    if story.iteration:
+        sidebar.add("Actions", "Report Impediment",
+                reverse("agilito.views.impediment_create", args=[project_id, story.iteration.id]),
+                redirect=True,
+                props={"class": "add-object"})
 
     context = AgilitoContext(request,{"sidebar": sidebar, "comment_on":story }, current_project=story.project, current_story=story)
     queryset = stories.filter(project__pk=project_id)
@@ -844,10 +850,21 @@ def task_detail(request, project_id, userstory_id, task_id):
             redirect=reverse("agilito.views.userstory_detail", args=[project_id,userstory_id]),
             #redirect=reverse("agilito.views.task_detail", args=[project_id,userstory_id, task_id]),
             props={"class": "log-object"})
+    sidebar.add("Actions", "Add an attachment",
+            reverse("agilito.views.add_attachment", args=[project_id, userstory_id]),
+            redirect=True,
+            props={"class": "add-object"})
+
 
     queryset = Task.objects.filter(user_story__project__pk=project_id, user_story__id=userstory_id)
 
     task = queryset.get(pk=task_id)
+    
+    if task.user_story.iteration:
+        sidebar.add("Actions", "Report Impediment",
+                reverse("agilito.views.impediment_create", args=[project_id, task.user_story.iteration.id]),
+                redirect=True,
+                props={"class": "add-object"})
 
     context = AgilitoContext(request, {"sidebar": sidebar, "comment_on":task }, current_project=project_id, current_story=userstory_id)
     return object_detail(request, queryset=queryset, template_name="agilito/task_detail.html",
