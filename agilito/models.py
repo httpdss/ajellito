@@ -1026,7 +1026,7 @@ class UserStoryAttachment(ClueModel):
         return self.user_story
 
     def get_secret_filepath(self):
-        return hashlib.md5("%s%s%s" % (self.pk, self.original_name, settings.SECRET_KEY)).hexdigest()
+        return hashlib.md5("%s%s%s" % (self.pk, self.original_name.encode('utf-8'), settings.SECRET_KEY)).hexdigest()
     
     class Meta:
         verbose_name = _(u"US Attachment")
