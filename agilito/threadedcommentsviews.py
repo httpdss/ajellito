@@ -65,7 +65,8 @@ def comment(*args, **kwargs):
                              "agilito_comment_create",
                              {'creator': args[0].user,
                               'comment': args[0].POST.get('comment'),
-                              'object_url': obj.get_absolute_url()})
+                              'object_url': obj.get_absolute_url(),
+                              'object': obj})
         
 
         

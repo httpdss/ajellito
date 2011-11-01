@@ -1,6 +1,10 @@
 {% load i18n %}
 {% load account_tags %}
 {% user_display creator as creator_display %}
-{% blocktrans %}{{ creator_display }} has added a comment{% endblocktrans %}
+
+{% blocktrans %}{{ creator_display }} has added a comment to {{ object }}{% endblocktrans %}
 
 {{ comment }}
+
+------------------------------------------------------------
+{{ object_url }}
