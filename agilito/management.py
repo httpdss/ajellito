@@ -23,7 +23,7 @@ if "notification" in settings.INSTALLED_APPS:
         
         notification.create_notice_type("agilito_impediment_create", _("Impediment Added"), _("an impediment has been added"), default=0)
         notification.create_notice_type("agilito_impediment_edit", _("Impediment Edited"), _("an impediment has been edited"), default=0)
-        notification.create_notice_type("agilito_impediment_create", _("Impediment Deleted"), _("an impediment has been deleted"), default=0)
+        notification.create_notice_type("agilito_impediment_delete", _("Impediment Deleted"), _("an impediment has been deleted"), default=0)
         
         notification.create_notice_type("agilito_attachment_create", _("Attachment Added"), _("an attachment has been added"), default=0)
         notification.create_notice_type("agilito_attachment_edit", _("Attachment Edited"), _("an attachment has been edited"), default=0)
