@@ -1,10 +1,13 @@
 {% load i18n %}
 {% load account_tags %}
+{% load shorturl %}
+
 {% user_display creator as creator_display %}
 
 {% blocktrans %}{{ creator_display }} has added a comment to {{ object }}{% endblocktrans %}
 
 {{ comment }}
 
+
 ------------------------------------------------------------
-{{BASE_URL}}{{ object_url }}
+{% trans 'Link' %}: http://{{ current_site }}{{object_url}}
