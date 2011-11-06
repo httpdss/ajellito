@@ -185,9 +185,9 @@ function highlightTag(ids)
                     </td>
 
                     <td id="move_us_{{us.id}}" class="">
-                        <a href="{% url agilito.views.userstory_move current_project.id,us.id %}?last_page={{last_page}}"
-                            onclick="popup(this, 'us-move'); return false"><img
-                            src="{{ STATIC_URL }}agilito/img/bullet_go.png" alt="move" title="move" width="16" height="16" /></a>
+                        <a href="{% url agilito.views.userstory_move current_project.id,us.id %}?last_page={{last_page}}">
+                            <img src="{{ STATIC_URL }}agilito/img/bullet_go.png" alt="move" title="move" width="16" height="16" />
+                        </a>
                     </td>
                 </tr> 
 
@@ -218,7 +218,6 @@ function highlightTag(ids)
                     <td>
                         {% if not ta.is_archived %}
                         <a id="task_edit_{{ta.id}}"
-                            onclick="popup(this, 'taskedit'); return false"
                             href="{% url agilito.views.task_edit current_project.id,us.id,ta.id %}?last_page={{last_page}}"><img
                             src="{{ STATIC_URL }}agilito/img/pencil.png" alt="edit"
                             title="edit" width="16" height="16" /></a>
@@ -226,10 +225,9 @@ function highlightTag(ids)
                     </td>
                     <td>
                         {% if not ta.is_archived %}
-                        <a id="task_del_{{ta.id}}"
-                            onclick="popup(this, 'taskdel'); return false"
-                            href="{% url agilito.views.task_delete current_project.id,us.id,ta.id %}?last_page={{last_page}}"><img
-                            src="{{ STATIC_URL }}agilito/img/delete.png" alt="delete" title="delete" width="16" height="16" /></a>
+                        <a id="task_del_{{ta.id}}" href="{% url agilito.views.task_delete current_project.id,us.id,ta.id %}?last_page={{last_page}}">
+                            <img src="{{ STATIC_URL }}agilito/img/delete.png" alt="delete" title="delete" width="16" height="16" />
+                        </a>
                         {% endif %}
                     </td>
                     <td>
@@ -259,12 +257,10 @@ function highlightTag(ids)
                 {% for impediment in impediments.open %}
                 <tr class="{% cycle even,odd %}" id="impediment-{{ impediment.id }}">
                     {% url impediment_edit current_project.id current_iteration.id impediment.id as impediment_url %}
-                    <td><a onclick="popup(this, 'impediment'); return false"
-                            href="{{ impediment_url }}?last_page={{last_page}}">IM{{ impediment.id }}</a></td>
+                    <td><a href="{{ impediment_url }}?last_page={{last_page}}">IM{{ impediment.id }}</a></td>
                     <td>{{ impediment.tasks.count }}</a></td>
                     <td>{{ impediment.risk }}</a></td>
-                    <td><a onclick="popup(this, 'impediment'); return false"
-                            href="{{ impediment_url }}?last_page={{last_page}}">{{ impediment.name }}</a></td>
+                    <td><a href="{{ impediment_url }}?last_page={{last_page}}">{{ impediment.name }}</a></td>
                 </tr>
 
         {% for task in impediment.tasks %}
@@ -288,12 +284,10 @@ function highlightTag(ids)
 
     {% for impediment in impediments.resolved %}
     <tr id="impediment-{{ impediment.id }}" class="child-of-resolved-impediments">
-        <td><a onclick="popup(this, 'impediment'); return false"
-                href="{{ impediment.get_absolute_url }}?last_page={{last_page}}">IM{{ impediment.id }}</a></td>
+        <td><a href="{{ impediment.get_absolute_url }}?last_page={{last_page}}">IM{{ impediment.id }}</a></td>
         <td>{{ impediment.tasks.count }}</a></td>
     <td>&nbsp;</td>
-    <td><a onclick="popup(this, 'impediment'); return false"
-            href="{{ impediment.get_absolute_url }}?last_page={{last_page}}">{{ impediment.name }}</a></td>
+    <td><a href="{{ impediment.get_absolute_url }}?last_page={{last_page}}">{{ impediment.name }}</a></td>
 </tr>
 
 {% for task in impediment.tasks %}
