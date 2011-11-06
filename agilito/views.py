@@ -1340,7 +1340,12 @@ def product_backlog_chart(request, project_id, iteration_id):
             days = []
             labels = []
 
-        it = Iteration.objects.filter(project__id=project_id, end_date__range=(start_date,datetime.date(3980,1,1)), start_date__range=(datetime.date(1980,1,1),today)).order_by("end_date")
+        q_project = Q(project__id=project_id)
+        q_end_date = Q(end_date__gte='%s' % str(start_date))
+        q_start_date = Q(start_date__lte='%s' % str(today))
+        
+        it = Iteration.objects.filter(q_project, q_end_date, q_start_date).order_by("end_date")
+
         for i in it:
             days.append(i.end_date)
             labels.append(i.name)
@@ -1395,7 +1400,8 @@ def product_backlog_chart(request, project_id, iteration_id):
         "completed": completed,
         "xlabels": labels
     }
-
+    
+    
     context = AgilitoContext(request, data)
     return render_to_response("agilito/backlog_evolution.html", context_instance=context)
 
