@@ -1340,7 +1340,7 @@ def product_backlog_chart(request, project_id, iteration_id):
             days = []
             labels = []
 
-        it = Iteration.objects.filter(project__id=project_id, end_date__gte=start_date, start_date__lte=today).order_by("end_date")
+        it = Iteration.objects.filter(project__id=project_id, end_date__range=(start_date,datetime.date(3980,1,1)), start_date__range=(datetime.date(1980,1,1),today)).order_by("end_date")
         for i in it:
             days.append(i.end_date)
             labels.append(i.name)
