@@ -5,7 +5,6 @@
 
 {% block head_title %}{% trans "Adding/Editing a project" %}{% endblock %}
 {% block body %}
-
 <h2><small>{% trans "adding/editing a project" %}</small><br /> {{ story }}</h2>
 <form method="post" class="uniForm">{% csrf_token %}
 {% include "agilito/generic_form.html" %}
