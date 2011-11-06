@@ -1,0 +1,118 @@
+[
+    {
+        "pk": 1, 
+        "model": "agilito.project", 
+        "fields": {
+            "project_members": [
+                1, 
+                2
+            ], 
+            "name": "My Sample Project", 
+            "visibility": 2, 
+            "description": ""
+        }
+    }, 
+    {
+        "pk": 1, 
+        "model": "agilito.release", 
+        "fields": {
+            "project": 1, 
+            "deadline": "2011-09-13", 
+            "name": "Release Sample", 
+            "rank": 3, 
+            "description": ""
+        }
+    }, 
+    {
+        "pk": 1, 
+        "model": "agilito.iteration", 
+        "fields": {
+            "name": "Iteration Sample", 
+            "end_date": "2011-09-10", 
+            "project": 1, 
+            "release": 1, 
+            "start_date": "2011-08-20", 
+            "description": ""
+        }
+    }, 
+    {
+        "pk": 1, 
+        "model": "agilito.userstory", 
+        "fields": {
+            "name": "My first sample story", 
+            "created": "2011-09-03", 
+            "copied_from": null, 
+            "tags": "", 
+            "iteration": 1, 
+            "rank": null, 
+            "project": 1, 
+            "state": 10, 
+            "closed": null, 
+            "size": null, 
+            "description": ""
+        }
+    }, 
+    {
+        "pk": 2, 
+        "model": "agilito.userstory", 
+        "fields": {
+            "name": "My second sample story", 
+            "created": "2011-09-03", 
+            "copied_from": null, 
+            "tags": "", 
+            "iteration": 1, 
+            "rank": null, 
+            "project": 1, 
+            "state": 10, 
+            "closed": null, 
+            "size": null, 
+            "description": ""
+        }
+    },
+    {
+        "pk": 1, 
+        "model": "agilito.task", 
+        "fields": {
+            "category": 0, 
+            "user_story": 1, 
+            "name": "my sample task 001", 
+            "tags": "", 
+            "state": 20, 
+            "owner": 1, 
+            "estimate": 10.0, 
+            "remaining": 10.0, 
+            "description": ""
+        }
+    },
+    {
+        "pk": 2, 
+        "model": "agilito.task", 
+        "fields": {
+            "category": 0, 
+            "user_story": 1, 
+            "name": "my sample task 002", 
+            "tags": "", 
+            "state": 20, 
+            "owner": 1, 
+            "estimate": 10.0, 
+            "remaining": 10.0, 
+            "description": ""
+        }
+    },
+    {
+        "pk": 3, 
+        "model": "agilito.task", 
+        "fields": {
+            "category": 0, 
+            "user_story": 2, 
+            "name": "my sample task 003", 
+            "tags": "",
+            "state": 20, 
+            "owner": 1, 
+            "estimate": 15.0, 
+            "remaining": 15.0, 
+            "description": ""
+        }
+    }
+    
+]
