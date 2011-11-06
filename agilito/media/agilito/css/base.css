@@ -9,13 +9,18 @@ select[multiple="multiple"] {
   padding: 3px;
 }
 
+#left_tabs {
+    height:21px;
+}
+
 #left_tabs .tabs{
     float:left;
 }
 
 #left_tabs select {
     margin-left:5px;
-    margin-bottom:2px;
+    padding-bottom:2px;
+    height:18px;
 }
 
 .comments_section {
