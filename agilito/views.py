@@ -2140,13 +2140,18 @@ class FileList(ListView):
     def get_context_data(self, **kwargs):
             context = super(FileList, self).get_context_data(**kwargs)
             context['current_project'] = context['object_list'][0].user_story.project
+            has_member = Q(project_members__pk=self.request.user.id)
+            is_visible = Q(visibility=1)
+            context['project_list'] = Project.objects.filter(has_member | is_visible).order_by("-id")
             return context
     
-
     def get_queryset(self):
         """docstring for get_queryset"""
+        context = self.args[0]
+        assert False
         has_member = Q(user_story__project__project_members__pk=self.request.user.id)
-        return UserStoryAttachment.objects.filter(has_member).order_by("-id")
+        is_project = Q(user_story__project__pk=myid.id)
+        return UserStoryAttachment.objects.filter(has_member | is_project).order_by("-id")
 
 class ProjectDetail(DetailView):
     context_object_name = "project"
