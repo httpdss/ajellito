@@ -234,8 +234,19 @@ VISIBILITY_CHOICE = (
         (2, _("Private"))
         )
 
+class ProjectManager(models.Manager):
+
+    def for_user(self, user):
+            return super(ProjectManager, self)\
+                        .get_query_set()\
+                        .filter(project_members=user)\
+                        .extra(select={"lower_name": "lower(name)"})\
+                        .order_by("lower_name")        
+
 # Create your models here.
 class Project(ClueModel):
+    
+    objects = ProjectManager()
     prefix = "P"
 
     project_members = models.ManyToManyField(User, null=True, blank=True)
