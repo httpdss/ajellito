@@ -1286,10 +1286,12 @@ def product_backlog_chart(request, project_id, iteration_id):
             labels = []
 
         q_project = Q(project__id=project_id)
-        q_end_date = Q(end_date__gte='%s' % str(start_date))
-        q_start_date = Q(start_date__lte='%s' % str(today))
+        q_end_date = Q(end_date__gte=start_date)
+        q_start_date = Q(start_date__lte=today)
         
-        it = Iteration.objects.filter(q_project, q_end_date, q_start_date).order_by("end_date")
+        it = Iteration.objects.filter(q_project,
+                                      q_end_date,
+                                      q_start_date).order_by("end_date")
 
         for i in it:
             days.append(i.end_date)
