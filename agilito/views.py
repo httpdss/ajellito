@@ -157,7 +157,7 @@ def generic_update(request, project_id, *args, **kwargs):
 
 @restricted
 def add_attachment(request, project_id, userstory_id, instance=None):
-    story = UserStory.objects.filter(id=userstory_id,project__id=project_id).get()
+    story = UserStory.objects.get(id=userstory_id, project__id=project_id)
     if request.method == "POST":
         form = UserStoryAttachmentForm(request.POST,
                                        request.FILES,
@@ -980,8 +980,8 @@ def search(request, project_id):
     """
 
     AVAILABLE_MODELS = { "User Story" : UserStory,
-                         "Task" :   Task,
-                         "Test Case": TestCase,}
+                         "Task" : Task,
+                         "Test Case" : TestCase,}
 
     PREFIX = { "User Story" : "US",
                "Task" : "TA",
