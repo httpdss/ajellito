@@ -1,5 +1,5 @@
 from django.contrib.auth.decorators import login_required
-from django.http import Http404
+from django.http import Http404, HttpResponse
 from django.utils.datastructures import SortedDict
 try:
     from functools import wraps
@@ -8,6 +8,53 @@ except ImportError:
 
 from agilito.models import Project
 import html5lib
+
+def touch_cache(request, project_id):
+    response = HttpResponse(mimetype="text/plain")
+    if CACHE_ENABLED:
+        Project.touch_cache(project_id)
+        response.write("Touched cache for project %s\n" % project_id)
+        response.write("CACHE_PREFIX=%s\n" % CACHE_PREFIX)
+    else:
+        response.write("Caching is disabled")
+    return response
+    
+def cached_view(f):
+    def f_cached(*args, **kwargs):
+        global CACHE_ENABLED
+
+        if not CACHE_ENABLED:
+            return f(*args, **kwargs)
+
+        params = f.func_code.co_varnames[1:f.func_code.co_argcount]
+        vardict = dict(zip(params, ['<default>' for d in params]))
+        vardict.update(dict(zip(params, args[1:])))
+        vardict.update(kwargs)
+        u = args[0].user # request.user
+
+        pv = Project.cache_id(vardict["project_id"])
+
+        key = "%s.agilito.views.%s(%s)" % (CACHE_PREFIX, f.__name__, ",".join([str(vardict[v]) for v in params]))
+
+        v = cache.get(key + "#version")
+        if v == pv:
+            v = cache.get(key + "#value")
+            if not v is None:
+                return v
+
+        v = f(*args, **kwargs)
+        cache.set(key + '#version', pv, 1000000)
+        cache.set(key + '#value', v, 1000000)
+
+        return v
+
+    return f_cached
+
+
+
+def datelabels(dates, l):
+    label = ["mo", "tu", "we", "th", "fr", "sa", "su"]
+    return list(enumerate([label[d.weekday()][:l] for d in dates]))
 
 class SideBar(SortedDict):
     class Sub(list):

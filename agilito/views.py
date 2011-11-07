@@ -65,49 +65,13 @@ from agilito.forms import UserStoryForm, UserStoryShortForm, gen_TaskLogForm,\
     UserStoryMoveForm, IterationImportForm, ReleaseForm, IterationForm, \
     ProjectForm
 
-from agilito.tools import restricted
+from agilito.tools import restricted, datelabels, SideBar, cached_view as cached, touch_cache
 
 
 if "notification" in getattr(settings, "INSTALLED_APPS"):
     from notification import models as notification
 else:
     notification = None
-
-
-
-def cached(f):
-    def f_cached(*args, **kwargs):
-        global CACHE_ENABLED
-
-        if not CACHE_ENABLED:
-            return f(*args, **kwargs)
-
-        params = f.func_code.co_varnames[1:f.func_code.co_argcount]
-        vardict = dict(zip(params, ['<default>' for d in params]))
-        vardict.update(dict(zip(params, args[1:])))
-        vardict.update(kwargs)
-        u = args[0].user # request.user
-
-        pv = Project.cache_id(vardict["project_id"])
-
-        key = "%s.agilito.views.%s(%s)" % (CACHE_PREFIX, f.__name__, ",".join([str(vardict[v]) for v in params]))
-
-        v = cache.get(key + "#version")
-        if v == pv:
-            v = cache.get(key + "#value")
-            if not v is None:
-                return v
-
-        v = f(*args, **kwargs)
-        cache.set(key + '#version', pv, 1000000)
-        cache.set(key + '#value', v, 1000000)
-
-        return v
-
-    return f_cached
-
-
-from agilito.tools import SideBar
 
 class AgilitoContext(RequestContext):
     """
@@ -156,22 +120,6 @@ class AgilitoContext(RequestContext):
 
     def iteritems(self):
         return self.dictionary.iteritems()
-
-# Views
-
-def touch_cache(request, project_id):
-    response = HttpResponse(mimetype="text/plain")
-    if CACHE_ENABLED:
-        Project.touch_cache(project_id)
-        response.write("Touched cache for project %s\n" % project_id)
-        response.write("CACHE_PREFIX=%s\n" % CACHE_PREFIX)
-    else:
-        response.write("Caching is disabled")
-    return response
-
-def datelabels(dates, l):
-    label = ["mo", "tu", "we", "th", "fr", "sa", "su"]
-    return list(enumerate([label[d.weekday()][:l] for d in dates]))
 
 @login_required
 def index(request):
