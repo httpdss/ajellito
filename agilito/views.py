@@ -981,11 +981,13 @@ def search(request, project_id):
 
     AVAILABLE_MODELS = { "User Story" : UserStory,
                          "Task" : Task,
-                         "Test Case" : TestCase,}
+                         "Test Case" : TestCase,
+                         "Attachment" : UserStoryAttachment}
 
     PREFIX = { "User Story" : "US",
                "Task" : "TA",
                "Test Case": "TC",
+               "Attachment": "AT",
              }
 
     query_statement = request.GET.get("query", "")
@@ -1006,10 +1008,10 @@ def search(request, project_id):
 
     try:
         context = AgilitoContext(request, {"query": query_statement,
-                                          "resultcount": queryset.count,
-                                          "querystring": querystring,
-                                          "prefix" : prefix,
-                                          }, current_project=project_id)
+                                           "resultcount": queryset.count,
+                                           "querystring": querystring,
+                                           "prefix" : prefix,
+                                           }, current_project=project_id)
     except UserHasNoProjectException:
         messages.add_message(request, messages.ERROR,
                 _("You are not assigned into any project."))
