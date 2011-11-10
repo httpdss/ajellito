@@ -16,12 +16,11 @@
 <script type="text/javascript" src="{{STATIC_URL}}agilito/js/jquery.uitablefilter.js"></script>
 
 <script type="text/javascript">
-    function reset_states()
-{
-    {% for state in states %}
-    $('#story_state_{{state.state}}').attr('checked', {% if state.selected %} true {% else %} false {% endif %});
-    {% endfor %}
-}
+    function reset_states() {
+        {% for state in states %}
+        $('#story_state_{{state.state}}').attr('checked', {% if state.selected %} true {% else %} false {% endif %});
+        {% endfor %}
+    }
 
 function select_states() {
     var states = [];
@@ -263,7 +262,6 @@ $("#filter").keyup(function() {
 {% block head_title %} {% trans "User Stories in the Backlog" %} {% endblock %}
 
 {% if current_project %}
-    {% block select_tab %} "backlog" {% endblock %}
 
     {% block body_header %}
         {% include "agilito/product_backlog_body_header.html" %}
