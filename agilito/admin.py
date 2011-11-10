@@ -49,7 +49,7 @@ class UserStoryAdmin(admin.ModelAdmin):
     list_filter = ('project', 'iteration', 'state', )
     ordering = ('rank','size', )
     search_fields = ['name', 'description']
-
+    
     fieldsets = ((None, {'fields': ('name', 'description',
                                    ('project', 'iteration'),
                                    ('rank', 'state', 'size', ))}), )
@@ -73,7 +73,7 @@ class TestCaseAdmin(admin.ModelAdmin):
                             'postcondition',),
                 }),
                 )
-
+    
     list_display = ('id', 'name', 'user_story', 'priority')
     list_display_links = ('id', 'name',)
     list_filter = ('priority',)
@@ -86,7 +86,7 @@ class TestResultAdmin(admin.ModelAdmin):
 
 class TaskLogAdmin(admin.ModelAdmin):
     list_display = ('summary', 'task', 'iteration', 'project', 'date', 'time_on_task', 'owner')
-    list_filter = ('owner',)
+    list_filter = ('owner','date')
     date_hierarchy = 'date'
     search_fields = ('summary', 'iteration__name', 'iteration__project__name')
     ordering = ('-date',)
