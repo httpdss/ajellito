@@ -83,6 +83,7 @@ class AgilitoContext(RequestContext):
 
         if request.user.is_authenticated():
             project_list = Project.objects.for_user(request.user)
+            is_viewer = request.user.groups.filter(name='Viewer') and True or False
         else:
             raise UserHasNoProjectException
 
@@ -113,6 +114,7 @@ class AgilitoContext(RequestContext):
             self.dictionary["current_project"] = current_project
             self.dictionary["current_story"] = current_story
             self.dictionary["last_page"] = request.path
+            self.dictionary["is_viewer"] = is_viewer
         RequestContext.__init__(self, self.request, self.dictionary)
 
     def items(self):
@@ -1860,6 +1862,16 @@ def _parseTimelogCmd(spec):
     return (None, (key, id))
 
 @restricted
+def timelog_mylog(request, project_id):
+    logs = TaskLog.objects.filter(owner=request.user).order_by('-date')
+    context = AgilitoContext(request, {"logs": logs},
+                                      current_project=project_id)
+
+    return render_to_response("agilito/timelog_mylog_list.html", context_instance=context)
+    
+    
+
+@restricted
 def timelog(request, project_id, task_id=None, instance=None):
     if not task_id is None:
         try:
@@ -2112,4 +2124,5 @@ class ProjectDetail(DetailView):
         has_member = Q(project_members__pk=self.request.user.id)
         is_visible = Q(visibility=1)
         return Project.objects.filter(has_member | is_visible).order_by("id")
+
     

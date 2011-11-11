@@ -4,6 +4,13 @@
 
 {% block body_class %}timelog agilito{% endblock %}
 
+{% block subnav %}
+<ul>
+    <li><a href="{% url timelog current_project.pk %}">{% trans "Log Hours" %}</a></li>
+    <li><a href="{% url agilito_tasklog_mylog current_project.pk %}">{% trans "My Log" %}</a></li>
+</ul>
+{% endblock %}
+
 {% block js %}
 <script type="text/javascript">
 

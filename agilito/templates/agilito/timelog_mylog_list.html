@@ -1,0 +1,40 @@
+{% extends "agilito/base.html" %}
+{% load i18n %}
+{% load pagination_tags %}
+{% block subnav %}
+<ul>
+    <li><a href="{% url timelog current_project.pk %}">{% trans "Log Hours" %}</a></li>
+    <li><a href="{% url agilito_tasklog_mylog current_project.pk %}">{% trans "My Log" %}</a></li>
+</ul>
+{% endblock %}
+
+{% block head_title %}{% trans "My Log" %}{% endblock %}
+{% block body_class %}agilito projects{% endblock %}
+
+{% block body %}
+  
+  <h2>{% trans "My Log" %}</h2>
+
+    {% if logs %}
+    {% autopaginate logs 20 %}
+    <table class="pretty-table" id="user-story-list" cellspacing="0" cellpadding="2">
+        <tbody>
+            {% for log in logs %}
+            <tr class="{% cycle even,odd %}">
+                <td>{{log.summary}}</td>
+                <td>{{log.task}}</td>
+                <td>{{log.iteration}}</td>
+                <td>{{log.project}}</td>
+                <td>{{log.time_on_task}}</td>
+                <td>{{log.date}}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% paginate %}
+
+    {% else %}
+    <p><strong>{% trans "No results found" %}</strong></p>
+    {% endif %}
+  
+{% endblock %}
