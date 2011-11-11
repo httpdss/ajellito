@@ -551,7 +551,7 @@ def gen_TaskLogForm(user):
                                                                     'style' : "border: 0"}),
                                      min_value=0, decimal_places=2, max_digits=5,
                                      required=False)
-        date = forms.DateField(initial=str(date.today()))
+        date = forms.DateField(required=False)
         class Meta:
             model = TaskLog
             fields = 'taskmenu', 'task', 'date', 'time_on_task', 'summary'
