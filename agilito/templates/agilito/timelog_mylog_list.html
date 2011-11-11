@@ -9,7 +9,7 @@
 {% endblock %}
 
 {% block head_title %}{% trans "My Log" %}{% endblock %}
-{% block body_class %}agilito projects{% endblock %}
+{% block body_class %}agilito timelog{% endblock %}
 
 {% block body %}
   
@@ -21,12 +21,9 @@
         <tbody>
             {% for log in logs %}
             <tr class="{% cycle even,odd %}">
-                <td>{{log.summary}}</td>
-                <td>{{log.task}}</td>
-                <td>{{log.iteration}}</td>
-                <td>{{log.project}}</td>
-                <td>{{log.time_on_task}}</td>
-                <td>{{log.date}}</td>
+                <td width="30%">{{log.date}}</td>
+                <td width="10%">{{log.time_on_task}}</td>
+                <td width="60%">{{log.summary}} (P{{log.project.pk}} - IT{{log.iteration.pk}} - {{log.task}})</td>
             </tr>
             {% endfor %}
         </tbody>
