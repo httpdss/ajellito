@@ -31,7 +31,7 @@
             <select id="iteration-selection" style="width:10em">
                 {%for iteration in itset %}
                 <option {% ifequal iteration.id current_iteration.id %} selected="selected" {%endifequal%}
-                value="{% url agilito.views.iteration_daily_hours current_project.id, iteration.id, user.id %}">{{ iteration.name }}</option>
+                value="{% url agilito.views.iteration_daily_hours current_project.id, iteration.id, user_data.username %}">{{ iteration.name }}</option>
                 {%endfor%}
             </select>
             {% else %}
