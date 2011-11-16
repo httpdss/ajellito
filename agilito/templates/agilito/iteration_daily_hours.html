@@ -6,7 +6,7 @@
 
 {% block head_title %}
     {% if current_iteration %}
-    {% trans "Individual hours for" %} {{user}}
+    {% trans "Individual hours for" %} {{user_data}}
     {% else %}
        {% trans "There are no iterations in this project." %}
     {% endif %}
@@ -15,7 +15,7 @@
 {% block body %}
 <h1>
     {% if current_iteration %}
-    {% trans "Individual hours for" %} {{user}}
+    {% trans "Individual hours for" %} {{user_data}}
     {% else %}
        {% trans "There are no iterations in this project." %}
     {% endif %}

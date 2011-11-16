@@ -1220,7 +1220,7 @@ def taskboard(request, project_id, iteration_id=None):
                             template="agilito/taskboard.html")
 
 @restricted
-def iteration_daily_hours(request, project_id, user_id, iteration_id=None):
+def iteration_daily_hours(request, project_id, username, iteration_id=None):
     
     if iteration_id is None:
         latest_iteration = _get_iteration(project_id)
@@ -1233,14 +1233,13 @@ def iteration_daily_hours(request, project_id, user_id, iteration_id=None):
 
     if latest_iteration is not None:
 
-        rows = latest_iteration.user_daily_progress(user_id)
-        
-        user = User.objects.get(pk=user_id)
+        user_data = User.objects.get(username=username)
+        rows = latest_iteration.user_daily_progress(user_data.id)
 
         inner_context = {
             "current_iteration" : latest_iteration,
             "user_daily_progress" : rows,
-            "user": user,
+            "user_data": user_data,
         }
     else:
         inner_context = {}
