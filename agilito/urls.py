@@ -57,6 +57,8 @@ urlpatterns = patterns('agilito.views',
     url(r'^(?P<project_id>\d+)/iteration/(?P<iteration_id>\d+)/userstory/add/$', 'userstory_create', name="story_from_iteration"),
     
     url(r'^(?P<project_id>\d+)/iteration/hours/$', 'iteration_hours', name="current_iteration_hours"),
+    url(r'^(?P<project_id>\d+)/iteration/hours/(?P<user_id>\d+)/$', 'iteration_daily_hours', name="current_daily_hours"),
+    url(r'^(?P<project_id>\d+)/iteration/(?P<iteration_id>\d+)/hours/(?P<user_id>\d+)/$', 'iteration_daily_hours', name="current_daily_hours_with_id"),
     url(r'^(?P<project_id>\d+)/iteration/(?P<iteration_id>\d+)/hours/$', 'iteration_hours', name="iteration_hours_with_id"),
     (r'^(?P<project_id>\d+)/iteration/(?P<iteration_id>\d+)/hours_export/$', 'hours_export'),
     url(r'^(?P<project_id>\d+)/iteration/(?P<iteration_id>\d+)/cards/$', 'iteration_cards', name='iteration_cards'),

@@ -3,6 +3,7 @@ from django.http import Http404, HttpResponse
 from django.utils.datastructures import SortedDict
 from agilito import CACHE_ENABLED, UNRESTRICTED_SIZE, PRINTABLE_CARD_STOCK, CACHE_PREFIX, BACKLOG_ARCHIVE
 from django.core.cache import cache
+
 try:
     from functools import wraps
 except ImportError:

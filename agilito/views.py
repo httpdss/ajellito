@@ -1220,6 +1220,35 @@ def taskboard(request, project_id, iteration_id=None):
                             template="agilito/taskboard.html")
 
 @restricted
+def iteration_daily_hours(request, project_id, user_id, iteration_id=None):
+    
+    if iteration_id is None:
+        latest_iteration = _get_iteration(project_id)
+    else:
+        try:
+            latest_iteration = Iteration.objects.get(pk=iteration_id,
+                                                     project__pk=project_id)
+        except Iteration.DoesNotExist:
+            raise Http404
+
+    if latest_iteration is not None:
+
+        rows = latest_iteration.user_daily_progress(user_id)
+        
+        user = User.objects.get(pk=user_id)
+
+        inner_context = {
+            "current_iteration" : latest_iteration,
+            "user_daily_progress" : rows,
+            "user": user,
+        }
+    else:
+        inner_context = {}
+
+    context = AgilitoContext(request, inner_context, current_project=project_id)
+    return render_to_response("agilito/iteration_daily_hours.html", context_instance=context)
+
+@restricted
 def iteration_hours(request, project_id, iteration_id=None):
 
     if iteration_id is None:
@@ -1235,11 +1264,10 @@ def iteration_hours(request, project_id, iteration_id=None):
         sidebar = SideBar(request)
 
         sidebar.add("Reports", "Export Hours", reverse("agilito.views.hours_export", args=[project_id, latest_iteration.id]))
-
+        
         rows = latest_iteration.users_total_status
         user_stories = latest_iteration.userstory_set.all().order_by("rank")
         planned = sum(i.size for i in user_stories if i.size)
-
         inner_context = {
             "current_iteration" : latest_iteration,
             "rows_bill" : rows,

@@ -14,6 +14,7 @@ from collections import defaultdict
 from django.core.urlresolvers import reverse
 from tagging.utils import parse_tag_input
 
+
 from dateutil.rrule import rrule, DAILY, MO, TU, WE, TH, FR
 import datetime, time
 import math, re
@@ -667,6 +668,24 @@ class Iteration(ClueModel):
     def user_progress(self, userid):
         tasklogs = self.tasklog_set.filter(owner__id=userid)
         return sum(tl.time_on_task or 0 for tl in tasklogs)
+        
+    def user_daily_progress(self, userid):
+        days = [datetime.date(d.year, d.month, d.day)
+                for d in rrule(DAILY,
+                               cache=True,
+                               dtstart=self.start_date,
+                               until=self.end_date,
+                               byweekday=(MO,TU,WE,TH,FR))]
+            
+        tasklogs = self.tasklog_set.values('date','time_on_task').filter(owner__id=userid)
+        
+        user_hours = []
+        for d in days:
+            task_sum = sum([tl["time_on_task"] for tl in tasklogs \
+                if datetime.date(tl["date"].year, tl["date"].month, tl["date"].day) == d])
+            user_hours.append({'date': d, 'task_sum': task_sum})
+        
+        return user_hours
 
     @cached
     def status(self):

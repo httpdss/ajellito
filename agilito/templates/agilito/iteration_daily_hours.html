@@ -1,0 +1,80 @@
+{% extends "agilito/base.html" %}
+{% load i18n %}
+{% load humanize %}
+
+{% block body_class %}hours agilito{% endblock %}
+
+{% block head_title %}
+    {% if current_iteration %}
+    {% trans "Individual hours for" %} {{user}}
+    {% else %}
+       {% trans "There are no iterations in this project." %}
+    {% endif %}
+{% endblock %}
+
+{% block body %}
+<h1>
+    {% if current_iteration %}
+    {% trans "Individual hours for" %} {{user}}
+    {% else %}
+       {% trans "There are no iterations in this project." %}
+    {% endif %}
+</h1>
+{% if current_iteration %}
+<table class="pretty-table">
+    <tr>
+        <td colspan="2">
+            {{ current_project.name }} &raquo;
+            {% if current_project.iteration_set.all %}
+            {% with current_project.iteration_set.all as itset %}
+            {% ifnotequal itset.count 1 %}
+            <select id="iteration-selection" style="width:10em">
+                {%for iteration in itset %}
+                <option {% ifequal iteration.id current_iteration.id %} selected="selected" {%endifequal%}
+                value="{% url agilito.views.iteration_daily_hours current_project.id, iteration.id, user.id %}">{{ iteration.name }}</option>
+                {%endfor%}
+            </select>
+            {% else %}
+            {% with itset.0 as iteration %}
+            {{ iteration.name }}
+            {% endwith %}
+            {% endifnotequal %}
+            {% endwith %}
+            {% endif %}
+            {% if current_iteration.release.name %}<span> &raquo; {% trans "Release:" %} {{current_iteration.release.name}}</span>{% endif %}
+
+            <p/>
+        </td>
+    </tr>
+
+</table>
+
+{% if user_daily_progress %}
+<table class="pretty-table" cellspacing="0" cellpadding="2">
+    <thead>
+        <tr>
+            <th>{% trans "Date" %}</th>
+            <th>{% trans "Hours" %}</th>
+        </tr>
+    </thead>
+
+    <tbody>
+
+        {% for r in user_daily_progress %}
+        <tr class="{% cycle even,odd %}">
+           <td class="estimated">{{r.date}}</td>
+            <td class="progress">{{r.task_sum}}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% else%}
+{% trans "There are no members on this project" %}
+
+{% endif%}
+
+{% else %}
+
+{% endif %}
+{% endblock %}
