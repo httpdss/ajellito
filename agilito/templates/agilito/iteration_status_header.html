@@ -14,7 +14,7 @@
                     <select id="iteration-selection" style="width:10em">
                         {%for iteration in itset %}
                         <option {% ifequal iteration.id current_iteration.id %} selected="selected" {%endifequal%}
-                        value="{% url iteration_status_with_id current_project.id current_iteration.id %}">{{ iteration.name }}</option>
+                        value="{% url iteration_status_with_id current_project.id iteration.id %}">{{ iteration.name }}</option>
                         {%endfor%}
                     </select>
                     {% else %}
