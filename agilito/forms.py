@@ -10,7 +10,7 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.utils.translation import ugettext as _
 from agilito.models import UserStory, Task, TestCase, TaskLog, TestResult,\
-    UserProfile, UserStoryAttachment, Impediment, Iteration, Release, Project
+    UserProfile, UserStoryAttachment, Impediment, Iteration, Release, Project,ProjectMember
 
 from agilito.widgets import HierarchicRadioSelect, TaskHierarchy
 from agilito.fields import GroupedChoiceField
@@ -354,7 +354,9 @@ class TaskForm(HiddenHttpRefererForm):
         super(TaskForm, self).__init__(*args, **kwargs)
         
         if project is not None:
-            owner_qset = project.project_members.all()
+            pm_values = ProjectMember.objects.filter(project__pk=1).values('user')
+            owner_qset = User.objects.filter(pk__in=pm_values)
+            
             self.fields['owner'] = forms.ModelChoiceField(queryset=owner_qset,
                                                           required=False)
 
@@ -422,7 +424,9 @@ class TestResultForm(HiddenHttpRefererForm):
 
         if project is not None:
             tc_qset = TestCase.objects.filter(user_story__project=project)
-            tester_qset = project.project_members.all()
+            pm_values = ProjectMember.objects.filter(project__pk=1).values('user')
+            tester_qset = User.objects.filter(pk__in=pm_values)
+
             self.fields['test_case'] = forms.ModelChoiceField(queryset=tc_qset)
             self.fields['tester'] = forms.ModelChoiceField(queryset=tester_qset)
 
@@ -464,7 +468,7 @@ def gen_TaskLogForm(user):
         select distinct
             p.id,   p.name
         from agilito_project p
-        join agilito_project_project_members pm on pm.project_id = p.id and pm.user_id = %(me)d
+        join agilito_projectmember pm on pm.project_id = p.id and pm.user_id = %(me)d
         join agilito_iteration i on i.project_id = p.id
         where i.start_date <= '%(today)s' and i.end_date >= '%(last_end)s'
         order by p.id
@@ -498,7 +502,7 @@ def gen_TaskLogForm(user):
 
             ,max(tlr.id) ,max(tlm.owner_id)
         from agilito_project p
-        join agilito_project_project_members pm on pm.project_id = p.id and pm.user_id = %(me)d
+        join agilito_projectmember pm on pm.project_id = p.id and pm.user_id = %(me)d
         join agilito_iteration i on i.project_id = p.id
         join agilito_userstory us on us.project_id = p.id and us.iteration_id = i.id
         join agilito_task t on t.user_story_id = us.id
