@@ -67,29 +67,30 @@ class SideBar(SortedDict):
         super(SideBar, self).__init__(self)
         self.request = request
 
-    def add(self, section, label, url, redirect=False, popup="", props=None):
-        if section.find("#") >= 0:
-            sid, section = section.split('#', 2)
-        else:
-            sid = None
-
-        if not self.has_key(section):
-            self[section] = SideBar.Sub()
-
-        if sid:
-            self[section].id = sid
-
-        if redirect:
-            if isinstance(redirect, basestring):
-                url = "%s?last_page=%s" % (url, redirect)
+    def add(self, section, label, url, redirect=False, popup="", props=None, visible=True):
+        if visible:
+            if section.find("#") >= 0:
+                sid, section = section.split('#', 2)
             else:
-                url = "%s?last_page=%s" % (url, self.request.path)
-
-        entry = {"url": url, "label": label, "properties": props}
-        if popup:
-            entry["popup"] = popup
-
-        self[section].append(entry)
+                sid = None
+            
+            if not self.has_key(section):
+                self[section] = SideBar.Sub()
+            
+            if sid:
+                self[section].id = sid
+            
+            if redirect:
+                if isinstance(redirect, basestring):
+                    url = "%s?last_page=%s" % (url, redirect)
+                else:
+                    url = "%s?last_page=%s" % (url, self.request.path)
+            
+            entry = {"url": url, "label": label, "properties": props}
+            if popup:
+                entry["popup"] = popup
+            
+            self[section].append(entry)
 
     def enabled(self):
         return (len(self) > 0)
