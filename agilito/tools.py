@@ -117,6 +117,19 @@ class SideBar(SortedDict):
             f.extend(nv)
 
         return f
+
+
+def is_member(view):
+    """ Gives access to everyone which is not a viewer """
+    @wraps(view)
+    def inner(request, project_id, *args, **kwargs):
+        if request.session.get('is_viewer',True):
+            raise Http404
+        return view(request, project_id, *args, **kwargs)
+    return inner
+
+
+
 def restricted(f):
     @wraps(f)
     @login_required
