@@ -137,8 +137,8 @@ def restricted(f):
     def wrapper(request, project_id, *args, **kwargs):
         if not request.user.is_superuser:
             try:
-                project = request.user.project_set.get(id=project_id)
-            except Project.DoesNotExist, msg:
+                project = ProjectMember.objects.filter(user=request.user, project__pk=project_id)
+            except ProjectMember.DoesNotExist, msg:
                 raise Http404, msg
         return f(request, project_id, *args, **kwargs)
     return wrapper
