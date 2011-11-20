@@ -2182,7 +2182,7 @@ class ProjectList(ListView):
     
     def get_queryset(self):
         """docstring for get_queryset"""
-        has_member = Q(project_members__pk=self.request.user.id)
+        has_member = Q(project_members__user__pk=self.request.user.id)
         is_visible = Q(visibility=1)
         return Project.objects.filter(has_member | is_visible).order_by("-id")
 
