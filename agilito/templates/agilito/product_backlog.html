@@ -301,9 +301,11 @@ $("#filter").keyup(function() {
                         <th>{% trans "Suggested size" %}</th>
                         {% endif %}
                         <th>{% trans "State" %}</th>
+                        {% if not is_viewer %}
                         <th><!-- edit --></th>
                         <th><!-- move --></th>
-                        <th><!-- delete --></th>
+                        <th><!-- delete --></th>        
+                        {% endif %}
                     </tr>
                 </thead>
     
@@ -311,13 +313,19 @@ $("#filter").keyup(function() {
                     {% for story in backlog %}
                         {% ifequal story.whatami "UserStory" %}
                             <tr id="us_{{story.id}}" class="{% cycle even,odd %}">
-                                <td class="mark">
-                                    {% if story.iteration %}
-                                        {{story.iteration.name}}
-                                    {% else %}
-                                        <input type=checkbox name="mark" value="{{story.id}}" onclick="mark(this, {{story.id}});" />
-                                    {% endif %}
-                                </td>
+                                
+                                    <td class="mark">
+                                        {% if story.iteration %}
+                                            {{story.iteration.name}}
+                                        {% else %}
+                                            {% if not is_viewer %}
+                                            <input type=checkbox name="mark" value="{{story.id}}" onclick="mark(this, {{story.id}});" />
+                                            {% else %}
+                                            <p>-</p>
+                                            {% endif %}
+                                        {% endif %}
+                                    </td>
+
                                 <td class="rank">{{story.rank}}</td>
                                 <td class="id">US{{story.id}}</td>
                                 <td class="name"><a href="{{story.get_absolute_url}}">{{story.name}}</a>
@@ -350,6 +358,9 @@ $("#filter").keyup(function() {
                                     <img src="{{ STATIC_URL }}agilito/img/backlog-state/{{ story.backlog_state }}.png"
                                         title="{{ story.backlog_state }}" alt="{{ story.backlog_state }}" />
                                 </td>
+                                {% if not is_viewer %}
+                                    
+
                                 <td id="edit_us_{{story.id}}" class="edit-button">
                                     <a href="{% url agilito.views.userstory_edit current_project.id,story.id %}?last_page={{last_page}}">
                                     <img src="{{ STATIC_URL }}agilito/img/pencil.png" alt="edit" title="edit" width="16" height="16" /></a>
@@ -363,6 +374,7 @@ $("#filter").keyup(function() {
                                     <a href="{% url agilito.views.userstory_delete current_project.id,story.id %}?last_page={{last_page}}">
                                     <img src="{{ STATIC_URL }}agilito/img/delete.png" alt="delete" title="delete" width="16" height="16" /></a>
                                 </td>
+                                {% endif %}
                             </tr>
                         {% endifequal %}
                         {% ifequal story.whatami "Release" %}
@@ -373,7 +385,7 @@ $("#filter").keyup(function() {
                                         <td colspan="{% if suggestions %}6{% else %}5{% endif %}">
                                             {{release.name}}{%if release.deadline %}, {% trans "deadline:" %} {{release.deadline}}{% endif %}{% if release_date.date or release_date.error %}, {% trans "projected release date:" %}  {{release_date.date|default_if_none:"unknown"}}{% endif %}{% if release_date.error %} ({{release_date.error}}){% endif %}
                                         </td>
-
+                                        {% if not is_viewer %}
                                         <td id="edit_re_{{release.id}}" class="edit-button">
                                             <a href="{% url agilito.views.release_edit current_project.id,release.id %}?last_page={{last_page}}">
                                                 <img src="{{ STATIC_URL }}agilito/img/pencil.png" alt="edit" title="edit" width="16" height="16" /></a>
@@ -383,6 +395,7 @@ $("#filter").keyup(function() {
                                             <a href="{% url agilito.views.release_delete current_project.id,release.id %}?last_page={{last_page}}">
                                                 <img src="{{ STATIC_URL }}agilito/img/delete.png" alt="delete" title="delete" width="16" height="16" /></a>
                                         </td>
+                                        {% endif %}
                                     </tr>
                                 {% endwith %}
                             {% endwith %}
@@ -391,7 +404,7 @@ $("#filter").keyup(function() {
                 </tbody>
             </table>
             {% if earliest_archive %}
-                <form name="archive" action="{%  url agilito.views.backlog_archived current_project.id %}" method="post">{% csrf_token %}
+                <form name="archive" action="{% url agilito.views.backlog_archived current_project.id %}" method="post">{% csrf_token %}
                     <div class="buttonHolder">
                         <input type="submit" id="archivefetch" disabled="disabled" class="primaryAction save" value="{% trans "Fetch" %}" />
                     </div>
@@ -400,13 +413,14 @@ $("#filter").keyup(function() {
                             value="" maxlength="10" size="10" type="text" />
                 </form>
             {% endif %}
+            {% if not is_viewer %}
             <form style="display:none" name="queuesubmit" id="queuesubmit" action="{% url backlog_save current_project.id %}?last_page={{last_page}}" method="post">{% csrf_token %}
-
                 <textarea name="command-queue" id="command-queue" class="mceNoEditor"></textarea>
                 <div class="buttonHolder">
                     <input  type="submit" class="primaryAction save" value="{% trans "Save" %}" />
                 </div>
-            </form>
+            </form>                
+            {% endif %}
         {% endif %}
     {% endblock %}
 {% endif %}
