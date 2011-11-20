@@ -73,7 +73,7 @@ def invalidate_cache(sender, instance, **kwargs):
     ids = []
 
     if isinstance(instance, User):
-        ids = [p.id for p in instance.project_set.all()]
+        ids = [pm.project.id for pm in ProjectMember.objects.filter(user=instance)]
     elif hasattr(instance, "project"):
         ids = [instance.project.id]
 
