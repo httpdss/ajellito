@@ -29,7 +29,7 @@
                     <p class="label">{% trans "Send to:" %}</p>
                     <ul>
                         {% for member in current_project.project_members.all %}
-                        <li><p for="member_{{member.id}}"><input type="checkbox" id="member_{{member.id}}" name="sendto" value="{{member.id}}"> {{member.email}}</p></li>                            
+                        <li><p for="member_{{member.user.id}}"><input type="checkbox" id="member_{{member.user.id}}" name="sendto" value="{{member.user.id}}"> {{member.user.email}}</p></li>                            
                         {% endfor %}
                     </ul>
                 </div>
