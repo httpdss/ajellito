@@ -1,6 +1,6 @@
 from agilito.models import Project, Release, Iteration, UserStoryAttachment,\
     UserStory, UserProfile, Task, TestCase, TestResult, TaskLog, \
-    Impediment
+    Impediment, ProjectMember
 from django.contrib import admin
 
 #
@@ -18,8 +18,12 @@ class TaskInLine(admin.TabularInline):
     model = Task
     extra = 1
 
+class ProjectMemberInLine(admin.TabularInline):
+    model = ProjectMember
+    extra = 1
+        
 class ProjectAdmin(admin.ModelAdmin):
-    filter_horizontal = ('project_members',)
+    inlines = [ProjectMemberInLine]
 
 class ReleaseAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'project')
@@ -94,7 +98,16 @@ class TaskLogAdmin(admin.ModelAdmin):
 class ImpedimentAdmin(admin.ModelAdmin):
     list_display = ('name', 'description', 'opened', 'resolved')
     ordering = ('-opened',)
+    
+class ProjectMemberAdmin(admin.ModelAdmin):
+    
+    list_display = ('user','project','role')
+    list_filter = ('project','role')
+    search_fields = ['member__username']
+    list_editable = ('role',)
+    
 
+admin.site.register(ProjectMember, ProjectMemberAdmin)
 admin.site.register(Project, ProjectAdmin)
 admin.site.register(Release, ReleaseAdmin)
 admin.site.register(Iteration, IterationAdmin)
