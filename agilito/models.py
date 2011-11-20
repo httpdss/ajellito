@@ -130,7 +130,7 @@ def _if_is_none_else(item,  rv_case_none,  fun_case_not_none=None):
     else:
         return fun_case_not_none(item)
 
-class FieldChoices:
+class FieldChoices(list):
     def __init__(self, *args, **kwargs):
         self.__choices = []
         self.keys = []
@@ -240,7 +240,7 @@ class ProjectManager(models.Manager):
     def for_user(self, user):
             return super(ProjectManager, self)\
                         .get_query_set()\
-                        .filter(project_members=user)\
+                        .filter(project_members__user=user)\
                         .extra(select={"lower_name": "lower(name)"})\
                         .order_by("lower_name")        
 
@@ -250,7 +250,6 @@ class Project(ClueModel):
     objects = ProjectManager()
     prefix = "P"
 
-    project_members = models.ManyToManyField(User, null=True, blank=True)
     visibility = models.IntegerField(choices=VISIBILITY_CHOICE, default=2)
 
     @property
@@ -1008,7 +1007,9 @@ class Iteration(ClueModel):
 
     @property
     def users_total_status(self):
-        users = self.project.project_members.all()
+        pm_values = ProjectMember.objects.filter(project=self.project).values('user')
+        users = User.objects.filter(pk__in=pm_values)
+        
         out = []
         for u in users:
             out.append({
@@ -1552,3 +1553,26 @@ class ArchivedBacklog(models.Model):
 
     class Meta:
         ordering = ("-stamp",)
+
+class ProjectMember(models.Model):
+    MEMBER_ROLES = ((10, _("Client")),
+                   (20, _("ScrumMaster")),
+                   (30, _("Developer")),
+                   (40, _("Designer")),
+                   (99, _("Other")))
+
+    user = models.ForeignKey(User, related_name="membership")
+    project = models.ForeignKey(Project, related_name="project_members")
+    role = models.SmallIntegerField(choices=MEMBER_ROLES, default=99)
+    created = models.DateTimeField(null=True, auto_now_add=True)
+    modified = models.DateTimeField(null=True, auto_now=True)
+    
+    class Meta:
+        unique_together = ('user','project','role')
+    
+    def __unicode__(self):
+        return u"%s: %s" % (self.user.username,
+                            self.get_role_display())
+        
+    def is_viewer(self):
+        return (self.role in [10,99])
