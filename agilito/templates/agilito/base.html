@@ -181,8 +181,8 @@ function hide_reply_form(comment_id, url, person_name) {
 
 {% block left_tabs %}
     <ul class="tabs">{% spaceless %}
-        <li id="tab_projects"><a href="{% url project_list  %}">{% trans "Projects" %}</a></li>
-        {% if current_project %}
+        <li id="tab_projects"><a href="{% url project_list %}">{% trans "Projects" %}</a></li>
+        {% if current_project and not is_viewer %}
         <li id="tab_backlog"><a href="{% url product_backlog current_project.pk %}">{% trans "Backlog" %}</a></li>
         <li id="tab_iteration"><a href="{% url current_iteration_status current_project.pk %}">{% trans "Iteration" %}</a></li>
         <li id="tab_timelog"><a href="{% url timelog current_project.pk %}">{% trans "Log" %}</a></li>

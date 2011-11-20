@@ -8,7 +8,7 @@ from django.contrib import messages
 from django.conf import settings
 from django.utils.translation import ugettext as _
 from django.contrib.contenttypes.models import ContentType
-
+from django.contrib.auth.models import User
 import logging
 
 logger = logging.getLogger('agilito.threadedcommentsview')
@@ -60,7 +60,7 @@ def comment(*args, **kwargs):
             ct = get_object_or_404(ContentType, id=int(kwargs['content_type']))
             obj = ct.get_object_for_this_type(id=int(kwargs['object_id']))
             
-            notify_list = obj.project.project_members.filter(pk__in=sendto_ids)
+            notify_list = User.objects.filter(pk__in=sendto_ids)
             notification.send(notify_list,
                              "agilito_comment_create",
                              {'creator': args[0].user,

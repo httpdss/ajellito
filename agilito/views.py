@@ -57,7 +57,7 @@ from urllib import quote, urlencode
 
 from agilito.models import Project, Iteration, UserStory, Task, TestCase,\
     TaskLog, UserProfile, User, TestResult, UserStoryAttachment, \
-    Impediment, Release, ArchivedBacklog
+    Impediment, Release, ArchivedBacklog, ProjectMember
 
 from agilito.forms import UserStoryForm, UserStoryShortForm, gen_TaskLogForm,\
     TaskForm, TestCaseAddForm, TestCaseEditForm, testcase_form_factory,\
@@ -65,7 +65,7 @@ from agilito.forms import UserStoryForm, UserStoryShortForm, gen_TaskLogForm,\
     UserStoryMoveForm, IterationImportForm, ReleaseForm, IterationForm, \
     ProjectForm
 
-from agilito.tools import restricted, datelabels, SideBar, cached_view as cached, touch_cache
+from agilito.tools import is_member, restricted, datelabels, SideBar, cached_view as cached, touch_cache
 
 
 if "notification" in getattr(settings, "INSTALLED_APPS"):
@@ -83,7 +83,7 @@ class AgilitoContext(RequestContext):
 
         if request.user.is_authenticated():
             project_list = Project.objects.for_user(request.user)
-            is_viewer = request.user.groups.filter(name='Viewer') and True or False
+            is_viewer = request.session.get('is_viewer', True)
         else:
             raise UserHasNoProjectException
 
@@ -107,6 +107,7 @@ class AgilitoContext(RequestContext):
                                 "current_project" : current_project,
                                 "current_story": current_story,
                                 "last_page": request.path,
+                                "is_viewer": is_viewer
                                 }
         else:
             self.dictionary = dictionary
@@ -143,6 +144,7 @@ def index(request):
 
 
 @restricted
+@is_member
 def generic_create(request, project_id, *args, **kwargs):
     """ A quicky view to get things off the ground """
     # Must send a "AgilitoContext"
@@ -150,6 +152,7 @@ def generic_create(request, project_id, *args, **kwargs):
     return create_update.create_object(request, *args, **kwargs)
 
 @restricted
+@is_member
 def generic_update(request, project_id, *args, **kwargs):
     """ A quicky view to get things off the ground """
     # Must send a "AgilitoContext"
@@ -172,6 +175,7 @@ def add_attachment(request, project_id, userstory_id, instance=None):
             
             if  notification:
                 notify_list = story.project.project_members.all()
+                notify_list = [nl.user for nl in notify_list]
                 notification.send(notify_list,
                         "agilito_attachment_create",
                         {'creator': request.user,
@@ -198,6 +202,7 @@ def add_attachment(request, project_id, userstory_id, instance=None):
 #    return add_attachment(request, project_id, userstory_id, instance=attachment)
 
 @restricted
+@is_member
 def delete_attachment(request, project_id, userstory_id, attachment_id):
     att = UserStoryAttachment.objects.get(id=attachment_id,
                                           user_story__id=userstory_id,
@@ -269,6 +274,7 @@ def view_attachment(request, project_id, userstory_id, attachment_id, secret=Non
 
 
 @restricted
+@is_member
 def impediment_create(request, project_id, iteration_id, instance=None, task_id=None):
     it = Iteration.objects.get(pk=iteration_id)
 
@@ -290,6 +296,7 @@ def impediment_create(request, project_id, iteration_id, instance=None, task_id=
             form.save_m2m()
             if  notification:
                 notify_list = impediment.project.project_members.all()
+                notify_list = [nl.user for nl in notify_list]
                 notification.send(notify_list,
                         "agilito_impediment_create",
                         {'creator': request.user,
@@ -307,11 +314,13 @@ def impediment_create(request, project_id, iteration_id, instance=None, task_id=
     return render_to_response("agilito/impediment_edit.html", context_instance=context)
 
 @restricted
+@is_member
 def impediment_edit(request, project_id, iteration_id, impediment_id):
     instance = Impediment.objects.get(id=impediment_id)
     return impediment_create(request, project_id, iteration_id, instance)
 
 @restricted
+@is_member
 def release_create(request, project_id, instance=None, is_edit=False):
     project = Project.objects.get(id=project_id)
     backlog_url = reverse("agilito.views.backlog", args=[project_id])
@@ -321,6 +330,7 @@ def release_create(request, project_id, instance=None, is_edit=False):
         """
         if  notification:
             notify_list = project.project_members.all()
+            notify_list = [nl.user for nl in notify_list]
             if is_edit:
                 notify_name = "agilito_release_edit"
             else:
@@ -341,11 +351,13 @@ def release_create(request, project_id, instance=None, is_edit=False):
     return render_to_response("agilito/generic_action.html", context_instance=context)
 
 @restricted
+@is_member
 def release_edit(request, project_id, release_id):
     instance = Release.objects.get(id=release_id)
     return release_create(request, project_id, instance, is_edit=True)
 
 @restricted
+@is_member
 def release_delete(request, project_id, release_id):
     release = Release.objects.get(id=release_id, project__id = project_id)
 
@@ -362,6 +374,7 @@ def release_delete(request, project_id, release_id):
                                        )
 
 @restricted
+@is_member
 def iteration_create(request, project_id, instance=None, is_edit=False):
     if request.method == "POST":
         form = IterationForm(request.POST, instance=instance, project=Project.objects.get(id=project_id))
@@ -369,6 +382,7 @@ def iteration_create(request, project_id, instance=None, is_edit=False):
         
         if  notification:
             notify_list = form.project.project_members.all()
+            notify_list = [nl.user for nl in notify_list]
             if is_edit:
                 notify_name = "agilito_iteration_edit"
             else:
@@ -387,11 +401,13 @@ def iteration_create(request, project_id, instance=None, is_edit=False):
     return render_to_response("agilito/generic_action.html", context_instance=context)
 
 @restricted
+@is_member
 def iteration_edit(request, project_id, iteration_id):
     instance = Iteration.objects.get(id=iteration_id)
     return iteration_create(request, project_id, instance, is_edit=True)
 
 @restricted
+@is_member
 def iteration_delete(request, project_id, iteration_id):
     iteration = Iteration.objects.get(id=iteration_id, project__id = project_id)
 
@@ -409,6 +425,7 @@ def iteration_delete(request, project_id, iteration_id):
                                            "current_project":iteration.project })
 
 @restricted
+@is_member
 def userstory_create(request, project_id, iteration_id=None, instance=None, is_edit=False):
     if request.method == "POST":
         form = UserStoryForm(request.POST, 
@@ -421,6 +438,7 @@ def userstory_create(request, project_id, iteration_id=None, instance=None, is_e
             
             if  notification:
                 notify_list = story.project.project_members.all()
+                notify_list = [nl.user for nl in notify_list]
                 if is_edit:
                     notify_name = "agilito_user_story_edit"
                 else:
@@ -445,6 +463,7 @@ def userstory_create(request, project_id, iteration_id=None, instance=None, is_e
     return render_to_response("agilito/userstory_edit.html", context_instance=context)
 
 @restricted
+@is_member
 def userstory_move(request, project_id, userstory_id):
     instance = UserStory.objects.get(pk=userstory_id, project__pk=project_id)
     project=Project.objects.get(id=project_id)
@@ -468,6 +487,7 @@ def userstory_move(request, project_id, userstory_id):
             
             if  notification:
                 notify_list = story.project.project_members.all()
+                notify_list = [nl.user for nl in notify_list]
                 notification.send(notify_list,
                         "agilito_user_story_move",
                         {'creator': request.user,
@@ -481,6 +501,7 @@ def userstory_move(request, project_id, userstory_id):
     return render_to_response("agilito/generic_action.html", context_instance=context)
 
 @restricted
+@is_member
 def userstory_edit(request, project_id, userstory_id):
     instance = UserStory.objects.get(pk=userstory_id, project__pk=project_id)
     if instance.iteration is None:
@@ -491,6 +512,7 @@ def userstory_edit(request, project_id, userstory_id):
                                 instance=instance, is_edit=True)
 
 @restricted
+@is_member
 def userstory_delete(request, project_id, userstory_id):
     obj = UserStory.objects.get(id=userstory_id, project=project_id)
     current_project = Project.objects.get(id=project_id)
@@ -581,25 +603,29 @@ def backlog(request, project_id, states=None, suggest=None):
             newiteration["ends"] += datetime.timedelta(days= 7 - newiteration["ends"].weekday())
 
     newiteration["name"] = "New Iteration created @ %s" % datetime.date.today()
-
+    
+    show_item = not request.session.get('is_viewer', True)
     sidebar = SideBar(request)
 
     sidebar.add("Actions", "Add User Story",
         reverse("story_from_backlog", args=[project_id]),
         redirect=True,
-        props={"class": "add-object"})
+        props={"class": "add-object"},
+        visible=show_item)
 
     sidebar.add("Actions", "Add Iteration",
         reverse("iteration_create", args=[project_id]),
         redirect=True,
-        props={"class": "add-object"})
+        props={"class": "add-object"},
+        visible=show_item)
 
     sidebar.add("Actions", "Add Release",
         reverse("release_create", args=[project_id]),
         redirect=True,
-        props={"class": "add-object"})
+        props={"class": "add-object"},
+        visible=show_item)
 
-    if not UNRESTRICTED_SIZE:
+    if not UNRESTRICTED_SIZE and show_item:
         if suggest is None or suggest == "estimates":
             sidebar.add("Review", "Suggest sizes based on actuals",
                 reverse("agilito.views.backlog", args=[project_id, str(UserStory.STATES.ACCEPTED), "actuals"]))
@@ -614,19 +640,25 @@ def backlog(request, project_id, states=None, suggest=None):
         args=[project_id, states, suggest]
     else:
         args=[project_id, states]
-    sidebar.add("Reports", "Backlog in spreadsheet format", reverse("agilito.views.backlog_ods", args=args))
+    sidebar.add("Reports",
+                "Backlog in spreadsheet format", 
+                reverse("agilito.views.backlog_ods",
+                args=args))
 
-    sidebar.add("Reports", "Backlog Evolution",
-        reverse("agilito.views.product_backlog_chart",
-                args=[project_id, ""]),
-        popup="chart")
+    sidebar.add("Reports", 
+                "Backlog Evolution",
+                reverse("agilito.views.product_backlog_chart",
+                        args=[project_id, ""]),
+                popup="chart")
 
     sidebar.add("save-changes#Backlog changed", "Save Changes",
         "#",
-        props={"onclick": "savechanges(); return false;"})
+        props={"onclick": "savechanges(); return false;"},
+        visible=show_item)
     sidebar.add("Backlog changed", "Cancel Changes",
         "#",
-        props={"onclick": "window.location.reload(); return false;"})
+        props={"onclick": "window.location.reload(); return false;"},
+        visible=show_item)
 
     try:
         earliest_archive = project.archivedbacklog_set.order_by("stamp")[0]
@@ -654,11 +686,13 @@ def backlog(request, project_id, states=None, suggest=None):
 
 @restricted
 def userstory_detail(request, project_id, userstory_id):
+    show_item = not request.session.get('is_viewer', True)
     sidebar = SideBar(request)
     sidebar.add("Actions", "Edit this story",
         reverse("agilito.views.userstory_edit", args=[project_id, userstory_id]),
         redirect=True,
-        props={"class": "edit-object"})
+        props={"class": "edit-object"},
+        visible=show_item)
     stories = UserStory.objects.select_related('iteration',
                                                'project',
                                                'impediment',
@@ -674,7 +708,8 @@ def userstory_detail(request, project_id, userstory_id):
     sidebar.add("Actions", "Delete this story",
         reverse("agilito.views.userstory_delete", args=[project_id, userstory_id]),
         redirect=url,
-        props={"class": "delete-object"})
+        props={"class": "delete-object"},
+        visible=show_item)
 
     sidebar.add("Actions", "Add an attachment",
         reverse("agilito.views.add_attachment", args=[project_id, userstory_id]),
@@ -683,17 +718,20 @@ def userstory_detail(request, project_id, userstory_id):
     sidebar.add("Actions", "Add a task",
         reverse("agilito.views.task_create", args=[project_id, userstory_id]),
         redirect=True,
-        props={"class": "add-object"})
+        props={"class": "add-object"},
+        visible=show_item)
     sidebar.add("Actions", "Add a test case",
         reverse("agilito.views.testcase_create", args=[project_id, userstory_id]),
         redirect=True,
-        props={"class": "add-object"})
+        props={"class": "add-object"},
+        visible=show_item)
         
     if story.iteration:
         sidebar.add("Actions", "Report Impediment",
                 reverse("agilito.views.impediment_create", args=[project_id, story.iteration.id]),
                 redirect=True,
-                props={"class": "add-object"})
+                props={"class": "add-object"},
+                visible=show_item)
 
     context = AgilitoContext(request,{"sidebar": sidebar, "comment_on":story }, current_project=story.project, current_story=story)
     queryset = stories.filter(project__pk=project_id)
@@ -719,6 +757,7 @@ def get_words():
 # refactoring, also xxx_details, xxx_delete, etc. Maybe a agilito_object_details?
 #
 @restricted
+@is_member
 def task_create(request, project_id, userstory_id, instance=None):
     story = UserStory.objects.get(id=userstory_id)
     if request.method == "POST":
@@ -746,6 +785,7 @@ def task_create(request, project_id, userstory_id, instance=None):
             task.save(user=request.user)
             if  notification:
                 notify_list = project.project_members.all()
+                notify_list = [nl.user for nl in notify_list]
                 notification.send(notify_list,
                         "agilito_task_create",
                         {'creator': request.user,
@@ -777,26 +817,31 @@ def task_create(request, project_id, userstory_id, instance=None):
     return render_to_response("agilito/task_create.html", context_instance=context)
 
 @restricted
+@is_member
 def task_edit(request, project_id, userstory_id, task_id):
     instance = Task.objects.get(id=task_id)
     return task_create(request, project_id, userstory_id, instance)
 
 @restricted
 def task_detail(request, project_id, userstory_id, task_id):
+    show_item = not request.session.get('is_viewer', True)
     sidebar = SideBar(request)
     sidebar.add("Actions", "Edit this task",
         reverse("agilito.views.task_edit", args=[project_id, userstory_id, task_id]),
         redirect=True,
-        props={"class": "edit-object"})
+        props={"class": "edit-object"},
+        visible=show_item)
     sidebar.add("Actions", "Delete this task",
         reverse("agilito.views.task_delete", args=[project_id, userstory_id, task_id]),
         redirect=reverse("agilito.views.userstory_detail", args=[project_id, userstory_id]),
-        props={"class": "delete-object"})
+        props={"class": "delete-object"},
+        visible=show_item)
     sidebar.add("Actions", "Log this task",
             reverse("agilito.views.timelog_task", args=[project_id, task_id]),
             redirect=reverse("agilito.views.userstory_detail", args=[project_id,userstory_id]),
             #redirect=reverse("agilito.views.task_detail", args=[project_id,userstory_id, task_id]),
-            props={"class": "log-object"})
+            props={"class": "log-object"},
+            visible=show_item)
     sidebar.add("Actions", "Add an attachment",
             reverse("agilito.views.add_attachment", args=[project_id, userstory_id]),
             redirect=True,
@@ -811,7 +856,8 @@ def task_detail(request, project_id, userstory_id, task_id):
         sidebar.add("Actions", "Report Impediment",
                 reverse("agilito.views.impediment_create", args=[project_id, task.user_story.iteration.id]),
                 redirect=True,
-                props={"class": "add-object"})
+                props={"class": "add-object"},
+                visible=show_item)
 
     context = AgilitoContext(request, {"sidebar": sidebar, "comment_on":task }, current_project=project_id, current_story=userstory_id)
     return object_detail(request, queryset=queryset, template_name="agilito/task_detail.html",
@@ -819,6 +865,7 @@ def task_detail(request, project_id, userstory_id, task_id):
                          object_id=task_id, extra_context=context)
 
 @restricted
+@is_member
 def task_delete(request, project_id, userstory_id, task_id):
     task = Task.objects.get(id=task_id, user_story__id=userstory_id, user_story__project__id=project_id)
 
@@ -838,6 +885,7 @@ def task_delete(request, project_id, userstory_id, task_id):
                                            })
 
 @restricted
+@is_member
 def testcase_create(request, project_id, userstory_id, instance=None):
     story = UserStory.objects.get(pk=userstory_id)
     if request.method == "POST":
@@ -861,6 +909,7 @@ def testcase_create(request, project_id, userstory_id, instance=None):
     return render_to_response("agilito/testcase_create.html", context_instance=context)
 
 @restricted
+@is_member
 def testcase_edit(request, project_id, userstory_id, testcase_id):
     instance = TestCase.objects.get(id=testcase_id)
     return testcase_create(request, project_id, userstory_id, instance)
@@ -889,6 +938,7 @@ def testcase_detail(request, project_id, userstory_id, testcase_id):
                           object_id=testcase_id, extra_context=context)
 
 @restricted
+@is_member
 def testcase_delete(request, project_id, userstory_id, testcase_id):
     testcase = TestCase.objects.get(id=testcase_id, user_story__id=userstory_id, user_story__project__id=project_id)
 
@@ -973,8 +1023,6 @@ def testresult_delete(request, project_id, userstory_id, testcase_id, testresult
                                            "current_project" : testresult.testcase.user_story.project,
                                            })
 
-
-
 @restricted
 def search(request, project_id):
     """
@@ -1044,6 +1092,7 @@ def _get_iteration(project_id, date=None):
     return None
 
 @restricted
+@is_member
 def iteration_import(request, project_id):
     project = Project.objects.get(id=project_id)
 
@@ -1111,6 +1160,7 @@ def iteration_status(request, project_id, iteration_id=None, template="agilito/i
             raise Http404
 
     if iteration is not None:
+        
         status = iteration.status()
 
         tags = defaultdict(list)
@@ -1119,34 +1169,40 @@ def iteration_status(request, project_id, iteration_id=None, template="agilito/i
                 tags[tag].append("%s-%d" % (item.whatami[:2].lower(), item.id))
         tags = [{"tag": tag, "data": ",".join(tags[tag])} for tag in tags.keys()]
 
+        show_item = not request.session.get('is_viewer', True) 
         sidebar = SideBar(request)
         sidebar.add("Actions", "Edit this iteration",
             reverse("agilito.views.iteration_edit", args=[project_id, iteration.id]),
             redirect=True,
-            props={"class": "edit-object"})
+            props={"class": "edit-object"},
+            visible=show_item)
 
         sidebar.add("Actions", "Add User Story",
             reverse("story_from_iteration",
                     args=[project_id, iteration.id]),
             redirect=True,
-            props={"class": "add-object"})
+            props={"class": "add-object"},
+            visible=show_item)
 
         sidebar.add("Actions", "Report Impediment",
             reverse("agilito.views.impediment_create",
                     args=[project_id, iteration.id]),
             redirect=True,
-            props={"class": "add-object"})
+            props={"class": "add-object"},
+            visible=show_item)
 
         sidebar.add("Actions", "Import Iteration",
             reverse("agilito.views.iteration_import",
                     args=[project_id]),
             redirect=True,
-            props={"class": "add-object"})
+            props={"class": "add-object"},
+            visible=show_item)
 
         sidebar.add("Actions", "Delete this iteration",
             reverse("agilito.views.iteration_delete", args=[project_id, iteration.id]),
             redirect=reverse("current_iteration_status", args=[project_id]),
-            props={"class": "delete-object"})
+            props={"class": "delete-object"},
+            visible=show_item)
 
         sidebar.add("Reports", "Task Cards",
             reverse("agilito.views.iteration_cards",
@@ -1539,7 +1595,9 @@ backlog_command_execute = {
         "set-size"      : backlog_cmd_set_size,
         "rank"          : backlog_cmd_rank,
     }
+
 @restricted
+@is_member
 def backlog_save(request, project_id):
     project = Project.objects.get(id=project_id)
 
@@ -1889,6 +1947,7 @@ def _parseTimelogCmd(spec):
     return (None, (key, id))
 
 @restricted
+@is_member
 def timelog_mylog(request, project_id):
     logs = TaskLog.objects.filter(owner=request.user).order_by('-date')
     context = AgilitoContext(request, {"logs": logs},
@@ -1896,9 +1955,8 @@ def timelog_mylog(request, project_id):
 
     return render_to_response("agilito/timelog_mylog_list.html", context_instance=context)
     
-    
-
 @restricted
+@is_member
 def timelog(request, project_id, task_id=None, instance=None):
     if not task_id is None:
         try:
@@ -1957,6 +2015,7 @@ def timelog(request, project_id, task_id=None, instance=None):
     return render_to_response("agilito/timelog.html", context_instance=context)
 
 @restricted
+@is_member
 def timelog_task(request, project_id, task_id):
     return timelog(request, project_id, task_id)
 
@@ -1967,6 +2026,7 @@ def dec2str(dec):
         return "%.2f" % dec
 
 @login_required
+@is_member
 def task_json(request, task_id):
     task = Task.objects.get(id=task_id)
     json = simplejson.dumps(dict(id=task.id,
