@@ -9,7 +9,7 @@ try:
 except ImportError:
     from django.utils.functional import wraps
 
-from agilito.models import Project
+from agilito.models import Project, ProjectMember
 import html5lib
 
 def touch_cache(request, project_id):
