@@ -2026,7 +2026,6 @@ def dec2str(dec):
         return "%.2f" % dec
 
 @login_required
-@is_member
 def task_json(request, task_id):
     task = Task.objects.get(id=task_id)
     json = simplejson.dumps(dict(id=task.id,
