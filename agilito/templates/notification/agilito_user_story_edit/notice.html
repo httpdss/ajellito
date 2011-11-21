@@ -1,0 +1,7 @@
+{% load i18n %}
+{% load account_tags %}
+{% user_display creator as creator_display %}
+{% url profile_detail username=creator.username as creator_url %}
+{% blocktrans with story.get_absolute_url as story_url %}
+    <a href="{{ creator_url }}">{{ creator_display }}</a> has edited an user story '<a href="{{ story_url }}">{{ story }}</a>'.
+{% endblocktrans %}

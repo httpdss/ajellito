@@ -1,8 +1,6 @@
 {% extends "agilito/base.html" %}
 {% load i18n %}
-{% load uni_form_tags %}
 {% load pagination_tags %}
-
 {% block subnav %}
 <ul>
 	<li>
@@ -19,7 +17,7 @@
   <h2>{% trans "Projects" %}</h2>
 
     {% if object_list %}
-    {% autopaginate object_list 10 %}
+    {% autopaginate object_list 20 %}
     <table class="pretty-table" id="user-story-list" cellspacing="0" cellpadding="2">
         <tbody>
             {% for object in object_list %}
@@ -29,7 +27,6 @@
             {% endfor %}
         </tbody>
     </table>
-
     {% paginate %}
 
     {% else %}

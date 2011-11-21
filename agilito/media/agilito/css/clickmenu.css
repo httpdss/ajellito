@@ -45,6 +45,7 @@ div.cmDiv
 {
 	position: relative;
 	padding: 0 20px 0 2px;
+	cursor:pointer;
 	/*white-space: nowrap; does not really work in ie */
 }
 .clickMenu li.main
@@ -52,18 +53,20 @@ div.cmDiv
 	float: left;
 	padding: 0 10px;
 	background-color: #eee;
-	//height: 20px; /* for ie */
+	height: 20px; /* for ie */
 }
 .clickMenu li.main li
 {
 	z-index: 2;
 	min-width: 78px;
 }
-.clickMenu li.hover
+.clickMenu li.hover, #tasks-select li.hover
 {
 	z-index: 1 !important; /* the hover z-index has to be below the normal one the hovering items may be drawn over a submenu */
 	background-color: #aaa;
 }
+
+
 .clickMenu img.liArrow
 {
 	position: absolute;

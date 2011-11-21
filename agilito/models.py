@@ -1,9 +1,10 @@
 from django.db import models
 from django.contrib.auth.models import User
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import ugettext as _
 from django.db.models import Q
 from django.core.cache import cache
 from django.db.models.signals import post_save, post_delete
+from django.conf import settings
 
 from tagging.fields import TagField
 import tagging
@@ -13,11 +14,13 @@ from collections import defaultdict
 from django.core.urlresolvers import reverse
 from tagging.utils import parse_tag_input
 
+
 from dateutil.rrule import rrule, DAILY, MO, TU, WE, TH, FR
 import datetime, time
 import math, re
 import sys
 import inspect
+import hashlib
 
 import random, string
 
@@ -70,7 +73,7 @@ def invalidate_cache(sender, instance, **kwargs):
     ids = []
 
     if isinstance(instance, User):
-        ids = [p.id for p in instance.project_set.all()]
+        ids = [pm.project.id for pm in ProjectMember.objects.filter(user=instance)]
     elif hasattr(instance, "project"):
         ids = [instance.project.id]
 
@@ -127,7 +130,7 @@ def _if_is_none_else(item,  rv_case_none,  fun_case_not_none=None):
     else:
         return fun_case_not_none(item)
 
-class FieldChoices:
+class FieldChoices(list):
     def __init__(self, *args, **kwargs):
         self.__choices = []
         self.keys = []
@@ -232,11 +235,21 @@ VISIBILITY_CHOICE = (
         (2, _("Private"))
         )
 
+class ProjectManager(models.Manager):
+
+    def for_user(self, user):
+            return super(ProjectManager, self)\
+                        .get_query_set()\
+                        .filter(project_members__user=user)\
+                        .extra(select={"lower_name": "lower(name)"})\
+                        .order_by("lower_name")        
+
 # Create your models here.
 class Project(ClueModel):
+    
+    objects = ProjectManager()
     prefix = "P"
 
-    project_members = models.ManyToManyField(User, null=True, blank=True)
     visibility = models.IntegerField(choices=VISIBILITY_CHOICE, default=2)
 
     @property
@@ -654,6 +667,24 @@ class Iteration(ClueModel):
     def user_progress(self, userid):
         tasklogs = self.tasklog_set.filter(owner__id=userid)
         return sum(tl.time_on_task or 0 for tl in tasklogs)
+        
+    def user_daily_progress(self, userid):
+        days = [datetime.date(d.year, d.month, d.day)
+                for d in rrule(DAILY,
+                               cache=True,
+                               dtstart=self.start_date,
+                               until=self.end_date,
+                               byweekday=(MO,TU,WE,TH,FR))]
+            
+        tasklogs = self.tasklog_set.values('date','time_on_task').filter(owner__id=userid)
+        
+        user_hours = []
+        for d in days:
+            task_sum = sum([tl["time_on_task"] for tl in tasklogs \
+                if datetime.date(tl["date"].year, tl["date"].month, tl["date"].day) == d])
+            user_hours.append({'date': d, 'task_sum': task_sum})
+        
+        return user_hours
 
     @cached
     def status(self):
@@ -976,7 +1007,9 @@ class Iteration(ClueModel):
 
     @property
     def users_total_status(self):
-        users = self.project.project_members.all()
+        pm_values = ProjectMember.objects.filter(project=self.project).values('user')
+        users = User.objects.filter(pk__in=pm_values)
+        
         out = []
         for u in users:
             out.append({
@@ -1023,6 +1056,9 @@ class UserStoryAttachment(ClueModel):
     def get_container_model(self):
         return self.user_story
 
+    def get_secret_filepath(self):
+        return hashlib.md5("%s%s%s" % (self.pk, self.original_name.encode('utf-8'), settings.SECRET_KEY)).hexdigest()
+    
     class Meta:
         verbose_name = _(u"US Attachment")
         verbose_name_plural = _(u"US Attachments")
@@ -1030,6 +1066,8 @@ class UserStoryAttachment(ClueModel):
         permissions = (
             ("view", _("Can view the user stories.")),
         )
+    
+        
 
 class UserStory(ClueModel):
     prefix = "US"
@@ -1515,3 +1553,26 @@ class ArchivedBacklog(models.Model):
 
     class Meta:
         ordering = ("-stamp",)
+
+class ProjectMember(models.Model):
+    MEMBER_ROLES = ((10, _("Client")),
+                   (20, _("ScrumMaster")),
+                   (30, _("Developer")),
+                   (40, _("Designer")),
+                   (99, _("Other")))
+
+    user = models.ForeignKey(User, related_name="membership")
+    project = models.ForeignKey(Project, related_name="project_members")
+    role = models.SmallIntegerField(choices=MEMBER_ROLES, default=99)
+    created = models.DateTimeField(null=True, auto_now_add=True)
+    modified = models.DateTimeField(null=True, auto_now=True)
+    
+    class Meta:
+        unique_together = ('user','project','role')
+    
+    def __unicode__(self):
+        return u"%s: %s" % (self.user.username,
+                            self.get_role_display())
+        
+    def is_viewer(self):
+        return (self.role in [10,99])

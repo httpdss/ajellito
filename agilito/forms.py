@@ -10,7 +10,7 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.utils.translation import ugettext as _
 from agilito.models import UserStory, Task, TestCase, TaskLog, TestResult,\
-    UserProfile, UserStoryAttachment, Impediment, Iteration, Release, Project
+    UserProfile, UserStoryAttachment, Impediment, Iteration, Release, Project,ProjectMember
 
 from agilito.widgets import HierarchicRadioSelect, TaskHierarchy
 from agilito.fields import GroupedChoiceField
@@ -28,7 +28,7 @@ class HiddenHttpRefererForm(forms.ModelForm):
 
 class IterationForm(HiddenHttpRefererForm):
     def __init__(self, *args, **kwargs):
-        project = kwargs.pop('project')
+        self.project = kwargs.pop('project')
         super(IterationForm, self).__init__(*args, **kwargs)
         self.fields['start_date'].widget.attrs['class'] = 'show-datepicker'
         self.fields['end_date'].widget.attrs['class'] = 'show-datepicker'
@@ -38,7 +38,7 @@ class IterationForm(HiddenHttpRefererForm):
 
 class ReleaseForm(HiddenHttpRefererForm):
     def __init__(self, *args, **kwargs):
-        project = kwargs.pop('project')
+        self.project = kwargs.pop('project')
         super(ReleaseForm, self).__init__(*args, **kwargs)
         self.fields['deadline'].widget.attrs['class'] = 'show-datepicker'
 
@@ -91,7 +91,7 @@ class IterationImportForm(forms.Form):
         # validate iteration header
         for i, s in enumerate(['id', 'name', 'start', 'end']):
             if rows[0][i].lower() != s:
-                raise forms.ValidationError(_('unexpected header "%s", expected "%s"' ) % (rows[0][i], s))
+                raise forms.ValidationError(_('unexpected header "%{h1}", expected "%{h2}"' ).format(h1=rows[0][i], h2=s))
 
         for i, cell in enumerate(rows[1]):
             if cell and i >= len(rows[0]):
@@ -107,7 +107,7 @@ class IterationImportForm(forms.Form):
             try:
                 id = int(rows[1][0])
             except ValueError:
-                raise forms.ValidationError(_('unexpected iteration ID "%s" (must be numeric)' ) % rows[1][0])
+                raise forms.ValidationError(_('unexpected iteration ID "%s" (must be numeric)' ).format(rows[1][0]))
 
             try:
                 iteration = Iteration.objects.get(project__id=self.project_id, id=id)
@@ -137,7 +137,7 @@ class IterationImportForm(forms.Form):
         for i, s in enumerate(['id', 'story', 'task', 'estimate', 'owner', 'tags']):
             try:
                 if rows[2][i].lower() != s:
-                    raise forms.ValidationError(_('unexpected header "%s", expected "%s"' ) % (rows[2][i], s))
+                    raise forms.ValidationError(_('unexpected header "%{h1}", expected "%{h2}"' ).format(h1=rows[2][i], h2=s))
             except IndexError:
                 if i <= 3:
                     raise forms.ValidationError(_('missing header, expected "%s"' ) % s)
@@ -267,7 +267,7 @@ class ImpedimentForm(HiddenHttpRefererForm):
 
     class Meta:
         model = Impediment
-        fields = 'name', 'description', 'state', 'tasks'
+        fields = 'name', 'description', 'tasks'
 
 class UserStoryForm(HiddenHttpRefererForm):
     tags = TagField(required=False)
@@ -354,7 +354,9 @@ class TaskForm(HiddenHttpRefererForm):
         super(TaskForm, self).__init__(*args, **kwargs)
         
         if project is not None:
-            owner_qset = project.project_members.all()
+            pm_values = ProjectMember.objects.filter(project__pk=1).values('user')
+            owner_qset = User.objects.filter(pk__in=pm_values)
+            
             self.fields['owner'] = forms.ModelChoiceField(queryset=owner_qset,
                                                           required=False)
 
@@ -422,7 +424,9 @@ class TestResultForm(HiddenHttpRefererForm):
 
         if project is not None:
             tc_qset = TestCase.objects.filter(user_story__project=project)
-            tester_qset = project.project_members.all()
+            pm_values = ProjectMember.objects.filter(project__pk=1).values('user')
+            tester_qset = User.objects.filter(pk__in=pm_values)
+
             self.fields['test_case'] = forms.ModelChoiceField(queryset=tc_qset)
             self.fields['tester'] = forms.ModelChoiceField(queryset=tester_qset)
 
@@ -464,7 +468,7 @@ def gen_TaskLogForm(user):
         select distinct
             p.id,   p.name
         from agilito_project p
-        join agilito_project_project_members pm on pm.project_id = p.id and pm.user_id = %(me)d
+        join agilito_projectmember pm on pm.project_id = p.id and pm.user_id = %(me)d
         join agilito_iteration i on i.project_id = p.id
         where i.start_date <= '%(today)s' and i.end_date >= '%(last_end)s'
         order by p.id
@@ -498,7 +502,7 @@ def gen_TaskLogForm(user):
 
             ,max(tlr.id) ,max(tlm.owner_id)
         from agilito_project p
-        join agilito_project_project_members pm on pm.project_id = p.id and pm.user_id = %(me)d
+        join agilito_projectmember pm on pm.project_id = p.id and pm.user_id = %(me)d
         join agilito_iteration i on i.project_id = p.id
         join agilito_userstory us on us.project_id = p.id and us.iteration_id = i.id
         join agilito_task t on t.user_story_id = us.id
@@ -551,7 +555,7 @@ def gen_TaskLogForm(user):
                                                                     'style' : "border: 0"}),
                                      min_value=0, decimal_places=2, max_digits=5,
                                      required=False)
-        date = forms.DateField(initial=str(date.today()))
+        date = forms.DateField(required=False)
         class Meta:
             model = TaskLog
             fields = 'taskmenu', 'task', 'date', 'time_on_task', 'summary'
@@ -565,6 +569,6 @@ def gen_TaskLogForm(user):
                                         'state',
                                         'summary',
                                         'date',
-                                        ]
+                                        'http_referer']
 
     return TaskLogForm

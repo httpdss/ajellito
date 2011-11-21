@@ -14,7 +14,7 @@
                     <select id="iteration-selection" style="width:10em">
                         {%for iteration in itset %}
                         <option {% ifequal iteration.id current_iteration.id %} selected="selected" {%endifequal%}
-                        value="{{iteration.get_absolute_url}}">{{ iteration.name }}</option>
+                        value="{% url iteration_status_with_id current_project.id iteration.id %}">{{ iteration.name }}</option>
                         {%endfor%}
                     </select>
                     {% else %}
@@ -32,17 +32,14 @@
                     <div class="description">{{current_iteration.description|safe}}</div>
                 </td>
             </tr>
-
             <tr>
                 <td>{% trans "Accepted" %}</td>
                 <td>{{us_accepted_percentage|floatformat:0 }} %</td>
             </tr>
-
             <tr>
                 <td>{% trans "Stories" %}</td>
                 <td>{{ stories|length }}</td>
             </tr>
-
             {% if velocity.planned %}
             <tr>
                 <td>{% trans "Velocity" %}</td>
@@ -57,8 +54,8 @@
             {% endif %}
 
             {% regroup tags|dictsort:"tag" by tag as grouped_tags %}
-            <tr>
-                <td>{% trans "Tags" %}</td>
+            <tr class="topline">
+                <td>{% trans "Tags" %} <img title="{% trans 'Reset tag filter' %}" src="{{STATIC_URL}}pinax/img/silk/icons/cancel.png" class="reset-tags" style="display:none;"/></td>
                 <td>
                     <ul class="tags">
                         {% for tag in grouped_tags %}
@@ -71,10 +68,8 @@
             </tr>
         </table>
     </div>
-
     <div id="burndown" style="width:320px; height:240px;">
     </div>
-
     <div style="clear: both"></div>
 </div>
 {% endif %}

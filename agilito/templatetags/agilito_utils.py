@@ -1,7 +1,7 @@
 from django import template
 from django.utils.safestring import mark_safe
 
-import settings
+from django.conf import settings
 from agilito import UNRESTRICTED_SIZE, RELEASE
 
 from agilito.models import UserStory, Task

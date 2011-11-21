@@ -1,0 +1,83 @@
+{% extends "agilito/base.html" %}
+{% load i18n %}
+
+{% block head_title %}{% trans "Files" %}{% endblock %}
+{% block body_class %}agilito files{% endblock %}
+{% block css %}
+    <link rel="stylesheet" href="{{ STATIC_URL }}pinax/css/facebox.css" />
+{% endblock css %}
+{% block body %}
+  
+  <h2>{% trans "Files" %}</h2>
+
+    {% if object_list %}
+    <table class="pretty-table" id="user-story-list" cellspacing="0" cellpadding="2">
+        <tbody>
+            {% for object in object_list %}
+            
+            <tr class="{% cycle even,odd %}">
+                <td style="width:20px;">
+                    <span rel="{{object.attachment}}" class="icon">&nbsp;</span>
+                </td>
+                <td>
+                    <a href="{% url agilito_view_attachment current_project.id,object.user_story.id,object.id %}" rel="facebox"> 
+                        {{object.name}}
+                    </a>
+                </td>
+                <td>
+                    {{object.description|safe}}
+                </td>
+                <td>
+                    <a id="att_dwld" href="{{object.attachment.url}}"> 
+                        <img src="{{ STATIC_URL }}agilito/img/save.png" alt="download this file" />
+                    </a>
+                </td>
+                <td>
+                    <a href="{% url agilito_view_attachment_secret current_project.id,object.user_story.id,object.id,object.get_secret_filepath %}" class="copypaste"> 
+                        <img src="{{STATIC_URL}}pinax/img/silk/icons/link_go.png" alt="Public link" title="{% trans 'Public link' %}" />
+                    </a>
+                </td>
+                <td>
+                    <a id="att_del" href="{% url agilito.views.delete_attachment current_project.id,object.user_story.id,object.id %}?last_page={{last_page}}">
+                    <img src="{{ STATIC_URL }}agilito/img/delete.png" alt="delete" title="delete" width="16" height="16" />
+                </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% if page_range %}
+    <ul>
+        {% for page in page_range %}
+            <li><a href="{% url agilito_project_files %}?page={{page}}">{{ page }}</a></li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+
+
+    {% else %}
+    <p><strong>{% trans "No results found" %}</strong></p>
+    {% endif %}
+  
+{% endblock %}
+
+{% block js %}
+    <script src="{{ STATIC_URL }}pinax/js/facebox.js" type="text/javascript"></script>
+    <script type="text/javascript">
+
+        $(function () {
+            $(".icon[rel$='.png'], .icon[rel$='.gif'], .icon[rel$='.jpg']").click(function () {
+                var img_path = $(this).closest('tr').find('a[rel*=facebox]').attr('href');                
+                $.facebox('<img src="'+img_path+'"/>');
+                $('#facebox .close_image').attr('src', '{{STATIC_URL}}pinax/img/facebox/closelabel.gif');
+                $('div.loading img').attr('src', '{{STATIC_URL}}pinax/img/facebox/loading.gif');
+            })
+            
+            $('.copypaste').click(function(event){
+                window.prompt ('{% trans "Copy to clipboard: Ctrl+C, Enter" %}', window.location.origin+$(this).attr('href'));
+                event.preventDefault();
+                return false;
+            });
+        });
+    </script>
+{% endblock js %}

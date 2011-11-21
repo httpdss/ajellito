@@ -1,6 +1,9 @@
 {% extends "agilito/base.html" %}
 {% load i18n %}
 {% load agilito_utils %}
+{% load humanize %}
+{% load markup %}
+{% load avatar_tags %}
 
 {% block body_class %}iteration agilito{% endblock %}
 
@@ -18,6 +21,7 @@
     {% include "agilito/burndown.js" %}
 
 <script type="text/javascript">
+var selected_tag_ids;
 $(window).ready(function(){
     $("#user-story-list").treeTable({initialState: "expanded", treeColumn: 1});
     $("#impediment-list").treeTable();
@@ -25,25 +29,44 @@ $(window).ready(function(){
     {% if current_iteration %}
     burndown('burndown');
     {% endif %}
+    
+    $('.task-owner').each(function(){
+        $owner = $(this);
+        $owner.next().attr('title', $owner.html());
+    });
+    $('.reset-tags').click(function(){
+        $(this).hide();
+        $("tr.userstory").show();
+        $("tr.task").show();
+        $('.task-tag').removeClass('selected');
+        $('.task-tag a').css({fontWeight:"normal"});
+    })
 });
 
 function highlightTag(ids)
 {
+    $('.reset-tags').show();
     $("tr.userstory").each(function() {
         $(this).removeClass("expanded");
         $(this).collapse();
     });
     $("tr.task .name a, .task-tag a").each(function() {
         $(this).css({fontWeight:"normal"});
+        $(this).parent().removeClass('selected');
     });
-
+    $("tr.userstory").hide();
+    $("tr.task").hide();
     ids = ids.split(',');
+    
+    selected_tag_ids = ids
     for (i in ids) {
         id = ids[i];
         if (id.indexOf('us-') == 0) {
             $("#" + id).expand();
+            $("#" + id).show();
         }
         if (id.indexOf('ta-') == 0) {
+            $("#" + id).show();
             $("#" + id + " .name a").css({fontWeight:"bold"});
 
             classes = $("#" + id).attr('class').split(' ');
@@ -54,12 +77,13 @@ function highlightTag(ids)
                 cls = classes[i];
                 if (cls.match(re) == prefix) {
                     parent = '#' + cls.substring(plen);
-                    $(parent).expand();
+                    $(parent).show();
                 }
             }
         }
         if (id.indexOf('tag-') == 0) {
             $("#" + id + " a").css({fontWeight:"bold"});
+            $("#" + id + " a").parent().addClass('selected');
         }
     }
 }
@@ -71,9 +95,6 @@ function highlightTag(ids)
 <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}agilito/js/jquery.jqplot/jquery.jqplot.css" />
 {% endblock %}
 
-{% load humanize %}
-{% load markup %}
-
 {% block head_title %}
     {% if current_iteration %}
         {{current_iteration.name}}
@@ -81,8 +102,6 @@ function highlightTag(ids)
     {% trans "There are no iterations in this project." %}
     {% endif %}
 {% endblock %}
-
-{% block select_tab %} "iteration" {% endblock %}
 
 {% block body_header %}
 {% include "agilito/iteration_status_header.html" %}
@@ -129,9 +148,10 @@ function highlightTag(ids)
                 </tr> 
 
                 {% for us in stories %}
+                {% url agilito_userstory_detail current_project.id us.id as userstory_url %}
                 <tr id="us-{{us.id}}" class="userstory {% cycle even,odd %} {%if us.is_blocked%}blocked{% endif %} {%if us.is_starved%}starved{% endif %}">
                     <td class="rank">{{us.relative_rank}}</td>
-                    <td class="id"><a href="{{us.get_absolute_url}}">US{{us.id}}</a></td>
+                    <td class="id"><a href="{{userstory_url}}">US{{us.id}}</a></td>
                     <td class="name{% if us.is_archived %} archived{% endif %}"><a href="{{us.get_absolute_url}}">{{us.name}}</a></td>
                     <td class="state {{ us.state|storystate|slugify }}">{{us.state|storystate}}</td>
                     <td class="planned">{{us.size|storysize|default_if_none:"-"}}</td>
@@ -139,7 +159,7 @@ function highlightTag(ids)
                     <td class="todo">{{us.remaining|default_if_none:"-"}}</td>
                     <td class="failures {% if us.failures %} fail {% endif %}">
                         {% if us.failures %}
-                        <a href="{{us.get_absolute_url}}#test-cases">{{us.failures|default_if_none:"-"}}</a>
+                        <a href="{{userstory_url}}#test-cases">{{us.failures|default_if_none:"-"}}</a>
                         {% else %}
                         {{us.failures|default_if_none:"-"}}
                         {%endif%}
@@ -165,17 +185,18 @@ function highlightTag(ids)
                     </td>
 
                     <td id="move_us_{{us.id}}" class="">
-                        <a href="{% url agilito.views.userstory_move current_project.id,us.id %}?last_page={{last_page}}"
-                            onclick="popup(this, 'us-move'); return false"><img
-                            src="{{ STATIC_URL }}agilito/img/bullet_go.png" alt="move" title="move" width="16" height="16" /></a>
+                        <a href="{% url agilito.views.userstory_move current_project.id,us.id %}?last_page={{last_page}}">
+                            <img src="{{ STATIC_URL }}agilito/img/bullet_go.png" alt="move" title="move" width="16" height="16" />
+                        </a>
                     </td>
                 </tr> 
 
                 {% for ta in us.tasks.all %}
+                {% url agilito_task_detail current_project.id us.id ta.id as task_url %}
                 <tr id="ta-{{ta.id}}" class="task child child-of-us-{{us.id}} {% cycle even,odd %} {%if ta.is_blocked%}blocked{% endif %}">
                     <td></td><!-- rank -->
-                    <td class="id"><a href="{{ta.get_absolute_url}}">TA{{ta.id}}</a></td>
-                    <td class="name"><a href="{{ta.get_absolute_url}}">{{ta.name}}</a>
+                    <td class="id"><a href="{{task_url}}">TA{{ta.id}}</a></td>
+                    <td class="name"><a href="{{task_url}}">{{ta.name}}</a>
                         <ul class="tags">
                             {% for tag in ta.taglist %}
                             <li><span class="small">{{ tag }}</span></li>
@@ -183,21 +204,20 @@ function highlightTag(ids)
                         </ul>
                     </td>
                     <td class="state {{ ta.state|taskstate|slugify }}">{{ta.state|taskstate}}</td>
-                    <td>{{ta.owner|default_if_none:""}}</td>
+                    <td></td>
                     <td class="estimated">{{ta.estimate|default_if_none:"-"}}</td>
                     <td class="todo">{{ta.remaining|default_if_none:"-"}}</td>
-                    <td></td><!-- failures -->
+                    <td></td>
                     <td>
                         {% if not ta.is_archived %}
-                        <a href="{% url agilito.views.timelog_task current_project.id,ta.id %}?last_page={{last_page}}"
-                            onclick="popup(this, 'timelog'); return false"><img
-                            src="{{ STATIC_URL }}agilito/img/log.png" alt="log" title="log" width="16" height="16" /></a>
+                        <a href="{% url agilito.views.timelog_task current_project.id,ta.id %}?last_page={{last_page}}">
+                            <img src="{{ STATIC_URL }}agilito/img/log.png" alt="log" title="log" width="16" height="16" />
+                        </a>
                         {% endif %}
                     </td>
                     <td>
                         {% if not ta.is_archived %}
                         <a id="task_edit_{{ta.id}}"
-                            onclick="popup(this, 'taskedit'); return false"
                             href="{% url agilito.views.task_edit current_project.id,us.id,ta.id %}?last_page={{last_page}}"><img
                             src="{{ STATIC_URL }}agilito/img/pencil.png" alt="edit"
                             title="edit" width="16" height="16" /></a>
@@ -205,13 +225,15 @@ function highlightTag(ids)
                     </td>
                     <td>
                         {% if not ta.is_archived %}
-                        <a id="task_del_{{ta.id}}"
-                            onclick="popup(this, 'taskdel'); return false"
-                            href="{% url agilito.views.task_delete current_project.id,us.id,ta.id %}?last_page={{last_page}}"><img
-                            src="{{ STATIC_URL }}agilito/img/delete.png" alt="delete" title="delete" width="16" height="16" /></a>
+                        <a id="task_del_{{ta.id}}" href="{% url agilito.views.task_delete current_project.id,us.id,ta.id %}?last_page={{last_page}}">
+                            <img src="{{ STATIC_URL }}agilito/img/delete.png" alt="delete" title="delete" width="16" height="16" />
+                        </a>
                         {% endif %}
                     </td>
-                    <td></td>
+                    <td>
+                        <div class="task-owner" style="display:none;">{{ta.owner}}</div>
+                        {% if ta.owner %}{% avatar ta.owner 16 %}{% endif %}
+                    </td>
                 </tr> 
                 {% endfor %}
                 {% endfor %}
@@ -233,14 +255,13 @@ function highlightTag(ids)
             <tbody>
                 {% if impediments.open %}
                 {% for impediment in impediments.open %}
-                <tr "class="{% cycle even,odd %}" id="impediment-{{ impediment.id }}">
-                    <td><a onclick="popup(this, 'impediment'); return false"
-                            href="{{ impediment.get_absolute_url }}?last_page={{last_page}}">IM{{ impediment.id }}</a></td>
+                <tr class="{% cycle even,odd %}" id="impediment-{{ impediment.id }}">
+                    {% url impediment_edit current_project.id current_iteration.id impediment.id as impediment_url %}
+                    <td><a href="{{ impediment_url }}?last_page={{last_page}}">IM{{ impediment.id }}</a></td>
                     <td>{{ impediment.tasks.count }}</a></td>
-                <td>{{ impediment.risk }}</a></td>
-            <td><a onclick="popup(this, 'impediment'); return false"
-                    href="{{ impediment.get_absolute_url }}?last_page={{last_page}}">{{ impediment.name }}</a></td>
-        </tr>
+                    <td>{{ impediment.risk }}</a></td>
+                    <td><a href="{{ impediment_url }}?last_page={{last_page}}">{{ impediment.name }}</a></td>
+                </tr>
 
         {% for task in impediment.tasks %}
         <tr id="impediment-{{ impediment.id }}-task-{{ task.id }}" class="child {% cycle even,odd %} child-of-impediment-{{ impediment.id }}">
@@ -263,12 +284,10 @@ function highlightTag(ids)
 
     {% for impediment in impediments.resolved %}
     <tr id="impediment-{{ impediment.id }}" class="child-of-resolved-impediments">
-        <td><a onclick="popup(this, 'impediment'); return false"
-                href="{{ impediment.get_absolute_url }}?last_page={{last_page}}">IM{{ impediment.id }}</a></td>
+        <td><a href="{{ impediment.get_absolute_url }}?last_page={{last_page}}">IM{{ impediment.id }}</a></td>
         <td>{{ impediment.tasks.count }}</a></td>
     <td>&nbsp;</td>
-    <td><a onclick="popup(this, 'impediment'); return false"
-            href="{{ impediment.get_absolute_url }}?last_page={{last_page}}">{{ impediment.name }}</a></td>
+    <td><a href="{{ impediment.get_absolute_url }}?last_page={{last_page}}">{{ impediment.name }}</a></td>
 </tr>
 
 {% for task in impediment.tasks %}
@@ -286,6 +305,7 @@ function highlightTag(ids)
         {% endif %}
 
     </div>
+
     {% include "agilito/comments_section.html" %}
     {% else %}
     <p>{% trans "There are no iterations in this project." %}</p>

@@ -1,13 +1,63 @@
 from django.contrib.auth.decorators import login_required
-from django.http import Http404
+from django.http import Http404, HttpResponse
 from django.utils.datastructures import SortedDict
+from agilito import CACHE_ENABLED, UNRESTRICTED_SIZE, PRINTABLE_CARD_STOCK, CACHE_PREFIX, BACKLOG_ARCHIVE
+from django.core.cache import cache
+
 try:
     from functools import wraps
 except ImportError:
     from django.utils.functional import wraps
 
-from agilito.models import Project
+from agilito.models import Project, ProjectMember
 import html5lib
+
+def touch_cache(request, project_id):
+    response = HttpResponse(mimetype="text/plain")
+    if CACHE_ENABLED:
+        Project.touch_cache(project_id)
+        response.write("Touched cache for project %s\n" % project_id)
+        response.write("CACHE_PREFIX=%s\n" % CACHE_PREFIX)
+    else:
+        response.write("Caching is disabled")
+    return response
+    
+def cached_view(f):
+    def f_cached(*args, **kwargs):
+        global CACHE_ENABLED
+
+        if not CACHE_ENABLED:
+            return f(*args, **kwargs)
+
+        params = f.func_code.co_varnames[1:f.func_code.co_argcount]
+        vardict = dict(zip(params, ['<default>' for d in params]))
+        vardict.update(dict(zip(params, args[1:])))
+        vardict.update(kwargs)
+        u = args[0].user # request.user
+
+        pv = Project.cache_id(vardict["project_id"])
+
+        key = "%s.agilito.views.%s(%s)" % (CACHE_PREFIX, f.__name__, ",".join([str(vardict[v]) for v in params]))
+
+        v = cache.get(key + "#version")
+        if v == pv:
+            v = cache.get(key + "#value")
+            if not v is None:
+                return v
+
+        v = f(*args, **kwargs)
+        cache.set(key + '#version', pv, 1000000)
+        cache.set(key + '#value', v, 1000000)
+
+        return v
+
+    return f_cached
+
+
+
+def datelabels(dates, l):
+    label = ["mo", "tu", "we", "th", "fr", "sa", "su"]
+    return list(enumerate([label[d.weekday()][:l] for d in dates]))
 
 class SideBar(SortedDict):
     class Sub(list):
@@ -17,29 +67,30 @@ class SideBar(SortedDict):
         super(SideBar, self).__init__(self)
         self.request = request
 
-    def add(self, section, label, url, redirect=False, popup="", props=None):
-        if section.find("#") >= 0:
-            sid, section = section.split('#', 2)
-        else:
-            sid = None
-
-        if not self.has_key(section):
-            self[section] = SideBar.Sub()
-
-        if sid:
-            self[section].id = sid
-
-        if redirect:
-            if isinstance(redirect, basestring):
-                url = "%s?last_page=%s" % (url, redirect)
+    def add(self, section, label, url, redirect=False, popup="", props=None, visible=True):
+        if visible:
+            if section.find("#") >= 0:
+                sid, section = section.split('#', 2)
             else:
-                url = "%s?last_page=%s" % (url, self.request.path)
-
-        entry = {"url": url, "label": label, "properties": props}
-        if popup:
-            entry["popup"] = popup
-
-        self[section].append(entry)
+                sid = None
+            
+            if not self.has_key(section):
+                self[section] = SideBar.Sub()
+            
+            if sid:
+                self[section].id = sid
+            
+            if redirect:
+                if isinstance(redirect, basestring):
+                    url = "%s?last_page=%s" % (url, redirect)
+                else:
+                    url = "%s?last_page=%s" % (url, self.request.path)
+            
+            entry = {"url": url, "label": label, "properties": props}
+            if popup:
+                entry["popup"] = popup
+            
+            self[section].append(entry)
 
     def enabled(self):
         return (len(self) > 0)
@@ -67,14 +118,27 @@ class SideBar(SortedDict):
             f.extend(nv)
 
         return f
+
+
+def is_member(view):
+    """ Gives access to everyone which is not a viewer """
+    @wraps(view)
+    def inner(request, project_id, *args, **kwargs):
+        if request.session.get('is_viewer',True):
+            raise Http404
+        return view(request, project_id, *args, **kwargs)
+    return inner
+
+
+
 def restricted(f):
     @wraps(f)
     @login_required
     def wrapper(request, project_id, *args, **kwargs):
         if not request.user.is_superuser:
             try:
-                project = request.user.project_set.get(id=project_id)
-            except Project.DoesNotExist, msg:
+                project = ProjectMember.objects.filter(user=request.user, project__pk=project_id)
+            except ProjectMember.DoesNotExist, msg:
                 raise Http404, msg
         return f(request, project_id, *args, **kwargs)
     return wrapper

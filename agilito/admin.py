@@ -1,6 +1,6 @@
 from agilito.models import Project, Release, Iteration, UserStoryAttachment,\
     UserStory, UserProfile, Task, TestCase, TestResult, TaskLog, \
-    Impediment
+    Impediment, ProjectMember
 from django.contrib import admin
 
 #
@@ -18,12 +18,12 @@ class TaskInLine(admin.TabularInline):
     model = Task
     extra = 1
 
-class ImpedimentInLine(admin.TabularInline):
-    model = Impediment
+class ProjectMemberInLine(admin.TabularInline):
+    model = ProjectMember
     extra = 1
-
+        
 class ProjectAdmin(admin.ModelAdmin):
-    filter_horizontal = ('project_members',)
+    inlines = [ProjectMemberInLine]
 
 class ReleaseAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'project')
@@ -53,13 +53,12 @@ class UserStoryAdmin(admin.ModelAdmin):
     list_filter = ('project', 'iteration', 'state', )
     ordering = ('rank','size', )
     search_fields = ['name', 'description']
-
+    
     fieldsets = ((None, {'fields': ('name', 'description',
                                    ('project', 'iteration'),
                                    ('rank', 'state', 'size', ))}), )
 
 class TaskAdmin(admin.ModelAdmin):
-    inlines = [ImpedimentInLine]
     list_display = ('name', 'estimate', 'actuals', 'remaining',
                     'state', 'category', 'owner', 'user_story')
     list_display_links = ('name', 'owner', 'user_story')
@@ -78,7 +77,7 @@ class TestCaseAdmin(admin.ModelAdmin):
                             'postcondition',),
                 }),
                 )
-
+    
     list_display = ('id', 'name', 'user_story', 'priority')
     list_display_links = ('id', 'name',)
     list_filter = ('priority',)
@@ -91,15 +90,24 @@ class TestResultAdmin(admin.ModelAdmin):
 
 class TaskLogAdmin(admin.ModelAdmin):
     list_display = ('summary', 'task', 'iteration', 'project', 'date', 'time_on_task', 'owner')
-    list_filter = ('owner',)
+    list_filter = ('owner','date')
     date_hierarchy = 'date'
     search_fields = ('summary', 'iteration__name', 'iteration__project__name')
     ordering = ('-date',)
 
 class ImpedimentAdmin(admin.ModelAdmin):
-    list_display = ('name', 'description', 'opened', 'resolved', 'tasks')
+    list_display = ('name', 'description', 'opened', 'resolved')
     ordering = ('-opened',)
+    
+class ProjectMemberAdmin(admin.ModelAdmin):
+    
+    list_display = ('user','project','role')
+    list_filter = ('project','role')
+    search_fields = ['member__username']
+    list_editable = ('role',)
+    
 
+admin.site.register(ProjectMember, ProjectMemberAdmin)
 admin.site.register(Project, ProjectAdmin)
 admin.site.register(Release, ReleaseAdmin)
 admin.site.register(Iteration, IterationAdmin)
@@ -110,4 +118,4 @@ admin.site.register(Task, TaskAdmin)
 admin.site.register(TestCase, TestCaseAdmin)
 admin.site.register(TestResult, TestResultAdmin)
 admin.site.register(TaskLog, TaskLogAdmin)
-#admin.site.register(Impediment, ImpedimentAdmin)
+admin.site.register(Impediment, ImpedimentAdmin)

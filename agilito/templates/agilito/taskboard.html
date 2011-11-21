@@ -1,71 +1,103 @@
 {% load i18n %}
+{% load compress %}
+{% load analytics_tags %}
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
     <head>
-        <title>{% block head_title %}{% trans "Agilito Project Managment App" %}{% endblock %}</title>
+        <title>{% block head_title %}{% trans "Taskboard" %}{% endblock %}</title>
+        {% compress css %}
+        <link rel="stylesheet" href="{{ STATIC_URL }}pinax/css/base.css" />
+        <link rel="stylesheet" href="{{ STATIC_URL }}pinax/css/tabs.css" />
         <link rel="stylesheet" href="{{STATIC_URL}}agilito/css/taskboard.css" type="text/css" />
-
-        <link rel="stylesheet" href="{{STATIC_URL}}agilito/css/forms.css" type="text/css" />
-        <link rel="stylesheet" href="{{STATIC_URL}}agilito/css/tables.css" type="text/css" />
-        {% block css%} {%endblock%}
-        <script type="text/javascript" src="{{STATIC_URL}}agilito/js/jquery.js"></script>
-        <script type="text/javascript" src="{{STATIC_URL}}agilito/js/ui.js"></script>
+        {% endcompress %}
     </head>
-
     <body>
-        <h3>{% trans "Taskboard" %}</h3>
-        <table id="taskboard" cellspacing="0" cellpadding="2">
-            <thead>
-                <tr>
-                    <th>{% trans "Story" %}</th>
-                    <th>{% trans "To do" %}</th>
-                    <th>{% trans "In progress" %}</th>
-                    <th>{% trans "Done" %}</th>
-                </tr>
-            </thead>
+        {% block flash_messages %}{% include "_flash_messages.html" %}{% endblock %}
+        <div class="filters">
+            <a href="{% url iteration_status_with_id current_project.id,current_iteration.id  %}">{% trans "Back to iteration" %}</a>
+            <form action="" class="uniForm">
+                <fieldset class="inlineLabels">
+                    <legend>{% trans "Filters" %}</legend>
+                    <div class="ctrlHolder">
+                        <label for="owner_filter">Owner</label>
+                        <select name="owner_filter" id="owner_filter">
+                                <option selected="selected" value="ALL">{% trans "Select an owner..." %}</option>
+                            {% for member in current_project.project_members.all %}
+                                {% if member.user.first_name %}
+                                <option value="{{member.user.first_name}} {{member.user.last_name}}">{{member.user.first_name}} {{member.user.last_name}}</option>                                    
+                                {% else %}
+                                <option value="{{member.user.email}}">{{member.user.email}}</option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
+                    </div>
+                </fieldset>
+            </form>
+        </div>
+        <div class="taskboard">
+            <table>
+                <thead>
+                    <tr>
+                        <td>{% trans "Story" %}</td>
+                        <td>{% trans "To Do" %}</td>
+                        <td>{% trans "In Progress" %}</td>
+                        <td>{% trans "Done" %}</td>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for us in stories %}
+                    <tr>
+                        <td>
+                            <div class="story">
+                                <div class="name"><a href="{{ us.get_absolute_url }}">{{ us.name }}</a></div>
+                                <div class="id">{{ us.code }}</div>
+                                <div class="rank" title="rank">{{ us.relative_rank }}</div>
+                                <div class="remaining" title="remaining">{{ us.remaining|default_if_none:"-" }}</div>
+                            </div>
+                        </td>
+                        <td>
+                            {% for ta in us.tasks.todo %}
+                            {% include "agilito/taskboard_task.html" %}
+                            {% endfor %}
+                        </td>
+                        <td>
+                            {% for ta in us.tasks.in_progress %}
+                            {% include "agilito/taskboard_task.html" %}
+                            {% endfor %}
+                        </td>
+                        <td>
+                            {% for ta in us.tasks.done %}
+                            {% include "agilito/taskboard_task.html" %}
+                            {% endfor %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
 
-            <tbody>
-                {% for us in stories %}
-                <tr>
-                    <td>
-                        <ul class="story">
-                            <li class="id"><span>{{ us.id }}</span></li>
-                            <li class="rank"><span>{% trans "rank:" %} {{ us.relative_rank }}</span></li>
-                            <li class="remaining"><span>{% trans "remaining:" %} {{ us.remaining|default_if_none:"-" }}</span></li>
-                            <li class="name"><span>{{ us.name }}</span></li>
-                        </ul>
-                    </td>
-                    <td>
-                        {% for ta in us.tasks.todo %}
-                        <ul class="task">
-                            <li class="id"><span>{{ ta.id }}</span></li>
-                            <li class="remaining"><span>{% trans "remaining:" %} {{ ta.remaining|default_if_none:"-" }}</span></li>
-                            <li class="name"><span>{{ ta.name }}</span></li>
-                        </ul>
-                        {% endfor %}
-                    </td>
-                    <td>
-                        {% for ta in us.tasks.in_progress %}
-                        <ul class="task">
-                            <li class="id"><span>{{ ta.id }}</span></li>
-                            <li class="remaining"><span>{% trans "remaining:" %} {{ ta.remaining|default_if_none:"-" }}</span></li>
-                            <li class="name"><span>{{ ta.name }}</span></li>
-                        </ul>
-                        {% endfor %}
-                    </td>
-                    <td>
-                        {% for ta in us.tasks.done %}
-                        <ul class="task">
-                            <li class="id"><span>{{ ta.id }}</span></li>
-                            <li class="remaining"><span>{% trans "remaining:" %} {{ ta.remaining|default_if_none:"-" }}</span></li>
-                            <li class="name"><span>{{ ta.name }}</span></li>
-                        </ul>
-                        {% endfor %}
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-
+            </div>
+        </div>
+        {% compress js %}
+        <script src="{{ STATIC_URL }}pinax/js/jquery-1.5.2.js" type="text/javascript"></script>
+        <script type="text/javascript">
+        $(function(){
+           $('#owner_filter').change(function(){
+               var current_value = $(this).val();
+               if (current_value === "ALL") {
+                   $('.filterable').show();
+               } else {
+                   $('.filterable').each(function() {
+                       if ($('.owner', this).html() != current_value) {
+                           $(this).hide();
+                       } else {
+                           $(this).show();
+                       }
+                   });
+               }
+           });
+        });
+        </script>
+        {% analytics %}
+        {% endcompress %}
     </body>
 </html>

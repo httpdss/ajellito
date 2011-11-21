@@ -3,7 +3,7 @@ import string
 import os
 from dulwich.repo import Repo
 
-import settings
+from django.conf import settings
 
 try:
     settings.CACHE_BACKEND
@@ -19,7 +19,7 @@ except AttributeError:
 try:
     PRINTABLE_CARD_STOCK = settings.PRINTABLE_CARD_STOCK
 except AttributeError:
-    PRINTABLE_CARD_STOCK = None
+    PRINTABLE_CARD_STOCK = 'Buro1 129820'
 
 ALPHABET = ''.join(c for c in string.ascii_uppercase + string.ascii_lowercase + string.digits + string.punctuation if c != '.')
 BASE = len(ALPHABET)

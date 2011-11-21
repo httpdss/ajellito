@@ -4,6 +4,13 @@
 
 {% block body_class %}timelog agilito{% endblock %}
 
+{% block subnav %}
+<ul>
+    <li><a href="{% url timelog current_project.pk %}">{% trans "Log Hours" %}</a></li>
+    <li><a href="{% url agilito_tasklog_mylog current_project.pk %}">{% trans "My Log" %}</a></li>
+</ul>
+{% endblock %}
+
 {% block js %}
 <script type="text/javascript">
 
@@ -29,7 +36,11 @@ function remaining_change() {
         $("#id_time_on_task").val('' + tot);
     }
     if ($("#id_summary").val() == '') {
-        $("#id_summary").val('Spent ' + tot + ' hours');
+        $("#id_summary").val('{% trans "Spent" %} ' + tot + ' {% trans "hours" %}');
+    }
+    if (parseFloat($remaining.val()) == 0) {
+        $('#id_state option').removeAttr('selected');
+        $('#id_state option:last').attr('selected','selected');
     }
 }
 
@@ -39,10 +50,10 @@ $(window).ready(function(){
         $(this).toggleClass("shown").next().toggle("blind", {direction:"vertical"}, 200);
     });
     $("#timelog .level0:not(:first) dt").toggleClass("shown").next().toggle();
-   // $("#id_date").datepicker({dateFormat: "yy-mm-dd", duration: "fast", mandatory: true});
+    $("#id_date").datepicker({dateFormat: "yy-mm-dd", duration: "fast", mandatory: true});
     $("input.tasks-select").click(task_details);
 
-    $.fn.clickMenu.setDefaults({arrowSrc:'/agilito/right.gif'});
+    $.fn.clickMenu.setDefaults({arrowSrc:'{{ STATIC_URL }}agilito/img/right.gif'});
     $('#tasks-select').clickMenu({
         onClick: function() {
             $(this).find('span').each(function() {
@@ -63,8 +74,6 @@ $(window).ready(function(){
 });
 </script>
 {% endblock %}
-
-{% block select_tab %} "timelog" {% endblock %}
 
 {% block body %}
 <h2>{% trans "Log your hours!" %}</h2>

@@ -1,8 +1,15 @@
 from django.conf.urls.defaults import *
 from django.contrib import admin
+from django.contrib.auth.decorators import login_required
+
 from agilito.feeds import Backlog, Iteration
+
 from tastypie.api import Api
 from agilito.api import ProjectResource
+
+from agilito.views import ProjectList, ProjectCreate, ProjectDetail, FileList
+
+
 
 admin.autodiscover()
 
@@ -19,19 +26,18 @@ v1_api = Api(api_name='v1')
 v1_api.register(ProjectResource())
 
 urlpatterns = patterns('agilito.views',
-    url(r'^$', 'index', name = "agilito_index"),
+    url(r'^$', 'index', name="agilito_index"),
 
     (r'^(?P<project_id>\d+)/touch/$', 'touch_cache'),
 
     url(r"^api/", include(v1_api.urls)),
 
-    url(r"^projects/list/$", "project_list", name="project_list"),
-    url(r"^projects/add/$", "project_create", name="project_create"),
-    url(r"^projects/(?P<project_id>\d+)edit/$", "project_edit", name="project_edit"),
-    url(r"^projects/(?P<project_id>\d+)delete/$", "project_delete", name="project_delete"),
-    url(r"^projects/(?P<project_id>\d+)details/$", "project_details", name="project_delete"),
-
+    url(r"^project/$", login_required(ProjectList.as_view()), name="project_list"),
+    url(r"^project/create/$",  login_required(ProjectCreate.as_view()), name="project_create"),
+    url(r"^project/(?P<pk>\d+)/$", login_required(ProjectDetail.as_view()), name="project_detail"),
+    
     url(r'^(?P<project_id>\d+)/backlog/$', 'backlog', name='product_backlog'),
+    url(r'^(?P<project_id>\d+)/files/$', login_required(FileList.as_view()), name='agilito_project_files'),
     url(r'^(?P<project_id>\d+)/backlog/states=(?P<states>\d+(:\d+)*)/$', 'backlog', name='product_backlog_states'),
     url(r'^(?P<project_id>\d+)/backlog/states=(?P<states>\d+(:\d+)*)/suggest-(?P<suggest>actuals|estimates)/$', 'backlog',
         name='product_backlog_states_suggest'),
@@ -60,6 +66,8 @@ urlpatterns = patterns('agilito.views',
     url(r'^(?P<project_id>\d+)/iteration/(?P<iteration_id>\d+)/userstory/add/$', 'userstory_create', name="story_from_iteration"),
     
     url(r'^(?P<project_id>\d+)/iteration/hours/$', 'iteration_hours', name="current_iteration_hours"),
+    url(r'^(?P<project_id>\d+)/iteration/hours/(?P<username>[A-Za-z0-9_\.]+)/$', 'iteration_daily_hours', name="current_daily_hours"),
+    url(r'^(?P<project_id>\d+)/iteration/(?P<iteration_id>\d+)/hours/(?P<username>[A-Za-z0-9_\.]+)/$', 'iteration_daily_hours', name="current_daily_hours_with_id"),
     url(r'^(?P<project_id>\d+)/iteration/(?P<iteration_id>\d+)/hours/$', 'iteration_hours', name="iteration_hours_with_id"),
     (r'^(?P<project_id>\d+)/iteration/(?P<iteration_id>\d+)/hours_export/$', 'hours_export'),
     url(r'^(?P<project_id>\d+)/iteration/(?P<iteration_id>\d+)/cards/$', 'iteration_cards', name='iteration_cards'),
@@ -70,24 +78,25 @@ urlpatterns = patterns('agilito.views',
     url(r'^(?P<project_id>\d+)/iteration/(?P<iteration_id>\d+)/impediment/(?P<impediment_id>\d+)/edit/$', 'impediment_edit', name='impediment_edit'),
     (r'^(?P<project_id>\d+)/product_backlog_chart/(?P<iteration_id>.*)$', 'product_backlog_chart'),
 
-    (r'^(?P<project_id>\d+)/userstory/(?P<userstory_id>\d+)/$', 'userstory_detail'),
-    (r'^(?P<project_id>\d+)/userstory/(?P<userstory_id>\d+)/delete/$', 'userstory_delete'),
-    (r'^(?P<project_id>\d+)/userstory/(?P<userstory_id>\d+)/edit/$', 'userstory_edit'),
+    url(r'^(?P<project_id>\d+)/userstory/(?P<userstory_id>\d+)/$', 'userstory_detail', name='agilito_userstory_detail'),
+    url(r'^(?P<project_id>\d+)/userstory/(?P<userstory_id>\d+)/delete/$', 'userstory_delete', name="agilito_userstory_delete"),
+    url(r'^(?P<project_id>\d+)/userstory/(?P<userstory_id>\d+)/edit/$', 'userstory_edit', name="agilito_userstory_edit"),
     (r'^(?P<project_id>\d+)/userstory/(?P<userstory_id>\d+)/move/$', 'userstory_move'),
 
-    (r'^(?P<project_id>\d+)/userstory/(?P<userstory_id>\d+)/task/add/$', 'task_create'),
+    url(r'^(?P<project_id>\d+)/userstory/(?P<userstory_id>\d+)/task/add/$', 'task_create', name="agilito_task_create"),
     (r'^(?P<project_id>\d+)/userstory/(?P<userstory_id>\d+)/task/(?P<task_id>\d+)/edit/$', 'task_edit'),
-    (r'^(?P<project_id>\d+)/userstory/(?P<userstory_id>\d+)/task/(?P<task_id>\d+)/$', 'task_detail'),
+    url(r'^(?P<project_id>\d+)/userstory/(?P<userstory_id>\d+)/task/(?P<task_id>\d+)/$', 'task_detail', name="agilito_task_detail"),
     (r'^(?P<project_id>\d+)/userstory/(?P<userstory_id>\d+)/task/(?P<task_id>\d+)/delete/$', 'task_delete'),
 
 
-    (r'^(?P<project_id>\d+)/userstory/(?P<userstory_id>\d+)/attachment/add/$', 'add_attachment'),
+    url(r'^(?P<project_id>\d+)/userstory/(?P<userstory_id>\d+)/attachment/add/$', 'add_attachment', name="agilito_add_attachment"),
     #just left it for the record.
     #(r'^(?P<project_id>\d+)/userstory/(?P<userstory_id>\d+)/attachment/(?P<attachment_id>\d+)/edit/$', 'edit_attachment'),
     (r'^(?P<project_id>\d+)/userstory/(?P<userstory_id>\d+)/attachment/(?P<attachment_id>\d+)/delete/$', 'delete_attachment'),
-    (r'^(?P<project_id>\d+)/userstory/(?P<userstory_id>\d+)/attachment/(?P<attachment_id>\d+)/view/$', 'view_attachment'),
+    url(r'^(?P<project_id>\d+)/userstory/(?P<userstory_id>\d+)/attachment/(?P<attachment_id>\d+)/view/$', 'view_attachment', name="agilito_view_attachment"),
+    url(r'^(?P<project_id>\d+)/userstory/(?P<userstory_id>\d+)/attachment/(?P<attachment_id>\d+)/view/(?P<secret>[A-Za-z0-9_]*)/$', 'view_attachment', name="agilito_view_attachment_secret"),
     
-    (r'^(?P<project_id>\d+)/userstory/(?P<userstory_id>\d+)/testcase/add/$', 'testcase_create'),
+    url(r'^(?P<project_id>\d+)/userstory/(?P<userstory_id>\d+)/testcase/add/$', 'testcase_create', name="agilito_testcase_create"),
     (r'^(?P<project_id>\d+)/userstory/(?P<userstory_id>\d+)/testcase/(?P<testcase_id>\d+)/edit/$', 'testcase_edit'),
     (r'^(?P<project_id>\d+)/userstory/(?P<userstory_id>\d+)/testcase/(?P<testcase_id>\d+)/$', 'testcase_detail'),
     (r'^(?P<project_id>\d+)/userstory/(?P<userstory_id>\d+)/testcase/(?P<testcase_id>\d+)/delete/$', 'testcase_delete'),
@@ -97,37 +106,23 @@ urlpatterns = patterns('agilito.views',
     (r'^(?P<project_id>\d+)/userstory/(?P<userstory_id>\d+)/testcase/(?P<testcase_id>\d+)/testresult/(?P<testresult_id>\d+)/edit/$', 'testresult_edit'),
     (r'^(?P<project_id>\d+)/userstory/(?P<userstory_id>\d+)/testcase/(?P<testcase_id>\d+)/testresult/(?P<testresult_id>\d+)/delete/$', 'testresult_delete'),
 
-    (r'^(?P<project_id>\d+)/search/', 'search'),
+    url(r'^(?P<project_id>\d+)/search/', 'search', name="agilito_search"),
     url(r'^json/task/[ra]?(?P<task_id>\d+)/$', 'task_json', name="task_json"),
 
     url(r'^(?P<project_id>\d+)/log/$', 'timelog',name="timelog"),
+    url(r'^(?P<project_id>\d+)/mylog/$', 'timelog_mylog', name="agilito_tasklog_mylog"),
     (r'^(?P<project_id>\d+)/log/task/(?P<task_id>\d+)/$', 'timelog_task'),
 
-    (r'^close/$', 'close_window'),
-
     url(r'^csv/', 'csv_log_all_projects', name='timelogs_for_all_projects'),
-    url(r'^(?P<project_id>\d+)/csv/(?P<username>[A-Za-z0-9_]+)/', 'csv_log', name='timelogs_for_user_in_project'),
+    url(r'^(?P<project_id>\d+)/csv/(?P<username>[A-Za-z0-9_\.]+)/', 'csv_log', name='timelogs_for_user_in_project'),
     url(r'^(?P<project_id>\d+)/csv/', 'csv_log_for_project', name='timelogs_for_project'),
 
 )
 
 urlpatterns += patterns('',
 #    (r'^agilito/(?P<path>.*)$', 'django.views.static.serve', {'document_root': media_root}),
-    (r'^xmlrpc/', 'agilito.xmlrpc.xmlrpc.view', {'module':'agilito.xmlrpc'}),
+#    (r'^xmlrpc/', 'agilito.xmlrpc.xmlrpc.view', {'module':'agilito.xmlrpc'}),
 #    (r'^(rsd.xml)$', 'django.views.static.serve', {'document_root': media_root}),
 
     (r'^feeds/(?P<url>.*)/$', 'agilito.feeds.feed', {'feed_dict': feeds}),
-)
-
-urlpatterns += patterns('agilito.threadedcommentsviews',
-    ### Comments ###
-    url(r'^comment/(?P<content_type>\d+)/(?P<object_id>\d+)/$', 'comment', name="tc_comment"),
-    url(r'^comment/(?P<content_type>\d+)/(?P<object_id>\d+)/(?P<parent_id>\d+)/$', 'comment', name="tc_comment_parent"),
-    url(r'^comment/(?P<object_id>\d+)/delete/$', 'comment_delete', name="tc_comment_delete"),
-    url(r'^comment/(?P<edit_id>\d+)/edit/$', 'comment', name="tc_comment_edit"),
-    
-    ### Comments (AJAX) ###
-    url(r'^comment/(?P<content_type>\d+)/(?P<object_id>\d+)/(?P<ajax>json|xml)/$', 'comment', name="tc_comment_ajax"),
-    url(r'^comment/(?P<content_type>\d+)/(?P<object_id>\d+)/(?P<parent_id>\d+)/(?P<ajax>json|xml)/$', 'comment', name="tc_comment_parent_ajax"),
-    url(r'^comment/(?P<edit_id>\d+)/edit/(?P<ajax>json|xml)/$', 'comment', name="tc_comment_edit_ajax"),
 )

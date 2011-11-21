@@ -7,7 +7,7 @@
 
 {% if comment_on %}
 <div class="comments_section">
-    <h1>{% trans "Comments" %}</h1>
+    <h2>{% trans "Comments" %}</h2>
     {% get_threaded_comment_tree for comment_on as tree %}
     {% for comment in tree %}
     <div style="margin-left: {{ comment.depth }}em;" class="commentbox {% ifnotequal comment.depth 0 %}reply{% endifnotequal %}">
@@ -21,10 +21,18 @@
         <a id="c{{ comment.id }}" href="javascript:show_reply_form('c{{ comment.id }}','{% get_comment_url comment_on comment %}','{{ comment.user|fullusername }}')">{% trans "reply" %}</a>
     </div>
     {% endfor %}
-    <form method="POST" action="{% get_comment_url comment_on%}">
+    <form method="POST" action="{% get_comment_url comment_on %}">
         {% get_threaded_comment_form as comment_form %}
         <div id="comment-form">{% csrf_token %}
                 {{ comment_form|as_uni_form }}
+                <div class="ctrlHolder">
+                    <p class="label">{% trans "Send to:" %}</p>
+                    <ul>
+                        {% for member in current_project.project_members.all %}
+                        <li><p for="member_{{member.user.id}}"><input type="checkbox" id="member_{{member.user.id}}" name="sendto" value="{{member.user.id}}"> {{member.user.email}}</p></li>                            
+                        {% endfor %}
+                    </ul>
+                </div>
                 <div class="buttonHolder">
                     <input class="primaryAction" type="submit" value="{% trans "Submit" %}" />
                 </div>

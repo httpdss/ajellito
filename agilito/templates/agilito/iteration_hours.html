@@ -12,8 +12,6 @@
     {% endif %}
 {% endblock %}
 
-{% block select_tab %} "hours" {% endblock %}
-
 {% block body %}
 <h1>
     {% if current_iteration %}
@@ -33,7 +31,7 @@
             <select id="iteration-selection" style="width:10em">
                 {%for iteration in itset %}
                 <option {% ifequal iteration.id current_iteration.id %} selected="selected" {%endifequal%}
-                value="{% url agilito.views.iteration_hours current_project.id,iteration.id %}">{{ iteration.name }}</option>
+                value="{% url agilito.views.iteration_hours current_project.id, iteration.id %}">{{ iteration.name }}</option>
                 {%endfor%}
             </select>
             {% else %}
@@ -98,7 +96,12 @@
 
         {% for r in rows_bill %}
         <tr class="{% cycle even,odd %} {%if object.is_blocked%}blocked{% endif %}">
-            <td class="name">{{r.name}}</td>
+            {% ifequal r.name "no owner"  %}
+<td class="name">{{r.name}}</td>
+            {%else%}
+            <td class="name"><a href="{% url current_daily_hours_with_id current_project.id, current_iteration.id, r.name  %}">{{r.name}}</a></td>
+            {% endifequal %}
+            
             <td class="estimated">{{r.estimated}}</td>
             <td class="progress">{{r.progress}}</td>
         </tr>

@@ -36,12 +36,8 @@
 {% block extra_body %}
 <script type="text/javascript" src="{{STATIC_URL}}agilito/js/treeTable/src/javascripts/jquery.treeTable.js"></script>
 <script type="text/javascript" src="{{STATIC_URL}}agilito/js/jquery.clickmenu.js"></script>
-
-
 <script type="text/javascript" src="{{STATIC_URL}}agilito/js/json2.js"></script>
 <script type="text/javascript" src="{{STATIC_URL}}agilito/js/jquery.cookie.js"></script>
-
-<script type="text/javascript" src="{{STATIC_URL}}agilito/js/jquery.clickmenu.js"></script>
 <script type="text/javascript" src="{{STATIC_URL}}agilito/js/jquery-ui-1.8.9.custom.min.js"></script>
 <script type="text/javascript">
 
@@ -79,6 +75,11 @@ $(document).ready(function(){
             $("#zoomable").addClass("zoomed");
         }
     $("#id_tasks").treeTable({initialState: "expanded"});
+    $('.copypaste').click(function(event){
+        window.prompt ('{% trans "Copy to clipboard: Ctrl+C, Enter" %}', window.location.origin+$(this).attr('href'));
+        event.preventDefault();
+        return false;
+    });
 })
 
 {% if comment_on %}
@@ -117,18 +118,61 @@ function hide_reply_form(comment_id, url, person_name) {
 </script>
 
 
+{% if autocomplete_words %}
+<script type="text/javascript">
+    $(function() {
+            var availableTags = {{ autocomplete_words|safe }};
+            function split (val) {
+                return val.split(" ");
+            }
+            
+            function extract_last (term) {
+                return split(term).pop();
+            }
+            $("#id_tags")
+                .bind('keydown', function (event) {
+                    if (event.keyCode === $.ui.keyCode.TAB &&
+                        $(this).data('autocomplete').menu.active) {
+                            event.preventDefault();
+                        };
+                })
+                .autocomplete({
+                    minLength:0,
+                    source: function (req, res) {
+                        res($.ui.autocomplete.filter(
+                            availableTags, extract_last(req.term)));
+                    },
+                    focus: function () {
+                        return false;
+                    },
+                    select: function (event, ui) {
+                        var terms = split(this.value);
+                        terms.pop();
+                        terms.push(ui.item.value);
+                        
+                        this.value = terms.join(" ");
+                        return false;
+                    }
+                    
+                    
+                });
+                
+            });
+</script>
+{% endif %}
+
 {% block js %}{% endblock %}
 {% endblock %}
 
 {% block extra_head %}
 <link rel="stylesheet" href="{{STATIC_URL}}agilito/js/treeTable/src/stylesheets/jquery.treeTable.css" type="text/css" media="screen" />
 <link rel="stylesheet" href="{{STATIC_URL}}agilito/css/base.css" type="text/css" media="screen" />
+<link rel="stylesheet" href="{{STATIC_URL}}agilito/css/tabs.css" type="text/css" media="screen" />
 <link rel="stylesheet" href="{{STATIC_URL}}agilito/css/tables.css" type="text/css" media="screen" />
 <link rel="stylesheet" href="{{STATIC_URL}}agilito/css/clickmenu.css" type="text/css" media="screen" />
 <link rel="stylesheet" href="{{STATIC_URL}}agilito/css/comments.css" type="text/css" media="screen" />
 <link rel="stylesheet" href="{{STATIC_URL}}agilito/css/content.css" type="text/css" media="screen" />
 <link rel="stylesheet" href="{{STATIC_URL}}agilito/css/forms.css" type="text/css" media="screen" />
-<link rel="stylesheet" href="{{STATIC_URL}}agilito/css/taskboard.css" type="text/css" media="screen" />
 <link rel="stylesheet" href="{{STATIC_URL}}agilito/css/zoomable.css" type="text/css" media="screen" />
 <link rel="stylesheet" href="{{STATIC_URL}}agilito/css/ui-lightness/jquery-ui-1.8.9.custom.css" type="text/css" media="screen" />
 {% block link %}{% endblock %}
@@ -136,22 +180,22 @@ function hide_reply_form(comment_id, url, person_name) {
 {% endblock %}
 
 {% block left_tabs %}
-{% if user.is_authenticated %}
-    {% endif %}
-        <ul class="tabs">{% spaceless %}
-            <li id="tab_projects"><a href="{% url project_list  %}">{% trans "Projects" %}</a></li>
-            {% if current_project %}
-            <li id="tab_backlog"><a href="{% url product_backlog current_project.pk %}">{% trans "Backlog" %}</a></li>
-            <li id="tab_iteration"><a href="{% url current_iteration_status current_project.pk %}">{% trans "Iteration" %}</a></li>
-            <li id="tab_timelog"><a href="{% url timelog current_project.pk %}">{% trans "Log" %}</a></li>
-            <li id="tab_hours"><a href="{% url current_iteration_hours current_project.pk %}">{% trans "Hours" %}</a></li>
-            {% endif %}
-        {% endspaceless %}</ul>
+    <ul class="tabs">{% spaceless %}
+        <li id="tab_projects"><a href="{% url project_list %}">{% trans "Projects" %}</a></li>
+        {% if current_project and not is_viewer %}
+        <li id="tab_backlog"><a href="{% url product_backlog current_project.pk %}">{% trans "Backlog" %}</a></li>
+        <li id="tab_iteration"><a href="{% url current_iteration_status current_project.pk %}">{% trans "Iteration" %}</a></li>
+        <li id="tab_timelog"><a href="{% url timelog current_project.pk %}">{% trans "Log" %}</a></li>
+        <li id="tab_hours"><a href="{% url current_iteration_hours current_project.pk %}">{% trans "Hours" %}</a></li>
+        <li id="tab_files"><a href="{% url agilito_project_files current_project.pk %}">{% trans "Files" %}</a></li>
+        <li id="tab_search"><a href="{% url agilito_search current_project.pk %}">{% trans "Search" %}</a></li>
+        {% endif %}
+    {% endspaceless %}</ul>
     {% if project_list and current_project %}
     <select id="project-selection">
         {% for project in project_list %}
         <option {% ifequal project.id current_project.id %} selected="selected" {% endifequal %} value="{{project.id}}">{{project.name}}</option>
         {% endfor %}
     </select>
-{% endif %}
+    {% endif %}
 {% endblock %}

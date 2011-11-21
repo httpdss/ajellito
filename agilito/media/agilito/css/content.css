@@ -28,6 +28,22 @@ td {
     width: 50%;
 }
 
+#iteration-data .tags li {
+    padding:2px 6px;
+    margin:2px 2px;    
+}
+#iteration-data .tags li:hover, #iteration-data .tags li.selected {
+    background:#def;
+}
+
+#iteration-data .tags li a {
+    color:#333;
+}
+
+#iteration-data .tags li a:hover {
+    text-decoration:none;
+}
+
 #burndown {
     float: right;
 }
@@ -36,9 +52,9 @@ td {
     padding-left: 20px;
     background: no-repeat top left;
 }
-.action-link.edit { background-image: url("../images/pencil.png") }
-.action-link.delete { background-image: url("../images/delete.png") }
-.action-link.add-object { background-image: url("../images/add.png") }
+.action-link.edit { background-image: url("../img/pencil.png") }
+.action-link.delete { background-image: url("../img/delete.png") }
+.action-link.add-object { background-image: url("../img/add.png") }
 
 /* tag display */
 ul.tags {
@@ -48,7 +64,7 @@ ul.tags {
     display: inline;
 }
 ul.tags li {
-    display: inline;
+    display: inline-block;
     list-style-type: none;
 }
 ul.tags span.big {
@@ -103,12 +119,12 @@ ul.tags span.small {
 }
 
 #timelog dt { 
-    background: url(../images/add.png) no-repeat; 
+    background: url(../img/add.png) no-repeat; 
     padding:5px 30px;
     cursor:pointer;
 }
 #timelog dt.shown { 
-    background-image: url(../images/remove.png) 
+    background-image: url(../img/remove.png) 
 }
 #timelog dl.level1 {
     padding-left:10px;
@@ -154,12 +170,12 @@ ul.tags span.small {
     background:orange !important;
 }
 .blocked .name{
-    background:#f99 url(../images/blocked.png) no-repeat !important;
+    background:#f99 url(../img/blocked.png) no-repeat !important;
     background-position: left center !important;
     padding-left:20px;
 }
 #us-head.blocked{
-    background:#f99 url(../images/blocked-big.png) no-repeat !important;
+    background:#f99 url(../img/blocked-big.png) no-repeat !important;
     background-position: left center !important;
     padding-left:32px;
 }
@@ -186,4 +202,16 @@ ul.breadcrumbs {
 
 .size-benchmark {
     border: 1px dotted grey;
+}
+.topline {
+    border-top:1px dotted #555;
+    margin-top:5px;
+}
+
+.topline td {
+    padding-top:10px;
+}
+
+.reset-tags {
+    cursor:pointer;
 }
