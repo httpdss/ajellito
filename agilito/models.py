@@ -1,33 +1,33 @@
-from django.db import models
-from django.contrib.auth.models import User
-from django.utils.translation import ugettext as _
-from django.db.models import Q
-from django.core.cache import cache
-from django.db.models.signals import post_save, post_delete
-from django.conf import settings
-
-from tagging.fields import TagField
-import tagging
-from tagging.utils import parse_tag_input
-from decimal import Decimal
-from collections import defaultdict
-from django.core.urlresolvers import reverse
-from tagging.utils import parse_tag_input
-
-
-from dateutil.rrule import rrule, DAILY, MO, TU, WE, TH, FR
-import datetime, time
-import math, re
-import sys
-import inspect
+import datetime
 import hashlib
-
-import random, string
-
+import inspect
+import math
+import random
+import re
+import string
+import sys
+import tagging
+import time
 from agilito import CACHE_ENABLED, UNRESTRICTED_SIZE, CACHE_PREFIX
 from agilito.exceptions import NoProjectException
+from collections import defaultdict
+from dateutil.rrule import rrule, DAILY, MO, TU, WE, TH, FR
+from decimal import Decimal
+from django.conf import settings
+from django.contrib.auth.models import User
+from django.core.cache import cache
+from django.core.urlresolvers import reverse
+from django.db import models
+from django.db.models import Q
+from django.db.models.signals import post_save, post_delete
+from django.utils.translation import ugettext as _
+from tagging.fields import TagField
+from tagging.utils import parse_tag_input
+from queryutils.queryutils import SearchEqualOp, SearchQueryGenerator
+
 
 class Object(object):
+
     def __init__(self, *args, **kwargs):
         for k, v in kwargs.items():
             setattr(self, k, v)
@@ -64,27 +64,35 @@ class Object(object):
         return self
 
     def __str__(self):
-        return "[" + ", ".join(["%s: %s" % (n, str(v)) for (n, v) in self.__dict__.items()]) + "]"
+        return "[" + ", ".join(["%s: %s" % (n, str(v)) \
+                for (n, v) in self.__dict__.items()]) + "]"
+
 
 def same_date(d1, d2):
     return ((d1 - d2).days == 0)
+
 
 def invalidate_cache(sender, instance, **kwargs):
     ids = []
 
     if isinstance(instance, User):
-        ids = [pm.project.id for pm in ProjectMember.objects.filter(user=instance)]
+        ids = [pm.project.id for pm in ProjectMember\
+                                        .objects\
+                                        .filter(user=instance)]
     elif hasattr(instance, "project"):
         ids = [instance.project.id]
 
     for id in ids:
         Project.touch_cache(id)
 
+
 if CACHE_ENABLED:
     post_save.connect(invalidate_cache, weak=False)
     post_delete.connect(invalidate_cache, weak=False)
 
+
 def cached(f):
+
     def f_cached(*args, **kwargs):
         global CACHE_ENABLED
 
@@ -96,8 +104,11 @@ def cached(f):
         vardict = dict(zip(params, ["<None>" for d in params]))
         vardict.update(dict(zip(f.func_code.co_varnames, args)))
         vardict.update(kwargs)
-        # replace "self" with module:class:id:method 
-        obj = "%s.%s.%s(%s" % (self.__class__.__module__, self.__class__.__name__, f.__name__, str(self.id))
+        # replace "self" with module:class:id:method
+        obj = "%s.%s.%s(%s" % (self.__class__.__module__,
+                               self.__class__.__name__,
+                               f.__name__,
+                               str(self.id))
         vardict["self"] = obj
 
         pv = Project.cache_id(self.project_id)
@@ -118,11 +129,9 @@ def cached(f):
 
     return f_cached
 
-# We are using our own search application here!
-from queryutils.queryutils import SearchEqualOp, SearchQueryGenerator
 
-# Auxiliary functions.
-def _if_is_none_else(item,  rv_case_none,  fun_case_not_none=None):
+def _if_is_none_else(item, rv_case_none, fun_case_not_none=None):
+
     if item is None:
         return rv_case_none
     elif fun_case_not_none is None:
@@ -130,7 +139,9 @@ def _if_is_none_else(item,  rv_case_none,  fun_case_not_none=None):
     else:
         return fun_case_not_none(item)
 
+
 class FieldChoices(list):
+
     def __init__(self, *args, **kwargs):
         self.__choices = []
         self.keys = []
@@ -169,7 +180,9 @@ class FieldChoices(list):
 
 PERMLINK_PREFIX = __name__.rsplit(".", 1)[0] + ".views."
 
+
 class ClueModel(models.Model):
+
     name = models.CharField(max_length=200)
     description = models.TextField(blank=True)
 
@@ -178,15 +191,13 @@ class ClueModel(models.Model):
         return self.__class__.__name__
 
     class Meta:
-        # mondo weird way of doing this, heh
         abstract = True
 
     @classmethod
     def query(klass, qstatement, project_id=None):
-        grammar = { "name" : SearchEqualOp("name__icontains"),
-                    "description": SearchEqualOp("description__icontains"),
-                    "id": SearchEqualOp(("id", int, 0))
-                  }
+        grammar = {"name": SearchEqualOp("name__icontains"),
+                   "description": SearchEqualOp("description__icontains"),
+                   "id": SearchEqualOp(("id", int, 0))}
         sg = SearchQueryGenerator(grammar, "name", klass)
         if project_id is not None:
             field_names = klass._meta.get_all_field_names()
@@ -200,9 +211,9 @@ class ClueModel(models.Model):
                 # project_id have a user_story :)
                 # (same applies to get_absolute_url, below)
                 if "user_story" not in field_names:
-                    raise NotImplementedError, \
-                        "I don't know how to search on that yet, it seems"
-                initial_set = klass.objects.filter(user_story__project__id=project_id)
+                    raise NotImplementedError("unable to search that")
+                initial_set = klass.objects\
+                                .filter(user_story__project__id=project_id)
             return sg.make_query(qstatement, init_q_set=initial_set)
         return sg.make_query(qstatement)
 
@@ -220,8 +231,7 @@ class ClueModel(models.Model):
         return rv
 
     def get_container_model(self):
-        raise NotImplementedError,  \
-            "I don't know who my container is?"
+        raise NotImplementedError("I don't know who my container is?")
 
     def get_container_url(self):
         container = self.get_container_model()
@@ -230,23 +240,22 @@ class ClueModel(models.Model):
         else:
             return None
 
-VISIBILITY_CHOICE = (
-        (1, _("Public")),
-        (2, _("Private"))
-        )
+VISIBILITY_CHOICE = ((1, _("Public")),
+                     (2, _("Private")))
+
 
 class ProjectManager(models.Manager):
 
     def for_user(self, user):
-            return super(ProjectManager, self)\
-                        .get_query_set()\
-                        .filter(project_members__user=user)\
-                        .extra(select={"lower_name": "lower(name)"})\
-                        .order_by("lower_name")        
+        return super(ProjectManager, self)\
+                    .get_query_set()\
+                    .filter(project_members__user=user)\
+                    .extra(select={"lower_name": "lower(name)"})\
+                    .order_by("lower_name")
 
-# Create your models here.
+
 class Project(ClueModel):
-    
+
     objects = ProjectManager()
     prefix = "P"
 
@@ -267,7 +276,7 @@ class Project(ClueModel):
         permissions = (
             ("view", _("Can view the project.")),
         )
-        ordering = ("id",)
+        ordering = ("id", )
 
     def get_absolute_url(self):
         return reverse("agilito.views.backlog", args=[self.id])
@@ -301,7 +310,10 @@ class Project(ClueModel):
             return -1
         if self.rank is None and other.rank is None:
             return cmp(self.typerank, other.typerank)
-        return cmp(Decimal("%d.%d" % (self.rank, self.typerank)), Decimal("%d.%d" % (other.rank, other.typerank)))
+        return cmp(Decimal("%d.%d" % (self.rank,
+                                      self.typerank)),
+                   Decimal("%d.%d" % (other.rank,
+                                      other.typerank)))
 
     @cached
     def backlog_suggest(self, states, base):
@@ -331,7 +343,7 @@ class Project(ClueModel):
         cursor.execute("""
             select avg(end_date - start_date)
             from agilito_iteration
-            where project_id = %s""", (self.id,))
+            where project_id = %s""", (self.id, ))
         try:
             l = int(cursor.fetchone()[0])
         except TypeError:
@@ -348,7 +360,7 @@ class Project(ClueModel):
                 sum(s.size) as planned,
                 sum(case when s.state=%s then s.size else 0 end) as finished
             from agilito_userstory s
-            where s.project_id = %s and s.iteration_id in 
+            where s.project_id = %s and s.iteration_id in
                 (select i.id
                 from agilito_iteration i
                 where project_id = %s
@@ -405,13 +417,13 @@ class Project(ClueModel):
         cursor.execute("""
             select count(1), sum(size)
             from agilito_userstory
-            where project_id=%s and state in (""" + stateset + ")", (self.id,))
+            where project_id=%s and state in (""" + stateset + ")", (self.id, ))
         result.story_count, result.size = cursor.fetchone()
 
         cursor.execute("""
             select min(rank)
             from agilito_userstory
-            where project_id = %s and state in (""" + stateset + ")", (self.id,))
+            where project_id = %s and state in (""" + stateset + ")", (self.id, ))
         minrank = cursor.fetchone()[0]
 
         # make sure at least one story is shown before the first shown
@@ -425,7 +437,7 @@ class Project(ClueModel):
         cursor.execute("""
             select r.id, r.name, r.deadline, r.rank
             from agilito_release r
-            where r.project_id = %s""" + minrank, (self.id,))
+            where r.project_id = %s""" + minrank, (self.id, ))
         for id, name, deadline, rank in cursor.fetchall():
             release = Object(typerank=0, id=id, name=name, deadline=deadline, rank=rank, whatami="Release")
 
@@ -455,7 +467,7 @@ class Project(ClueModel):
             join agilito_userstory s on s.project_id = r.project_id and s.rank < r.rank
             left join agilito_iteration i on s.iteration_id = i.id
             where r.project_id = %s""" + minrank + """
-            group by r.id""", (self.id,))
+            group by r.id""", (self.id, ))
         for id, it_end, unsized, unplanned, unfinished in cursor.fetchall():
             release = release_by_id[id]
             if unsized or (unplanned and points_per_day == 0):
@@ -504,7 +516,7 @@ class Project(ClueModel):
             select count(1)
             from agilito_userstory
             where project_id = %s and state in (""" + stateset + """)
-            """, (self.id,))
+            """, (self.id, ))
         stories = cursor.fetchone()[0]
 
         cursor.execute("""
@@ -513,7 +525,7 @@ class Project(ClueModel):
             join agilito_task t on t.user_story_id = s.id
             """ + tasklogs + """
             where s.project_id = %s and s.state in (""" + stateset + """)
-            """, (self.id,))
+            """, (self.id, ))
         estimate = cursor.fetchone()[0]
 
         avg = estimate / stories
@@ -566,9 +578,10 @@ class Project(ClueModel):
         if rank in ["min", "max"]:
             ranks = []
             for t in ["userstory", "release"]:
-                cursor.execute("select %s(rank) from agilito_%s where project_id = %%s" % (rank, t), (self.id,))
+                cursor.execute("select %s(rank) from agilito_%s where project_id = %%s" % (rank, t), (self.id, ))
                 r = cursor.fetchone()[0]
-                if not r is None: ranks.append(r)
+                if not r is None:
+                    ranks.append(r)
 
             if ranks == []:
                 rank = 1
@@ -596,7 +609,7 @@ class Project(ClueModel):
 
             select 0, 'release', id, rank from agilito_release
                 where project_id = %s and not rank is NULL
-            
+
             order by rank, relorder""", (self.id, self.id))
 
         objs = [(r[1], r[2]) for r in cursor.fetchall()]
@@ -608,7 +621,9 @@ class Project(ClueModel):
         # which touches the cache using a signal
         Project.touch_cache(self.id)
 
+
 class Release(ClueModel):
+
     prefix = "RE"
     project = models.ForeignKey(Project)
     rank = models.IntegerField(null=True, blank=True)
@@ -622,23 +637,26 @@ class Release(ClueModel):
         return u"RE%s: %s" % (self.id, self.name)
 
     class Meta:
-        permissions = (
-            ("view", _("Can view the project.")),
-        )
-        ordering = ("rank",)
+        permissions = (("view", _("Can view the project.")), )
+        ordering = ("rank", )
 
     def get_container_model(self):
         return self.project
 
     @models.permalink
     def get_absolute_url(self):
-        return "release_edit", (), {"project_id": self.project.id, "release_id": self.id }      
+        return "release_edit", (), {"project_id": self.project.id,
+                                    "release_id": self.id}
 
     def save(self):
         super(Release, self).save()
-        self.project.reorder_backlog("release", self.id, self.rank)
+        self.project.reorder_backlog("release",
+                                     self.id,
+                                     self.rank)
+
 
 class Iteration(ClueModel):
+
     prefix = "I"
 
     start_date = models.DateField()
@@ -657,33 +675,38 @@ class Iteration(ClueModel):
     @models.permalink
     def get_absolute_url(self):
         return "iteration_status_with_id", (), {"project_id": self.project.id,
-                                                "iteration_id": self.id }
+                                                "iteration_id": self.id}
 
     def user_estimated(self, userid):
-        tasks = Task.objects.filter(owner__id=userid, user_story__iteration__pk=self.id)
+        tasks = Task.objects.filter(owner__id=userid,
+                                    user_story__iteration__pk=self.id)
 
         return sum(t.estimate or 0 for t in tasks)
 
     def user_progress(self, userid):
         tasklogs = self.tasklog_set.filter(owner__id=userid)
         return sum(tl.time_on_task or 0 for tl in tasklogs)
-        
+
     def user_daily_progress(self, userid):
         days = [datetime.date(d.year, d.month, d.day)
                 for d in rrule(DAILY,
                                cache=True,
                                dtstart=self.start_date,
                                until=self.end_date,
-                               byweekday=(MO,TU,WE,TH,FR))]
-            
-        tasklogs = self.tasklog_set.values('date','time_on_task').filter(owner__id=userid)
-        
+                               byweekday=(MO, TU, WE, TH, FR))]
+
+        tasklogs = self.tasklog_set\
+                        .values('date', 'time_on_task')\
+                        .filter(owner__id=userid)
+
         user_hours = []
         for d in days:
             task_sum = sum([tl["time_on_task"] for tl in tasklogs \
-                if datetime.date(tl["date"].year, tl["date"].month, tl["date"].day) == d])
+                if datetime.date(tl["date"].year,
+                                 tl["date"].month,
+                                 tl["date"].day) == d])
             user_hours.append({'date': d, 'task_sum': task_sum})
-        
+
         return user_hours
 
     @cached
@@ -699,7 +722,7 @@ class Iteration(ClueModel):
                                cache=True,
                                dtstart=self.start_date,
                                until=self.end_date,
-                               byweekday=(MO,TU,WE,TH,FR))]
+                               byweekday=(MO, TU, WE, TH, FR))]
 
         result._("burndown").days = len(days)
         result.burndown.dates = days
@@ -739,7 +762,8 @@ class Iteration(ClueModel):
 
             # apply updates that occur on the 1st or 2nd day on the
             # 2nd day
-            if d <= 1: return 1
+            if d <= 1:
+                return 1
 
             # apply update to the day before
             return d - 1
@@ -758,14 +782,22 @@ class Iteration(ClueModel):
         ## fetch story data
         unranked = []
         accepted = 0
-        statenames = {Task.STATES.DEFINED: "todo", Task.STATES.IN_PROGRESS: "in_progress", Task.STATES.COMPLETED: "done"}
+        statenames = {Task.STATES.DEFINED: "todo", 
+                      Task.STATES.IN_PROGRESS: "in_progress",
+                      Task.STATES.COMPLETED: "done"}
 
         cursor.execute("""select s.id, s.name, s.description, s.state, s.size, s.rank, s.tags
                           from agilito_userstory s
                           where s.iteration_id = %s
-                          order by rank""", (self.id,))
+                          order by rank""", (self.id, ))
         for id, name, description, state, size, rank, tags in cursor.fetchall():
-            story = Object(id=id, name=name, description=description, state=state, size=size, rank=rank, whatami="UserStory")
+            story = Object(id=id, 
+                           name=name,
+                           description=description,
+                           state=state,
+                           size=size,
+                           rank=rank,
+                           whatami="UserStory")
             story.get_absolute_url = reverse("agilito.views.userstory_detail", args=[project_id, id])
             story.taglist = parse_tag_input(tags)
             story.is_blocked = False
@@ -807,7 +839,7 @@ class Iteration(ClueModel):
             join agilito_testcase tc on tc.user_story_id = us.id
             join agilito_testresult tr on tr.test_case_id = tc.id
             where us.iteration_id =%s
-            order by tr.date""", (self.id,))
+            order by tr.date""", (self.id, ))
         for storyid, tcid, testresult in cursor.fetchall():
             try:
                 tr = stories_by_id[storyid].tmp.testresult
@@ -831,7 +863,7 @@ class Iteration(ClueModel):
                           left join auth_user u on t.owner_id = u.id
                           where s.iteration_id = %s
                           order by t.id
-                          """, (self.id,))
+                          """, (self.id, ))
         for id, name, description, state, estimate, remaining, tags, user_story_id, username, first_name, last_name, email in cursor.fetchall():
             try:
                 story = stories_by_id[user_story_id]
@@ -849,7 +881,7 @@ class Iteration(ClueModel):
                 if first_name and last_name:
                     task_owner[username] = "%s %s" % (first_name, last_name)
                 elif first_name:
-                    task_owner [username]= first_name
+                    task_owner[username]= first_name
                 elif last_name:
                     task_owner[username] = last_name
                 elif email:
@@ -885,7 +917,7 @@ class Iteration(ClueModel):
                             join agilito_userstory s on t.user_story_id = s.id
                             where s.iteration_id = %s
                             order by tl.date
-                            """, (self.id,))
+                            """, (self.id, ))
             for old_remaining, date, spent, task in cursor.fetchall():
                 task = tasks_by_id[task]
                 task.remaining_for_day[tasklogday(date)] = old_remaining
@@ -955,7 +987,7 @@ class Iteration(ClueModel):
                           join agilito_task t on it.task_id = t.id
                           join agilito_userstory s on t.user_story_id = s.id
                           where s.iteration_id = %s
-                          """, (self.id,))
+                          """, (self.id, ))
         for id, name, resolved, taskid in cursor.fetchall():
             try:
                 task = tasks_by_id[taskid]
@@ -967,7 +999,8 @@ class Iteration(ClueModel):
             except KeyError:
                 imp = Object(id=id, name=name, resolved=resolved, risk=0)
                 imp.tasks = []
-                imp.get_absolute_url = reverse("agilito.views.impediment_edit", args=[project_id, self.id, id])
+                imp.get_absolute_url = reverse("agilito.views.impediment_edit", 
+                                               args=[project_id, self.id, id])
                 imp._("tmp").storysize = {}
 
                 impediment[id] = imp
@@ -1007,9 +1040,11 @@ class Iteration(ClueModel):
 
     @property
     def users_total_status(self):
-        pm_values = ProjectMember.objects.filter(project=self.project).values('user')
+        pm_values = ProjectMember.objects\
+                        .filter(project=self.project)\
+                        .values('user')
         users = User.objects.filter(pk__in=pm_values)
-        
+
         out = []
         for u in users:
             out.append({
@@ -1057,8 +1092,10 @@ class UserStoryAttachment(ClueModel):
         return self.user_story
 
     def get_secret_filepath(self):
-        return hashlib.md5("%s%s%s" % (self.pk, self.original_name.encode('utf-8'), settings.SECRET_KEY)).hexdigest()
-    
+        return hashlib.md5("%s%s%s" % (self.pk, 
+                                       self.original_name.encode('utf-8'),
+                                       settings.SECRET_KEY)).hexdigest()
+
     class Meta:
         verbose_name = _(u"US Attachment")
         verbose_name_plural = _(u"US Attachments")
@@ -1066,8 +1103,8 @@ class UserStoryAttachment(ClueModel):
         permissions = (
             ("view", _("Can view the user stories.")),
         )
-    
-        
+
+
 
 class UserStory(ClueModel):
     prefix = "US"
@@ -1096,7 +1133,8 @@ class UserStory(ClueModel):
     iteration = models.ForeignKey(Iteration, null=True, blank=True)
     rank = models.IntegerField(null=True, blank=True)
 
-    state = models.SmallIntegerField(choices=STATES.choices(), default=STATES.DEFINED)
+    state = models.SmallIntegerField(choices=STATES.choices(),
+                                     default=STATES.DEFINED)
 
     if UNRESTRICTED_SIZE:
         size = models.SmallIntegerField(null=True, blank=True)
@@ -1140,7 +1178,8 @@ class UserStory(ClueModel):
 
     @property
     def is_blocked(self):
-        return (Impediment.objects.filter(resolved=None, tasks__user_story=self).count() != 0)
+        return (Impediment.objects.filter(resolved=None,
+                                          tasks__user_story=self).count() != 0)
 
     @property
     def is_pinned(self):
@@ -1156,7 +1195,8 @@ class UserStory(ClueModel):
         if self.iteration is None or self.rank is None:
             return None
 
-        return UserStory.objects.filter(iteration=self.iteration, rank__lt=self.rank).count() + 1
+        return UserStory.objects.filter(iteration=self.iteration,
+                                        rank__lt=self.rank).count() + 1
 
     @property
     def estimated(self):
@@ -1216,7 +1256,7 @@ class UserStory(ClueModel):
 
     def get_container_url(self):
         if self.iteration is None:
-            return "/%s/backlog" % self.project.id
+            return reverse("product_backlog", args=[self.project.id])
         else:
             return self.iteration.get_absolute_url()
 
@@ -1260,7 +1300,8 @@ class UserProfile(models.Model):
     user = models.ForeignKey(User, unique=True)
 
     def __unicode__(self):
-        return u"%s: %s" % (self.user.username, self.get_category_display())
+        return u"%s: %s" % (self.user.username,
+                            self.get_category_display())
 
     @property
     def capacity(self):
@@ -1289,9 +1330,11 @@ class Task(ClueModel):
     estimate = models.FloatField(blank=True, null=True)
     remaining = models.FloatField(blank=True, null=True)
 
-    state = models.SmallIntegerField(choices=STATES.choices(), default=STATES.DEFINED)
+    state = models.SmallIntegerField(choices=STATES.choices(),
+                                     default=STATES.DEFINED)
 
-    category = models.SmallIntegerField(choices=CATEGORIES.choices(), default=CATEGORIES.UNDEFINED)
+    category = models.SmallIntegerField(choices=CATEGORIES.choices(), 
+                                        default=CATEGORIES.UNDEFINED)
 
     owner = models.ForeignKey(User, blank=True, null=True)
     user_story = models.ForeignKey("UserStory")
@@ -1438,11 +1481,11 @@ class TestResult(models.Model):
 
     @models.permalink
     def get_absolute_url(self):
-        return "testresult_detail_with_id", (), {"project_id": self.test_case.user_story.project.id,
-                                                 "userstory_id": self.test_case.user_story.id,
-                                                 "testcase_id" : self.test_case.id,
-                                                 "testresult_id": self.id,
-                                                }
+        return "testresult_detail_with_id", (),\
+               {"project_id": self.test_case.user_story.project.id,
+                "userstory_id": self.test_case.user_story.id,
+                "testcase_id" : self.test_case.id,
+                "testresult_id": self.id}
 
     def get_container_model(self):
         return self.test_case
@@ -1476,7 +1519,10 @@ class Impediment(models.Model):
     def get_absolute_url(self):
         it = self.tasks.all()[0].user_story.iteration
 
-        return PERMLINK_PREFIX + "impediment_edit", (), {"project_id": it.project.id, "iteration_id": it.id, "impediment_id": self.id }
+        return PERMLINK_PREFIX + "impediment_edit", (),\
+                {"project_id": it.project.id,
+                 "iteration_id": it.id,
+                 "impediment_id": self.id}
 
     @property
     def project(self):
@@ -1566,13 +1612,15 @@ class ProjectMember(models.Model):
     role = models.SmallIntegerField(choices=MEMBER_ROLES, default=99)
     created = models.DateTimeField(null=True, auto_now_add=True)
     modified = models.DateTimeField(null=True, auto_now=True)
-    
+
     class Meta:
-        unique_together = ('user','project','role')
-    
+        unique_together = ('user',
+                           'project',
+                           'role')
+
     def __unicode__(self):
         return u"%s: %s" % (self.user.username,
                             self.get_role_display())
-        
+
     def is_viewer(self):
-        return (self.role in [10,99])
+        return (self.role in [10, 99])

@@ -1,84 +1,76 @@
-import csv, StringIO
-import time
+import agilito.reporting
+import csv
 import datetime
-import types
+import decimal
 import mimetypes
 import os
-from django.core.cache import cache
-from django.contrib import messages
-from django.conf import settings
-from django.db.models import Q
+import time
+import types
+import StringIO
 
-
-
-from django.contrib.sites.models import Site
-from agilito.reporting import Calc, HTML, Formula
-import agilito.reporting
-from tagging.models import Tag
-
-from agilito import CACHE_ENABLED, UNRESTRICTED_SIZE, PRINTABLE_CARD_STOCK, CACHE_PREFIX, BACKLOG_ARCHIVE
+from agilito import CACHE_ENABLED, UNRESTRICTED_SIZE, PRINTABLE_CARD_STOCK,\
+                    CACHE_PREFIX, BACKLOG_ARCHIVE
 from agilito.exceptions import NoProjectException, UserHasNoProjectException
-
-if BACKLOG_ARCHIVE:
-    from dulwich.repo import Repo
-    from dulwich import object_store as GitObjectStore
-
-import decimal
-
-from django.core.xheaders import populate_xheaders
-from django.utils.translation import ugettext as _
-
+from agilito.forms import UserStoryForm, UserStoryShortForm, gen_TaskLogForm,\
+                          TaskForm, TestCaseAddForm, TestCaseEditForm,\
+                          testcase_form_factory, TestResultForm,\
+                          UserStoryAttachmentForm, ImpedimentForm,\
+                          UserStoryMoveForm, IterationImportForm,\
+                          ReleaseForm, IterationForm, ProjectForm
+from agilito.models import Project, Iteration, UserStory, Task, TestCase,\
+                           TaskLog, UserProfile, User, TestResult,\
+                           UserStoryAttachment, Impediment, Release,\
+                           ArchivedBacklog, ProjectMember
+from agilito.reporting import Calc, HTML, Formula
+from agilito.tools import is_member, restricted, datelabels, SideBar,\
+                          cached_view as cached, touch_cache
 from dateutil.rrule import rrule, WEEKLY, DAILY, MO, TU, WE, TH, FR
-
+from django import forms
+from django.conf import settings
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.contrib.sites.models import Site
+from django.core.cache import cache
+from django.core.urlresolvers import reverse
+from django.core.xheaders import populate_xheaders
+from django.db.models import Q
+from django.http import Http404
+from django.http import HttpResponse, HttpResponseRedirect
+from django.shortcuts import render_to_response, get_object_or_404
+from django.template import RequestContext, Context, loader, Template
+from django.utils import simplejson
+from django.utils.translation import ugettext as _
+from django.views.generic import create_update
+from django.views.generic.list_detail import object_list, object_detail
+from tagging.models import Tag
 from tagging.utils import parse_tag_input
+from urllib import quote, urlencode
+from urllib import quote_plus
 
 try:
     from collections import defaultdict
 except ImportError:
     from agilito.tools import defaultdict
 
-from urllib import quote_plus
-
-from django.template import RequestContext, Context, loader, Template
-from django.core.urlresolvers import reverse
-from django.http import HttpResponse, HttpResponseRedirect
-from django.shortcuts import render_to_response, get_object_or_404
-from django.views.generic.list_detail import object_list, object_detail
-from django.views.generic import create_update
-from django.utils import simplejson
-from django import forms
-from django.http import Http404
-
-# Decorator wich checks if you are loged in.
-from django.contrib.auth.decorators import login_required
-
-# Helpers to handle GET type of requests.
-from urllib import quote, urlencode
-
-from agilito.models import Project, Iteration, UserStory, Task, TestCase,\
-    TaskLog, UserProfile, User, TestResult, UserStoryAttachment, \
-    Impediment, Release, ArchivedBacklog, ProjectMember
-
-from agilito.forms import UserStoryForm, UserStoryShortForm, gen_TaskLogForm,\
-    TaskForm, TestCaseAddForm, TestCaseEditForm, testcase_form_factory,\
-    TestResultForm, UserStoryAttachmentForm, ImpedimentForm, \
-    UserStoryMoveForm, IterationImportForm, ReleaseForm, IterationForm, \
-    ProjectForm
-
-from agilito.tools import is_member, restricted, datelabels, SideBar, cached_view as cached, touch_cache
-
+if BACKLOG_ARCHIVE:
+    from dulwich.repo import Repo
+    from dulwich import object_store as GitObjectStore
 
 if "notification" in getattr(settings, "INSTALLED_APPS"):
     from notification import models as notification
 else:
     notification = None
 
+
 class AgilitoContext(RequestContext):
     """
     This subclass of template.RequestContext automatically populates with
     data needed throughout the application
     """
-    def __init__(self, request, dictionary=None, current_project=None, current_story=None):
+
+    def __init__(self, request, dictionary=None,
+                 current_project=None,
+                 current_story=None):
         self.request = request
 
         if request.user.is_authenticated():
@@ -103,12 +95,11 @@ class AgilitoContext(RequestContext):
                 current_story = None
 
         if dictionary is None:
-            self.dictionary = { "project_list" : project_list,
-                                "current_project" : current_project,
-                                "current_story": current_story,
-                                "last_page": request.path,
-                                "is_viewer": is_viewer
-                                }
+            self.dictionary = {"project_list": project_list,
+                               "current_project": current_project,
+                               "current_story": current_story,
+                               "last_page": request.path,
+                               "is_viewer": is_viewer}
         else:
             self.dictionary = dictionary
             self.dictionary["project_list"] = project_list
@@ -124,6 +115,7 @@ class AgilitoContext(RequestContext):
     def iteritems(self):
         return self.dictionary.iteritems()
 
+
 @login_required
 def index(request):
     """
@@ -136,7 +128,7 @@ def index(request):
         messages.add_message(request, messages.ERROR,
                 _("You are not assigned into any project."))
         return render_to_response("agilito/errorpages/user_has_no_project.html",
-                                  context_instance=RequestContext(request,{}))
+                                  context_instance=RequestContext(request, {}))
     if context["current_project"] is None:
         return HttpResponseRedirect(reverse("project_list"))
     return HttpResponseRedirect(reverse("current_iteration_status",
@@ -172,25 +164,25 @@ def add_attachment(request, project_id, userstory_id, instance=None):
             attachment.user_story = story
             attachment.original_name = request.FILES["attachment"].name
             attachment.save()
-            
+
             if  notification:
                 notify_list = story.project.project_members.all()
                 notify_list = [nl.user for nl in notify_list]
                 notification.send(notify_list,
                         "agilito_attachment_create",
                         {'creator': request.user,
-                         'story_name':story.name,
-                         'story_url':story.get_absolute_url(),
-                         'attachment':attachment,})
+                         'story_name': story.name,
+                         'story_url': story.get_absolute_url(),
+                         'attachment': attachment, })
             return HttpResponseRedirect(form.cleaned_data["http_referer"])
         else:
             print "form invalid: \n", form
     else:
         url = request.GET.get("last_page", story.get_absolute_url())
-        form = UserStoryAttachmentForm(initial={"http_referer" : url},
+        form = UserStoryAttachmentForm(initial={"http_referer": url},
                                        instance=instance)
     context = AgilitoContext(request, {"form": form,
-                                      "story" : story},
+                                      "story": story},
                             current_project=project_id)
     return render_to_response("agilito/add_attachment.html", context_instance=context)
 
@@ -214,12 +206,8 @@ def delete_attachment(request, project_id, userstory_id, attachment_id):
                                        model=UserStoryAttachment,
                                        template_name="agilito/userstory_delete.html",
                                        post_delete_redirect=url,
-                                       extra_context = {
-                                           "current_project":att.user_story.project
-                                           },
-                                           login_required=True  
-                                           
-                                       )
+                                       extra_context = {"current_project":att.user_story.project},
+                                       login_required=True)
 
 def view_attachment(request, project_id, userstory_id, attachment_id, secret=None):
     """borrowed from http://www.djangosnippets.org/snippets/1710/
@@ -2210,5 +2198,4 @@ class ProjectDetail(DetailView):
         has_member = Q(project_members__pk=self.request.user.id)
         is_visible = Q(visibility=1)
         return Project.objects.filter(has_member | is_visible).order_by("id")
-
     
