@@ -75,7 +75,7 @@ urlpatterns = patterns('agilito.views',
     (r'^(?P<project_id>\d+)/userstory/(?P<userstory_id>\d+)/move/$', 'userstory_move'),
 
     url(r'^(?P<project_id>\d+)/userstory/(?P<userstory_id>\d+)/task/add/$', 'task_create', name="agilito_task_create"),
-    (r'^(?P<project_id>\d+)/userstory/(?P<userstory_id>\d+)/task/(?P<task_id>\d+)/edit/$', 'task_edit'),
+    url(r'^(?P<project_id>\d+)/userstory/(?P<userstory_id>\d+)/task/(?P<task_id>\d+)/edit/$', 'task_edit', name="agilito_task_edit"),
     url(r'^(?P<project_id>\d+)/userstory/(?P<userstory_id>\d+)/task/(?P<task_id>\d+)/$', 'task_detail', name="agilito_task_detail"),
     (r'^(?P<project_id>\d+)/userstory/(?P<userstory_id>\d+)/task/(?P<task_id>\d+)/delete/$', 'task_delete'),
 
