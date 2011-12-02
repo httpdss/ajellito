@@ -62,10 +62,12 @@ class TaskAdmin(admin.ModelAdmin):
     list_display = ('name', 'estimate', 'actuals', 'remaining',
                     'state', 'category', 'owner', 'user_story')
     list_display_links = ('name', 'owner', 'user_story')
+    list_filter = ('owner', 'state', 'user_story__iteration__name')
     fieldsets = ((None, { 'fields': ('name', 'description', 'user_story',
                                     ('estimate', 'remaining', 'state', 'category'),
                                      'owner')}),)
     search_fields = ('name', 'description', 'user_story__name')
+    
 
 class TestCaseAdmin(admin.ModelAdmin):
     fieldsets = ((None, {
