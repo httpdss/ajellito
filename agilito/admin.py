@@ -47,7 +47,7 @@ class UserStoryAttachmentAdmin(admin.ModelAdmin):
 
 class UserStoryAdmin(admin.ModelAdmin):
     inlines = [UserStoryAttachmentInLine, TestCaseInLine, TaskInLine]
-    list_display = ('id', 'name', 'rank', 'size', 'iteration', 'state',
+    list_display = ('id', 'name', 'rank', 'size', 'task_count', 'iteration', 'state',
                     'estimated', 'actuals', 'remaining')
     list_display_links = ('id', 'name',)
     list_filter = ('project', 'iteration', 'state', )

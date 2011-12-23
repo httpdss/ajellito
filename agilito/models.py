@@ -1205,6 +1205,10 @@ class UserStory(ClueModel):
     @property
     def actuals(self):
         return sum(t.actuals for t in self.task_set.all() if t.actuals)
+        
+    @property
+    def task_count(self):
+        return self.task_set.all().count()
 
     @property
     def remaining(self):
