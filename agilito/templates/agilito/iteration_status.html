@@ -122,6 +122,7 @@ function highlightTag(ids)
                     <th>{% trans "State" %}</th>
                     <th>{% trans "Size" %}</th>
                     <th>{% trans "Tasks" %}</th>
+                    <th>{% trans "Actuals" %}</th>
                     <th>{% trans "To-Do" %}</th>
                     <th>{% trans "Failures" %}</th>
                     <th></th>
@@ -156,6 +157,7 @@ function highlightTag(ids)
                     <td class="state {{ us.state|storystate|slugify }}">{{us.state|storystate}}</td>
                     <td class="planned">{{us.size|storysize|default_if_none:"-"}}</td>
                     <td class="estimated">{{us.estimate|default_if_none:"-"}}</td>
+                    <td class="actuals">{{us.actuals|default_if_none:"-"}}</td>
                     <td class="todo">{{us.remaining|default_if_none:"-"}}</td>
                     <td class="failures {% if us.failures %} fail {% endif %}">
                         {% if us.failures %}
