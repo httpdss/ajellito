@@ -6,7 +6,7 @@ from django import forms
 from django.shortcuts import render_to_response
 from tagging.models import Tag
 from django.views.decorators.csrf import csrf_exempt
-
+from django.template import RequestContext
 
 #
 # In Lines
