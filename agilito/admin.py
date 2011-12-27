@@ -104,9 +104,9 @@ class TaskAdmin(admin.ModelAdmin):
         if not form:
             form = self.AddTagForm(initial={'_selected_action': request.POST.getlist(admin.ACTION_CHECKBOX_NAME)})
 
-        return render_to_response('admin/add_tag.html', {'tasks': queryset,
-                                                         'tag_form': form,
-                                                        })
+        return render_to_response('admin/add_tag.html',
+                                  context_instance=RequestContext(request, {'tasks': queryset,
+                                                                            'tag_form': form,}))
     add_tag.short_description = "Add tag to task"
     
 
