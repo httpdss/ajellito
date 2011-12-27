@@ -4,6 +4,7 @@ from agilito.models import Project, Release, Iteration, UserStoryAttachment,\
 from django.contrib import admin
 from django import forms
 from django.shortcuts import render_to_response
+from tagging.models import Tag
 
 
 #
