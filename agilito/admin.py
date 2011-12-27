@@ -2,6 +2,9 @@ from agilito.models import Project, Release, Iteration, UserStoryAttachment,\
     UserStory, UserProfile, Task, TestCase, TestResult, TaskLog, \
     Impediment, ProjectMember
 from django.contrib import admin
+from django import forms
+from django.shortcuts import render_to_response
+
 
 #
 # In Lines
