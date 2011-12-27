@@ -5,6 +5,7 @@ from django.contrib import admin
 from django import forms
 from django.shortcuts import render_to_response
 from tagging.models import Tag
+from django.views.decorators.csrf import csrf_exempt
 
 
 #
@@ -77,7 +78,8 @@ class TaskAdmin(admin.ModelAdmin):
     class AddTagForm(forms.Form):
         _selected_action = forms.CharField(widget=forms.MultipleHiddenInput)
         tag = forms.ModelChoiceField(Tag.objects)
-
+        
+    @csrf_exempt
     def add_tag(self, request, queryset):
         form = None
 
