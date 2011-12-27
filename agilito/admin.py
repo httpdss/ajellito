@@ -68,6 +68,41 @@ class TaskAdmin(admin.ModelAdmin):
                                      'owner')}),)
     search_fields = ('name', 'description', 'user_story__name')
     
+    actions = ['add_tag']
+
+    class AddTagForm(forms.Form):
+        _selected_action = forms.CharField(widget=forms.MultipleHiddenInput)
+        tag = forms.ModelChoiceField(Tag.objects)
+
+    def add_tag(self, request, queryset):
+        form = None
+
+        if 'apply' in request.POST:
+            form = self.AddTagForm(request.POST)
+
+            if form.is_valid():
+                tag = form.cleaned_data['tag']
+
+                count = 0
+                for task in queryset:
+                    task.tags.add(tag)
+                    count += 1
+
+                plural = ''
+                if count != 1:
+                    plural = 's'
+
+                self.message_user(request, "Successfully added tag %s to %d task%s." % (tag, count, plural))
+                return HttpResponseRedirect(request.get_full_path())
+
+        if not form:
+            form = self.AddTagForm(initial={'_selected_action': request.POST.getlist(admin.ACTION_CHECKBOX_NAME)})
+
+        return render_to_response('admin/add_tag.html', {'tasks': queryset,
+                                                         'tag_form': form,
+                                                        })
+    add_tag.short_description = "Add tag to task"
+    
 
 class TestCaseAdmin(admin.ModelAdmin):
     fieldsets = ((None, {
@@ -102,7 +137,6 @@ class ImpedimentAdmin(admin.ModelAdmin):
     ordering = ('-opened',)
     
 class ProjectMemberAdmin(admin.ModelAdmin):
-    
     list_display = ('user','project','role')
     list_filter = ('project','role')
     search_fields = ['member__username']
