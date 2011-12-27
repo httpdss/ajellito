@@ -4,7 +4,7 @@
 {% block content %}
 
 <p>{% trans "Select tag to apply" %}:</p>
-<form action="" method="post">
+<form action="" method="post">{% csrf_token %}
     {{ tag_form }}
     <p>{% trans "The tag will be applied to" %}:</p>
     <ul>{{ tasks|unordered_list }}</ul>
