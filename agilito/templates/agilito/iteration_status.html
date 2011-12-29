@@ -209,7 +209,7 @@ function highlightTag(ids)
                     <td class="state {{ ta.state|taskstate|slugify }}">{{ta.state|taskstate}}</td>
                     <td></td>
                     <td class="estimated">{{ta.estimate|default_if_none:"-"}}</td>
-                    <td class="actuals">{{ta.actuals|default_if_none:"-"}}</td>
+                    <td class="actuals">{{ta.time_on_task}}</td>
                     <td class="todo">{{ta.remaining|default_if_none:"-"}}</td>
                     <td></td>
                     <td>

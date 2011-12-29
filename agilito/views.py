@@ -1150,7 +1150,7 @@ def iteration_status(request, project_id, iteration_id=None, template="agilito/i
     if iteration is not None:
         
         status = iteration.status()
-
+        dir(status.stories)
         tags = defaultdict(list)
         for tag, items in status.tags.items():
             for item in items:

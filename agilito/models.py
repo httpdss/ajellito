@@ -909,6 +909,9 @@ class Iteration(ClueModel):
 
         # if we"re only 2 days into the sprint the burndown is covered
         # by estimate and remaining
+        
+        task_spent = {}
+        
         if today > 1:
             ## tasklog updates
             cursor.execute("""select tl.old_remaining, tl.date, tl.time_on_task, t.id
@@ -919,18 +922,21 @@ class Iteration(ClueModel):
                             order by tl.date
                             """, (self.id, ))
             for old_remaining, date, spent, task in cursor.fetchall():
+                task_spent[task] = task_spent.get(task,0) + spent
                 task = tasks_by_id[task]
                 task.remaining_for_day[tasklogday(date)] = old_remaining
 
                 if spent:
                     result.time_spent += spent
-
             ## fill out burndown by overwriting None values with the earliest updated value
             revdays = list(reversed(activedays))
+            print tasks_by_id
             for id, task in tasks_by_id.items():
                 for day in revdays:
                     if task.remaining_for_day[day] is None:
                         task.remaining_for_day[day] = task.remaining_for_day[day+1]
+                task.time_on_task = task_spent.get(id,0)
+                print task
 
         ## now that we have all task data we can update the story stats for all days spent in the iteration
         for story in result.stories:
@@ -1357,6 +1363,10 @@ class Task(ClueModel):
     @property
     def is_blocked(self):
         return (Impediment.objects.filter(resolved=None, tasks=self).count() != 0)
+    
+    def actuals_count(self):
+        print self.actuals
+        return self.actuals
 
     @property
     def actuals(self):
