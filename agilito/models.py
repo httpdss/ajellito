@@ -930,13 +930,11 @@ class Iteration(ClueModel):
                     result.time_spent += spent
             ## fill out burndown by overwriting None values with the earliest updated value
             revdays = list(reversed(activedays))
-            print tasks_by_id
             for id, task in tasks_by_id.items():
                 for day in revdays:
                     if task.remaining_for_day[day] is None:
                         task.remaining_for_day[day] = task.remaining_for_day[day+1]
                 task.time_on_task = task_spent.get(id,0)
-                print task
 
         ## now that we have all task data we can update the story stats for all days spent in the iteration
         for story in result.stories:
@@ -1365,7 +1363,6 @@ class Task(ClueModel):
         return (Impediment.objects.filter(resolved=None, tasks=self).count() != 0)
     
     def actuals_count(self):
-        print self.actuals
         return self.actuals
 
     @property
