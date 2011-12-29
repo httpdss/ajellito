@@ -7,6 +7,7 @@ from django.shortcuts import render_to_response
 from tagging.models import Tag
 from django.views.decorators.csrf import csrf_exempt
 from django.template import RequestContext
+from agilito.actions import export_as_csv_action
 
 #
 # In Lines
@@ -73,7 +74,14 @@ class TaskAdmin(admin.ModelAdmin):
                                      'owner')}),)
     search_fields = ('name', 'description', 'user_story__name')
     
-    actions = ['add_tag']
+    actions = [export_as_csv_action(fields=['name', 
+                                            'estimate',
+                                            'actuals',
+                                            'remaining',
+                                            'owner',
+                                            'state',
+                                            'user_story']), 
+               'add_tag']
 
     class AddTagForm(forms.Form):
         _selected_action = forms.CharField(widget=forms.MultipleHiddenInput)
