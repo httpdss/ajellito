@@ -24,7 +24,6 @@ from django.utils.translation import ugettext as _
 from tagging.fields import TagField
 from tagging.utils import parse_tag_input
 from queryutils.queryutils import SearchEqualOp, SearchQueryGenerator
-from django.db.models import Sum
 
 
 class Object(object):
@@ -1361,7 +1360,7 @@ class Task(ClueModel):
 
     @property
     def actuals(self):
-        return self.tasklog_set.aggregate(Sum('time_on_task')).get('time_on_task__sum')
+        return sum(i.time_on_task for i in self.tasklog_set.all())
 
     @property
     def is_complete(self):
