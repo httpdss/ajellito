@@ -14,10 +14,11 @@ def export_as_csv_action(description="Export selected objects as CSV file",
         based on http://djangosnippets.org/snippets/1697/
         """
         opts = modeladmin.model._meta
+        print fields
         field_names = set([field.name for field in opts.fields])
         if fields:
             fieldset = set(fields)
-            field_names = field_names & fieldset
+            field_names = field_names.union(fieldset)
         elif exclude:
             excludeset = set(exclude)
             field_names = field_names - excludeset
@@ -28,6 +29,7 @@ def export_as_csv_action(description="Export selected objects as CSV file",
         writer = csv.writer(response)
         if header:
             writer.writerow(list(field_names))
+        
         for obj in queryset:
             writer.writerow([unicode(getattr(obj, field)).encode("utf-8","replace") for field in field_names])
         return response

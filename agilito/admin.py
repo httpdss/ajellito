@@ -74,7 +74,7 @@ class TaskAdmin(admin.ModelAdmin):
                                      'owner')}),)
     search_fields = ('name', 'description', 'user_story__name')
     
-    actions = [export_as_csv_action(), 'add_tag']
+    actions = [export_as_csv_action(fields=['name', 'owner', 'estimate', 'actuals']), 'add_tag']
 
     class AddTagForm(forms.Form):
         _selected_action = forms.CharField(widget=forms.MultipleHiddenInput)
