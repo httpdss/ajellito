@@ -1360,7 +1360,7 @@ class Task(ClueModel):
 
     @property
     def actuals(self):
-        return sum(i.time_on_task for i in self.tasklog_set.all())
+        return sum(i.time_on_task or 0 for i in self.tasklog_set.all())
 
     @property
     def is_complete(self):

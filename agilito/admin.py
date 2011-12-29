@@ -80,7 +80,8 @@ class TaskAdmin(admin.ModelAdmin):
                                             'remaining',
                                             'owner',
                                             'state',
-                                            'user_story']), 
+                                            'user_story',
+                                            'user_story__iteration__name']), 
                'add_tag']
 
     class AddTagForm(forms.Form):
