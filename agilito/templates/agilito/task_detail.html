@@ -33,5 +33,10 @@
 </div>
 
 <div class="description">{{task.description|markdown}}</div>
-    {% include "agilito/comments_section.html" %}
+
+<h2>{% trans "Tasklog" %}</h2>
+
+{% include "agilito/log_list.html" with logs=task.tasklog_set.all %}
+
+{% include "agilito/comments_section.html" %}
 {% endblock %}

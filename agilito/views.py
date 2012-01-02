@@ -1345,7 +1345,7 @@ def product_backlog_chart(request, project_id, iteration_id):
 
         leeway = 5
     else:
-        stories = UserStory.objects.filter(project__id = project_id).order_by("created")
+        stories = UserStory.objects.filter(project__id=project_id).order_by("created")
 
         us_start = stories[0].created
         it = Iteration.objects.filter(project__id=project_id).order_by("start_date")[0]
