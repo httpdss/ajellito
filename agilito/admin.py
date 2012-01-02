@@ -68,11 +68,13 @@ class TaskAdmin(admin.ModelAdmin):
     list_display = ('name', 'estimate', 'actuals', 'remaining',
                     'state', 'category', 'owner', 'user_story')
     list_display_links = ('name', 'owner', 'user_story')
-    list_filter = ('owner', 'state', 'user_story__iteration__name')
+    list_filter = ('owner', 'state', 'user_story__iteration__name', 'category')
     fieldsets = ((None, { 'fields': ('name', 'description', 'user_story',
                                     ('estimate', 'remaining', 'state', 'category'),
                                      'owner')}),)
     search_fields = ('name', 'description', 'user_story__name')
+    
+    list_editable = ('category',)
     
     actions = [export_as_csv_action(fields=['name', 'owner', 'estimate', 'actuals']), 'add_tag']
 
