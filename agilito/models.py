@@ -1333,7 +1333,7 @@ class Task(ClueModel):
                 (20, _("Design")),
                 (30, _("Development")),
                 (40, _("Testing")),
-                (40, _("Support")),
+                (50, _("Support")),
                 (99, _("Other")))
 
     estimate = models.FloatField(blank=True, null=True)
