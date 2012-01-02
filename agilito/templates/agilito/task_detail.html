@@ -36,7 +36,7 @@
 
 <h2>{% trans "Tasklog" %}</h2>
 
-{% include "agilito/log_list.html" with logs=task.tasklog_set.all %}
+{% include "agilito/log_list.html" with logs=task.tasklog_set.all show_user=1 %}
 
 {% include "agilito/comments_section.html" %}
 {% endblock %}
