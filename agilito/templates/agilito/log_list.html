@@ -10,7 +10,12 @@
             <td width="25%">{{log.date}}</td>
             <td width="10%">{{log.time_on_task}}</td>
             <td width="10%">{{log.old_remaining}}</td>
-            <td width="40%">{{log.summary}} (P{{log.project.pk}} - IT{{log.iteration.pk}} - {{log.task}})</td>
+            <td width="40%">
+                {{log.summary}} 
+                {% ifnotequal show_user 1 %}
+                (P{{log.project.pk}} - IT{{log.iteration.pk}} - {{log.task}})
+                {% endifnotequal %}
+                </td>
             {% ifequal show_user 1 %}
             <td width="15%">{{log.owner}}</td>
             {% endifequal %}
