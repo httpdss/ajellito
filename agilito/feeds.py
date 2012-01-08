@@ -22,7 +22,7 @@ def get_project(user, project):
 
     return project
 
-class Backlog(Feed):
+class BacklogFeed(Feed):
     def get_object(self, bits):
         # In case of "/feeds/backlog/9/foo/bar/baz/", or other such clutter,
         # check that bits has only one member.
@@ -52,11 +52,11 @@ class Backlog(Feed):
         return sizes + states
 
     def item_link(self, story):
-        return story.get_absolute_url()
+        return story.get_absolute_url
 
-    def item_pubdate(self, story):
-        c = story.created
-        return datetime.datetime(c.year, c.month, c.day)
+    # def item_pubdate(self, story):
+    #     c = story.created or datetime.today()
+    #     return datetime.datetime(c.year, c.month, c.day)
 
     def item_categories(self, story):
         state = UserStory.STATES.label(story.state)
@@ -65,7 +65,7 @@ class Backlog(Feed):
         if size: cats.append(size)
         return cats
 
-class Iteration(Feed):
+class IterationFeed(Feed):
     def get_object(self, bits):
         if len(bits) != 2:
             raise ObjectDoesNotExist
@@ -76,7 +76,7 @@ class Iteration(Feed):
     def title(self, iteration):
         it = iteration.name
         pr = iteration.project.name
-        return _("Agilito: Iteration backlog for %{0} (%{1}) ").format(it, pr)
+        return _("Agilito: Iteration backlog for {0} ({1}) ").format(it, pr)
 
     def link(self, iteration):
         if not iteration:
@@ -86,7 +86,7 @@ class Iteration(Feed):
     def description(self, iteration):
         it = iteration.name
         pr = iteration.project.name
-        return _("Iteration backlog for %{0} (%{1}) ").format(it, pr)
+        return _("Iteration backlog for {0} ({1}) ").format(it, pr)
 
     def items(self, iteration):
         tasks = []
