@@ -40,6 +40,7 @@ if "notification" in settings.INSTALLED_APPS:
         notification.create_notice_type("agilito_testresult_delete", _("Test Result Deleted"), _("a test result has been deleted"), default=0)
         
         notification.create_notice_type("agilito_backlog_save", _("Backlog saved"), _("backlog has been saved"), default=0)
+        notification.create_notice_type("agilito_timelog_alert", _("Log alert"), _("you need to log your hours"), default=0)
     
     signals.post_syncdb.connect(create_notice_types, sender=notification)
 else:

@@ -1636,3 +1636,6 @@ class ProjectMember(models.Model):
 
     def is_viewer(self):
         return (self.role in [10, 99])
+
+    def is_manager(self):
+        return (self.role in [20])

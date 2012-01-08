@@ -2159,6 +2159,15 @@ def project_delete(request, project_id):
                 _("Project has been deleted"))
         return HttpResponseRedirect(reverse("project_list"))
     
+def timelog_alert(request, project_id):
+    
+    # end_date__gte=datetime.date.today()
+    current_time = datetime.datetime.now()
+    all_members = Project.objects.get(pk=project_id).project_members.select_related('task','timelog').filter(role__in=[30,40])
+    pm_list = all_members.exclude(user__tasklog__date__gte=datetime.date.today())
+    if notification:
+        notification.send([pm.user for pm in pm_list],"agilito_timelog_alert", {})
+    return HttpResponseRedirect(reverse("project_list"))
 
 from django.views.generic import ListView, DetailView
 
