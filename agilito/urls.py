@@ -2,7 +2,7 @@ from django.conf.urls.defaults import *
 from django.contrib import admin
 from django.contrib.auth.decorators import login_required
 
-from agilito.feeds import BacklogFeed, IterationFeed
+from agilito.feeds import BacklogFeed, IterationFeed, NoticeFeed
 from agilito.views import ProjectList, ProjectCreate, ProjectDetail, FileList
 
 
@@ -15,6 +15,7 @@ media_root = os.path.join(os.path.dirname(__file__), 'media')
 feeds = {
     'backlog': BacklogFeed,
     'iteration': IterationFeed,
+    'notice': NoticeFeed,
     }
 
 urlpatterns = patterns('agilito.views',
