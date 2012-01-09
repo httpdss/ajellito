@@ -1757,8 +1757,8 @@ def iteration_status_table(request, project_id, iteration_id):
                 style = {"background": green}
             elif task.state != Task.STATES.COMPLETED and remaining == 0:
                 style = {"background": orange}
-            elif task.state == Task.STATES.COMPLETED and last != 0:
-                style = {"background": orange}
+            #elif task.state == Task.STATES.COMPLETED and last != 0:
+            #    style = {"background": orange}
             else:
                 style={}
             calc.write((row, 3), task.name, style)
@@ -2161,13 +2161,15 @@ def project_delete(request, project_id):
         return HttpResponseRedirect(reverse("project_list"))
     
 def timelog_alert(request, project_id):
+    current_time = datetime.datetime.today()
+    if current_time.hour in range(11,18):
+        last_hour = current_time - datetime.timedelta(hours = 1.5)
     
-    # end_date__gte=datetime.date.today()
-    current_time = datetime.datetime.now()
-    all_members = Project.objects.get(pk=project_id).project_members.select_related('task','timelog').filter(role__in=[30,40])
-    pm_list = all_members.exclude(user__tasklog__date__gte=datetime.date.today())
-    if notification:
-        notification.send([pm.user for pm in pm_list],"agilito_timelog_alert", {})
+        all_members = Project.objects.get(pk=project_id).project_members.select_related('task','timelog').filter(role__in=[30,40])
+        pm_list = all_members.exclude(user__tasklog__date__gte=last_hour)
+    
+        if notification:
+            notification.send([pm.user for pm in pm_list],"agilito_timelog_alert", {})
     return HttpResponseRedirect(reverse("project_list"))
 
 from django.views.generic import ListView, DetailView
