@@ -806,6 +806,7 @@ class Iteration(ClueModel):
             result.size += size or 0
             if story.state == UserStory.STATES.ACCEPTED:
                 accepted += 1
+            result.accepted = accepted
 
             story._("tmp").hours_remaining_for_day = [None for day in activedays]
             story.tmp.points_remaining_for_day = [None for day in activedays]
