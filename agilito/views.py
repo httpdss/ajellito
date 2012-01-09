@@ -1318,6 +1318,7 @@ def iteration_hours(request, project_id, iteration_id=None):
             "progress_total": sum(u["progress"] or 0 for u in rows),
             "planned": planned,
             "sidebar": sidebar.ifenabled(),
+            "user_stories":user_stories,
         }
     else:
         inner_context = {}
