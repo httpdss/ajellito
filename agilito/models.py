@@ -375,7 +375,7 @@ class Project(ClueModel):
         result.velocity.actual, result.velocity.planned = cursor.fetchone()
 
         if result.velocity.planned:
-            result.velocity.accuracy = float(result.velocity.actual) / result.velocity.planned
+            result.velocity.accuracy = float(result.velocity.actual) / float(result.velocity.planned)
         else:
             result.velocity.accuracy = None
 
