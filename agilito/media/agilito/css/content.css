@@ -170,10 +170,6 @@ ul.tags span.small {
     background:orange !important;
 }
 
-.userstory.normal td {
-    background:#e2c87d !important;
-}
-
 .blocked .name{
     background:#f99 url(../img/blocked.png) no-repeat !important;
     background-position: left center !important;

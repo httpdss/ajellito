@@ -162,3 +162,7 @@ table .icon[rel$='.xls'] {
 table .icon[rel$='.xml'] {
     background-image:url(../img/filetype/xml.gif);
 }
+
+.userstory.normal td {
+    background:#e2c87d !important;
+}
