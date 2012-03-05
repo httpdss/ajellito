@@ -151,7 +151,9 @@ function highlightTag(ids)
 
                 {% for us in stories %}
                 {% url agilito_userstory_detail current_project.id us.id as userstory_url %}
-                <tr id="us-{{us.id}}" class="userstory {% cycle even,odd %} {%if us.is_blocked%}blocked{% endif %} {%if us.is_starved%}starved{% endif %}">
+                <tr id="us-{{us.id}}" class="userstory {% cycle even,odd %} 
+                                {%if not us.is_blocked and not us.is_starved %}normal{% endif %}
+                                {%if us.is_blocked%}blocked{% endif %} {%if us.is_starved%}starved{% endif %}">
                     <td class="rank">{{us.relative_rank}}</td>
                     <td class="id"><a href="{{userstory_url}}">US{{us.id}}</a></td>
                     <td class="name{% if us.is_archived %} archived{% endif %}"><a href="{{us.get_absolute_url}}">{{us.name}}</a></td>
