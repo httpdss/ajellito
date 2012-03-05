@@ -41,6 +41,24 @@ $(window).ready(function(){
         $('.task-tag').removeClass('selected');
         $('.task-tag a').css({fontWeight:"normal"});
     })
+    
+    $('.collapse-all').click(function(){
+        $('.reset-tags').trigger('click');
+        $("tr.userstory").each(function() {
+            $(this).removeClass("expanded");
+            $(this).collapse();
+        });
+        return false;
+    });
+    
+    $('.expand-all').click(function(){
+        $('.reset-tags').trigger('click');
+        $("tr.userstory").each(function() {
+            $(this).addClass("expanded");
+            $(this).expand();
+        });
+        return false;
+    });
 });
 
 function highlightTag(ids)
