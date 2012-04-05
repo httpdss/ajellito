@@ -27,10 +27,13 @@
                 {{ comment_form|as_uni_form }}
                 <div class="ctrlHolder">
                     <p class="label">{% trans "Send to:" %}</p>
-                    <ul>
+                    <select multiple size=10 name="sendto" id="sendto">
                         {% for member in current_project.project_members.all %}
-                        <li><p for="member_{{member.user.id}}"><input type="checkbox" id="member_{{member.user.id}}" name="sendto" value="{{member.user.id}}"> {{member.user.email}}</p></li>                            
+                        <option value="{{member.user.id}}">{{member.user.email}}</option>
                         {% endfor %}
+                    </select>
+                    <ul>
+
                     </ul>
                 </div>
                 <div class="buttonHolder">
