@@ -37,10 +37,13 @@
     </dd>        
 
     <dt>{% trans "Precondition" %}</dt> 
-    <dd class=""><pre>{{object.precondition|safe}}</pre></dd>
+    <dd><pre>{{object.precondition|safe}}</pre></dd>
 
     <dt>{% trans "Steps" %}</dt> 
-    <dd class=""><pre>{{object.steps|safe}}</pre></dd>
+    <dd><pre>{{object.steps|safe}}</pre></dd>
+
+    <dt>{% trans "Postcondition" %}</dt>
+    <dd><pre>{{object.postcondition|safe}}</pre></dd>
 
 </dl>
 <h3>{% trans "Test Results" %}</h3>

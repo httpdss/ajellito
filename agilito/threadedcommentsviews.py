@@ -61,6 +61,7 @@ def comment(*args, **kwargs):
             obj = ct.get_object_for_this_type(id=int(kwargs['object_id']))
             ids = [int(user_id) for user_id in sendto_ids]
             notify_list = User.objects.filter(pk__in=ids)
+
             notification.send(notify_list,
                              "agilito_comment_create",
                              {'creator': args[0].user,
