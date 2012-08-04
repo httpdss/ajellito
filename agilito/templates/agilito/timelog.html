@@ -80,7 +80,7 @@ $(window).ready(function(){
 {% if message %}
 <p class="notice">{{ message }}</p>
 {% endif %}
-<form method="post" action="" class="uniForm">{% csrf_token %}
+<form method="post" action="" >{% csrf_token %}
 
     <div id="timelog-wrapper">
         <div>
@@ -99,8 +99,8 @@ $(window).ready(function(){
         </fieldset>
     </div>
 
-    <div class="buttonHolder">
-        <input type="submit" class="primaryAction save" value="{% trans "Apply" %}"/>
-    </div>
+    <div class="form-actions actions">
+    <input type="submit" class="btn primary save" value="{% trans "Apply" %}" />
+</div>
 </form>
 {% endblock %}

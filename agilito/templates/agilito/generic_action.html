@@ -1,24 +1,15 @@
 {% extends "agilito/base.html" %}
 {% load i18n %}
-{% load uni_form_tags %}
+{% load bootstrap_tags %}
 {% block head_title %}{{object.name}}{% endblock %}
 {% block body %}
 <h2>{{ action }}</h2>
 <h3>{{ object.name }}</h3>
 
-<form method="post" class="uniForm">{% csrf_token %}
-    {% for field in form %}
-    {% if field.is_hidden %}
-        {{ field }}
-    {% endif %}
-    {% endfor %}
-    <div class="inlineLabels">
-        {% for field in form %}
-        {{ field|as_uni_field }}
-        {% endfor %}
-    </div>
-    <div class="buttonHolder">
-        <input type="submit" class="primaryAction save" value="{% trans "Save" %}"/>
+<form method="post" >{% csrf_token %}
+    {{form|as_bootstrap}}
+    <div class="form-actions">
+        <input type="submit" class="btn btn-primary" value="{% trans "Save" %}" />
     </div>
 </form>
 {% endblock %}

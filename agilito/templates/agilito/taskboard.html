@@ -15,7 +15,7 @@
         {% block flash_messages %}{% include "_flash_messages.html" %}{% endblock %}
         <div class="filters">
             <a href="{% url iteration_status_with_id current_project.id,current_iteration.id  %}">{% trans "Back to iteration" %}</a>
-            <form action="" class="uniForm">
+            <form action="" >
                 <fieldset class="inlineLabels">
                     <legend>{% trans "Filters" %}</legend>
                     <div class="ctrlHolder">

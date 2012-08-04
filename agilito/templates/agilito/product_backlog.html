@@ -250,6 +250,11 @@ showSave();
 }
 });
 
+
+
+
+
+
 var pbl = $('#user-story-list')
 
 $("#filter").keyup(function() {
@@ -405,9 +410,10 @@ $("#filter").keyup(function() {
             </table>
             {% if earliest_archive %}
                 <form name="archive" action="{% url agilito.views.backlog_archived current_project.id %}" method="post">{% csrf_token %}
-                    <div class="buttonHolder">
-                        <input type="submit" id="archivefetch" disabled="disabled" class="primaryAction save" value="{% trans "Fetch" %}" />
+                    <div class="form-actions actions">
+                        <input type="submit" class="btn primary save"  disabled="disabled" id="archivefetch" value="{% trans "Fetch" %}" />
                     </div>
+
                      {% trans "backlog as it was on" %}
                         <input onchange="enableArchive()" id="archivedate" name="archivedate"
                             value="" maxlength="10" size="10" type="text" />
@@ -416,10 +422,10 @@ $("#filter").keyup(function() {
             {% if not is_viewer %}
             <form style="display:none" name="queuesubmit" id="queuesubmit" action="{% url backlog_save current_project.id %}?last_page={{last_page}}" method="post">{% csrf_token %}
                 <textarea name="command-queue" id="command-queue" class="mceNoEditor"></textarea>
-                <div class="buttonHolder">
-                    <input  type="submit" class="primaryAction save" value="{% trans "Save" %}" />
+                <div class="form-actions actions">
+                    <input type="submit" class="btn primary save" value="{% trans "Save" %}" />
                 </div>
-            </form>                
+            </form>
             {% endif %}
         {% endif %}
     {% endblock %}
