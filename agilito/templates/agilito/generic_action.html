@@ -8,8 +8,8 @@
 
 <form method="post" >{% csrf_token %}
     {{form|as_bootstrap}}
-    <div class="form-actions">
-        <input type="submit" class="btn btn-primary" value="{% trans "Save" %}" />
+    <div class="form-actions actions">
+        <input type="submit" class="btn btn-primary primary" value="{% trans "Save" %}" />
     </div>
 </form>
 {% endblock %}

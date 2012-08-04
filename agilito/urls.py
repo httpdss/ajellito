@@ -27,6 +27,9 @@ urlpatterns = patterns('agilito.views',
     url(r"^project/create/$",  login_required(ProjectCreate.as_view()), name="project_create"),
     url(r"^project/(?P<pk>\d+)/$", login_required(ProjectDetail.as_view()), name="project_detail"),
     
+    # url(r'^(?P<project_id>\d+)/testcase/$', login_required(TestCaseList.as_view()), name="testcase_list"),
+    #     url(r'^(?P<project_id>\d+)/testcase/(?P<iteration_id>\d+)/$', login_required(TestCaseList.as_view()), name="iteration_hours_with_id"),
+    
 
     url(r'^(?P<project_id>\d+)/backlog/$', 'backlog', name='product_backlog'),
     url(r'^(?P<project_id>\d+)/files/$', login_required(FileList.as_view()), name='agilito_project_files'),
@@ -56,7 +59,7 @@ urlpatterns = patterns('agilito.views',
 
     url(r'^(?P<project_id>\d+)/taskboard/(?P<iteration_id>\d+)/$', 'taskboard', name="taskboard"),
     url(r'^(?P<project_id>\d+)/iteration/(?P<iteration_id>\d+)/userstory/add/$', 'userstory_create', name="story_from_iteration"),
-    
+        
     url(r'^(?P<project_id>\d+)/iteration/hours/$', 'iteration_hours', name="current_iteration_hours"),
     url(r'^(?P<project_id>\d+)/iteration/hours/(?P<username>[A-Za-z0-9_\.]+)/$', 'iteration_daily_hours', name="current_daily_hours"),
     url(r'^(?P<project_id>\d+)/iteration/(?P<iteration_id>\d+)/hours/(?P<username>[A-Za-z0-9_\.]+)/$', 'iteration_daily_hours', name="current_daily_hours_with_id"),

@@ -107,6 +107,7 @@ class AgilitoContext(RequestContext):
             self.dictionary["current_story"] = current_story
             self.dictionary["last_page"] = request.path
             self.dictionary["is_viewer"] = is_viewer
+        
         RequestContext.__init__(self, self.request, self.dictionary)
 
     def items(self):
@@ -1615,7 +1616,9 @@ def backlog_archived(request, project_id, date=None):
     date = datetime.datetime(year, month, day, 23, 59, 59)
 
     try:
-        archived = ArchivedBacklog.objects.filter(project__id=project_id, stamp__lte=date).order_by("-stamp")[0]
+        archived = ArchivedBacklog.objects\
+                    .filter(project__id=project_id,stamp__lte=date)\
+                    .order_by("-stamp")[0]
     except ArchivedBacklog.DoesNotExist:
         raise Http404
     except IndexError:
@@ -1625,7 +1628,9 @@ def backlog_archived(request, project_id, date=None):
     response["Content-Disposition"] = "attachment; filename=backlog.ods"
 
     repo = Repo(BACKLOG_ARCHIVE)
-    response.write(GitObjectStore.tree_lookup_path(repo.object_store.__getitem__, str(archived.commit), "%d.ods" % int(project_id)))
+    response.write(GitObjectStore.tree_lookup_path(repo.object_store.__getitem__,
+                                                   str(archived.commit),
+                                                   "%d.ods" % int(project_id)))
     return response
 
 @restricted
@@ -1807,7 +1812,11 @@ def iteration_export(request, project_id, iteration_id):
     for story in status.stories:
         for task in story.tasks["all"]:
             row += 1
-            for c, d in enumerate([task.id, task.user_story.name, task.name, task.estimate, task.owner, ", ".join(task.taglist)]):
+            for c, d in enumerate([task.id, 
+                                   task.user_story.name, 
+                                   task.name, 
+                                   task.estimate, 
+                                   task.owner, ", ".join(task.taglist)]):
                 calc.write((row, c), d)
 
     response = HttpResponse(mimetype="application/vnd.oasis.opendocument.spreadsheet")
@@ -2165,11 +2174,16 @@ def timelog_alert(request, project_id):
     if current_time.hour in range(11,18):
         last_hour = current_time - datetime.timedelta(hours = 1.5)
     
-        all_members = Project.objects.get(pk=project_id).project_members.select_related('task','timelog').filter(role__in=[30,40])
+        all_members = Project.objects.get(pk=project_id)\
+                        .project_members\
+                        .select_related('task','timelog')\
+                        .filter(role__in=[30,40])
         pm_list = all_members.exclude(user__tasklog__date__gte=last_hour)
     
         if notification:
-            notification.send([pm.user for pm in pm_list],"agilito_timelog_alert", {})
+            notification.send([pm.user for pm in pm_list],
+                              "agilito_timelog_alert",
+                              {})
     return HttpResponseRedirect(reverse("project_list"))
 
 from django.views.generic import ListView, DetailView
@@ -2184,6 +2198,15 @@ class ProjectList(ListView):
         has_member = Q(project_members__user__pk=self.request.user.id)
         is_visible = Q(visibility=1)
         return Project.objects.filter(has_member | is_visible).order_by("-id")
+
+# class TestCaseList(ListView):
+#     """Generic view to show the list of testcases"""
+#     paginate_by = 20
+#     template_name = "agilito/testcase_list.html"
+# 
+#     def get_queryset(self):
+#         publisher = get_object_or_404(Publisher, name__iexact=self.args[0])
+#         return Book.objects.filter(publisher=publisher)
 
 class FileList(ListView):
     """Generic view to show the list of files"""

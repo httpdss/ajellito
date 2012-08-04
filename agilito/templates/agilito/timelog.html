@@ -1,6 +1,6 @@
 {% extends "agilito/base.html" %}
 {% load i18n %}
-{% load uni_form_tags  %}
+{% load bootstrap_tags  %}
 
 {% block body_class %}timelog agilito{% endblock %}
 
@@ -93,7 +93,7 @@ $(window).ready(function(){
                     <p id="task-name"></p>
             {% for field in form %}
             {% ifnotequal field.name "taskmenu" %}
-                {{ field|as_uni_field }}
+                {{ field }}
             {% endifnotequal %}
             {% endfor %}
         </fieldset>

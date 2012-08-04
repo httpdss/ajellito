@@ -1,7 +1,7 @@
 {% load i18n %}
 {% load threadedcommentstags %}
 {% load agilito_utils %}
-{% load uni_form_tags %}
+{% load bootstrap_tags %}
 {% load smart_links %}
 {% load avatar_tags %}
 
@@ -24,7 +24,7 @@
     <form method="POST" action="{% get_comment_url comment_on %}">
         {% get_threaded_comment_form as comment_form %}
         <div id="comment-form">{% csrf_token %}
-                {{ comment_form|as_uni_form }}
+                {{ comment_form|as_bootstrap }}
                 <div class="ctrlHolder">
                     <p class="label">{% trans "Send to:" %}</p>
                     <select multiple size=10 name="sendto" id="sendto">

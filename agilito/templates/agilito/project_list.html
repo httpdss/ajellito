@@ -1,13 +1,17 @@
 {% extends "agilito/base.html" %}
 {% load i18n %}
 {% load pagination_tags %}
-{% block subnav %}
-<ul>
-	<li>
-		<a href="{% url project_create %}">{% trans "Add Project" %}</a>
-	</li>
-</ul>
-{% endblock %}
+
+
+{% block extra_body %}
+<div class="subnav subnav-fixed">
+    <ul class="nav nav-pills">
+        <li>
+            <a href="{% url project_create %}">{% trans "Add Project" %}</a>
+        </li>
+    </ul>
+</div>
+{% endblock extra_body %}
 
 {% block head_title %}{% trans "Projects" %}{% endblock %}
 {% block body_class %}agilito projects{% endblock %}
