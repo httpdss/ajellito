@@ -3,7 +3,7 @@
 
 {% if logs %}
 {% autopaginate logs 20 %}
-<table class="table table-striped" id="user-story-list" cellspacing="0" cellpadding="2">
+<table class="table table-striped" id="user-story-list" >
     <tbody>
         {% for log in logs %}
         <tr class="{% cycle even,odd %}">

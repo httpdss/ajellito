@@ -132,7 +132,7 @@ function highlightTag(ids)
         {% include "agilito/iteration_status_header.html" %}
     </div>
     <div>
-        <table summary="stories and tasks" id="user-story-list" cellspacing="0" cellpadding="2">
+        <table summary="stories and tasks" id="user-story-list" class="table table-striped table-bordered">
             <thead>
                 <tr>
                     <th>{% trans "Rank" %}</th>
@@ -166,7 +166,7 @@ function highlightTag(ids)
                     <td></td>
                     <td></td>
                     <td></td>
-                </tr> 
+                </tr>
 
                 {% for us in stories %}
                 {% url agilito_userstory_detail current_project.id us.id as userstory_url %}
@@ -267,7 +267,7 @@ function highlightTag(ids)
 
         {% if impediments.open or impediments.resolved %}
         <h3>{% trans "Impediments" %}</h3>
-        <table id="impediment-list" cellspacing="0" cellpadding="2">
+        <table id="impediment-list" >
             <thead>
                 <tr>
                     <th style="width:10%;">{% trans "Id" %}</th>
