@@ -1,15 +1,13 @@
 import agilito.reporting
 import csv
 import datetime
-import decimal
 import mimetypes
 import os
 import time
-import types
 import StringIO
 
-from agilito import CACHE_ENABLED, UNRESTRICTED_SIZE, PRINTABLE_CARD_STOCK,\
-                    CACHE_PREFIX, BACKLOG_ARCHIVE
+from agilito import UNRESTRICTED_SIZE, PRINTABLE_CARD_STOCK,\
+                    BACKLOG_ARCHIVE
 from agilito.exceptions import NoProjectException, UserHasNoProjectException
 from agilito.forms import UserStoryForm, UserStoryShortForm, gen_TaskLogForm,\
                           TaskForm, TestCaseAddForm, TestCaseEditForm,\
@@ -29,10 +27,7 @@ from django import forms
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.contrib.sites.models import Site
-from django.core.cache import cache
 from django.core.urlresolvers import reverse
-from django.core.xheaders import populate_xheaders
 from django.db.models import Q
 from django.http import Http404
 from django.http import HttpResponse, HttpResponseRedirect
@@ -43,9 +38,8 @@ from django.utils.translation import ugettext as _
 from django.views.generic import create_update
 from django.views.generic.list_detail import object_list, object_detail
 from tagging.models import Tag
-from tagging.utils import parse_tag_input
 from urllib import quote, urlencode
-from urllib import quote_plus
+from agilito.mixins import NotifyMixin
 
 try:
     from collections import defaultdict
@@ -107,7 +101,7 @@ class AgilitoContext(RequestContext):
             self.dictionary["current_story"] = current_story
             self.dictionary["last_page"] = request.path
             self.dictionary["is_viewer"] = is_viewer
-        
+
         RequestContext.__init__(self, self.request, self.dictionary)
 
     def items(self):
@@ -143,6 +137,7 @@ def generic_create(request, project_id, *args, **kwargs):
     # Must send a "AgilitoContext"
     kwargs["extra_context"] = AgilitoContext(request, current_project=project_id)
     return create_update.create_object(request, *args, **kwargs)
+
 
 @restricted
 @is_member
@@ -207,7 +202,7 @@ def delete_attachment(request, project_id, userstory_id, attachment_id):
                                        model=UserStoryAttachment,
                                        template_name="agilito/userstory_delete.html",
                                        post_delete_redirect=url,
-                                       extra_context = {"current_project":att.user_story.project},
+                                       extra_context={"current_project": att.user_story.project},
                                        login_required=True)
 
 def view_attachment(request, project_id, userstory_id, attachment_id, secret=None):
@@ -216,7 +211,7 @@ def view_attachment(request, project_id, userstory_id, attachment_id, secret=Non
     att = UserStoryAttachment.objects.get(id=attachment_id,
                                           user_story__id=userstory_id,
                                           user_story__project__id=project_id)
-                                          
+
 
     if secret:
         if att.get_secret_filepath() != secret:
@@ -289,7 +284,7 @@ def impediment_create(request, project_id, iteration_id, instance=None, task_id=
                 notification.send(notify_list,
                         "agilito_impediment_create",
                         {'creator': request.user,
-                         'iteration_name':it.name,
+                         'iteration_name': it.name,
                          'iteration_url':it.get_absolute_url(),
                          'impediment':impediment,})
             return HttpResponseRedirect(form.cleaned_data["http_referer"])
@@ -297,7 +292,7 @@ def impediment_create(request, project_id, iteration_id, instance=None, task_id=
     else:
 
         url = reverse("iteration_status_with_id", args=[it.project.id, it.id])
-        form = ImpedimentForm(iteration=it, initial={"http_referer" : url}, instance=instance)
+        form = ImpedimentForm(iteration=it, initial={"http_referer": url}, instance=instance)
 
     context = AgilitoContext(request, {"form": form}, current_project=it.project.id)
     return render_to_response("agilito/impediment_edit.html", context_instance=context)
@@ -334,7 +329,7 @@ def release_create(request, project_id, instance=None, is_edit=False):
         return HttpResponseRedirect(form.cleaned_data["http_referer"])
     else:
         url = request.GET.get("last_page", backlog_url)
-        form = ReleaseForm(initial={"http_referer" : url}, project=project, instance=instance)
+        form = ReleaseForm(initial={"http_referer": url}, project=project, instance=instance)
 
     context = AgilitoContext(request, {"form": form}, current_project=project_id)
     return render_to_response("agilito/generic_action.html", context_instance=context)
@@ -348,7 +343,7 @@ def release_edit(request, project_id, release_id):
 @restricted
 @is_member
 def release_delete(request, project_id, release_id):
-    release = Release.objects.get(id=release_id, project__id = project_id)
+    release = Release.objects.get(id=release_id, project__id=project_id)
 
     # set the url to return to after deletion
     url = request.GET.get("last_page", reverse("agilito.views.backlog", args=[project_id]))
@@ -357,8 +352,8 @@ def release_delete(request, project_id, release_id):
                                        model=Release,
                                        template_name="agilito/userstory_delete.html",
                                        post_delete_redirect=url,
-                                       extra_context = {
-                                           "current_project":release.project
+                                       extra_context={
+                                           "current_project": release.project
                                            }
                                        )
 
@@ -368,7 +363,7 @@ def iteration_create(request, project_id, instance=None, is_edit=False):
     if request.method == "POST":
         form = IterationForm(request.POST, instance=instance, project=Project.objects.get(id=project_id))
         form.save()
-        
+
         if  notification:
             notify_list = form.project.project_members.all()
             notify_list = [nl.user for nl in notify_list]
@@ -379,12 +374,14 @@ def iteration_create(request, project_id, instance=None, is_edit=False):
             notification.send(notify_list,
                     notify_name,
                     {'creator': request.user,
-                     'project_name':form.project.name,
-                     'iteration': form,})
+                     'project_name': form.project.name,
+                     'iteration': form, })
         return HttpResponseRedirect(form.cleaned_data["http_referer"])
     else:
         url = request.GET.get("last_page", reverse("agilito.views.backlog", args=[project_id]))
-        form = IterationForm(initial={"http_referer" : url}, instance=instance, project=Project.objects.get(id=project_id))
+        form = IterationForm(initial={"http_referer": url},
+                             instance=instance,
+                             project=Project.objects.get(id=project_id))
 
     context = AgilitoContext(request, {"form": form}, current_project=project_id)
     return render_to_response("agilito/generic_action.html", context_instance=context)
@@ -398,7 +395,7 @@ def iteration_edit(request, project_id, iteration_id):
 @restricted
 @is_member
 def iteration_delete(request, project_id, iteration_id):
-    iteration = Iteration.objects.get(id=iteration_id, project__id = project_id)
+    iteration = Iteration.objects.get(id=iteration_id, project__id=project_id)
 
     # set the url to return to after deletion
     url = request.GET.get("last_page", reverse("agilito.views.backlog", args=[project_id]))
@@ -411,20 +408,20 @@ def iteration_delete(request, project_id, iteration_id):
                                        post_delete_redirect=url,
                                        extra_context={"title": _("Are you sure you want to delete this iteration? This iteration has these stories attached"),
                                            "deleted_objects": delobjs,
-                                           "current_project":iteration.project })
+                                           "current_project": iteration.project})
 
 @restricted
 @is_member
 def userstory_create(request, project_id, iteration_id=None, instance=None, is_edit=False):
     if request.method == "POST":
-        form = UserStoryForm(request.POST, 
+        form = UserStoryForm(request.POST,
                              instance=instance,
                              project=Project.objects.get(id=project_id))
         if form.is_valid():
             story = form.save(commit=False)
             story.project_id = project_id
             story.save()
-            
+
             if  notification:
                 notify_list = story.project.project_members.all()
                 notify_list = [nl.user for nl in notify_list]
@@ -435,15 +432,15 @@ def userstory_create(request, project_id, iteration_id=None, instance=None, is_e
                 notification.send(notify_list,
                         notify_name,
                         {'creator': request.user,
-                         'story': story,})             
+                         'story': story, })
             return HttpResponseRedirect(form.cleaned_data["http_referer"])
     else:
         fallback_url = reverse("agilito.views.backlog", args=[project_id])
         if not (iteration_id is None):
-            fallback_url = reverse("iteration_status_with_id", args=[project_id,iteration_id])
+            fallback_url = reverse("iteration_status_with_id", args=[project_id, iteration_id])
         url = request.GET.get("last_page", fallback_url)
         project = Project.objects.get(id=project_id)
-        form = UserStoryForm(initial={"http_referer" : url},
+        form = UserStoryForm(initial={"http_referer": url},
                              instance=instance,
                              project=project)
 
@@ -473,14 +470,14 @@ def userstory_move(request, project_id, userstory_id):
                     state = UserStory.STATES.DEFINED
 
                 story.copy_to_iteration(data["iteration"], data["copy_tasks"], state)
-            
+
             if  notification:
                 notify_list = story.project.project_members.all()
                 notify_list = [nl.user for nl in notify_list]
                 notification.send(notify_list,
                         "agilito_user_story_move",
                         {'creator': request.user,
-                         'story': instance,})
+                         'story': instance, })
             url = request.GET.get("last_page", story.get_absolute_url())
             return HttpResponseRedirect(url)
     else:
@@ -538,7 +535,7 @@ def userstory_delete(request, project_id, userstory_id):
                                        template_name="agilito/userstory_delete.html",
                                        post_delete_redirect=url,
                                        extra_context={"deleted_objects": delobjs,
-                                           "current_project":current_project
+                                           "current_project": current_project
                                            })
 
 @restricted
@@ -547,7 +544,7 @@ def backlog(request, project_id, states=None, suggest=None):
     """
     if not states:
         states = "%d:%d" % (UserStory.STATES.DEFINED, UserStory.STATES.SPECIFIED)
-        return HttpResponseRedirect( reverse("agilito.views.backlog", args=[project_id, states]))
+        return HttpResponseRedirect(reverse("agilito.views.backlog", args=[project_id, states]))
 
     project = Project.objects.select_related().get(id=project_id)
 
@@ -561,7 +558,7 @@ def backlog(request, project_id, states=None, suggest=None):
         backlog = project.backlog(states_filter)
 
     iterations = project.iteration_set.filter(end_date__gte=datetime.date.today())
-    
+
     newiteration = {}
     if iterations.count() != 0:
         newiteration["starts"] = iterations[iterations.count() - 1].end_date + datetime.timedelta(days=1)
@@ -592,7 +589,7 @@ def backlog(request, project_id, states=None, suggest=None):
             newiteration["ends"] += datetime.timedelta(days= 7 - newiteration["ends"].weekday())
 
     newiteration["name"] = "New Iteration created @ %s" % datetime.date.today()
-    
+
     show_item = not request.session.get('is_viewer', True)
     sidebar = SideBar(request)
 
@@ -630,11 +627,11 @@ def backlog(request, project_id, states=None, suggest=None):
     else:
         args=[project_id, states]
     sidebar.add("Reports",
-                "Backlog in spreadsheet format", 
+                "Backlog in spreadsheet format",
                 reverse("agilito.views.backlog_ods",
                 args=args))
 
-    sidebar.add("Reports", 
+    sidebar.add("Reports",
                 "Backlog Evolution",
                 reverse("agilito.views.product_backlog_chart",
                         args=[project_id, ""]),
@@ -693,7 +690,7 @@ def userstory_detail(request, project_id, userstory_id):
         url = reverse("iteration_status_with_id", args=[project_id, story.iteration.id])
     else:
         url = reverse("product_backlog", args=[project_id])
-        
+
     sidebar.add("Actions", "Delete this story",
         reverse("agilito.views.userstory_delete", args=[project_id, userstory_id]),
         redirect=url,
@@ -714,7 +711,7 @@ def userstory_detail(request, project_id, userstory_id):
         redirect=True,
         props={"class": "add-object"},
         visible=show_item)
-        
+
     if story.iteration:
         sidebar.add("Actions", "Report Impediment",
                 reverse("agilito.views.impediment_create", args=[project_id, story.iteration.id]),
@@ -736,7 +733,7 @@ def userstory_detail(request, project_id, userstory_id):
 
 def get_words():
     """docstring for get_words"""
-    words = []                
+    words = []
     for t in Tag.objects.all():
         words.append('{0}'.format(t.name.encode('utf-8')))
     return words
@@ -794,7 +791,7 @@ def task_create(request, project_id, userstory_id, instance=None):
             return HttpResponseRedirect(form.cleaned_data["http_referer"])
     else:
         url = request.GET.get("last_page", story.get_absolute_url())
-        initial = {"http_referer" : url,
+        initial = {"http_referer": url,
                    "actuals": getattr(instance, "actuals", 0)}
         form = TaskForm(initial=initial, instance=instance,
                         project=Project.objects.get(pk=project_id))
@@ -840,7 +837,7 @@ def task_detail(request, project_id, userstory_id, task_id):
     queryset = Task.objects.filter(user_story__project__pk=project_id, user_story__id=userstory_id)
 
     task = queryset.get(pk=task_id)
-    
+
     if task.user_story.iteration:
         sidebar.add("Actions", "Report Impediment",
                 reverse("agilito.views.impediment_create", args=[project_id, task.user_story.iteration.id]),
@@ -889,7 +886,7 @@ def testcase_create(request, project_id, userstory_id, instance=None):
     else:
         url = request.GET.get("last_page", story.get_absolute_url())
         form = testcase_form_factory(instance=instance,
-                                     initial={"http_referer" : url},
+                                     initial={"http_referer": url},
                                      project=story.project)
 
     context = AgilitoContext(request, {"form": form,
@@ -947,6 +944,7 @@ def testcase_delete(request, project_id, userstory_id, testcase_id):
                                            "current_project" : testcase.user_story.project,
                                            })
 
+
 # ToDo: Remove the userstory_id field? Makes sense?
 @restricted
 def testresult_create(request, project_id, userstory_id, testcase_id, instance=None):
@@ -964,7 +962,7 @@ def testresult_create(request, project_id, userstory_id, testcase_id, instance=N
             instance = TestResult(test_case=testcase, tester=request.user,
                                   date=datetime.datetime.today(), result=0)
         url = request.GET.get("last_page", testcase.get_absolute_url())
-        form = TestResultForm(initial={"http_referer" : url},
+        form = TestResultForm(initial={"http_referer": url},
                               instance=instance,
                               project=testcase.user_story.project)
 
@@ -973,9 +971,11 @@ def testresult_create(request, project_id, userstory_id, testcase_id, instance=N
                             current_project=project_id)
     return render_to_response("agilito/testresult_create.html", context_instance=context)
 
+
 def testresult_edit(request, project_id, userstory_id, testcase_id, testresult_id):
     testresult = TestResult.objects.get(pk=testresult_id)
     return testresult_create(request, project_id, userstory_id, testcase_id, instance=testresult)
+
 
 @restricted
 def testresult_detail(request, project_id, userstory_id, testcase_id, testresult_id):
@@ -990,6 +990,7 @@ def testresult_detail(request, project_id, userstory_id, testcase_id, testresult
                                          test_case__user_story__project__id=project_id)
     return object_detail(request, queryset=queryset, template_name="agilito/testresult_detail.html",
                           object_id=testresult_id, extra_context=context)
+
 
 @restricted
 def testresult_delete(request, project_id, userstory_id, testcase_id, testresult_id):
@@ -1149,7 +1150,7 @@ def iteration_status(request, project_id, iteration_id=None, template="agilito/i
             raise Http404
 
     if iteration is not None:
-        
+
         status = iteration.status()
         dir(status.stories)
         tags = defaultdict(list)
@@ -1158,7 +1159,7 @@ def iteration_status(request, project_id, iteration_id=None, template="agilito/i
                 tags[tag].append("%s-%d" % (item.whatami[:2].lower(), item.id))
         tags = [{"tag": tag, "data": ",".join(tags[tag])} for tag in tags.keys()]
 
-        show_item = not request.session.get('is_viewer', True) 
+        show_item = not request.session.get('is_viewer', True)
         sidebar = SideBar(request)
         sidebar.add("Actions", "Edit this iteration",
             reverse("agilito.views.iteration_edit", args=[project_id, iteration.id]),
@@ -1251,7 +1252,7 @@ def iteration_status(request, project_id, iteration_id=None, template="agilito/i
     else:
         inner_context = {}
 
-    context = AgilitoContext(request, 
+    context = AgilitoContext(request,
                              inner_context,
                              current_project=project_id)
     return render_to_response(template, context_instance=context)
@@ -1266,7 +1267,7 @@ def taskboard(request, project_id, iteration_id=None):
 
 @restricted
 def iteration_daily_hours(request, project_id, username, iteration_id=None):
-    
+
     if iteration_id is None:
         latest_iteration = _get_iteration(project_id)
     else:
@@ -1308,7 +1309,7 @@ def iteration_hours(request, project_id, iteration_id=None):
         sidebar = SideBar(request)
 
         sidebar.add("Reports", "Export Hours", reverse("agilito.views.hours_export", args=[project_id, latest_iteration.id]))
-        
+
         rows = latest_iteration.users_total_status
         user_stories = latest_iteration.userstory_set.all().order_by("rank")
         planned = sum(i.size for i in user_stories if i.size)
@@ -1365,7 +1366,7 @@ def product_backlog_chart(request, project_id, iteration_id):
         q_project = Q(project__id=project_id)
         q_end_date = Q(end_date__gte=start_date)
         q_start_date = Q(start_date__lte=today)
-        
+
         it = Iteration.objects.filter(q_project,
                                       q_end_date,
                                       q_start_date).order_by("end_date")
@@ -1424,8 +1425,8 @@ def product_backlog_chart(request, project_id, iteration_id):
         "completed": completed,
         "xlabels": labels
     }
-    
-    
+
+
     context = AgilitoContext(request, data)
     return render_to_response("agilito/backlog_evolution.html", context_instance=context)
 
@@ -1705,6 +1706,7 @@ def backlog_ods(request, project_id, states=None, suggest=None):
 
     return response
 
+
 @restricted
 @cached
 def iteration_status_table(request, project_id, iteration_id):
@@ -1791,6 +1793,7 @@ def iteration_status_table(request, project_id, iteration_id):
 
     return response
 
+
 @restricted
 @cached
 def iteration_export(request, project_id, iteration_id):
@@ -1812,10 +1815,10 @@ def iteration_export(request, project_id, iteration_id):
     for story in status.stories:
         for task in story.tasks["all"]:
             row += 1
-            for c, d in enumerate([task.id, 
-                                   task.user_story.name, 
-                                   task.name, 
-                                   task.estimate, 
+            for c, d in enumerate([task.id,
+                                   task.user_story.name,
+                                   task.name,
+                                   task.estimate,
                                    task.owner, ", ".join(task.taglist)]):
                 calc.write((row, c), d)
 
@@ -1825,6 +1828,7 @@ def iteration_export(request, project_id, iteration_id):
     calc.save(response)
 
     return response
+
 
 @restricted
 @cached
@@ -1906,6 +1910,7 @@ def hours_export(request, project_id, iteration_id):
 
     return response
 
+
 @restricted
 def iteration_burndown(request, project_id, iteration_id):
     it = Iteration.objects.get(id=iteration_id, project__id=project_id)
@@ -1944,6 +1949,7 @@ def _parseTimelogCmd(spec):
 
     return (None, (key, id))
 
+
 @restricted
 @is_member
 def timelog_mylog(request, project_id):
@@ -1952,7 +1958,8 @@ def timelog_mylog(request, project_id):
                                       current_project=project_id)
 
     return render_to_response("agilito/timelog_mylog_list.html", context_instance=context)
-    
+
+
 @restricted
 @is_member
 def timelog(request, project_id, task_id=None, instance=None):
@@ -1996,9 +2003,9 @@ def timelog(request, project_id, task_id=None, instance=None):
                     _("Task %d updated! More?" % form.cleaned_data["task"].id))
             return HttpResponseRedirect(form.cleaned_data["http_referer"])
         else:
-            form = gen_TaskLogForm(request.user)(initial={"http_referer" : url})
+            form = gen_TaskLogForm(request.user)(initial={"http_referer": url})
     else:
-        form = TaskLogForm(instance=instance, initial={"http_referer" : url})
+        form = TaskLogForm(instance=instance, initial={"http_referer": url})
 
     if task_id is None:
         selectedTask = ''
@@ -2012,16 +2019,19 @@ def timelog(request, project_id, task_id=None, instance=None):
 
     return render_to_response("agilito/timelog.html", context_instance=context)
 
+
 @restricted
 @is_member
 def timelog_task(request, project_id, task_id):
     return timelog(request, project_id, task_id)
+
 
 def dec2str(dec):
     if dec is None:
         return ""
     else:
         return "%.2f" % dec
+
 
 @login_required
 def task_json(request, task_id):
@@ -2035,16 +2045,18 @@ def task_json(request, task_id):
                                  state=task.state))
     return HttpResponse(json, mimetype="application/json")
 
+
 def _mk_time(date_string):
     _date = time.mktime(time.strptime(date_string, "%Y-%m-%d"))
     _date = datetime.date.fromtimestamp(_date)
     return _date
 
+
 def _gen(qset):
     io = StringIO.StringIO()
     writer = csv.writer(io)
-    writer.writerow(["Date","Project","Iteration","User Story", "Task",
-                     "User","Time on Task","Summary"])
+    writer.writerow(["Date", "Project", "Iteration", "User Story", "Task",
+                     "User", "Time on Task", "Summary"])
     yield io.getvalue()
     for item in qset:
         io = StringIO.StringIO()
@@ -2053,6 +2065,7 @@ def _gen(qset):
         yield io.getvalue()
     return
 
+
 def _get_date_from_request(request, request_key, kwargs_dict, kwargs_key):
     date_str = request.GET.get(request_key, None)
     if not (date_str is None):
@@ -2060,6 +2073,7 @@ def _get_date_from_request(request, request_key, kwargs_dict, kwargs_key):
             kwargs_dict[kwargs_key] = _mk_time(date_str)
         except ValueError:
             pass
+
 
 @restricted
 def csv_log(request, project_id, username):
@@ -2083,6 +2097,7 @@ def csv_log(request, project_id, username):
 
     return response
 
+
 @restricted
 def csv_log_for_project(request, project_id):
     kwargs = dict(task__user_story__project__id=project_id)
@@ -2097,6 +2112,7 @@ def csv_log_for_project(request, project_id):
     response["Content-Disposition"] = "attachment; filename=tasklogs-for-project.csv"
 
     return response
+
 
 @login_required
 def csv_log_all_projects(request):
@@ -2115,50 +2131,25 @@ def csv_log_all_projects(request):
 
 from django.views.generic.edit import CreateView
 
-class NotifyMixin(object):
-    
-    valid_type = messages.SUCCESS
-    valid_message = None
-    valid_flash = True
 
-    invalid_type = messages.ERROR
-    invalid_message = _("Some validation errors where found on the submitted form.")
-    invalid_flash = True
-    
-    notify_list = None
-    notify_template = None
-    
-    def show_invalid_flash(self):
-        if self.invalid_flash:
-            messages.add_message(self.request, self.invalid_type, self.invalid_message)
-            
-    def show_valid_flash(self):
-        self.valid_message = _("The %s has been added successfully" % self.object._meta.verbose_name)
-        if self.valid_flash:
-            messages.add_message(self.request, self.valid_type, self.valid_message)
-    
-    def send_notification(self):
-        if notification and self.notify_list and self.notify_template:
-            notification.send(self.notify_list,
-                              self.notify_template,
-                              self.get_context_data())
-    
 class NotifyCreateView(CreateView, NotifyMixin):
     def form_valid(self, form):
         ret = super(NotifyCreateView, self).form_valid(form)
         self.show_valid_flash()
         self.send_notification()
         return ret
-        
+
     def form_invalid(self, form, **kwargs):
         show_invalid_flash()
         return self.render_to_response(self.get_context_data(form=form))
+
 
 class ProjectCreate(NotifyCreateView):
     login_required = True
     form_class = ProjectForm
     template_name = "agilito/project_form.html"
-    
+
+
 @login_required
 def project_delete(request, project_id):
     project = get_object_or_404(Project, pk=project_id)
@@ -2168,18 +2159,19 @@ def project_delete(request, project_id):
         messages.add_message(request, messages.SUCCESS,
                 _("Project has been deleted"))
         return HttpResponseRedirect(reverse("project_list"))
-    
+
+
 def timelog_alert(request, project_id):
     current_time = datetime.datetime.today()
-    if current_time.hour in range(11,18):
-        last_hour = current_time - datetime.timedelta(hours = 1.5)
-    
+    if current_time.hour in range(11, 18):
+        last_hour = current_time - datetime.timedelta(hours=1.5)
+
         all_members = Project.objects.get(pk=project_id)\
                         .project_members\
-                        .select_related('task','timelog')\
-                        .filter(role__in=[30,40])
+                        .select_related('task', 'timelog')\
+                        .filter(role__in=[30, 40])
         pm_list = all_members.exclude(user__tasklog__date__gte=last_hour)
-    
+
         if notification:
             notification.send([pm.user for pm in pm_list],
                               "agilito_timelog_alert",
@@ -2188,11 +2180,12 @@ def timelog_alert(request, project_id):
 
 from django.views.generic import ListView, DetailView
 
+
 class ProjectList(ListView):
     """Generic view to show the list of projects"""
     paginate_by = 20
     template_name = "agilito/project_list.html"
-    
+
     def get_queryset(self):
         """docstring for get_queryset"""
         has_member = Q(project_members__user__pk=self.request.user.id)
@@ -2203,10 +2196,11 @@ class ProjectList(ListView):
 #     """Generic view to show the list of testcases"""
 #     paginate_by = 20
 #     template_name = "agilito/testcase_list.html"
-# 
+#
 #     def get_queryset(self):
 #         publisher = get_object_or_404(Publisher, name__iexact=self.args[0])
 #         return Book.objects.filter(publisher=publisher)
+
 
 class FileList(ListView):
     """Generic view to show the list of files"""
@@ -2217,20 +2211,19 @@ class FileList(ListView):
             context = super(FileList, self).get_context_data(**kwargs)
             context['current_project'] = context['object_list'][0].user_story.project
             return context
-    
 
     def get_queryset(self):
         """docstring for get_queryset"""
         has_member = Q(user_story__project__project_members__pk=self.request.user.id)
         return UserStoryAttachment.objects.filter(has_member).order_by("-id")
 
+
 class ProjectDetail(DetailView):
     context_object_name = "project"
     template_name = "agilito/project_detail.html"
-        
+
     def get_queryset(self):
         """docstring for get_queryset"""
         has_member = Q(project_members__pk=self.request.user.id)
         is_visible = Q(visibility=1)
         return Project.objects.filter(has_member | is_visible).order_by("id")
-    
