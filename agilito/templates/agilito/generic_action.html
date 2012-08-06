@@ -3,8 +3,8 @@
 {% load bootstrap_tags %}
 {% block head_title %}{{object.name}}{% endblock %}
 {% block body %}
-<h2>{{ action }}</h2>
-<h3>{{ object.name }}</h3>
+<h1>{{ action }}</h1>
+<h2>{{ object.name }}</h2>
 
 <form method="post" >{% csrf_token %}
     {{form|as_bootstrap}}
