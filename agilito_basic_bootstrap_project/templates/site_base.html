@@ -22,7 +22,7 @@
                 <li id="tab_kanban"><a href="{% url kanban_board_create %}">{% trans "Kanban" %}</a></li>
                 {% endcomment %}
                 <li id="tab_profile"><a href="{% url profile_detail user.username %}">{% trans "Profile" %}</a></li>
-                <li id="tab_notices"><a href="{% url notification_notices %}">{% trans "Notices" %}{% if notice_unseen_count %} ({{ notice_unseen_count }}){% endif %}</a></li>
+                <li id="tab_notices"><a href="{% url notification_notices %}">{% trans "Notices" %}{% if notice_unseen_count %} <span class="badge badge-info">{{ notice_unseen_count }}</span>{% endif %}</a></li>
             {% endspaceless %}
             </ul>
             {% if project_list and current_project %}
