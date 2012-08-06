@@ -294,7 +294,7 @@ $("#filter").keyup(function() {
                     {% trans "Ends:" %} <input onchange="showSave()" id="iterationends" name="iterationends" value="{{newiteration.ends}}" maxlength="10" size="10" type="text" />
                 </span>
             </form>
-            <table summary="product backlog" cellspacing="0" cellpadding="2" id="user-story-list">
+            <table class="table table-striped" summary="product backlog" cellspacing="0" cellpadding="2" id="user-story-list">
                 <thead>
                     <tr class="nodrop nodrag">
                         <th>{% trans "Mark" %}</th>

@@ -49,7 +49,7 @@
 <h3>{% trans "Test Results" %}</h3>
 <a href="{% url agilito.views.testresult_create current_project.id,current_story.id,object.id %}?last_page={{last_page}}" class="action-link add-object" >{% trans "add a test result" %}</a>
 
-<table class="pretty-table">
+<table class="table table-striped">
     <thead>
         <tr>
             <th>{% trans "Id" %}</th>

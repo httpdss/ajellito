@@ -21,7 +21,7 @@
     {% endif %}
 </h1>
 {% if current_iteration %}
-<table class="pretty-table">
+<table class="table table-striped">
     <tr>
         <td colspan="2">
             {{ current_project.name }} &raquo;
@@ -78,7 +78,7 @@
 </table>
 
 {% if rows_bill %}
-<table class="pretty-table" cellspacing="0" cellpadding="2">
+<table class="table table-striped" cellspacing="0" cellpadding="2">
     <thead>
         <tr>
             <th>{% trans "Team Status" %}</th>

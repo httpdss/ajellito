@@ -1,6 +1,6 @@
 {% load markup %}
 {% load humanize %}
-<table class="pretty-table">
+<table class="table table-striped">
     <tr class="{% cycle even,odd%}">
         <td>TR{{object.id}}</td>
         <td><a href="{{testcase.get_absolute_url}}">{{object.test_case.name}}</a></td>
