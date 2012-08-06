@@ -11,11 +11,6 @@ table#user-story-list .edit-button {
     text-align: center;
 }
 
-thead th {
-    vertical-align:top;
-    padding-left:0.5em;
-    text-align:left;
-}
 
 td img {
     vertical-align:middle;
@@ -26,39 +21,13 @@ td.name {
     width:50%;
 }
 
-tbody td {
-    font-weight:normal;
-    padding:0 0.5em;
-    vertical-align:top;
-}
-
 table#user-story-list tbody td, table#impediment-list tbody td, table.pretty-table tbody td {
     height:35px;
     vertical-align:middle;
 }
+
 tr#resolved-impediments td {
  background-color:#C9E27D;
-}
-
-.mceEditor tbody td {
-    padding:0;
-}
-
-form tbody td {
-    border-right:none;
-}
-
-tr.even td { 
-    background: #ddeeff;
-}
-tr.child.even td { 
-    background: #ecf4fc;
-}
-tr.odd td { 
-    background: #d8e9f9;
-}
-tr.child.odd td { 
-    background: #fffefb;
 }
 
 .estimates th {
