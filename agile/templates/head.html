@@ -21,7 +21,7 @@
 				<a href="#">MENU</a>
 			</div>
 			<div class="graphs topMenu">
-				<a href="/kanban/graphs">Zobrazit grafy</a>&nbsp;|&nbsp;
+				<a href="/kanban/graphs">View Graphs</a>&nbsp;|&nbsp;
 				<a href="/kanban/logout/">Logout</a>&nbsp;|&nbsp;
 				<a href="/kanban/profile/">
 					{% if loguser.first_name == '' %}
@@ -34,7 +34,7 @@
 				{% if users %}
 				&nbsp;|&nbsp;
 				<select name="userTicket" id="userTicket">
-					<option value="0" selected="selected">Vše</option>
+					<option value="0" selected="selected">All</option>
 					{% for u in users %}
 						<option value="{{ u.username }}">
 						{% if u.first_name == '' %}
