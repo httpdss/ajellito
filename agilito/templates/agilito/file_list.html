@@ -1,5 +1,6 @@
 {% extends "agilito/base.html" %}
 {% load i18n %}
+{% load pagination_tags %}
 
 {% block head_title %}{% trans "Files" %}{% endblock %}
 {% block body_class %}agilito files{% endblock %}
@@ -11,10 +12,11 @@
   <h2>{% trans "Files" %}</h2>
 
     {% if object_list %}
+
+    {% autopaginate object_list 20 %}
     <table class="table table-striped" id="user-story-list" >
         <tbody>
             {% for object in object_list %}
-            
             <tr class="{% cycle even,odd %}">
                 <td style="width:20px;">
                     <span rel="{{object.attachment}}" class="icon">&nbsp;</span>
@@ -46,19 +48,10 @@
             {% endfor %}
         </tbody>
     </table>
-    {% if page_range %}
-    <ul>
-        {% for page in page_range %}
-            <li><a href="{% url agilito_project_files %}?page={{page}}">{{ page }}</a></li>
-        {% endfor %}
-    </ul>
-    {% endif %}
-
-
+    {% paginate %}
     {% else %}
     <p><strong>{% trans "No results found" %}</strong></p>
     {% endif %}
-  
 {% endblock %}
 
 {% block js %}
