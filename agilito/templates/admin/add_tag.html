@@ -1,0 +1,14 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block content %}
+
+<p>{% trans "Select tag to apply" %}:</p>
+<form action="" method="post">{% csrf_token %}
+    {{ tag_form }}
+    <p>{% trans "The tag will be applied to" %}:</p>
+    <ul>{{ tasks|unordered_list }}</ul>
+    <input type="hidden" name="action" value="add_tag" />
+    <input type="submit" name="apply" value="{% trans 'Apply tag' %}" />
+</form>
+{% endblock %}

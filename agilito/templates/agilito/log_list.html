@@ -1,0 +1,29 @@
+{% load i18n %}
+{% load pagination_tags %}
+
+{% if logs %}
+{% autopaginate logs 20 %}
+<table class="table table-striped" id="user-story-list" >
+    <tbody>
+        {% for log in logs %}
+        <tr class="{% cycle even,odd %}">
+            <td width="25%">{{log.date}}</td>
+            <td width="10%">{{log.time_on_task}}</td>
+            <td width="10%">{{log.old_remaining}}</td>
+            <td width="40%">
+                {{log.summary}} 
+                {% ifnotequal show_user 1 %}
+                (P{{log.project.pk}} - IT{{log.iteration.pk}} - {{log.task}})
+                {% endifnotequal %}
+                </td>
+            {% ifequal show_user 1 %}
+            <td width="15%">{{log.owner}}</td>
+            {% endifequal %}
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% paginate %}
+{% else %}
+<p><strong>{% trans "You have not logged your hours" %}</strong></p>
+{% endif %}

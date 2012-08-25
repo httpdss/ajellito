@@ -1,0 +1,88 @@
+<a href="#" id="addTicket" class="addTicketButton radius-all">Přidat nový ticket</a>
+<div id="addticketRoot" class="radius-all">
+	<form action="/kanban/kanban/addticket/" method="post">
+		{% csrf_token %}
+		<div class="row">
+			<label for="service">Služba:</label>
+			<div class="item">
+				<input id="service" type="text" name="service" value="" />
+			</div>
+			<div class="clear"></div>
+		</div>
+		{% if loguser.is_superuser %}
+			<div class="row">
+				<label for="user">Vlastník:</label>
+				<div class="item">
+					<select id="user" name="user" multiple="multiple">
+						{% for u in users %}
+							{% if u.first_name == '' %}
+								<option value="{{ u.id }}">{{ u.username }}</option>
+							{% else %}
+								<option value="{{ u.id }}">{{ u.first_name }}&nbsp;{{ u.last_name }}</option>
+							{% endif %}
+						{% endfor %}
+					</select>
+				</div>
+				<div class="clear"></div>
+			</div>
+		{% else %}
+			{% if loguser.is_staff %}
+				<div class="row">
+					<label for="user">Vlastník:</label>
+					<div class="item">
+						{% if loguser.first_name == '' %}
+							<strong>{{ loguser.username }}</strong>
+						{% else %}
+							<strong>{{ loguser.first_name }}&nbsp;{{ loguser.last_name }}</strong>
+						{% endif %}
+						<input type="hidden" name="user" value="{{ loguser.id }}" />
+					</div>
+					<div class="clear"></div>
+				</div>
+			{% endif %}
+		{% endif %}
+		<div class="row">
+			<label for="cmlurl">CML URL:</label>
+			<div class="item">
+				<input id="cmlurl" type="text" name="cmlurl" value="" />
+			</div>
+			<div class="clear"></div>
+		</div>
+		<div class="row">
+			<label for="difficulty">Obtížnost:</label>
+			<div class="item">
+				<select name="difficulty">
+					<option value="1">1</option>
+					<option value="2">2</option>
+					<option value="3">3</option>
+					<option value="4">4</option>
+					<option value="5">5</option>
+					<option value="6">6</option>
+					<option value="7">7</option>
+					<option value="8">8</option>
+					<option value="9">9</option>
+					<option value="10">10</option>
+				</select>
+			</div>
+			<div class="clear"></div>
+		</div>
+		<div class="row">
+			<label for="description">Popis:</label>
+			<div class="item">
+				<textarea id="description" name="description" cols="3" rows="5"></textarea>
+			</div>
+			<div class="clear"></div>
+		</div>
+		<div class="row">
+			<label>&nbsp;</label>
+			<div class="item"><input type="submit" value="Odeslat" /></div>
+		</div>
+	</form>
+</div>
+<script type="text/javascript">
+	var ato = {
+		opener : 'addTicket',
+		mainElm : 'addticketRoot'
+	};
+	var addticketopen = new Kanban.Opener(ato);
+</script>

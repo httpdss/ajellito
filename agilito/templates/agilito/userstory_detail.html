@@ -52,7 +52,7 @@
     {% if object.iteration %}
     <li id="breadcrumb-iteration"><a href="{{ object.iteration.get_absolute_url }}">{{ object.iteration.name }}</a> &gt; </li> 
     {% else %}
-    <li id="breadcrumb-backlog"><a href="/{{ object.project_id }}/backlog">{% trans "Backlog" %}</a> &gt; </li>
+    <li id="breadcrumb-backlog"><a href="{% url product_backlog object.project_id %}">{% trans "Backlog" %}</a> &gt; </li>
     {% endif %}
     <li id="breadcrumb-story">{{ object.name }}</li>
     <li class="visualClear" />
@@ -140,7 +140,7 @@
 
 <h3 id="tasks">{% trans "Tasks" %}</h3>
   {% if object.task_set.all %}
-  <table class="pretty-table">
+  <table class="table table-striped">
       <thead>
           <tr>
               <th>{% trans "Id" %}</th>
@@ -167,7 +167,7 @@
 {% endif %}
 <h3 id="test-cases">{% trans "Test Cases" %}</h3>
 {% if object.testcase_set.all %}
-<table class="pretty-table" >
+<table class="table table-striped" >
 <thead>
     <tr>
         <th>{% trans "Id" %}</th>

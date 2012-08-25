@@ -1,14 +1,14 @@
 {% extends "agilito/base.html" %}
 {% load i18n %}
-{% load uni_form_tags %}
+{% load bootstrap_tags %}
 {% block head_title %} {% trans "Search" %} {% if query %} {% trans "Results" %} {% endif %} {% endblock %}
-{% block select_tab %} "search" {% endblock %}
+{% block body_class %}search agilito{% endblock %}
 
 {% block body %}
   
   <h2>{% trans "Search for Uses Stories, Tasks, Test Cases" %}</h2>
 
-  <form action="." method="GET" class="uniForm">
+  <form action="." method="GET" >
       <div class="inlineLabels">
           <div class="ctrlHolder">
               <label for="query">{% trans "Search:" %}</label>
@@ -20,6 +20,7 @@
                   <option value="User Story">{% trans "User Stories" %}</option>
                   <option value="Task">{% trans "Tasks" %}</option>
                   <option value="Test Case">{% trans "Test Cases" %}</option>
+                  <option value="Attachment">{% trans "Attachment" %}</option>
               </select>
           </div>
           <div class="ctrlHolder">
@@ -33,8 +34,8 @@
               </select>
           </div>
       </div>
-      <div class="buttonHolder">
-          <input class="primaryAction" type="submit" value="{% trans "Search" %}"/>
+      <div class="form-actions actions">
+          <input type="submit" class="btn primary save" value="{% trans "Search" %}" />
       </div>
   </form>
   

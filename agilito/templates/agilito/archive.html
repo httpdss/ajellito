@@ -10,8 +10,8 @@
 <ul>{{ deleted_objects|unordered_list }}</ul>{% endif %}
 <form method="post">{% csrf_token %}
   <input type="hidden" name="post" value="yes" />
-  <div class="buttonHolder">
-      <input class="primaryAction" type="submit" value="{% trans "Yes, I'm sure" %}" />
-  </div>
+  <div class="form-actions actions">
+        <input type="submit" class="btn btn-primary primary" value="{% trans "Yes, I'm sure" %}" />
+    </div>
 </form>
 {% endblock %}

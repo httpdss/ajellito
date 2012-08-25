@@ -1,0 +1,198 @@
+
+	{% include "head.html" %}
+				
+		{% if error_message %}
+			<div class="error">
+				<p>{{ error_message }}</p>
+				{% if last_sprint %}
+					<p>Poslední sprint byl ukončen {{ last_sprint.date_to|date:"d.n.Y" }}</p>
+				{% endif %}
+			</div>
+		{% else %}
+			<div class="addNewTicket">
+				{% include "tickets/addticket.html" %}
+			</div>
+		{% endif %}
+		
+		{% if error %}
+			<p class="error">{{ error }}</p>
+		{% endif %}
+		<div id="tablesTickets">
+			<div class="collumn todo radius-all-small" id="todo">
+				<h1>TODO</h1>
+				{% if todo %}
+					{% for ticket in todo %}
+						<div class="ticket radius-all" id="ticket-{{ ticket.id }}">
+							<h3>{{ ticket.service }}</h3>
+							<p class="date">{{ ticket.pub_date|date:"d.n.Y" }}</p>
+							<div class="clear"></div>
+							<p><a href="{{ ticket.cmlurl }}">CML</a></p>
+							<p>{{ ticket.description }}</p>
+							<div class="owners">
+								{% for u in ticket.users.all %}
+									{% if u.get_profile.avatarImg %}
+										<p><img src="{{ u.get_profile.avatarImg|cut:'/www/kanban' }}" alt="{{ u.username }}" title="{{ u.username }}" width="50" /></p>
+									{% else %}
+										{{ u.username }}
+									{% endif %}
+								{% endfor %}
+								<div class="clear"></div>
+							</div>
+							<!--- <p>{{ ticket.description }}</p> --->
+							<a href="#" class="avatar">
+								<span class="zoom"></span>
+							</a>
+						</div>
+					{% endfor %}
+					<div class="clear"></div>
+				{% endif %}
+			</div>
+			
+			<div class="collumn devel radius-all-small" id="devel">
+				<h1>DEVEL ({{ sprint.0.max_develop }})</h1>
+				{% if devel %}
+					{% for ticket in devel %}
+						<div class="ticket radius-all" id="ticket-{{ ticket.id }}">
+							<h3>{{ ticket.service }}</h3>
+							<p class="date">{{ ticket.devel_date|date:"d.n.Y" }}</p>
+							<div class="clear"></div>
+							<p><a href="{{ ticket.cmlurl }}">CML</a></p>
+							<p>{{ ticket.description }}</p>
+							<div class="owners">
+								{% for u in ticket.users.all %}
+									{% if u.get_profile.avatarImg %}
+										<p><img src="{{ u.get_profile.avatarImg|cut:'/www/kanban' }}" alt="{{ u.username }}" title="{{ u.username }}" width="50" /></p>
+									{% else %}
+										{{ u.username }}
+									{% endif %}
+								{% endfor %}
+								<div class="clear"></div>
+							</div>
+							<!--- <p>{{ ticket.description }}</p> --->
+							<a href="#" class="avatar">
+								<span class="zoom"></span>
+							</a>
+						</div>
+					{% endfor %}
+					<div class="clear"></div>
+				{% endif %}
+			</div>
+			
+			<div class="collumn done radius-all-small" id="done">
+				<h1>DONE</h1>
+				{% if done %}
+					{% for ticket in done %}
+						<div class="ticket radius-all" id="ticket-{{ ticket.id }}">
+							<h3>{{ ticket.service }}</h3>
+							<p class="date">{{ ticket.done_date|date:"d.n.Y" }}</p>
+							<div class="clear"></div>
+							<p><a href="{{ ticket.cmlurl }}">CML</a></p>
+							<p>{{ ticket.description }}</p>
+							<div class="owners">
+								{% for u in ticket.users.all %}
+									{% if u.get_profile.avatarImg %}
+										<p><img src="{{ u.get_profile.avatarImg|cut:'/www/kanban' }}" alt="{{ u.username }}" title="{{ u.username }}" width="50" /></p>
+									{% else %}
+										{{ u.username }}
+									{% endif %}
+								{% endfor %}
+								<div class="clear"></div>
+							</div>
+							<!--- <p>{{ ticket.description }}</p> --->
+							<a href="#" class="avatar">
+								<span class="zoom"></span>
+							</a>
+						</div>
+					{% endfor %}
+					<div class="clear"></div>
+				{% endif %}
+			</div>
+			<div class="clear"></div>
+			
+			<div id="ticketDetailBox" class="addNewTicket">
+				{% if loguser.is_staff %}
+					<p>
+						<a href="#" class="detail-info">info</a>&nbsp;|&nbsp;
+						<a href="#" class="detail-form">edit</a>
+						{% if loguser.is_superuser %}
+							&nbsp;|&nbsp;<a href="#" class="detail-remove">smazat</a>
+						{% endif %}
+					</p>
+				{% endif %}
+				<form action="/kanban/kanban/ticketedit/" method="post">
+					{% csrf_token %}
+					<input type="hidden" class="ticketId" name="ticketId" value="" />
+					<div class="item" id="td-dates"></div>
+					<div class="row">
+						<label for="td-table">Table: </label>
+						<div class="item" id="td-table">
+							<span class="detailInfo"></span>
+							<select name="tables">
+							</select>
+						</div>
+						<div class="clear"></div>
+					</div>
+					<div class="row">
+						<label for="td-users">Vlastník: </label>
+						<div class="item" id="td-users">
+							<span class="detailInfo"></span>
+							<select name="users" multiple="multiple">
+							</select>
+						</div>
+						<div class="clear"></div>
+					</div>
+					<div class="row">
+						<label for="td-service">Služba: </label>
+						<div class="item" id="td-service">
+							<span class="detailInfo"></span>
+							<input type="text" name="service" value="" />
+						</div>
+						<div class="clear"></div>
+					</div>
+					<div class="row">
+						<label for="td-cml">CML: </label>
+						<div class="item" id="td-cml">
+							<span class="detailInfo"></span>
+							<input type="text" name="cmlurl" value="" />
+						</div>
+						<div class="clear"></div>
+					</div>
+					<div class="row">
+						<label for="td-dificulty">Obtížnost: </label>
+						<div class="item" id="td-dificulty">
+							<span class="detailInfo"></span>
+							<input type="text" name="difficulty" value="" />
+						</div>
+						<div class="clear"></div>
+					</div>
+					<div class="row">
+						<label for="td-desc">Popis: </label>
+						<div class="item" id="td-desc">
+							<span class="detailInfo"></span>
+							<textarea name="description"></textarea>
+						</div>
+						<div class="clear"></div>
+					</div>
+					<div class="row">
+						<label>&nbsp;</label>
+						<div class="item">
+							<input type="submit" value="Odeslat" />
+						</div>
+						<div class="clear"></div>
+					</div>
+				</form>
+			</div>
+			
+			<script type="text/javascript">
+				var opt = {
+					todoElm : 'todo',
+					develElm : 'devel',
+					doneElm : 'done'
+				};
+				var tickets = new Kanban.Tickets(opt);
+				var ticketDetail = new Kanban.TicketDetail('ticketDetailBox', {{ loguser.id }}, '{{ loguser.is_superuser }}', 1);
+				var usersTickets = new Kanban.UsersTickets('userTicket');
+			</script>
+		</div>	
+		
+	{% include "foot.html" %}

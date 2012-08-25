@@ -1,8 +1,15 @@
 {% extends "agilito/base.html" %}
 {% load i18n %}
-{% load uni_form_tags  %}
+{% load bootstrap_tags  %}
 
 {% block body_class %}timelog agilito{% endblock %}
+
+{% block subnav %}
+<ul>
+    <li><a href="{% url timelog current_project.pk %}">{% trans "Log Hours" %}</a></li>
+    <li><a href="{% url agilito_tasklog_mylog current_project.pk %}">{% trans "My Log" %}</a></li>
+</ul>
+{% endblock %}
 
 {% block js %}
 <script type="text/javascript">
@@ -73,7 +80,7 @@ $(window).ready(function(){
 {% if message %}
 <p class="notice">{{ message }}</p>
 {% endif %}
-<form method="post" action="" class="uniForm">{% csrf_token %}
+<form method="post" action="" >{% csrf_token %}
 
     <div id="timelog-wrapper">
         <div>
@@ -86,14 +93,14 @@ $(window).ready(function(){
                     <p id="task-name"></p>
             {% for field in form %}
             {% ifnotequal field.name "taskmenu" %}
-                {{ field|as_uni_field }}
+                {{ field }}
             {% endifnotequal %}
             {% endfor %}
         </fieldset>
     </div>
 
-    <div class="buttonHolder">
-        <input type="submit" class="primaryAction save" value="{% trans "Apply" %}"/>
-    </div>
+    <div class="form-actions actions">
+    <input type="submit" class="btn primary save" value="{% trans "Apply" %}" />
+</div>
 </form>
 {% endblock %}

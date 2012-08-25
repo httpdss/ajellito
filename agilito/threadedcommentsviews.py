@@ -8,7 +8,7 @@ from django.contrib import messages
 from django.conf import settings
 from django.utils.translation import ugettext as _
 from django.contrib.contenttypes.models import ContentType
-
+from django.contrib.auth.models import User
 import logging
 
 logger = logging.getLogger('agilito.threadedcommentsview')
@@ -55,21 +55,19 @@ def comment(*args, **kwargs):
     http_response = threadedcomments.views.comment(*args, **kwargs)
     messages.add_message(args[0], messages.SUCCESS , _("Comment added succesfully"))
     if notification:
-        sendto_ids = args[0].POST.get('sendto')
+        sendto_ids = args[0].POST.getlist('sendto')
         if sendto_ids:
             ct = get_object_or_404(ContentType, id=int(kwargs['content_type']))
             obj = ct.get_object_for_this_type(id=int(kwargs['object_id']))
-            
-            notify_list = obj.project.project_members.filter(pk__in=sendto_ids)
+            ids = [int(user_id) for user_id in sendto_ids]
+            notify_list = User.objects.filter(pk__in=ids)
+
             notification.send(notify_list,
                              "agilito_comment_create",
                              {'creator': args[0].user,
                               'comment': args[0].POST.get('comment'),
                               'object_url': obj.get_absolute_url(),
                               'object': obj})
-        
-
-        
     return http_response
 
 #@restricted

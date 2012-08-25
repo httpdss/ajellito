@@ -4,12 +4,12 @@
 
 {% block body_class %}agilito{% endblock %}
 
-{% block subnav %}
-<!-- TODO: add menu links to base.html -->
+{% block extra_body %}
 {% if user.is_authenticated %}
 {% if sidebar %}
+<div class="subnav subnav-fixed">
+<ul class="nav nav-pills">
 {% for label, section in sidebar.items %}
-<ul>
     {% for entry in section %}
     <li><a href="{{entry.url}}"
             {% for k, v in entry.properties.items %}
@@ -17,23 +17,11 @@
             {% endfor %}
             >{{entry.label}}</a></li>
     {% endfor %}
-</ul>
 {% endfor %}
-{% else %}
-
-<ul>
-    <li>&nbsp;</li>
 </ul>
+</div>
 {% endif %}
-{% else %}
-<ul>
-    <li>&nbsp;</li>
-</ul>
 {% endif %}
-
-{% endblock %}
-
-{% block extra_body %}
 <script type="text/javascript" src="{{STATIC_URL}}agilito/js/treeTable/src/javascripts/jquery.treeTable.js"></script>
 <script type="text/javascript" src="{{STATIC_URL}}agilito/js/jquery.clickmenu.js"></script>
 <script type="text/javascript" src="{{STATIC_URL}}agilito/js/json2.js"></script>
@@ -165,31 +153,20 @@ function hide_reply_form(comment_id, url, person_name) {
 {% endblock %}
 
 {% block extra_head %}
+
+<link rel="stylesheet" href="{{STATIC_URL}}agilito/css/ui-lightness/jquery-ui-1.8.9.custom.css" type="text/css" media="screen" />
 <link rel="stylesheet" href="{{STATIC_URL}}agilito/js/treeTable/src/stylesheets/jquery.treeTable.css" type="text/css" media="screen" />
 <link rel="stylesheet" href="{{STATIC_URL}}agilito/css/base.css" type="text/css" media="screen" />
-<link rel="stylesheet" href="{{STATIC_URL}}agilito/css/tabs.css" type="text/css" media="screen" />
 <link rel="stylesheet" href="{{STATIC_URL}}agilito/css/tables.css" type="text/css" media="screen" />
-<link rel="stylesheet" href="{{STATIC_URL}}agilito/css/clickmenu.css" type="text/css" media="screen" />
 <link rel="stylesheet" href="{{STATIC_URL}}agilito/css/comments.css" type="text/css" media="screen" />
 <link rel="stylesheet" href="{{STATIC_URL}}agilito/css/content.css" type="text/css" media="screen" />
 <link rel="stylesheet" href="{{STATIC_URL}}agilito/css/forms.css" type="text/css" media="screen" />
-<link rel="stylesheet" href="{{STATIC_URL}}agilito/css/zoomable.css" type="text/css" media="screen" />
-<link rel="stylesheet" href="{{STATIC_URL}}agilito/css/ui-lightness/jquery-ui-1.8.9.custom.css" type="text/css" media="screen" />
+
 {% block link %}{% endblock %}
 {% block css %}{% endblock %}
 {% endblock %}
-
-{% block left_tabs %}
-    <ul class="tabs">{% spaceless %}
-        <li id="tab_projects"><a href="{% url project_list  %}">{% trans "Projects" %}</a></li>
-        {% if current_project %}
-        <li id="tab_backlog"><a href="{% url product_backlog current_project.pk %}">{% trans "Backlog" %}</a></li>
-        <li id="tab_iteration"><a href="{% url current_iteration_status current_project.pk %}">{% trans "Iteration" %}</a></li>
-        <li id="tab_timelog"><a href="{% url timelog current_project.pk %}">{% trans "Log" %}</a></li>
-        <li id="tab_hours"><a href="{% url current_iteration_hours current_project.pk %}">{% trans "Hours" %}</a></li>
-        <li id="tab_files"><a href="{% url agilito_project_files current_project.pk %}">{% trans "Files" %}</a></li>
-        {% endif %}
-    {% endspaceless %}</ul>
+{% comment %}
+{% block projectnav %}
     {% if project_list and current_project %}
     <select id="project-selection">
         {% for project in project_list %}
@@ -197,4 +174,19 @@ function hide_reply_form(comment_id, url, person_name) {
         {% endfor %}
     </select>
     {% endif %}
+{% endblock projectnav %}
+{% block agilitonav %}
+    <ul class="dropdown-menu">{% spaceless %}
+        <li id="tab_projects"><a href="{% url project_list %}">{% trans "Projects" %}</a></li>
+        {% if current_project and not is_viewer %}
+        <li id="tab_backlog"><a href="{% url product_backlog current_project.pk %}">{% trans "Backlog" %}</a></li>
+        <li id="tab_iteration"><a href="{% url current_iteration_status current_project.pk %}">{% trans "Iteration" %}</a></li>
+        <li id="tab_timelog"><a href="{% url timelog current_project.pk %}">{% trans "Log" %}</a></li>
+        <li id="tab_hours"><a href="{% url current_iteration_hours current_project.pk %}">{% trans "Hours" %}</a></li>
+        <li id="tab_files"><a href="{% url agilito_project_files current_project.pk %}">{% trans "Files" %}</a></li>
+        <li id="tab_search"><a href="{% url agilito_search current_project.pk %}">{% trans "Search" %}</a></li>
+        {% endif %}
+    {% endspaceless %}
+</ul>
 {% endblock %}
+{% endcomment %}

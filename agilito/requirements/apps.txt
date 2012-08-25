@@ -9,3 +9,4 @@ django-avatar
 Markdown
 Pygments
 django-shorturls
+pinax-theme-bootstrap==2.0.4

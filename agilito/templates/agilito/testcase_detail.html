@@ -37,16 +37,19 @@
     </dd>        
 
     <dt>{% trans "Precondition" %}</dt> 
-    <dd class=""><pre>{{object.precondition|safe}}</pre></dd>
+    <dd><pre>{{object.precondition|safe}}</pre></dd>
 
     <dt>{% trans "Steps" %}</dt> 
-    <dd class=""><pre>{{object.steps|safe}}</pre></dd>
+    <dd><pre>{{object.steps|safe}}</pre></dd>
+
+    <dt>{% trans "Postcondition" %}</dt>
+    <dd><pre>{{object.postcondition|safe}}</pre></dd>
 
 </dl>
 <h3>{% trans "Test Results" %}</h3>
 <a href="{% url agilito.views.testresult_create current_project.id,current_story.id,object.id %}?last_page={{last_page}}" class="action-link add-object" >{% trans "add a test result" %}</a>
 
-<table class="pretty-table">
+<table class="table table-striped">
     <thead>
         <tr>
             <th>{% trans "Id" %}</th>
