@@ -1,29 +1,32 @@
 {% extends "agilito/base.html" %}
 {% load i18n %}
 {% load pagination_tags %}
-{% block subnav %}
-<ul>
-	<li>
-		<a href="{% url project_create %}">{% trans "Add Project" %}</a>
-	</li>
-</ul>
-{% endblock %}
+
+
+{% block extra_body %}
+<div class="subnav subnav-fixed">
+    <ul class="nav nav-pills">
+        <li>
+            <a href="{% url project_create %}">{% trans "Add Project" %}</a>
+        </li>
+    </ul>
+</div>
+{% endblock extra_body %}
 
 {% block head_title %}{% trans "Projects" %}{% endblock %}
 {% block body_class %}agilito projects{% endblock %}
 
 {% block body %}
-  
-  <h2>{% trans "Projects" %}</h2>
+  <h2>{% trans "All Projects" %}</h2>
 
     {% if object_list %}
     {% autopaginate object_list 20 %}
-    <table class="pretty-table" id="user-story-list" cellspacing="0" cellpadding="2">
+    <table class="table table-striped" id="user-story-list">
         <tbody>
             {% for object in object_list %}
             <tr class="{% cycle even,odd %}">
                 <td class="name"><a href="{{object.get_absolute_url}}">{{object.name}}</a></td>
-            </tr> 
+            </tr>
             {% endfor %}
         </tbody>
     </table>

@@ -4,11 +4,11 @@
 {% block body %}
 
 <h2><small>{% trans "adding/editing a task to" %}</small><br /> {{ story }}</h2>
-<form method="post" class="uniForm">{% csrf_token %}
+<form method="post" >{% csrf_token %}
 
 {% include "agilito/generic_form.html" %}
-<div class="buttonHolder">
-    <input type="submit" class="primaryAction save" value="{% trans "Save" %}"/>
+<div class="form-actions actions">
+    <input type="submit" class="btn primary save" value="{% trans "Save" %}" />
 </div>
 </form>
 {% endblock %}

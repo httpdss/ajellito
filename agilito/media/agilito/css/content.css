@@ -1,26 +1,8 @@
-a {
-    text-decoration:none;
-}
-
-a:hover{
-    text-decoration:underline;
-}
-
-
-a img {
-    border: 0;
-}
-
 #tasks-select, #tasks-select li, #tasks-select li li, #tasks-select li li li {
     background: none;
     clear: none;
     list-style: none;
     font: normal 100% "Lucida Sans Unicode",sans-serif;
-}
-
-td {
-    vertical-align: top;
-    text-align: left 
 }
 
 #iteration-data {
@@ -30,7 +12,7 @@ td {
 
 #iteration-data .tags li {
     padding:2px 6px;
-    margin:2px 2px;    
+    margin:2px 2px;
 }
 #iteration-data .tags li:hover, #iteration-data .tags li.selected {
     background:#def;
@@ -169,6 +151,7 @@ ul.tags span.small {
 .starved td{
     background:orange !important;
 }
+
 .blocked .name{
     background:#f99 url(../img/blocked.png) no-repeat !important;
     background-position: left center !important;

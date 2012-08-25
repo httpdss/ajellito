@@ -3,10 +3,6 @@
 }
 
 .comments_section textarea {
-    width:98%;
     height:70px;
 }
 
-.comments_section .ctrlHolder {
-    margin-bottom:5px;
-}

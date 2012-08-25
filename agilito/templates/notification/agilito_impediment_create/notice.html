@@ -1,0 +1,5 @@
+{% load i18n %}
+{% load account_tags %}
+{% user_display creator as creator_display %}
+{% url profile_detail username=creator.username as creator_url %}
+{% blocktrans with task.get_absolute_url as task_url %}<a href="{{ creator_url }}">{{ creator_display }}</a> has added a task '<a href="{{ task_url }}">{{ task }}</a>'.{% endblocktrans %}

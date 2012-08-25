@@ -31,6 +31,6 @@ class LoginRequiredMiddleware:
                 return HttpResponseRedirect(settings.LOGIN_URL)
         else:
             if request.session.get('is_viewer', None) is None:
-                request.session["is_viewer"] = ProjectMember.objects\
-                                                    .get(user=request.user)\
-                                                    .is_viewer()
+                #member = ProjectMember.objects.all(user=request.user)[0]
+                request.session["is_viewer"] = False #member.is_viewer()
+                

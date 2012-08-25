@@ -21,7 +21,7 @@
     {% endif %}
 </h1>
 {% if current_iteration %}
-<table class="pretty-table">
+<table class="table table-striped">
     <tr>
         <td colspan="2">
             {{ current_project.name }} &raquo;
@@ -56,7 +56,7 @@
     </tr>
     <tr>
         <td>{% trans "Accepted" %}</td>
-        <td>{{current_iteration.us_accepted}} ({{current_iteration.us_accepted_percentage|floatformat:0 }} %)</td>
+        <td>{{current_iteration.status.accepted}} ({{current_iteration.status.stories_accepted_percentage|floatformat:0 }} %)</td>
     </tr>
     <tr>
         <td>{% trans "Task Estimated:" %}</td> 
@@ -78,7 +78,7 @@
 </table>
 
 {% if rows_bill %}
-<table class="pretty-table" cellspacing="0" cellpadding="2">
+<table class="table table-striped" >
     <thead>
         <tr>
             <th>{% trans "Team Status" %}</th>

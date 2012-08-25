@@ -22,6 +22,7 @@
 
 <script type="text/javascript">
 var selected_tag_ids;
+
 $(window).ready(function(){
     $("#user-story-list").treeTable({initialState: "expanded", treeColumn: 1});
     $("#impediment-list").treeTable();
@@ -41,6 +42,24 @@ $(window).ready(function(){
         $('.task-tag').removeClass('selected');
         $('.task-tag a').css({fontWeight:"normal"});
     })
+    
+    $('.collapse-all').click(function(){
+        $('.reset-tags').trigger('click');
+        $("tr.userstory").each(function() {
+            $(this).removeClass("expanded");
+            $(this).collapse();
+        });
+        return false;
+    });
+    
+    $('.expand-all').click(function(){
+        $('.reset-tags').trigger('click');
+        $("tr.userstory").each(function() {
+            $(this).addClass("expanded");
+            $(this).expand();
+        });
+        return false;
+    });
 });
 
 function highlightTag(ids)
@@ -113,7 +132,7 @@ function highlightTag(ids)
         {% include "agilito/iteration_status_header.html" %}
     </div>
     <div>
-        <table summary="stories and tasks" id="user-story-list" cellspacing="0" cellpadding="2">
+        <table summary="stories and tasks" id="user-story-list" class="table table-striped table-bordered">
             <thead>
                 <tr>
                     <th>{% trans "Rank" %}</th>
@@ -122,6 +141,7 @@ function highlightTag(ids)
                     <th>{% trans "State" %}</th>
                     <th>{% trans "Size" %}</th>
                     <th>{% trans "Tasks" %}</th>
+                    <th>{% trans "Actuals" %}</th>
                     <th>{% trans "To-Do" %}</th>
                     <th>{% trans "Failures" %}</th>
                     <th></th>
@@ -139,23 +159,27 @@ function highlightTag(ids)
                     <td></td>
                     <td class="total">{{planned}}</td>
                     <td class="total">{{estimated}}</td>
+                    <td class="total">{{actuals}}</td>
                     <td class="total">{{remaining}}</td>
                     <td class="total">{{failures}}</td>
                     <td></td>
                     <td></td>
                     <td></td>
                     <td></td>
-                </tr> 
+                </tr>
 
                 {% for us in stories %}
                 {% url agilito_userstory_detail current_project.id us.id as userstory_url %}
-                <tr id="us-{{us.id}}" class="userstory {% cycle even,odd %} {%if us.is_blocked%}blocked{% endif %} {%if us.is_starved%}starved{% endif %}">
+                <tr id="us-{{us.id}}" class="userstory {% cycle even,odd %} 
+                                {%if not us.is_blocked and not us.is_starved %}normal{% endif %}
+                                {%if us.is_blocked%}blocked{% endif %} {%if us.is_starved%}starved{% endif %}">
                     <td class="rank">{{us.relative_rank}}</td>
                     <td class="id"><a href="{{userstory_url}}">US{{us.id}}</a></td>
                     <td class="name{% if us.is_archived %} archived{% endif %}"><a href="{{us.get_absolute_url}}">{{us.name}}</a></td>
                     <td class="state {{ us.state|storystate|slugify }}">{{us.state|storystate}}</td>
                     <td class="planned">{{us.size|storysize|default_if_none:"-"}}</td>
                     <td class="estimated">{{us.estimate|default_if_none:"-"}}</td>
+                    <td class="actuals">{{us.actuals|default_if_none:"-"}}</td>
                     <td class="todo">{{us.remaining|default_if_none:"-"}}</td>
                     <td class="failures {% if us.failures %} fail {% endif %}">
                         {% if us.failures %}
@@ -206,6 +230,7 @@ function highlightTag(ids)
                     <td class="state {{ ta.state|taskstate|slugify }}">{{ta.state|taskstate}}</td>
                     <td></td>
                     <td class="estimated">{{ta.estimate|default_if_none:"-"}}</td>
+                    <td class="actuals">{{ta.time_on_task}}</td>
                     <td class="todo">{{ta.remaining|default_if_none:"-"}}</td>
                     <td></td>
                     <td>
@@ -242,7 +267,7 @@ function highlightTag(ids)
 
         {% if impediments.open or impediments.resolved %}
         <h3>{% trans "Impediments" %}</h3>
-        <table id="impediment-list" cellspacing="0" cellpadding="2">
+        <table id="impediment-list" >
             <thead>
                 <tr>
                     <th style="width:10%;">{% trans "Id" %}</th>

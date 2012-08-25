@@ -46,6 +46,10 @@
                 <td>{% trans "currently" %} {{ velocity.actual|default_if_none:"unknown" }} vs {{ velocity.planned }} {% trans "planned" %}</td>
             </tr>
             {% endif %}
+            <tr>
+                <td><a href="#" class="collapse-all">Collapse All</a></td>
+                <td><a href="#" class="expand-all">Expand All</a></td>
+            </tr>
 
             {% if unsized %}
             <tr class="starved">

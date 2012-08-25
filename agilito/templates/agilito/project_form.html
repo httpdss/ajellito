@@ -3,13 +3,26 @@
 
 {% block body_class %}agilito projects{% endblock %}
 
+{% block extra_body %}
+<div class="subnav subnav-fixed">
+    <ul class="nav nav-pills">
+        <li>
+            <a href="{% url project_list %}">{% trans "All Projects" %}</a>
+        </li>
+    </ul>
+</div>
+{% endblock extra_body %}
+
 {% block head_title %}{% trans "Adding/Editing a project" %}{% endblock %}
 {% block body %}
-<h2><small>{% trans "adding/editing a project" %}</small><br /> {{ story }}</h2>
-<form method="post" class="uniForm">{% csrf_token %}
+
+<h1>{% trans "adding/editing a project" %}</h1>
+<h2>{{ story }}</h2>
+<form method="post">{% csrf_token %}
 {% include "agilito/generic_form.html" %}
-<div class="buttonHolder">
-    <input type="submit" class="primaryAction save" value="{% trans "Save" %}"/>
+<div class="form-actions actions">
+	<a href="#back" class="btn">Go back</a>
+    <input type="submit" class="btn primary save" value="{% trans "Save" %}" />
 </div>
 </form>
 {% endblock %}
