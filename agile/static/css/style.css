@@ -1,0 +1,84 @@
+html		{ font-size:106.5%; margin:0; padding:0; background-color:#2d332f; }
+body		{ color:#000; font-size:76.5%; font-family:"Trebuchet MS", Arial, Helvetica, sans-serif; margin:0; padding:0; background-color:#2d332f; }
+h1,h2,h3,h4,h5,h6,p,ul,ol,form, table		{ padding:0; margin:0; }
+a			{ color:#000; text-decoration:underline; }
+a:hover     { text-decoration:none; }
+a img		{ border:0px; padding:0; margin:0; }
+.clear		{ clear:both; overflow:hidden; padding:0 !important; margin:0 !important; float:none !important; font-size:0; height:0; }
+.alert 		{ background-color:#A30000; border:1px solid #DDDDDD; color:#FDFDFD; font-weight:bold; margin:5px; padding:5px; text-align:center; }
+.important	{ font-weight:bold; font-style:italic; color:#A30000; font-size:12px; }
+
+/*- kulaty rohy -*/
+.radius-bottom-only	{  border-bottom-left-radius:6px; border-bottom-right-radius:6px; -webkit-border-bottom-left-radius:6px; -webkit-border-bottom-right-radius:6px; -moz-border-radius-bottomleft:6px; -moz-border-radius-bottomright:6px; -khtml-border-radius:0 0 6px 6px;}
+.radius-top-only	{ border-top-left-radius:6px; border-top-right-radius:6px; -webkit-border-top-left-radius:6px; -webkit-border-top-right-radius:6px; -moz-border-radius-topleft:6px; -moz-border-radius-topright:6px; -khtml-border-radius:6px 6px 0 0; }
+.radius-all			{ border-bottom-left-radius:6px; border-bottom-right-radius:6px; -webkit-border-bottom-left-radius:6px; -webkit-border-bottom-right-radius:6px; -moz-border-radius-bottomleft:6px; -moz-border-radius-bottomright:6px; -khtml-border-radius:6px 6px 6px 6px; border-top-left-radius:6px; border-top-right-radius:6px; -webkit-border-top-left-radius:6px; -webkit-border-top-right-radius:6px; -moz-border-radius-topleft:6px; -moz-border-radius-topright:6px; }
+.radius-all-small	{ border-bottom-left-radius:3px; border-bottom-right-radius:3px; -webkit-border-bottom-left-radius:3px; -webkit-border-bottom-right-radius:3px; -moz-border-radius-bottomleft:3px; -moz-border-radius-bottomright:3px; -khtml-border-radius:3px 3px 3px 3px; border-top-left-radius:3px; border-top-right-radius:3px; -webkit-border-top-left-radius:3px; -webkit-border-top-right-radius:3px; -moz-border-radius-topleft:3px; -moz-border-radius-topright:3px; }
+/*- kulaty rohy -*/
+
+.error			{ color:#FFF; background:#a30000; font-weight:bold; font-size:123.5%; text-align:center; border:2px solid #000; padding:5px; margin:5px; }
+
+h1				{ color:#FFF; text-align:center; }
+
+.head			{ position:relative; padding:0; margin:0; width:110px; overflow:hidden; height:55px; -moz-transition: all 0.5s ease-in-out 0s; }
+.head:hover		{ width:650px; }
+.graphs 		{ color:#fff; }
+.graphs a 		{ color:#fff; }
+.graphs form	{ display:inline; }
+.login			{ background-color:#000; opacity:0.8; position:relative; top:0px; float:left; color:#FFF; padding:0 10px; }
+.login a		{ font-weight:bold; color:#FFF; font-size:18px; background:url(/media/img/plus.png) left center no-repeat; padding:15px 10px 15px 35px; display:block; text-decoration:none; }
+.topMenu		{ background-color:#000; padding:1px 10px 11px 10px; position:absolute; left:100px; width:600px; }
+.home img		{ position:relative; }
+.arrows 		{ text-align:center; }
+
+
+.addTicketButton		{ background:#ccc url(/media/img/button-plus.png) 8px 50% no-repeat; display:block; padding:8px 8px 8px 32px; border:2px solid #666; color:#000; font-weight:bold; font-size:125.5%; text-decoration:none; margin:5px auto; width:160px; }
+
+.collumn				{ width:31.9%; border:3px solid #464b47; float:left; margin-left:10px; background:#666 url(/media/img/ticketsbg.png) left top repeat; =height:650px; min-height:650px; }
+.collumn h1				{ color:#FFF; text-align:left; text-transform:uppercase; padding:7px 0 0 15px; background:url(/media/img/tabbg.png) left top repeat-x; height:38px; }
+.collumn ul,ol			{ padding:0; margin:0; list-style-type:none; }
+.collumn .ticket,
+.ticket					{ background-color:#dfe9e5; padding:8px; border:3px solid #b3bab7; width:43%; height:130px; margin:5px 0px 0px 5px; float:left; overflow:hidden; position:relative; }
+.past .ticket			{ background-color:#FFDB6E; }
+.collumn .ticket h3		{ color:#3366cc; float:left; }
+.ticket .date			{ float:right; padding-top:3px; }
+.ticket.draggable		{ opacity:0.6; }
+.ticket .owners			{ margin:10px 0; }
+.ticket .owners p		{ width:50px; height:50px; padding:1px; border:1px solid #FFF; overflow:hidden; float:left; background-color:#000; }
+.ticket .avatar			{ position:absolute; bottom:1px; right:1px; display:block; width:45px; height:45px; overflow:hidden; }
+.ticket .avatar .zoom	{ background:url(/media/img/zoom.png) left top no-repeat; width:43px; height:43px; display:block; z-index:2; position:absolute; }
+.ticket .avatar	img		{ border:1px solid #FFF; z-index:2; }
+.collumn .item h3		{ text-align:center; border-bottom:1px solid #666; }
+.collumn .date			{ font-size:90%; }
+
+.addNewTicket							{ position:relative; }
+#addticketRoot							{ position:absolute; top:45px; z-index:50; border:3px solid #666; left:25%; }
+.addNewTicket form						{ width:100%; }
+.addNewTicket form .row					{}
+.addNewTicket form .row label			{ float:left; width:8em; display:block; text-align:right; padding-right:5px; position:relative; top:5px; font-weight:bold; }
+.addNewTicket form .row .item			{ float:left; }
+.addNewTicket form .row .item input,
+.addNewTicket form .row .item textarea	{ width:30em; }
+
+.addNewTicket #addticketRoot			{ width:50%; margin:0 auto; background-color:#FFDB6E; padding:8px; display:none; }
+
+.detailBg				{ position:absolute; opacity:0.7; background-color:#000; top:0px; left:0px; display:none; }
+.ticketDetail			{ position:absolute; width:50%; margin:0 auto; visibility:hidden; top:-1000px; left:-1000px; display:none; }
+#ticketDetailBox		{ padding:10px; font-size:20px; }
+#ticketDetailBox input,
+#ticketDetailBox select,
+#ticketDetailBox textarea	{ display:none; }
+#ticketDetailBox span.detailInfo	{ position:relative; top:5px; }
+#ticketDetailBox p		{ text-align:right; }
+#ticketDetailBox input	{ width:20em; }
+
+.loading				{ background:#000 url(/media/img/ajax-loader.gif) 50% 50% no-repeat; }
+
+.sprintsList 			{ width:60%; margin:0 auto; list-style-type:none; font-size:18px; color:#fff; }
+.sprintsList td			{ border:1px dotted #ccc; padding-left:15px; }
+.sprintsList a 			{ color:#fff; }
+
+#graphRoot				{ width:50%; margin:0 auto; }
+.graphDetail 			{ color:#fff; }
+.graphDetail h1			{ color:#fff; }
+.graphDetail a 			{ color:#fff; }
+
