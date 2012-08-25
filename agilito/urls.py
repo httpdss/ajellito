@@ -3,7 +3,12 @@ from django.contrib import admin
 from django.contrib.auth.decorators import login_required
 
 from agilito.feeds import BacklogFeed, IterationFeed, NoticeFeed
+
+from tastypie.api import Api
+from agilito.api import ProjectResource
+
 from agilito.views import ProjectList, ProjectCreate, ProjectDetail, FileList
+
 
 
 admin.autodiscover()
@@ -18,18 +23,22 @@ feeds = {
     'notice': NoticeFeed,
     }
 
+v1_api = Api(api_name='v1')
+v1_api.register(ProjectResource())
+
 urlpatterns = patterns('agilito.views',
     url(r'^$', 'index', name="agilito_index"),
 
     (r'^(?P<project_id>\d+)/touch/$', 'touch_cache'),
 
+    url(r"^api/", include(v1_api.urls)),
+
     url(r"^project/$", login_required(ProjectList.as_view()), name="project_list"),
     url(r"^project/create/$",  login_required(ProjectCreate.as_view()), name="project_create"),
     url(r"^project/(?P<pk>\d+)/$", login_required(ProjectDetail.as_view()), name="project_detail"),
-    
+
     # url(r'^(?P<project_id>\d+)/testcase/$', login_required(TestCaseList.as_view()), name="testcase_list"),
     #     url(r'^(?P<project_id>\d+)/testcase/(?P<iteration_id>\d+)/$', login_required(TestCaseList.as_view()), name="iteration_hours_with_id"),
-    
 
     url(r'^(?P<project_id>\d+)/backlog/$', 'backlog', name='product_backlog'),
     url(r'^(?P<project_id>\d+)/files/$', login_required(FileList.as_view()), name='agilito_project_files'),
@@ -116,7 +125,6 @@ urlpatterns = patterns('agilito.views',
 )
 
 urlpatterns += patterns('',
-#    (r'^admin/(.*)', admin.site.root),
 #    (r'^agilito/(?P<path>.*)$', 'django.views.static.serve', {'document_root': media_root}),
 #    (r'^xmlrpc/', 'agilito.xmlrpc.xmlrpc.view', {'module':'agilito.xmlrpc'}),
 #    (r'^(rsd.xml)$', 'django.views.static.serve', {'document_root': media_root}),
