@@ -25,23 +25,23 @@ Kanban.Tickets.prototype.$constructor = function(opt){
 };
 Kanban.Tickets.prototype._drop = function(drgElm, cloneElm, drops){
 	cloneElm.parentNode.removeChild(cloneElm);
-	
+
 	var targetElm = drops[0].id;
 	var fromElm = drgElm.parentNode.id;
-	
+
 	if(targetElm == fromElm){ return; }
-	
-	if(window.confirm('Opravdu chcete presunout tento tiket ?')){	
+
+	if(window.confirm('Do you really want to move this ticket?')){
 		if(targetElm == 'devel' && fromElm == 'todo'){
 			var ticketId = drgElm.id.split('-')[1];
-			var url = '/kanban/kanban/tododevel/'+ticketId+'/';
+			var url = '/tickets/tododevel/'+ticketId+'/';
 			var rq = new JAK.Request(JAK.Request.TEXT/*-, { method : 'post' }-*/);
 			rq.setCallback(this, '_move');
 			rq.send(url);
 		}
 		if(targetElm == 'done' && fromElm == 'devel'){
 			var ticketId = drgElm.id.split('-')[1];
-			var url = '/kanban/kanban/develdone/'+ticketId+'/';
+			var url = '/tickets/develdone/'+ticketId+'/';
 			var rq = new JAK.Request(JAK.Request.TEXT/*-, { method : 'post' }-*/);
 			rq.setCallback(this, '_move');
 			rq.send(url);
@@ -113,11 +113,11 @@ Kanban.Opener.prototype.$constructor = function(opt){
 Kanban.Opener.prototype.open = function(e, elm){
 	JAK.Events.cancelDef(e);
 	if(this.isOpen){ return this.close(); }
-	
+
 	/*-this.dom.opener.style.display = 'none';-*/
 	if(this.dom.closer){ this.dom.closer.style.display = 'inline'; }
 	if(this.dom.hideElm){ this.dom.hideElm.style.display = 'none'; }
-	
+
 	if(this.opt.animation){
 		this.dom.mainElm.style.visibility = 'hidden';
 		this.dom.mainElm.style.position = 'absolute';
@@ -248,10 +248,10 @@ Kanban.TicketDetail.prototype._showForm = function(){
 	/*- request -*/
 	var rq = new JAK.Request(JAK.Request.TEXT, { method:'get' });
 	rq.setCallback(this, '_getDetail');
-	rq.send('/kanban/kanban/ticketdetail/'+id+'/');
+	rq.send('/tickets/ticketdetail/'+id+'/');
 };
 Kanban.TicketDetail.prototype._removeDetail = function(e, elm){
-	if( window.confirm('OPRAVDU ???') ){
+	if( window.confirm('REALLY ???') ){
 		return;
 	} else {
 		JAK.Events.cancelDef(e);
@@ -262,7 +262,6 @@ Kanban.TicketDetail.prototype._isMyTicket = function(users){
 	for(var i=0;i<users.length;i++){
 		if(users[i].selected){
 			return true;
-			break;
 		}
 	}
 	return false;
@@ -270,16 +269,16 @@ Kanban.TicketDetail.prototype._isMyTicket = function(users){
 Kanban.TicketDetail.prototype._getDetail = function(JSONData, status){
 	eval('var data ='+JSONData);
 	var isMyTicket = this._isMyTicket(data.users);
-	
+
 	if(JAK.DOM.getElementsByClass('detail-form', this.dom.cloneElm, 'a').length > 0){
 		var editForm = JAK.DOM.getElementsByClass('detail-form', this.dom.cloneElm, 'a')[0];
 		var infoForm = JAK.DOM.getElementsByClass('detail-info', this.dom.cloneElm, 'a')[0];
-		if((isMyTicket == true || this.issuperuser) && this.showLinks ){
+		if((isMyTicket === true || this.issuperuser) && this.showLinks ){
 			this.ec.push( JAK.Events.addListener( editForm, 'click', this, '_changeDetail' ) );
 			this.ec.push( JAK.Events.addListener( infoForm, 'click', this, '_changeDetail' ) );
 			var removeElm = JAK.DOM.getElementsByClass('detail-remove', this.dom.cloneElm, 'a')[0];
-			if(removeElm){ 
-				removeElm.href = '/kanban/kanban/ticketremove/'+data.ticketId+'/';
+			if(removeElm){
+				removeElm.href = '/tickets/ticketremove/'+data.ticketId+'/';
 				this.ec.push( JAK.Events.addListener( JAK.DOM.getElementsByClass('detail-remove', this.dom.cloneElm, 'a')[0], 'click', this, '_removeDetail' ) );
 			}
 		} else {
@@ -296,7 +295,7 @@ Kanban.TicketDetail.prototype._getDetail = function(JSONData, status){
 			}
 		}
 		var items = JAK.DOM.getElementsByClass('item', this.dom.cloneElm, 'div');
-		for(var i=0;i<items.length;i++){
+		for(var i=0; i < items.length; i++){
 			switch(items[i].id){
 				case 'td-service':
 					items[i].getElementsByTagName('input')[0].value = data.service;
@@ -326,7 +325,7 @@ Kanban.TicketDetail.prototype._getDetail = function(JSONData, status){
 					}
 					break;
 				case 'td-users':
-					for(var j=0;j<data.users.length;j++){
+					for(var j = 0; j < data.users.length; j++){
 						var opt = JAK.mel('option', { value : data.users[j].id, innerHTML : data.users[j].name });
 						if(data.users[j].selected == 1){ opt.selected = true; }
 						var sel = items[i].getElementsByTagName('select')[0];
@@ -370,7 +369,8 @@ Kanban.TicketDetail.prototype._hideDetail = function(e, elm){
 		this.dom.cloneElm.parentNode.removeChild(this.dom.cloneElm);
 		this.dom.cloneElm = null;
 	}
-}
+};
+
 Kanban.TicketDetail.prototype._link = function(){
 	for(var i=0;i<this.dom.tickets.length;i++){
 		this.ec.push( JAK.Events.addListener(this.dom.tickets[i], 'click', this, '_showDetail') );

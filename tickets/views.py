@@ -3,26 +3,26 @@
 # Create your views here
 from django.contrib.auth.decorators import login_required
 from datetime import datetime
-from django.shortcuts import  render_to_response, get_object_or_404
-from django.http import HttpResponse, HttpResponseRedirect, Http404
+from django.shortcuts import  render_to_response
+from django.http import HttpResponse, HttpResponseRedirect
 from django.core.urlresolvers import reverse
 from django.template import RequestContext
-from django.utils.encoding import smart_str, smart_unicode
-from agile.table.models import Tables
-#from agile.users.models import Users
+
+from table.models import Tables
+#from users.models import Users
 from django.contrib.auth.models import User
-from agile.tickets.models import Tickets
-from agile.sprints.models import Sprints
+from tickets.models import Tickets
+from sprints.models import Sprints
 import re
+
 
 def httpParser(url):
     url1 = url.split('http://')
     if len(url1) > 1:
-        return 'http://'+url1[1]
+        return 'http://' + url1[1]
     else:
-        return 'http://'+url1[0]
-    #endif
-#enddef
+        return 'http://' + url1[0]
+
 
 @login_required
 def index(req):
@@ -41,7 +41,7 @@ def index(req):
     je-li nejaky sprint ve kterem muzeme kanbanovat
     '''
     if len(sprint) > 0:
-        sprint_dates = { 'from' : sprint[0].date_from, 'to' : sprint[0].date_to, }
+        sprint_dates = {'from': sprint[0].date_from, 'to': sprint[0].date_to, }
         for tab in tables:
             if tab.name == 'TODO':
                 todo = Tickets.objects.filter(tables=tab)
@@ -51,10 +51,7 @@ def index(req):
                             t.avatarImg = u.get_profile().avatarImg
                         except:
                             t.avatarImg = ''
-                        #endtry
-                    #endfor
-                #endfor
-            #endif
+
             if tab.name == 'DEVEL':
                 devel = Tickets.objects.filter(tables=tab)
                 for t in devel:
@@ -63,10 +60,7 @@ def index(req):
                             t.avatarImg = u.get_profile().avatarImg
                         except:
                             t.avatarImg = ''
-                        #endtry
-                    #endfor
-                #endfor
-            #endif
+
             if tab.name == 'DONE':
                 done = Tickets.objects.filter(tables=tab).filter(done_date__gt=sprint_dates['from'])
                 for t in done:
@@ -75,32 +69,26 @@ def index(req):
                             t.avatarImg = u.get_profile().avatarImg
                         except:
                             t.avatarImg = ''
-                        #endtry
-                    #endfor
-                #endfor
-            #endif
-        #endfor
+
         return render_to_response('tickets/index.html', {
-            'todo' : todo,
-            'devel' : devel,
-            'done' : done,
-            'tables' : tables,
-            'users' : users,
-            'loguser' : logUser,
-            'sprint' : sprint,
-        }, context_instance = RequestContext(req))
+                                'todo': todo,
+                                'devel': devel,
+                                'done': done,
+                                'tables': tables,
+                                'users': users,
+                                'loguser': logUser,
+                                'sprint': sprint,
+                            }, context_instance=RequestContext(req))
     else:
         '''
         nejni-li zadny kanban vyhodim error hlasku
         '''
         last_sprint = Sprints.objects.all()[:1][0]
         return render_to_response('tickets/index.html', {
-            'error_message' : 'Neni vytvoren zadny sprint.',
-            'last_sprint' : last_sprint,
+            'error_message': 'Neni vytvoren zadny sprint.',
+            'last_sprint': last_sprint,
         })
-    #endif
 
-#enddef
 
 @login_required
 def movetododevel(req, ticket_id):
@@ -109,19 +97,18 @@ def movetododevel(req, ticket_id):
     ticket = Tickets.objects.get(pk=ticket_id)
 
     if ticket.users.all()[0].id != logUser.id and logUser.is_superuser is False:
-        doneText = '{ status : "userError", ticketId : '+ticket_id+', table : "devel" }'
+        doneText = '{ status: "userError", ticketId: ' + ticket_id + ', table: "devel" }'
         return HttpResponse(doneText)
     else:
         if ticket:
             ticket.tables = table
             ticket.devel_date = datetime.now()
             ticket.save()
-            doneText = '{ status : "ok", ticketId : '+ticket_id+', table : "devel" }'
+            doneText = '{ status : "ok", ticketId : ' + ticket_id + ', table : "devel" }'
         else:
-            doneText = '{ status : "error", ticketId : '+ticket_id+', table : "devel" }'
+            doneText = '{ status : "error", ticketId : ' + ticket_id + ', table : "devel" }'
         return HttpResponse(doneText)
-    #endif
-#enddef
+
 
 @login_required
 def delete(req, ticket_id):
@@ -129,9 +116,9 @@ def delete(req, ticket_id):
     if logUser.is_superuser:
         ticket = Tickets.objects.get(pk=int(ticket_id))
         ticket.delete()
-    #endif
-    return HttpResponseRedirect(reverse( 'agile.tickets.views.index' ))
-#enddef
+
+    return HttpResponseRedirect(reverse('tickets.views.index'))
+
 
 @login_required
 def movedeveldone(req, ticket_id):
@@ -140,24 +127,24 @@ def movedeveldone(req, ticket_id):
     ticket = Tickets.objects.get(pk=ticket_id)
 
     if ticket.users.all()[0].id != logUser.id and logUser.is_superuser is False:
-        doneText = '{ status : "userError", ticketId : '+ticket_id+', table : "devel" }'
+        doneText = '{ status : "userError", ticketId : ' + ticket_id + ', table : "devel" }'
         return HttpResponse(doneText)
     else:
         if ticket:
             ticket.tables = table
             ticket.done_date = datetime.now()
             ticket.save()
-            doneText = '{ status : "ok", ticketId : '+ticket_id+', table : "done" }'
+            doneText = '{ status : "ok", ticketId : ' + ticket_id + ', table : "done" }'
         else:
-            doneText = '{ status : "error", ticketId : '+ticket_id+', table : "done" }'
+            doneText = '{ status : "error", ticketId : ' + ticket_id + ', table : "done" }'
         return HttpResponse(doneText)
-    #endif
-#enddef
+
 
 @login_required
 def addticket(req):
     tables = Tables.objects.all()
     table = Tables.objects.filter(name='TODO')
+    users = User.objects.all()
     for tab in tables:
         if tab.name == 'TODO':
             todo = Tickets.objects.filter(tables=tab)
@@ -173,14 +160,14 @@ def addticket(req):
         newticket = Tickets(service=service, cmlurl=cmlurl, difficulty=int(difficulty), description=description, pub_date=datetime.now())
     except (KeyError, Tickets.DoesNotExist):
         c = {
-            'tables' : tables,
-            'users' : users,
-            'todo' : todo,
-            'devel' : devel,
-            'done' : done,
-            'error' : 'Nepodarilo se vlozit novy ticket',
+            'tables': tables,
+            'users': users,
+            'todo': todo,
+            'devel': devel,
+            'done': done,
+            'error': 'Nepodarilo se vlozit novy ticket',
         }
-        return render_to_response('tickets/index.html', c, context_instance = RequestContext(req))
+        return render_to_response('tickets/index.html', c, context_instance=RequestContext(req))
     else:
         newticket.save()
         if 'user' in req.POST:
@@ -192,8 +179,8 @@ def addticket(req):
         #endif
         newticket.tables.add(table[0])
         newticket.save()
-        return HttpResponseRedirect(reverse( 'agile.tickets.views.index' ))
-#enddef
+        return HttpResponseRedirect(reverse('tickets.views.index'))
+
 
 @login_required
 def edit(req):
@@ -203,7 +190,7 @@ def edit(req):
     ticket = Tickets.objects.get(pk=postData['ticketId'])
 
     if logUser not in ticket.users.all() and logUser.is_superuser is False:
-        return HttpResponseRedirect(reverse('agile.tickets.views.index'))
+        return HttpResponseRedirect(reverse('tickets.views.index'))
     else:
         ticket.service = postData['service']
         ticket.cmlurl = httpParser(postData['cmlurl'])
@@ -228,9 +215,8 @@ def edit(req):
         ticket.tables.remove(ticket.tables.all()[0])
         ticket.tables.add(table)
         ticket.save()
-        return HttpResponseRedirect(reverse( 'agile.tickets.views.index' ))
-    #endif
-#enddef
+        return HttpResponseRedirect(reverse('tickets.views.index'))
+
 
 @login_required
 def detail(req, ticket_id):
@@ -251,8 +237,8 @@ def detail(req, ticket_id):
     if logUser.is_superuser:
         ic = 0
         for u in users:
-            ic+=1
-            json += "{ name : '"+str(u)+"', id : "+str(u.id)
+            ic += 1
+            json += "{ name : '" + str(u) + "', id : " + str(u.id)
             if len(ticket.users.all()) > 0:
                 if u.id == ticket.users.all()[0].id:
                     json += ", selected : '1'"
@@ -263,7 +249,7 @@ def detail(req, ticket_id):
                 json += ","
         #endfor
     else:
-        json += "{ name : '"+str(logUser)+"', id : "+str(logUser.id)
+        json += "{ name : '" + str(logUser) + "', id : " + str(logUser.id)
         if ticket.users.filter(pk=logUser.id):
             json += ", selected : '1'"
         #endif
@@ -274,8 +260,8 @@ def detail(req, ticket_id):
         "tables : ["
     ic = 0
     for t in tables:
-        ic+=1
-        json += "{ name : '"+str(t)+"', id : "+str(t.id)
+        ic += 1
+        json += "{ name : '" + str(t) + "', id : " + str(t.id)
         if t == ticket.tables.all()[0]:
             json += ", selected : '1'"
         #endif
@@ -287,12 +273,10 @@ def detail(req, ticket_id):
     if ticket.devel_date is not None or ticket.done_date is not None:
         json += ","
     if ticket.devel_date is not None:
-        json += "devel_date : '"+str(ticket.devel_date)+"'"
+        json += "devel_date : '" + str(ticket.devel_date) + "'"
     if ticket.done_date is not None:
-        json += ", done_date : '"+str(ticket.done_date)+"'"
+        json += ", done_date : '" + str(ticket.done_date) + "'"
     json += "}"
     #from django.core import serializers
     #json = serializers.serialize('json', [ticket])
     return HttpResponse(json)
-#enddef
-

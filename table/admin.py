@@ -1,4 +1,4 @@
-from agile.table.models import Tables
+from table.models import Tables
 from django.contrib import admin
 '''
 class UsersInline(admin.TabularInline):

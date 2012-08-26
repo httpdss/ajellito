@@ -1,179 +1,178 @@
+{% extends "agile/base.html" %}
+{% load i18n %}
+{% block body %}
+	<h1>{% trans "Browse sprint" %} {{ sprint.date_from|date:"d.n.Y" }} - {{ sprint.date_to|date:"d.n.Y" }} </h1>
+	<h1>{{ actualDate|date:"d.n.Y" }}</h1>
 
-	{% include "head.html" %}
-				
-		<h1>Prochazeni sprintem {{ sprint.date_from|date:"d.n.Y" }} - {{ sprint.date_to|date:"d.n.Y" }} </h1>
-		<h1>{{ actualDate|date:"d.n.Y" }}</h1>
-		
-		<div class="arrows">
-			<a href="/kanban/{{ sprint.id }}/browse/?date={{ prevArrow|date:"d.n.Y" }}"><img src="/media/img/prev_arrow.png" alt="" title="" /></a>
-			<a href="/kanban/{{ sprint.id }}/browse/?date={{ nextArrow|date:"d.n.Y" }}"><img src="/media/img/next_arrow.png" alt="" title="" /></a>
-			<div class="clear"></div>
-		</div>
-		
-		<div id="tablesTickets" class="past">
-			<div class="collumn todo radius-all-small" id="todo">
-				<h1>TODO</h1>
-				{% if todo %}
-					{% for ticket in todo %}
-						<div class="ticket radius-all" id="ticket-{{ ticket.id }}">
-							<h3>{{ ticket.service }}</h3>
-							<p class="date">{{ ticket.pub_date|date:"d.n.Y" }}</p>
+	<div class="arrows">
+		<a href="/kanban/{{ sprint.id }}/browse/?date={{ prevArrow|date:"d.n.Y" }}"><img src="/media/img/prev_arrow.png" alt="" title="" /></a>
+		<a href="/kanban/{{ sprint.id }}/browse/?date={{ nextArrow|date:"d.n.Y" }}"><img src="/media/img/next_arrow.png" alt="" title="" /></a>
+		<div class="clear"></div>
+	</div>
+
+	<div id="tablesTickets" class="past">
+		<div class="collumn todo radius-all-small" id="todo">
+			<h1>TODO</h1>
+			{% if todo %}
+				{% for ticket in todo %}
+					<div class="ticket radius-all" id="ticket-{{ ticket.id }}">
+						<h3>{{ ticket.service }}</h3>
+						<p class="date">{{ ticket.pub_date|date:"d.n.Y" }}</p>
+						<div class="clear"></div>
+						<p><a href="{{ ticket.cmlurl }}">CML</a></p>
+						<p>{{ ticket.description }}</p>
+						<div class="owners">
+							{% for u in ticket.users.all %}
+								{% if u.get_profile.avatarImg %}
+									<p><img src="{{ u.get_profile.avatarImg|cut:'/www/kanban' }}" alt="{{ u.username }}" title="{{ u.username }}" width="50" /></p>
+								{% else %}
+									{{ u.username }}
+								{% endif %}
+							{% endfor %}
 							<div class="clear"></div>
-							<p><a href="{{ ticket.cmlurl }}">CML</a></p>
-							<p>{{ ticket.description }}</p>
-							<div class="owners">
-								{% for u in ticket.users.all %}
-									{% if u.get_profile.avatarImg %}
-										<p><img src="{{ u.get_profile.avatarImg|cut:'/www/kanban' }}" alt="{{ u.username }}" title="{{ u.username }}" width="50" /></p>
-									{% else %}
-										{{ u.username }}
-									{% endif %}
-								{% endfor %}
-								<div class="clear"></div>
-							</div>
-							<a href="#" class="avatar">
-								<span class="zoom"></span>
-							</a>
-						</div>
-					{% endfor %}
-					<div class="clear"></div>
-				{% endif %}
-			</div>
-			
-			<div class="collumn devel radius-all-small" id="devel">
-				<h1>DEVEL ({{ sprint.max_develop }})</h1>
-				{% if devel %}
-					{% for ticket in devel %}
-						<div class="ticket radius-all" id="ticket-{{ ticket.id }}">
-							<h3>{{ ticket.service }}</h3>
-							<p class="date">{{ ticket.devel_date|date:"d.n.Y" }}</p>
-							<div class="clear"></div>
-							<p><a href="{{ ticket.cmlurl }}">CML</a></p>
-							<p>{{ ticket.description }}</p>
-							<div class="owners">
-								{% for u in ticket.users.all %}
-									{% if u.get_profile.avatarImg %}
-										<p><img src="{{ u.get_profile.avatarImg|cut:'/www/kanban' }}" alt="{{ u.username }}" title="{{ u.username }}" width="50" /></p>
-									{% else %}
-										{{ u.username }}
-									{% endif %}
-								{% endfor %}
-								<div class="clear"></div>
-							</div>
 						</div>
 						<a href="#" class="avatar">
 							<span class="zoom"></span>
 						</a>
-					{% endfor %}
-					<div class="clear"></div>
-				{% endif %}
-			</div>
-			
-			<div class="collumn done radius-all-small" id="done">
-				<h1>DONE</h1>
-				{% if done %}
-					{% for ticket in done %}
-						<div class="ticket radius-all" id="ticket-{{ ticket.id }}">
-							<h3>{{ ticket.service }}</h3>
-							<p class="date">{{ ticket.done_date|date:"d.n.Y" }}</p>
+					</div>
+				{% endfor %}
+				<div class="clear"></div>
+			{% endif %}
+		</div>
+
+		<div class="collumn devel radius-all-small" id="devel">
+			<h1>DEVEL ({{ sprint.max_develop }})</h1>
+			{% if devel %}
+				{% for ticket in devel %}
+					<div class="ticket radius-all" id="ticket-{{ ticket.id }}">
+						<h3>{{ ticket.service }}</h3>
+						<p class="date">{{ ticket.devel_date|date:"d.n.Y" }}</p>
+						<div class="clear"></div>
+						<p><a href="{{ ticket.cmlurl }}">CML</a></p>
+						<p>{{ ticket.description }}</p>
+						<div class="owners">
+							{% for u in ticket.users.all %}
+								{% if u.get_profile.avatarImg %}
+									<p><img src="{{ u.get_profile.avatarImg|cut:'/www/kanban' }}" alt="{{ u.username }}" title="{{ u.username }}" width="50" /></p>
+								{% else %}
+									{{ u.username }}
+								{% endif %}
+							{% endfor %}
 							<div class="clear"></div>
-							<p><a href="{{ ticket.cmlurl }}">CML</a></p>
-							<p>{{ ticket.description }}</p>
-							<div class="owners">
-								{% for u in ticket.users.all %}
-									{% if u.get_profile.avatarImg %}
-										<p><img src="{{ u.get_profile.avatarImg|cut:'/www/kanban' }}" alt="{{ u.username }}" title="{{ u.username }}" width="50" /></p>
-									{% else %}
-										{{ u.username }}
-									{% endif %}
-								{% endfor %}
-								<div class="clear"></div>
-							</div>
-							<a href="#" class="avatar">
-								<span class="zoom"></span>
-							</a>
 						</div>
-					{% endfor %}
+					</div>
+					<a href="#" class="avatar">
+						<span class="zoom"></span>
+					</a>
+				{% endfor %}
+				<div class="clear"></div>
+			{% endif %}
+		</div>
+
+		<div class="collumn done radius-all-small" id="done">
+			<h1>DONE</h1>
+			{% if done %}
+				{% for ticket in done %}
+					<div class="ticket radius-all" id="ticket-{{ ticket.id }}">
+						<h3>{{ ticket.service }}</h3>
+						<p class="date">{{ ticket.done_date|date:"d.n.Y" }}</p>
+						<div class="clear"></div>
+						<p><a href="{{ ticket.cmlurl }}">CML</a></p>
+						<p>{{ ticket.description }}</p>
+						<div class="owners">
+							{% for u in ticket.users.all %}
+								{% if u.get_profile.avatarImg %}
+									<p><img src="{{ u.get_profile.avatarImg|cut:'/www/kanban' }}" alt="{{ u.username }}" title="{{ u.username }}" width="50" /></p>
+								{% else %}
+									{{ u.username }}
+								{% endif %}
+							{% endfor %}
+							<div class="clear"></div>
+						</div>
+						<a href="#" class="avatar">
+							<span class="zoom"></span>
+						</a>
+					</div>
+				{% endfor %}
+				<div class="clear"></div>
+			{% endif %}
+		</div>
+		<div class="clear"></div>
+
+		<div id="ticketDetailBox" class="addNewTicket">
+			{% if loguser.is_staff %}
+				<p>
+					<a href="#" class="detail-info">info</a>&nbsp;|&nbsp;
+					<a href="#" class="detail-form">edit</a>
+				</p>
+			{% endif %}
+			<form action="/tickets/ticketedit/" method="post">
+				{% csrf_token %}
+				<input type="hidden" class="ticketId" name="ticketId" value="" />
+				<div class="item" id="td-dates"></div>
+				<div class="row">
+					<label for="td-table">Table: </label>
+					<div class="item" id="td-table">
+						<span class="detailInfo"></span>
+						<select name="tables">
+						</select>
+					</div>
 					<div class="clear"></div>
-				{% endif %}
-			</div>
-			<div class="clear"></div>
-			
-			<div id="ticketDetailBox" class="addNewTicket">
-				{% if loguser.is_staff %}
-					<p>
-						<a href="#" class="detail-info">info</a>&nbsp;|&nbsp;
-						<a href="#" class="detail-form">edit</a>
-					</p>
-				{% endif %}
-				<form action="/kanban/kanban/ticketedit/" method="post">
-					{% csrf_token %}
-					<input type="hidden" class="ticketId" name="ticketId" value="" />
-					<div class="item" id="td-dates"></div>
-					<div class="row">
-						<label for="td-table">Table: </label>
-						<div class="item" id="td-table">
-							<span class="detailInfo"></span>
-							<select name="tables">
-							</select>
-						</div>
-						<div class="clear"></div>
+				</div>
+				<div class="row">
+					<label for="td-users">{% trans "Owner" %}: </label>
+					<div class="item" id="td-users">
+						<span class="detailInfo"></span>
+						<select name="users" multiple="multiple">
+						</select>
 					</div>
-					<div class="row">
-						<label for="td-users">Vlastník: </label>
-						<div class="item" id="td-users">
-							<span class="detailInfo"></span>
-							<select name="users" multiple="multiple">
-							</select>
-						</div>
-						<div class="clear"></div>
+					<div class="clear"></div>
+				</div>
+				<div class="row">
+					<label for="td-service">{% trans "Service" %}: </label>
+					<div class="item" id="td-service">
+						<span class="detailInfo"></span>
+						<input type="text" name="service" value="" />
 					</div>
-					<div class="row">
-						<label for="td-service">Služba: </label>
-						<div class="item" id="td-service">
-							<span class="detailInfo"></span>
-							<input type="text" name="service" value="" />
-						</div>
-						<div class="clear"></div>
+					<div class="clear"></div>
+				</div>
+				<div class="row">
+					<label for="td-cml">CML: </label>
+					<div class="item" id="td-cml">
+						<span class="detailInfo"></span>
+						<input type="text" name="cmlurl" value="" />
 					</div>
-					<div class="row">
-						<label for="td-cml">CML: </label>
-						<div class="item" id="td-cml">
-							<span class="detailInfo"></span>
-							<input type="text" name="cmlurl" value="" />
-						</div>
-						<div class="clear"></div>
+					<div class="clear"></div>
+				</div>
+				<div class="row">
+					<label for="td-dificulty">{% trans "Dificulty" %}: </label>
+					<div class="item" id="td-dificulty">
+						<span class="detailInfo"></span>
+						<input type="text" name="difficulty" value="" />
 					</div>
-					<div class="row">
-						<label for="td-dificulty">Obtížnost: </label>
-						<div class="item" id="td-dificulty">
-							<span class="detailInfo"></span>
-							<input type="text" name="difficulty" value="" />
-						</div>
-						<div class="clear"></div>
+					<div class="clear"></div>
+				</div>
+				<div class="row">
+					<label for="td-desc">{% trans "Description" %}: </label>
+					<div class="item" id="td-desc">
+						<span class="detailInfo"></span>
+						<textarea name="description"></textarea>
 					</div>
-					<div class="row">
-						<label for="td-desc">Popis: </label>
-						<div class="item" id="td-desc">
-							<span class="detailInfo"></span>
-							<textarea name="description"></textarea>
-						</div>
-						<div class="clear"></div>
+					<div class="clear"></div>
+				</div>
+				<div class="row">
+					<label>&nbsp;</label>
+					<div class="item">
+						<input type="submit" value="Send" />
 					</div>
-					<div class="row">
-						<label>&nbsp;</label>
-						<div class="item">
-							<input type="submit" value="Odeslat" />
-						</div>
-						<div class="clear"></div>
-					</div>
-				</form>
-			</div>
-			
-			<script type="text/javascript">
-				var ticketDetail = new Kanban.TicketDetail('ticketDetailBox', {{ loguser.id }}, '{{ loguser.is_superuser }}', 0);
-			</script>
-			
-		</div>	
-		
-	{% include "foot.html" %}
+					<div class="clear"></div>
+				</div>
+			</form>
+		</div>
+
+		<script type="text/javascript">
+			var ticketDetail = new Kanban.TicketDetail('ticketDetailBox', {{ loguser.id }}, '{{ loguser.is_superuser }}', 0);
+		</script>
+
+	</div>
+{% endblock body %}

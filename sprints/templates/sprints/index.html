@@ -1,5 +1,6 @@
-{% include "head.html" %}
+{% extends "agile/base.html" %}
 
+{% block body %}
 	{% if sprints %}
 		<table class="sprintsList">
 		{% for s in sprints %}
@@ -13,5 +14,4 @@
 		{% endfor %}
 		</table>
 	{% endif %}
-
-{% include "foot.html" %}
+{% endblock body %}

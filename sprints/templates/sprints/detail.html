@@ -1,8 +1,10 @@
-{% include "head.html" %}
-<div class="graphDetail">
-	<p><a href="/kanban/kanban/">&laquo;Zpět na tabuli</a></p>
+{% extends "agile/base.html" %}
+{% load i18n %}
+{% block body %}
+	<div class="graphDetail">
+	<p><a href="/tickets/">&laquo; {% trans "Back to board" %}</a></p>
 
-	<h1>Detail sprintu {{ sprint.date_from|date:"d.n.Y" }} - {{ sprint.date_to|date:"d.n.Y" }}</h1>
+	<h1>Sprint detail {{ sprint.date_from|date:"d.n.Y" }} - {{ sprint.date_to|date:"d.n.Y" }}</h1>
 
 	<div>
 		{% if dates %}
@@ -11,11 +13,10 @@
 			{% endfor %}
 		{% endif %}
 		<hr />
-		
+
 		<div id="graphRoot" style="height:300px; width:100%; position:relative;"></div>
-		
+
 		<script>
-			
 			var dates = [];
 			{% for d in dates %}
 				dates.push({ label : '{{ d|date:"d.n.Y" }}', color : '#000', width : '1px' });
@@ -32,16 +33,14 @@
 			{% for done in done %}
 				done.push({{ done }});
 			{% endfor %}
-			
+
 			var todo = { label : 'todo', data : todo };
 			var devel = {label : 'devel', data : devel };
 			var done = { label : 'done', data : done };
 			var all = [ todo, devel, done ];
 			var lbchart = new JAK.LBChart(JAK.gel('graphRoot'), all, dates, {});
-			
+
 		</script>
-		
-		
 	</div>
 </div>
-{% include "foot.html" %}
+{% endblock body %}

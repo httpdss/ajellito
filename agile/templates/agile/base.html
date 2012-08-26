@@ -1,0 +1,38 @@
+{% extends "theme_bootstrap/less_base.html" %}
+{% load staticfiles i18n %}
+{% load url from future %}
+
+{% block body_class %}agile{% endblock %}
+
+{% block subnav %}
+	{% if users %}
+	<select name="userTicket" id="userTicket">
+		<option value="0" selected="selected">{% trans "All" %}</option>
+		{% for u in users %}
+			<option value="{{ u.username }}">
+			{% if u.first_name == '' %}
+				{{ u.username }}
+			{% else %}
+				{{ u.first_name }}&nbsp;{{ u.last_name }}
+			{% endif %}
+			</option>
+		{% endfor %}
+	</select>
+	{% endif %}
+{% endblock subnav %}
+
+{% block extra_body %}
+
+{% endblock extra_body %}
+
+{% block extra_head %}
+	<link rel="stylesheet" href="{% static "agile/css/style.css" %}" type="text/css" media="all" />
+	<script type="text/javascript" src="{% static "agile/js/01_common.js" %}"></script>
+
+		<script type="text/javascript" src="{% static "agile/js/graphics.js" %}"></script>
+		<script type="text/javascript" src="{% static "agile/js/lbchart.js" %}"></script>
+
+		<script type="text/javascript" src="{% static "agile/js/interpolator.js" %}"></script>
+		<script type="text/javascript" src="{% static "agile/js/dragdrop.js" %}"></script>
+		<script type="text/javascript" src="{% static "agile/js/kanban.js" %}"></script>
+{% endblock extra_head %}

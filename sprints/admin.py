@@ -1,4 +1,4 @@
-from agile.sprints.models import Sprints
+from sprints.models import Sprints
 from django.contrib import admin
 
 class SprintsAdmin(admin.ModelAdmin):

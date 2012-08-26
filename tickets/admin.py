@@ -1,4 +1,4 @@
-from agile.tickets.models import Tickets
+from tickets.models import Tickets
 from django.contrib import admin
 
 class TicketsAdmin(admin.ModelAdmin):

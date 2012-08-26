@@ -1,8 +1,8 @@
 from django.db import models
 import datetime
-#from agile.users.models import Users
+#from users.models import Users
 from django.contrib.auth.models import User
-from agile.table.models import Tables
+from table.models import Tables
 
 class Tickets(models.Model):
     tables = models.ManyToManyField(Tables)
@@ -17,11 +17,8 @@ class Tickets(models.Model):
 
     def was_published_today(self):
         return self.pub_date.date() == datetime.time.today()
-    #enddef
-    was_published_today.short_description = 'Publikovano dnes ?'
+
+    was_published_today.short_description = 'Posted today?'
 
     def __unicode__(self):
         return self.service
-    #enddef
-#endclass
-

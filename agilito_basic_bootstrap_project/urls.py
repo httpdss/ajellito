@@ -27,6 +27,9 @@ urlpatterns = patterns("",
     url(r"^agilito/", include("agilito.urls")),
     url(r"^comments/", include("agilito.urls_comments")),
 
+    url(r"^tickets/", include("tickets.urls")),
+    url(r"^sprints/", include("sprints.urls")),
+
     #url(r"^kanban/", include('kanban.urls')),
 )
 

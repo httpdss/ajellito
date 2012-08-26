@@ -1,4 +1,4 @@
-from django.conf.urls import patterns, url
+from django.conf.urls.defaults import *
 
 urlpatterns = patterns('',
     url(r'^$', 'tickets.views.index', name="tickets-index"),

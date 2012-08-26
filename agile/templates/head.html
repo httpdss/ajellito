@@ -4,16 +4,9 @@
 		<title>Kanban</title>
 		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
 		<meta http-equiv="content-language" content="cs" />
-		<link rel="stylesheet" href="/media/css/style.css?0" type="text/css" media="all" />
+
 		<link rel="shortcut icon" href="/media/img/favicon.ico" />
-		<script type="text/javascript" src="/media/js/kanban/01_common.js?0"></script>
 
-		<script type="text/javascript" src="/media/js/kanban/graphics.js?0"></script>
-		<script type="text/javascript" src="/media/js/kanban/lbchart.js?0"></script>
-
-		<script type="text/javascript" src="/media/js/kanban/interpolator.js?0"></script>
-		<script type="text/javascript" src="/media/js/kanban/dragdrop.js?0"></script>
-		<script type="text/javascript" src="/media/js/kanban/kanban.js?0"></script>
 	</head>
 	<body>
 		<div class="head">
@@ -31,21 +24,7 @@
 					{% endif %}
 				</a>
 
-				{% if users %}
-				&nbsp;|&nbsp;
-				<select name="userTicket" id="userTicket">
-					<option value="0" selected="selected">All</option>
-					{% for u in users %}
-						<option value="{{ u.username }}">
-						{% if u.first_name == '' %}
-							{{ u.username }}
-						{% else %}
-							{{ u.first_name }}&nbsp;{{ u.last_name }}
-						{% endif %}
-						</option>
-					{% endfor %}
-				</select>
-				{% endif %}
+
 
 				{% if sprintDates %}
 				<!--- datumy sprintu --->
@@ -58,7 +37,7 @@
 				</form>
 				{% endif %}
 
-				<a class="home" href="/kanban/kanban/"><img src="/media/img/house.png" alt="home" title="" /></a>
+				<a class="home" href="/tickets/"><img src="/media/img/house.png" alt="home" title="" /></a>
 
 				<div class="clear"></div>
 			</div>

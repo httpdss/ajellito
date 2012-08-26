@@ -1,6 +1,5 @@
 from django.db import models
 
-# Create your models here.
 
 class Sprints(models.Model):
     date_from = models.DateTimeField('date_from')
@@ -8,8 +7,4 @@ class Sprints(models.Model):
     max_develop = models.IntegerField()
 
     def __unicode__(self):
-        return str(self.date_from)+' - '+str(self.date_to)
-    #enddef
-
-#endclass
-
+        return str(self.date_from) + ' - ' + str(self.date_to)

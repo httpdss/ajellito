@@ -25,16 +25,16 @@ h1				{ color:#FFF; text-align:center; }
 .graphs a 		{ color:#fff; }
 .graphs form	{ display:inline; }
 .login			{ background-color:#000; opacity:0.8; position:relative; top:0px; float:left; color:#FFF; padding:0 10px; }
-.login a		{ font-weight:bold; color:#FFF; font-size:18px; background:url(/media/img/plus.png) left center no-repeat; padding:15px 10px 15px 35px; display:block; text-decoration:none; }
+.login a		{ font-weight:bold; color:#FFF; font-size:18px; background:url(../img/plus.png) left center no-repeat; padding:15px 10px 15px 35px; display:block; text-decoration:none; }
 .topMenu		{ background-color:#000; padding:1px 10px 11px 10px; position:absolute; left:100px; width:600px; }
 .home img		{ position:relative; }
 .arrows 		{ text-align:center; }
 
 
-.addTicketButton		{ background:#ccc url(/media/img/button-plus.png) 8px 50% no-repeat; display:block; padding:8px 8px 8px 32px; border:2px solid #666; color:#000; font-weight:bold; font-size:125.5%; text-decoration:none; margin:5px auto; width:160px; }
+.addTicketButton		{ background:#ccc url(../img/button-plus.png) 8px 50% no-repeat; display:block; padding:8px 8px 8px 32px; border:2px solid #666; color:#000; font-weight:bold; font-size:125.5%; text-decoration:none; margin:5px auto; width:160px; }
 
-.collumn				{ width:31.9%; border:3px solid #464b47; float:left; margin-left:10px; background:#666 url(/media/img/ticketsbg.png) left top repeat; =height:650px; min-height:650px; }
-.collumn h1				{ color:#FFF; text-align:left; text-transform:uppercase; padding:7px 0 0 15px; background:url(/media/img/tabbg.png) left top repeat-x; height:38px; }
+.collumn				{ width:31.9%; border:3px solid #464b47; float:left; margin-left:10px; background:#666 url(../img/ticketsbg.png) left top repeat; =height:650px; min-height:650px; }
+.collumn h1				{ color:#FFF; text-align:left; text-transform:uppercase; padding:7px 0 0 15px; background:url(../img/tabbg.png) left top repeat-x; height:38px; }
 .collumn ul,ol			{ padding:0; margin:0; list-style-type:none; }
 .collumn .ticket,
 .ticket					{ background-color:#dfe9e5; padding:8px; border:3px solid #b3bab7; width:43%; height:130px; margin:5px 0px 0px 5px; float:left; overflow:hidden; position:relative; }
@@ -45,7 +45,7 @@ h1				{ color:#FFF; text-align:center; }
 .ticket .owners			{ margin:10px 0; }
 .ticket .owners p		{ width:50px; height:50px; padding:1px; border:1px solid #FFF; overflow:hidden; float:left; background-color:#000; }
 .ticket .avatar			{ position:absolute; bottom:1px; right:1px; display:block; width:45px; height:45px; overflow:hidden; }
-.ticket .avatar .zoom	{ background:url(/media/img/zoom.png) left top no-repeat; width:43px; height:43px; display:block; z-index:2; position:absolute; }
+.ticket .avatar .zoom	{ background:url(../img/zoom.png) left top no-repeat; width:43px; height:43px; display:block; z-index:2; position:absolute; }
 .ticket .avatar	img		{ border:1px solid #FFF; z-index:2; }
 .collumn .item h3		{ text-align:center; border-bottom:1px solid #666; }
 .collumn .date			{ font-size:90%; }
@@ -71,7 +71,7 @@ h1				{ color:#FFF; text-align:center; }
 #ticketDetailBox p		{ text-align:right; }
 #ticketDetailBox input	{ width:20em; }
 
-.loading				{ background:#000 url(/media/img/ajax-loader.gif) 50% 50% no-repeat; }
+.loading				{ background:#000 url(../img/ajax-loader.gif) 50% 50% no-repeat; }
 
 .sprintsList 			{ width:60%; margin:0 auto; list-style-type:none; font-size:18px; color:#fff; }
 .sprintsList td			{ border:1px dotted #ccc; padding-left:15px; }

@@ -4,7 +4,7 @@ from django.shortcuts import  render_to_response, get_object_or_404
 from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.core.urlresolvers import reverse
 from django.template import RequestContext
-from agile.table.models import Tables
+from table.models import Tables
 
 def index(req):
     tables = Tables.objects.all()

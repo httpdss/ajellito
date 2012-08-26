@@ -1,4 +1,4 @@
-from django.conf.urls import patterns, url
+from django.conf.urls.defaults import *
 
 urlpatterns = patterns('',
     url(r'^graphs/$', 'sprints.views.index', name="sprints-index"),

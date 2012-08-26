@@ -2,9 +2,9 @@ from datetime import datetime, date, timedelta
 from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext
-from agile.sprints.models import Sprints
-from agile.tickets.models import Tickets
-from agile.table.models import Tables
+from sprints.models import Sprints
+from tickets.models import Tickets
+from table.models import Tables
 from django.contrib.auth.models import User
 from django.db.models import Q
 
