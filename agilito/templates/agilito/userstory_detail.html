@@ -20,21 +20,13 @@
         float:right;
     }
     #us-resume {
-        width:96%;
-        padding:0 2%;
-        margin:10px 0;
         background-color:#ddeeff;
     }
     
     #us-resume #rank {
         font-size:30px;
     }
-    
-    #us-resume .state, #us-resume .time {
-        float:left;
-        width:50%;
-    }
-    
+
     #us-resume .state {
         text-align:right;
     }
@@ -47,100 +39,115 @@
 {% endblock %}
 
 {% block body %}
-<ul class="breadcrumbs">
-    <li id="breadcrumb-project">{{ object.project.name }} &gt; </li>
-    {% if object.iteration %}
-    <li id="breadcrumb-iteration"><a href="{{ object.iteration.get_absolute_url }}">{{ object.iteration.name }}</a> &gt; </li> 
-    {% else %}
-    <li id="breadcrumb-backlog"><a href="{% url product_backlog object.project_id %}">{% trans "Backlog" %}</a> &gt; </li>
-    {% endif %}
-    <li id="breadcrumb-story">{{ object.name }}</li>
-    <li class="visualClear" />
-</ul>
-<div id="us-head" {%if object.is_blocked%}class="blocked"{% endif %}> 
-    <h2>{{ object }} {% include "agilito/short_url.html" %}</h2>
-    <div class="visualClear"></div>
-</div>
-<div id="us-resume">
-    <ul class="time">
-        <li><span id="estimate">{% trans "Estimate:" %} <strong>{{object.estimated}}</strong></span></li>
-        <li><span id="actuals">{% trans "Actuals:" %} <strong>{{object.actuals}}</strong></span></li>
-        <li><span id="remaining">{% trans "Remaining:" %} <strong>{{object.remaining}} </strong></span></li>
-        {% if object.planned %}
-        <li><span id="planned">{% trans "Planned:" %} <strong>{{object.planned}}</strong></span></li>
-        {% endif %}
-    </ul>
-    <div class="state">
-        <p><strong id="rank">
-        {% if object.rank %}
-        {{ object.size_label }}
+<div class="row">
+<div class="span12">
+    <ul class="breadcrumbs">
+        <li id="breadcrumb-project">{{ object.project.name }} &gt; </li>
+        {% if object.iteration %}
+        <li id="breadcrumb-iteration"><a href="{{ object.iteration.get_absolute_url }}">{{ object.iteration.name }}</a> &gt; </li> 
         {% else %}
-        -
+        <li id="breadcrumb-backlog"><a href="{% url product_backlog object.project_id %}">{% trans "Backlog" %}</a> &gt; </li>
         {% endif %}
-        </strong></p>
-        <p id="state" class="{{ object.get_state_display|slugify }}">{% trans "State:" %} {{object.get_state_display}} {% if object.is_blocked %}{% trans "blocked" %}{% endif %}</p>
-        {% if object.is_blocked %}
-        <span style="display:none" id="blocked">{{object.is_blocked}}</span>
-        {% endif %}
-    </div>  
-    <div class="visualClear"></div>
+        <li id="breadcrumb-story">{{ object.name }}</li>
+    </ul>
+</div>
+</div>
+<div class="row">
+<div class="span12">
+    <div id="us-head" {%if object.is_blocked%}class="blocked"{% endif %}>
+        <h2>{{ object }} {% include "agilito/short_url.html" %}</h2>
+    </div>
+</div>
 </div>
 
-    <div id="description" class="description">{{object.description|markdown}}</div>
-
-<h3>{% trans "Attachments" %}</h3>
-{% if object.userstoryattachment_set.all %}
-<table class="pretty-table attachments" >
-<thead>
-    <tr>
-        <th style="width:3%;"></th>
-        <th style="width:20%;"></th>
-        <th style="width:68%;"></th>
-        <th style="width:3%;"></th>
-        <th style="width:3%;"></th>
-        <th style="width:3%;"></th>
-    </tr>
-</thead>
-<tbody>
-{% for attach in object.userstoryattachment_set.all %}
-    <tr class="{% cycle even,odd %}">
-        <td style="width:20px;">
-            <span rel="{{attach.attachment}}" class="icon">&nbsp;</span>
-        </td>
-        <td>
-            <a href="{% url agilito_view_attachment current_project.id,object.id,attach.id %}" rel="facebox"> 
-                {{attach.name}}
+<div id="us-head" class="row">
+        <div class="span10">
+            <ul class="time">
+                <li><span id="estimate">{% trans "Estimate:" %} <strong>{{object.estimated}}</strong></span></li>
+                <li><span id="actuals">{% trans "Actuals:" %} <strong>{{object.actuals}}</strong></span></li>
+                <li><span id="remaining">{% trans "Remaining:" %} <strong>{{object.remaining}} </strong></span></li>
+                {% if object.planned %}
+                <li><span id="planned">{% trans "Planned:" %} <strong>{{object.planned}}</strong></span></li>
+                {% endif %}
+            </ul>
+        </div>
+        <div class="span2 state">
+            <p><strong id="rank">
+            {% if object.rank %}
+            {{ object.size_label }}
+            {% else %}
+            -
+            {% endif %}
+            </strong></p>
+            <p id="state" class="{{ object.get_state_display|slugify }}">{% trans "State:" %} {{object.get_state_display}} {% if object.is_blocked %}{% trans "blocked" %}{% endif %}</p>
+            {% if object.is_blocked %}
+            <span style="display:none" id="blocked">{{object.is_blocked}}</span>
+            {% endif %}
+        </div>
+</div>
+<div class="row">
+    <div class="span12">
+        <div id="description" class="description">{{object.description|markdown}}</div>
+    </div>
+</div>
+<div class="row">
+<div class="span12">
+    <h3>{% trans "Attachments" %}</h3>
+    {% if object.userstoryattachment_set.all %}
+    <table class="table table-striped attachments" >
+    <thead>
+        <tr>
+            <th style="width:3%;"></th>
+            <th style="width:20%;"></th>
+            <th style="width:68%;"></th>
+            <th style="width:3%;"></th>
+            <th style="width:3%;"></th>
+            <th style="width:3%;"></th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for attach in object.userstoryattachment_set.all %}
+        <tr class="{% cycle even,odd %}">
+            <td style="width:20px;">
+                <span rel="{{attach.attachment}}" class="icon">&nbsp;</span>
+            </td>
+            <td>
+                <a href="{% url agilito_view_attachment current_project.id,object.id,attach.id %}" rel="facebox"> 
+                    {{attach.name}}
+                </a>
+            </td>
+            <td>
+                {{attach.description|safe}}
+            </td>
+            <td>
+                <a id="att_dwld" href="{{attach.attachment.url}}"> 
+                    <img src="{{ STATIC_URL }}agilito/img/save.png" alt="download this file" />
+                </a>
+            </td>
+            <td>
+                <a href="{% url agilito_view_attachment_secret current_project.id,object.id,attach.id,attach.get_secret_filepath %}" class="copypaste"> 
+                    <img src="{{STATIC_URL}}pinax/img/silk/icons/link_go.png" alt="Public link" title="{% trans 'Public link' %}" />
+                </a>
+            </td>
+            <td>
+                <a id="att_del" href="{% url agilito.views.delete_attachment current_project.id,object.id,attach.id %}?last_page={{last_page}}">
+                <img src="{{ STATIC_URL }}agilito/img/delete.png" alt="delete" title="delete" width="16" height="16" />
             </a>
-        </td>
-        <td>
-            {{attach.description|safe}}
-        </td>
-        <td>
-            <a id="att_dwld" href="{{attach.attachment.url}}"> 
-                <img src="{{ STATIC_URL }}agilito/img/save.png" alt="download this file" />
-            </a>
-        </td>
-        <td>
-            <a href="{% url agilito_view_attachment_secret current_project.id,object.id,attach.id,attach.get_secret_filepath %}" class="copypaste"> 
-                <img src="{{STATIC_URL}}pinax/img/silk/icons/link_go.png" alt="Public link" title="{% trans 'Public link' %}" />
-            </a>
-        </td>
-        <td>
-            <a id="att_del" href="{% url agilito.views.delete_attachment current_project.id,object.id,attach.id %}?last_page={{last_page}}">
-            <img src="{{ STATIC_URL }}agilito/img/delete.png" alt="delete" title="delete" width="16" height="16" />
-        </a>
-        </td>
-    </tr>
-{% endfor %}
-</tbody>
-</table>
-{% else%}
-<p>{% trans "No attachments for this user story" %}</p>
-{% endif %}
-
-<h3 id="tasks">{% trans "Tasks" %}</h3>
-  {% if object.task_set.all %}
-  <table class="table table-striped">
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+    </table>
+    {% else%}
+    <p>{% trans "No attachments for this user story" %}</p>
+    {% endif %}
+</div>
+</div>
+<div class="row">
+<div class="span12">
+    <h3 id="tasks">{% trans "Tasks" %}</h3>
+    {% if object.task_set.all %}
+    <table class="table table-striped">
       <thead>
           <tr>
               <th>{% trans "Id" %}</th>
@@ -161,31 +168,37 @@
           {% include "agilito/task.html" %}
           {%endfor%}
       </tbody>
-  </table>
-{% else %}
-<p>{% trans "No tasks for this user story" %}</p>
-{% endif %}
-<h3 id="test-cases">{% trans "Test Cases" %}</h3>
-{% if object.testcase_set.all %}
-<table class="table table-striped" >
-<thead>
-    <tr>
-        <th>{% trans "Id" %}</th>
-        <th>{% trans "Test Name" %}</th>
-        <th>{% trans "Result" %}</th>
-        <th>{% trans "Priority" %}</th>
-        <th>{% trans "Description" %}</th>
-    </tr>
-</thead>
-<tbody>
-{% for object in object.testcase_set.all %}
-{% include "agilito/testcase.html" %}
-{%endfor%}
-</tbody>
-</table>
-{% else %}
-<p>{% trans "No tests for this user story" %}</p>
-{% endif %}
+    </table>
+    {% else %}
+    <p>{% trans "No tasks for this user story" %}</p>
+    {% endif %}
+</div>
+</div>
+<div class="row">
+<div class="span12">
+    <h3 id="test-cases">{% trans "Test Cases" %}</h3>
+    {% if object.testcase_set.all %}
+    <table class="table table-striped" >
+    <thead>
+        <tr>
+            <th>{% trans "Id" %}</th>
+            <th>{% trans "Test Name" %}</th>
+            <th>{% trans "Result" %}</th>
+            <th>{% trans "Priority" %}</th>
+            <th>{% trans "Description" %}</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for object in object.testcase_set.all %}
+    {% include "agilito/testcase.html" %}
+    {%endfor%}
+    </tbody>
+    </table>
+    {% else %}
+    <p>{% trans "No tests for this user story" %}</p>
+    {% endif %}
+</div>
+</div>
 {% include "agilito/comments_section.html" %}
 
 {% endblock %}

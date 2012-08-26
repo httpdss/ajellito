@@ -132,6 +132,8 @@ function highlightTag(ids)
         {% include "agilito/iteration_status_header.html" %}
     </div>
     <div>
+        <div class="row">
+        <div class="span12">
         <table summary="stories and tasks" id="user-story-list" class="table table-striped table-bordered">
             <thead>
                 <tr>
@@ -259,21 +261,24 @@ function highlightTag(ids)
                         <div class="task-owner" style="display:none;">{{ta.owner}}</div>
                         {% if ta.owner %}{% avatar ta.owner 16 %}{% endif %}
                     </td>
-                </tr> 
+                </tr>
                 {% endfor %}
                 {% endfor %}
             </tbody>
         </table>
-
+        </div>
+        </div>
         {% if impediments.open or impediments.resolved %}
-        <h3>{% trans "Impediments" %}</h3>
+        <div class="row">
+            <div class="span12">
+                <h3>{% trans "Impediments" %}</h3>
         <table id="impediment-list" >
             <thead>
                 <tr>
-                    <th style="width:10%;">{% trans "Id" %}</th>
-                    <th style="width:10%;">{% trans "Tasks" %}</th>
-                    <th style="width:10%;">{% trans "Risk" %}</th>
-                    <th>{% trans "Name" %}</th>
+                    <th style="width:10%;">{% trans "Id" %}</td>
+                    <th style="width:10%;">{% trans "Tasks" %}</td>
+                    <th style="width:10%;">{% trans "Risk" %}</td>
+                    <td>{% trans "Name" %}</td>
                 </tr>
             </thead>
 
@@ -288,8 +293,35 @@ function highlightTag(ids)
                     <td><a href="{{ impediment_url }}?last_page={{last_page}}">{{ impediment.name }}</a></td>
                 </tr>
 
+                {% for task in impediment.tasks %}
+                <tr id="impediment-{{ impediment.id }}-task-{{ task.id }}" class="child {% cycle even,odd %} child-of-impediment-{{ impediment.id }}">
+                    <td>TA{{ task.id }}</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>{{ task.name }}</td>
+                </tr>
+                {% endfor %}
+                {% endfor %}
+                {% endif %}
+
+                {% if impediments.resolved %}
+                <tr id="resolved-impediments">
+                    <td>&nbsp;</td>
+                    <td>{{ impediments.resolved.count }}</a></td>
+                <td>&nbsp;</td>
+                <td>{% trans "Resolved" %}</td>
+            </tr>
+
+            {% for impediment in impediments.resolved %}
+            <tr id="impediment-{{ impediment.id }}" class="child-of-resolved-impediments">
+                <td><a href="{{ impediment.get_absolute_url }}?last_page={{last_page}}">IM{{ impediment.id }}</a></td>
+                <td>{{ impediment.tasks.count }}</a></td>
+            <td>&nbsp;</td>
+            <td><a href="{{ impediment.get_absolute_url }}?last_page={{last_page}}">{{ impediment.name }}</a></td>
+        </tr>
+
         {% for task in impediment.tasks %}
-        <tr id="impediment-{{ impediment.id }}-task-{{ task.id }}" class="child {% cycle even,odd %} child-of-impediment-{{ impediment.id }}">
+        <tr id="impediment-{{ impediment.id }}-task-{{ task.id }}" class="child-of-impediment-{{ impediment.id }}">
             <td>TA{{ task.id }}</td>
             <td>&nbsp;</td>
             <td>&nbsp;</td>
@@ -298,36 +330,12 @@ function highlightTag(ids)
         {% endfor %}
         {% endfor %}
         {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
 
-        {% if impediments.resolved %}
-        <tr id="resolved-impediments">
-            <td>&nbsp;</td>
-            <td>{{ impediments.resolved.count }}</a></td>
-        <td>&nbsp;</td>
-        <td>{% trans "Resolved" %}</td>
-    </tr>
-
-    {% for impediment in impediments.resolved %}
-    <tr id="impediment-{{ impediment.id }}" class="child-of-resolved-impediments">
-        <td><a href="{{ impediment.get_absolute_url }}?last_page={{last_page}}">IM{{ impediment.id }}</a></td>
-        <td>{{ impediment.tasks.count }}</a></td>
-    <td>&nbsp;</td>
-    <td><a href="{{ impediment.get_absolute_url }}?last_page={{last_page}}">{{ impediment.name }}</a></td>
-</tr>
-
-{% for task in impediment.tasks %}
-<tr id="impediment-{{ impediment.id }}-task-{{ task.id }}" class="child-of-impediment-{{ impediment.id }}">
-    <td>TA{{ task.id }}</td>
-    <td>&nbsp;</td>
-    <td>&nbsp;</td>
-    <td>{{ task.name }}</td>
-</tr>
-{% endfor %}
-{% endfor %}
-{% endif %}
-            </tbody>
-        </table>
-        {% endif %}
+    {% endif %}
 
     </div>
 

@@ -271,17 +271,17 @@ $("#filter").keyup(function() {
     {% block body_header %}
         {% include "agilito/product_backlog_body_header.html" %}
     {% endblock %}
-    
+
     {% block body %}
     <div id="body-header">
         {% include "agilito/product_backlog_body_header.html" %}
     </div>
         {% if backlog %}
-            <form id="filter-form" action="#">{% trans "Filter:" %} <input name="filter" id="filter" value="" maxlength="30" size="30" type="text" />{% csrf_token %}
-</form>
-            <form id="iteration-form" action="#">{% csrf_token %}
-
-                {% trans "Assign marked stories to" %}
+        <div class="row">
+        <div class="span12">
+            <form class="form-inline" id="iteration-form" action="#">{% csrf_token %}
+                <fieldset>
+                    <legend>{% trans "Assign marked stories to" %}</legend>
                     <select onchange="iterationDetails(this)" id="selected-iteration" class="resize">
                         <option value="new">{% trans "New iteration" %}</option>
                         {% for it in iterations %}
@@ -289,11 +289,16 @@ $("#filter").keyup(function() {
                         {% endfor %}
                     </select>
                 <span id="new-iteration">
-                    {% trans "Name:" %} <input onchange="showSave()" id="iterationname" name="iterationname" value="{{newiteration.name}}" maxlength="40" size="40" type="text" />
-                    {% trans "Starts:" %} <input onchange="showSave()" id="iterationstarts" name="iterationstarts" value="{{newiteration.starts}}" maxlength="10" size="10" type="text" />
-                    {% trans "Ends:" %} <input onchange="showSave()" id="iterationends" name="iterationends" value="{{newiteration.ends}}" maxlength="10" size="10" type="text" />
+                     <input placeholder="{% trans "Name:" %}" onchange="showSave()" id="iterationname" name="iterationname" value="{{newiteration.name}}" maxlength="40"  type="text" class="input-small" />
+                    <input placeholder="{% trans "Starts:" %}" onchange="showSave()" id="iterationstarts" name="iterationstarts" value="{{newiteration.starts}}" maxlength="10" type="date" class="input-small" />
+                    <input placeholder="{% trans "Ends:" %}" onchange="showSave()" id="iterationends" name="iterationends" value="{{newiteration.ends}}" maxlength="10" type="date" class="input-small" />
                 </span>
+                </fieldset>
             </form>
+        </div>
+        </div>
+        <div class="row">
+        <div class="span12">
             <table class="table table-striped" summary="product backlog"  id="user-story-list">
                 <thead>
                     <tr class="nodrop nodrag">
@@ -307,18 +312,15 @@ $("#filter").keyup(function() {
                         {% endif %}
                         <th>{% trans "State" %}</th>
                         {% if not is_viewer %}
-                        <th><!-- edit --></th>
-                        <th><!-- move --></th>
-                        <th><!-- delete --></th>        
+                        <th><!-- actions --></th>
                         {% endif %}
                     </tr>
                 </thead>
-    
+
                 <tbody>
                     {% for story in backlog %}
                         {% ifequal story.whatami "UserStory" %}
                             <tr id="us_{{story.id}}" class="{% cycle even,odd %}">
-                                
                                     <td class="mark">
                                         {% if story.iteration %}
                                             {{story.iteration.name}}
@@ -364,20 +366,20 @@ $("#filter").keyup(function() {
                                         title="{{ story.backlog_state }}" alt="{{ story.backlog_state }}" />
                                 </td>
                                 {% if not is_viewer %}
-                                    
-
-                                <td id="edit_us_{{story.id}}" class="edit-button">
-                                    <a href="{% url agilito.views.userstory_edit current_project.id,story.id %}?last_page={{last_page}}">
-                                    <img src="{{ STATIC_URL }}agilito/img/pencil.png" alt="edit" title="edit" width="16" height="16" /></a>
-                                </td>
-                                <td id="move_us_{{story.id}}" class="edit-button">
-                                    <a href="{% url agilito.views.userstory_move current_project.id,story.id %}?last_page={{last_page}}"
-                                        onclick="popup(this, 'us-move'); return false">
-                                    <img src="{{ STATIC_URL }}agilito/img/bullet_go.png" alt="move" title="move" width="16" height="16" /></a>
-                                </td>
-                                <td id="delete_us_{{story.id}}" class="edit-button">
-                                    <a href="{% url agilito.views.userstory_delete current_project.id,story.id %}?last_page={{last_page}}">
-                                    <img src="{{ STATIC_URL }}agilito/img/delete.png" alt="delete" title="delete" width="16" height="16" /></a>
+                                <td>
+                                    <span id="edit_us_{{story.id}}" class="edit-button">
+                                        <a href="{% url agilito.views.userstory_edit current_project.id,story.id %}?last_page={{last_page}}">
+                                        <img src="{{ STATIC_URL }}agilito/img/pencil.png" alt="edit" title="edit" width="16" height="16" /></a>
+                                    </span>
+                                    <span id="move_us_{{story.id}}" class="edit-button">
+                                        <a href="{% url agilito.views.userstory_move current_project.id,story.id %}?last_page={{last_page}}"
+                                            onclick="popup(this, 'us-move'); return false">
+                                        <img src="{{ STATIC_URL }}agilito/img/bullet_go.png" alt="move" title="move" width="16" height="16" /></a>
+                                    </span>
+                                    <span id="delete_us_{{story.id}}" class="edit-button">
+                                        <a href="{% url agilito.views.userstory_delete current_project.id,story.id %}?last_page={{last_page}}">
+                                        <img src="{{ STATIC_URL }}agilito/img/delete.png" alt="delete" title="delete" width="16" height="16" /></a>
+                                    </span>
                                 </td>
                                 {% endif %}
                             </tr>
@@ -391,14 +393,15 @@ $("#filter").keyup(function() {
                                             {{release.name}}{%if release.deadline %}, {% trans "deadline:" %} {{release.deadline}}{% endif %}{% if release_date.date or release_date.error %}, {% trans "projected release date:" %}  {{release_date.date|default_if_none:"unknown"}}{% endif %}{% if release_date.error %} ({{release_date.error}}){% endif %}
                                         </td>
                                         {% if not is_viewer %}
-                                        <td id="edit_re_{{release.id}}" class="edit-button">
-                                            <a href="{% url agilito.views.release_edit current_project.id,release.id %}?last_page={{last_page}}">
-                                                <img src="{{ STATIC_URL }}agilito/img/pencil.png" alt="edit" title="edit" width="16" height="16" /></a>
-                                            </td>
-                                        <td><!-- move --></td>
-                                        <td id="delete_re_{{release.id}}" class="edit-button">
-                                            <a href="{% url agilito.views.release_delete current_project.id,release.id %}?last_page={{last_page}}">
-                                                <img src="{{ STATIC_URL }}agilito/img/delete.png" alt="delete" title="delete" width="16" height="16" /></a>
+                                        <td>
+                                            <span id="edit_re_{{release.id}}" class="edit-button">
+                                                <a href="{% url agilito.views.release_edit current_project.id,release.id %}?last_page={{last_page}}">
+                                                    <img src="{{ STATIC_URL }}agilito/img/pencil.png" alt="edit" title="edit" width="16" height="16" /></a>
+                                                </span>
+                                            <span id="delete_re_{{release.id}}" class="edit-button">
+                                                <a href="{% url agilito.views.release_delete current_project.id,release.id %}?last_page={{last_page}}">
+                                                    <img src="{{ STATIC_URL }}agilito/img/delete.png" alt="delete" title="delete" width="16" height="16" /></a>
+                                            </span>
                                         </td>
                                         {% endif %}
                                     </tr>
@@ -408,6 +411,8 @@ $("#filter").keyup(function() {
                     {%endfor%}
                 </tbody>
             </table>
+        </div>
+        </div>
             {% if earliest_archive %}
                 <form name="archive" action="{% url agilito.views.backlog_archived current_project.id %}" method="post">{% csrf_token %}
                     <div class="form-actions actions">

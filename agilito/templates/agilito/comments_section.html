@@ -6,7 +6,8 @@
 {% load avatar_tags %}
 
 {% if comment_on %}
-<div class="comments_section">
+<div class="row">
+<div class="span12 comments_section">
     <h2>{% trans "Comments" %}</h2>
     {% get_threaded_comment_tree for comment_on as tree %}
     <div>
@@ -59,6 +60,7 @@
             </div>
         </form>
     </div>
+</div>
 </div>
 {% endif %}
 

@@ -2,8 +2,8 @@
 {% load humanize %}
 {% load markup %}
 {% if current_iteration %}
-<div id="iteration-header">
-    <div id="iteration-data"> 
+<div id="iteration-header" class="row">
+    <div id="iteration-data" class="span7"> 
         <table summary="Iteration data">
             <tr>
                 <td colspan="2">
@@ -72,8 +72,7 @@
             </tr>
         </table>
     </div>
-    <div id="burndown" style="width:320px; height:240px;">
+    <div id="burndown" class="hidden-phone span5">
     </div>
-    <div style="clear: both"></div>
 </div>
 {% endif %}

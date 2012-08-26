@@ -1,36 +1,35 @@
 {% load i18n %}
 <h2>
-    {% if current_project %}
-    {{ current_project.name }} &raquo;
-    {% endif %}
-
-    {% trans "Backlog" %}
+    {% if current_project %}{{ current_project.name }} &raquo;{% endif %} {% trans "Backlog" %}
 </h2>
 
 {% if backlog %}
-<div id="us-resume">
-    <span>{% trans "Number of US in Backlog:" %} <strong>{{ user_stories }}</strong> </span> 
-    {% if velocity.sprint_length %}
-    <div>
-        {% blocktrans %}Velocity: {{ velocity.actual }} vs. {{ velocity.planned }} (avg sprint length {{ velocity.sprint_length|floatformat:0 }} days){% endblocktrans %}
-        </div>
-    {% endif %}
-    {% if suggestions %}
-    <div>
-        {% blocktrans %}Sizing accuracy: {{ suggestions.accuracy|floatformat:0 }}%, based on {{ suggestions.base }}{% endblocktrans %}
-    </div>
-    {% endif %}
-    {% else %}
-    {% trans "No user stories in the backlog." %}
-    {% endif %}
-    <div>
-        <form name="states" action="#">
+<div id="us-resume" class="row">
+    <div class="span8">
+        <form name="states" action="#" class="form-inline">
+            <input name="filter" id="filter" value="" maxlength="30" size="30" type="text" placeholder="{% trans "Filter:" %}"/>
             {% for state in states %}
-            <input type="checkbox" id="story_state_{{state.state}}" name="story_state_{{state.state}}" value="{{ state.state }}" />&nbsp;<label class="inline" for="story_state_{{state.state}}">{{state.name}}</label>
+            <label for="story_state_{{state.state}}" class="checkbox"><input type="checkbox" id="story_state_{{state.state}}" name="story_state_{{state.state}}" value="{{ state.state }}" /> {{state.name}}</label>
             {% endfor %}
             <input onclick="select_states(); return false" type="image" src="{{ STATIC_URL }}agilito/img/bullet_go.png" alt="Submit Form" />
         </form>
     </div>
-    {% if backlog %}
+    <div class="span3 pull-right">
+        <p>{% trans "Number of US in Backlog:" %} <strong>{{ user_stories }}</strong></p>
+        {% if velocity.sprint_length %}
+        <div>
+            {% blocktrans %}Velocity: {{ velocity.actual }} vs. {{ velocity.planned }} (avg sprint length {{ velocity.sprint_length|floatformat:0 }} days){% endblocktrans %}
+            </div>
+        {% endif %}
+        {% if suggestions %}
+        <div>
+            {% blocktrans %}Sizing accuracy: {{ suggestions.accuracy|floatformat:0 }}%, based on {{ suggestions.base }}{% endblocktrans %}
+        </div>
+        {% endif %}
+    </div>
+{% else %}
+    {% trans "No user stories in the backlog." %}
+{% endif %}
+{% if backlog %}
 </div>
 {% endif %}
