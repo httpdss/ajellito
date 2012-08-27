@@ -26,8 +26,6 @@ v1_api.register(ProjectResource())
 urlpatterns = patterns('agilito.views',
     url(r'^$', 'index', name="agilito_index"),
 
-    (r'^(?P<project_id>\d+)/touch/$', 'touch_cache'),
-
     url(r"^api/", include(v1_api.urls)),
 
     url(r"^project/$", login_required(ProjectList.as_view()), name="project_list"),
@@ -125,6 +123,6 @@ urlpatterns += patterns('',
 #    (r'^agilito/(?P<path>.*)$', 'django.views.static.serve', {'document_root': media_root}),
 #    (r'^xmlrpc/', 'agilito.xmlrpc.xmlrpc.view', {'module':'agilito.xmlrpc'}),
 #    (r'^(rsd.xml)$', 'django.views.static.serve', {'document_root': media_root}),
-
+    (r'^(?P<project_id>\d+)/touch/$', 'agilito.tools.touch_cache'),
     (r'^feeds/(?P<url>.*)/$', 'agilito.feeds.feed', {'feed_dict': feeds}),
 )
