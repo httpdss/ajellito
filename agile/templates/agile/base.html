@@ -4,7 +4,7 @@
 
 {% block body_class %}agile{% endblock %}
 
-{% block subnav %}
+{% block nav %}
 	{% if users %}
 	<select name="userTicket" id="userTicket">
 		<option value="0" selected="selected">{% trans "All" %}</option>
@@ -19,7 +19,7 @@
 		{% endfor %}
 	</select>
 	{% endif %}
-{% endblock subnav %}
+{% endblock nav %}
 
 {% block extra_body %}
 
@@ -29,10 +29,10 @@
 	<link rel="stylesheet" href="{% static "agile/css/style.css" %}" type="text/css" media="all" />
 	<script type="text/javascript" src="{% static "agile/js/01_common.js" %}"></script>
 
-		<script type="text/javascript" src="{% static "agile/js/graphics.js" %}"></script>
-		<script type="text/javascript" src="{% static "agile/js/lbchart.js" %}"></script>
+	<script type="text/javascript" src="{% static "agile/js/graphics.js" %}"></script>
+	<script type="text/javascript" src="{% static "agile/js/lbchart.js" %}"></script>
 
-		<script type="text/javascript" src="{% static "agile/js/interpolator.js" %}"></script>
-		<script type="text/javascript" src="{% static "agile/js/dragdrop.js" %}"></script>
-		<script type="text/javascript" src="{% static "agile/js/kanban.js" %}"></script>
+	<script type="text/javascript" src="{% static "agile/js/interpolator.js" %}"></script>
+	<script type="text/javascript" src="{% static "agile/js/dragdrop.js" %}"></script>
+	<script type="text/javascript" src="{% static "agile/js/kanban.js" %}"></script>
 {% endblock extra_head %}

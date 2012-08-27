@@ -1,30 +1,27 @@
-import types
 import re
 import datetime
-from datetime import date
-from dateutil.relativedelta import relativedelta
-from operator import attrgetter
-from itertools import groupby
+
 from django import forms
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.utils.translation import ugettext as _
-from agilito.models import UserStory, Task, TestCase, TaskLog, TestResult,\
-    UserProfile, UserStoryAttachment, Impediment, Iteration, Release, Project,ProjectMember
 
-from agilito.widgets import HierarchicRadioSelect, TaskHierarchy
-from agilito.fields import GroupedChoiceField
+from agilito.models import UserStory, Task, TestCase, TaskLog, TestResult,\
+    UserProfile, UserStoryAttachment, Impediment, Iteration, Release, Project, ProjectMember
+from agilito.widgets import HierarchicRadioSelect, TaskHierarchy, TableSelectMultiple
 
 from tagging.forms import TagField
-from agilito.widgets import AutoCompleteTagInput, TableSelectMultiple
+
 
 class UserProfileForm(forms.ModelForm):
     class Meta:
         model = UserProfile
         exclude = ('user',)
 
+
 class HiddenHttpRefererForm(forms.ModelForm):
     http_referer = forms.CharField(widget=forms.HiddenInput, required=False)
+
 
 class IterationForm(HiddenHttpRefererForm):
     def __init__(self, *args, **kwargs):
@@ -36,6 +33,7 @@ class IterationForm(HiddenHttpRefererForm):
     class Meta:
         model = Iteration
 
+
 class ReleaseForm(HiddenHttpRefererForm):
     def __init__(self, *args, **kwargs):
         self.project = kwargs.pop('project')
@@ -45,26 +43,13 @@ class ReleaseForm(HiddenHttpRefererForm):
     class Meta:
         model = Release
 
+
 class UserStoryAttachmentForm(HiddenHttpRefererForm):
-
-#### No point in having this code here, this basicly modifies the queryset for
-#### for the user_story field, but since we are not going to modified I commented it.
-#    def __init__(self, *args, **kwargs):
-#        try:
-#            project = kwargs.pop('project')
-#        except KeyError:
-#            project = None
-#
-#        super(UserStoryAttachmentForm, self).__init__(*args, **kwargs)
-
-#        if project is not None:
-#            us_qset = UserStory.objects.filter(project=project)
-#            self.fields['user_story'] = forms.ModelChoiceField(queryset=us_qset,
-#                                                               required=False)
 
     class Meta:
         model = UserStoryAttachment
         exclude = ('user_story',)
+
 
 class IterationImportForm(forms.Form):
     data = forms.CharField(widget=forms.widgets.Textarea(attrs={'class': 'mceNoEditor'}))
@@ -91,11 +76,11 @@ class IterationImportForm(forms.Form):
         # validate iteration header
         for i, s in enumerate(['id', 'name', 'start', 'end']):
             if rows[0][i].lower() != s:
-                raise forms.ValidationError(_('unexpected header "%{h1}", expected "%{h2}"' ).format(h1=rows[0][i], h2=s))
+                raise forms.ValidationError(_('unexpected header "%{h1}", expected "%{h2}"').format(h1=rows[0][i], h2=s))
 
         for i, cell in enumerate(rows[1]):
             if cell and i >= len(rows[0]):
-                raise forms.ValidationError(_('Unexpected "%s" in iteration data' ) % cell)
+                raise forms.ValidationError(_('Unexpected "%s" in iteration data') % cell)
 
         if not rows[1][0] and not rows[1][1]:
             raise forms.ValidationError(_('You must specify at least an iteration id or name'))
@@ -107,12 +92,12 @@ class IterationImportForm(forms.Form):
             try:
                 id = int(rows[1][0])
             except ValueError:
-                raise forms.ValidationError(_('unexpected iteration ID "%s" (must be numeric)' ).format(rows[1][0]))
+                raise forms.ValidationError(_('unexpected iteration ID "%s" (must be numeric)').format(rows[1][0]))
 
             try:
                 iteration = Iteration.objects.get(project__id=self.project_id, id=id)
             except Iteration.DoesNotExist:
-                raise forms.ValidationError(_('Iteration %d does not exist' ) % id)
+                raise forms.ValidationError(_('Iteration %d does not exist') % id)
         else:
             try:
                 iteration = Iteration.objects.get(project__id=self.project_id, name=rows[1][1])
@@ -123,7 +108,7 @@ class IterationImportForm(forms.Form):
         for cell in rows[1][2:4]:
             if cell:
                 if not re.match('[0-9]{4}-[0-9]{1,2}-[0-9]{1,2}$', cell):
-                    raise forms.ValidationError(_('unexpected date "%s"' ) % cell)
+                    raise forms.ValidationError(_('unexpected date "%s"') % cell)
 
         # iteration is OK
         iteration = {}
@@ -137,10 +122,10 @@ class IterationImportForm(forms.Form):
         for i, s in enumerate(['id', 'story', 'task', 'estimate', 'owner', 'tags']):
             try:
                 if rows[2][i].lower() != s:
-                    raise forms.ValidationError(_('unexpected header "%{h1}", expected "%{h2}"' ).format(h1=rows[2][i], h2=s))
+                    raise forms.ValidationError(_('unexpected header "%{h1}", expected "%{h2}"').format(h1=rows[2][i], h2=s))
             except IndexError:
                 if i <= 3:
-                    raise forms.ValidationError(_('missing header, expected "%s"' ) % s)
+                    raise forms.ValidationError(_('missing header, expected "%s"') % s)
 
         stories = {}
         story_order = []
@@ -149,59 +134,62 @@ class IterationImportForm(forms.Form):
 
             for i, cell in enumerate(rowdata):
                 if cell and i >= len(rows[2]):
-                    raise forms.ValidationError(rn + _('unexpected "%s" in sprint data' ) % cell)
+                    raise forms.ValidationError(rn + _('unexpected "%s" in sprint data') % cell)
 
             row = {}
             for i, s in enumerate(sprintheader):
                 row[s.lower()] = rowdata[i]
 
             if not row['id'] and not row['story']:
-                raise forms.ValidationError(rn + _( 'you must specify at least a story id or name') )
+                raise forms.ValidationError(rn + _('you must specify at least a story id or name'))
 
             if not row['task']:
-                raise forms.ValidationError(rn + _( 'you must specify a task name') )
+                raise forms.ValidationError(rn + _('you must specify a task name'))
 
             if row['id']:
                 try:
                     id = int(row['id'])
                 except ValueError:
-                    raise forms.ValidationError(rn + _('unexpected story ID "%s" (must be numeric)' ) % row['id'])
+                    raise forms.ValidationError(rn + _('unexpected story ID "%s" (must be numeric)') % row['id'])
 
                 try:
                     story = UserStory.objects.get(id=id)
                 except UserStory.DoesNotExist:
-                    raise forms.ValidationError(rn + _('story %d does not exist' ) % id)
+                    raise forms.ValidationError(rn + _('story %d does not exist') % id)
                 key = id
+                story = story
 
             else:
                 key = row['story']
                 id = None
 
-            if not stories.has_key(key):
+            if not key in stories:
                 story_order.append(key)
                 stories[key] = {'id': id, 'name': row['story'], 'tasks': []}
 
             if stories[key]['name'] and row['story'] and stories[key]['name'] != row['story']:
-                raise forms.ValidationError(rn + _('conflicting names for same story' ) % id)
-            
+                raise forms.ValidationError(rn + _('conflicting names for same story') % id)
+
             if not row['estimate']:
-                raise forms.ValidationError(rn + _( 'you must specify a task estimate') )
+                raise forms.ValidationError(rn + _('you must specify a task estimate'))
             try:
                 est = float(row['estimate'])
             except ValueError:
-                raise forms.ValidationError(rn + _('unexpected task estimate "%s" (must be numeric)' ) % row['estimate'])
+                raise forms.ValidationError(rn + _('unexpected task estimate "%s" (must be numeric)') % row['estimate'])
+            est = est
 
-            if row.has_key('owner') and row['owner']:
+            if 'owner' in row:
                 username = (row['owner'].split('/')[0]).strip()
                 try:
                     owner = User.objects.get(username=username)
                 except User.DoesNotExist:
-                    raise forms.ValidationError(rn + _('user %s does not exist' ) % username)
+                    raise forms.ValidationError(rn + _('user %s does not exist') % username)
                 row['owner'] = username
             else:
                 row['owner'] = None
+            owner = owner
 
-            if row.has_key('tags') and row['tags']:
+            if 'tags' in row:
                 row['tags'] = [t.strip() for t in row['tags'].split('/')]
             else:
                 row['tags'] = []
@@ -222,14 +210,15 @@ class IterationImportForm(forms.Form):
         ns = self.cleaned_data['new_stories']
 
         if not ni and not it['id']:
-            raise forms.ValidationError(_('You are creating a new iteration. Please check the appropriate checkbox to confirm.') )
+            raise forms.ValidationError(_('You are creating a new iteration. Please check the appropriate checkbox to confirm.'))
 
         if not ns:
             for st in stories:
                 if not st['id']:
-                    raise forms.ValidationError(_('You are creating a new story. Please check the appropriate checkbox to confirm.') )
+                    raise forms.ValidationError(_('You are creating a new story. Please check the appropriate checkbox to confirm.'))
 
         return self.cleaned_data
+
 
 class ImpedimentForm(HiddenHttpRefererForm):
     tasks = forms.MultipleChoiceField(widget=TableSelectMultiple(item_attrs=('id', 'name'), grouper=('user_story', 'name')))
@@ -257,22 +246,23 @@ class ImpedimentForm(HiddenHttpRefererForm):
     def clean_state(self):
         state = self.cleaned_data['state']
         if not state in ('open', 'resolved', 'reopen'):
-            raise forms.ValidationError(_('Invalid state selected') )
+            raise forms.ValidationError(_('Invalid state selected'))
         return state
 
     def clean(self):
         if 'tasks' not in self.cleaned_data or len(self.cleaned_data['tasks']) == 0:
-            raise forms.ValidationError(_('You must select at least one task.') )
+            raise forms.ValidationError(_('You must select at least one task.'))
         return self.cleaned_data
 
     class Meta:
         model = Impediment
         fields = 'name', 'description', 'tasks'
 
+
 class UserStoryForm(HiddenHttpRefererForm):
     tags = TagField(required=False)
 
-    def __init__(self,*args, **kwargs):
+    def __init__(self, *args, **kwargs):
         try:
             project = kwargs.pop('project')
         except KeyError:
@@ -303,11 +293,12 @@ class UserStoryForm(HiddenHttpRefererForm):
         model = UserStory
         fields = 'name', 'description', 'rank', 'size', 'state', 'iteration', 'tags'
 
+
 class UserStoryMoveForm(forms.ModelForm):
-    copy_tasks = forms.BooleanField(label=_('Copy tasks') , required=False)
+    copy_tasks = forms.BooleanField(label=_('Copy tasks'), required=False)
     action = forms.ChoiceField(choices=[])
 
-    def __init__(self,*args, **kwargs):
+    def __init__(self, *args, **kwargs):
         user_story = kwargs['instance']
         project = kwargs.pop('project')
         it = user_story.iteration
@@ -317,16 +308,16 @@ class UserStoryMoveForm(forms.ModelForm):
         if user_story.task_set.all().count() == 0:
             self.fields['copy_tasks'].hidden = True
 
-        choices = [('copy_fail',_( 'Copy and Fail original') )]
+        choices = [('copy_fail', _('Copy and Fail original'))]
         if user_story.is_blocked or (user_story.state != UserStory.STATES.COMPLETED and (it is None or it.end_date < datetime.date.today())):
             choices.reverse()
-        choices.append(('copy',_( 'Copy') ))
+        choices.append(('copy', _('Copy')))
 
         if not user_story.is_pinned:
             if user_story.iteration is None:
-                choices = [('move',_( 'Move') )] + choices
+                choices = [('move', _('Move'))] + choices
             else:
-                choices.append(('move',_( 'Move') ))
+                choices.append(('move', _('Move')))
 
         self.fields['action'].choices = choices
 
@@ -341,31 +332,33 @@ class UserStoryMoveForm(forms.ModelForm):
         model = UserStory
         fields = 'iteration', 'action', 'copy_tasks'
 
+
 class TaskForm(HiddenHttpRefererForm):
     actuals = forms.CharField(widget=forms.HiddenInput, required=False)
     tags = TagField(required=False)
 
-    def __init__(self,*args, **kwargs):
+    def __init__(self, *args, **kwargs):
         try:
             project = kwargs.pop('project')
         except KeyError:
             project = None
 
         super(TaskForm, self).__init__(*args, **kwargs)
-        
+
         if project is not None:
             pm_values = ProjectMember.objects.filter(project__pk=1).values('user')
             owner_qset = User.objects.filter(pk__in=pm_values)
-            
+
             self.fields['owner'] = forms.ModelChoiceField(queryset=owner_qset,
                                                           required=False)
 
     class Meta:
         model = Task
         fields = 'name', 'tags', 'description', 'state', 'estimate', 'remaining', 'owner', 'actuals'
-    
+
     class Media:
         js = (settings.STATIC_URL + 'agilito/js/copy_estimate_to_remaining.js',)
+
 
 class TestCaseAddForm(HiddenHttpRefererForm):
 
@@ -373,12 +366,13 @@ class TestCaseAddForm(HiddenHttpRefererForm):
         model = TestCase
         exclude = ('user_story',)
 
+
 class TestCaseEditForm(HiddenHttpRefererForm):
     def __init__(self, *w, **kw):
         try:
             project = kw.pop('project')
         except KeyError:
-            project = None        
+            project = None
 
         super(TestCaseEditForm, self).__init__(*w, **kw)
 
@@ -388,6 +382,7 @@ class TestCaseEditForm(HiddenHttpRefererForm):
 
     class Meta:
         model = TestCase
+
 
 def testcase_form_factory(data=None, instance=None, initial=None, project=None):
     if initial is None:
@@ -408,14 +403,14 @@ def testcase_form_factory(data=None, instance=None, initial=None, project=None):
             return TestCaseEditForm(initial=initial, instance=instance, project=project)
         elif not (instance is None) and not (data is None):
             return TestCaseEditForm(data, initial=initial, instance=instance, project=project)
-        
+
 
 class TestResultForm(HiddenHttpRefererForm):
     def __init__(self, *w, **kw):
         try:
             project = kw.pop('project')
         except KeyError:
-            project = None        
+            project = None
 
         super(TestResultForm, self).__init__(*w, **kw)
 
@@ -433,19 +428,25 @@ class TestResultForm(HiddenHttpRefererForm):
     class Meta:
         model = TestResult
 
+
 class UserStoryShortForm(HiddenHttpRefererForm):
+
     class Meta:
         model = UserStory
         fields = 'name', 'description'
 
+
 class ProjectForm(HiddenHttpRefererForm):
+
     class Meta:
         model = Project
+
 
 class TaskField(forms.IntegerField):
     def clean(self, value):
         value = super(TaskField, self).clean(value)
         return Task.objects.get(id=value)
+
 
 def gen_TaskLogForm(user):
     from django.db import connection
@@ -453,17 +454,17 @@ def gen_TaskLogForm(user):
 
     me = user.id
     today = datetime.date.today()
-    recent_task = (today - datetime.timedelta(days = 3)).strftime('%Y-%m-%d')
-    last_end = (today - datetime.timedelta(days = 7)).strftime('%Y-%m-%d')
+    recent_task = (today - datetime.timedelta(days=3)).strftime('%Y-%m-%d')
+    last_end = (today - datetime.timedelta(days=7)).strftime('%Y-%m-%d')
     today = today.strftime('%Y-%m-%d')
 
     menu = TaskHierarchy(None)
-    menu['recent'].name =_( 'Recent') 
-    menu['mine'].name =_( 'My tasks') 
-    menu['inprogress'].name =_( 'In progress') 
-    
+    menu['recent'].name = _('Recent')
+    menu['mine'].name = _('My tasks')
+    menu['inprogress'].name = _('In progress')
+
     projectmenus = []
-    
+
     projects_sql = """
         select distinct
             p.id,   p.name
@@ -477,7 +478,7 @@ def gen_TaskLogForm(user):
 
     projects = cur.fetchall()
 
-    if len(projects) > 5: # this is arbitrary
+    if len(projects) > 5:  # this is arbitrary
         mi = menu['all']
         mi.name = 'All'
         projectmenus.append((mi, True))
@@ -521,12 +522,13 @@ def gen_TaskLogForm(user):
             if add is None:
                 add = (h.project == row[1])
 
-            if not add: continue
+            if not add:
+                continue
 
             submenu = h.id[0]
 
             for i in range(0, 12, 3):
-                tpe, id, label = row[i:i+3]
+                tpe, id, label = row[i:i + 3]
                 key = '%s%s%d' % (submenu, tpe[0], id)
                 elt = h[key]
 
@@ -541,27 +543,29 @@ def gen_TaskLogForm(user):
     class TaskLogForm(HiddenHttpRefererForm):
         taskmenu = forms.Field(widget=HierarchicRadioSelect(attrs={'id': 'tasks-select', 'class': 'tasks-select'},
                                                      choices=[],
-                                                     hierarchy=menu), required = False)
+                                                     hierarchy=menu),
+                                                     required=False)
         task = TaskField(widget=forms.TextInput(attrs={'readonly': 'readonly', 'value': ''}))
         state = forms.ChoiceField(choices=Task.STATES.choices())
         estimate = forms.DecimalField(widget=forms.TextInput(attrs={'type': "readonly",
                                                                     'readonly': "readonly",
-                                                                    'style' : "border: 0"}),
+                                                                    'style': "border: 0"}),
                                       min_value=0, decimal_places=2, max_digits=5,
                                       required=False)
         remaining = forms.DecimalField(min_value=0, decimal_places=2, max_digits=5)
         actuals = forms.DecimalField(widget=forms.TextInput(attrs={'type': "readonly",
                                                                     'readonly': "readonly",
-                                                                    'style' : "border: 0"}),
+                                                                    'style': "border: 0"}),
                                      min_value=0, decimal_places=2, max_digits=5,
                                      required=False)
         date = forms.DateField(required=False)
+
         class Meta:
             model = TaskLog
             fields = 'taskmenu', 'task', 'date', 'time_on_task', 'summary'
 
     TaskLogForm.base_fields.keyOrder = ['taskmenu',
-                                        'task', 
+                                        'task',
                                         'estimate',
                                         'actuals',
                                         'remaining',

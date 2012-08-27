@@ -1,6 +1,7 @@
 from django import forms
 from django.utils.encoding import smart_unicode
 
+
 class GroupedChoiceField(forms.ChoiceField):
     def clean(self, value):
         """

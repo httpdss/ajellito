@@ -8,34 +8,39 @@ from tagging.models import Tag
 from django.views.decorators.csrf import csrf_exempt
 from django.template import RequestContext
 from agilito.actions import export_as_csv_action
+from django.http import HttpResponseRedirect
 
-#
-# In Lines
-#
+
 class UserStoryAttachmentInLine(admin.TabularInline):
     model = UserStoryAttachment
     extra = 1
+
 
 class TestCaseInLine(admin.TabularInline):
     model = TestCase
     extra = 1
 
+
 class TaskInLine(admin.TabularInline):
     model = Task
     extra = 1
 
+
 class ProjectMemberInLine(admin.TabularInline):
     model = ProjectMember
     extra = 1
-        
+
+
 class ProjectAdmin(admin.ModelAdmin):
     inlines = [ProjectMemberInLine]
+
 
 class ReleaseAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'project')
     list_filter = ('project',)
     ordering = ('project',)
     search_fields = ['name', 'description', 'project__name']
+
 
 class IterationAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'project', 'start_date', 'end_date')
@@ -44,12 +49,15 @@ class IterationAdmin(admin.ModelAdmin):
     ordering = ('project',)
     search_fields = ['name', 'description', 'project__name']
 
+
 class UserProfileAdmin(admin.ModelAdmin):
     pass
+
 
 class UserStoryAttachmentAdmin(admin.ModelAdmin):
     list_display = ('name',)
     list_display_links = ('name',)
+
 
 class UserStoryAdmin(admin.ModelAdmin):
     inlines = [UserStoryAttachmentInLine, TestCaseInLine, TaskInLine]
@@ -57,31 +65,32 @@ class UserStoryAdmin(admin.ModelAdmin):
                     'iteration', 'state', 'rank', 'size')
     list_display_links = ('id', 'name',)
     list_filter = ('project', 'iteration', 'state', )
-    ordering = ('rank','size', )
+    ordering = ('rank', 'size')
     search_fields = ['name', 'description']
-    
+
     fieldsets = ((None, {'fields': ('name', 'description',
                                    ('project', 'iteration'),
                                    ('rank', 'state', 'size', ))}), )
+
 
 class TaskAdmin(admin.ModelAdmin):
     list_display = ('name', 'estimate', 'actuals', 'remaining',
                     'state', 'category', 'owner', 'user_story')
     list_display_links = ('name', 'owner', 'user_story')
     list_filter = ('owner', 'state', 'user_story__iteration__name', 'category')
-    fieldsets = ((None, { 'fields': ('name', 'description', 'user_story',
+    fieldsets = ((None, {'fields': ('name', 'description', 'user_story',
                                     ('estimate', 'remaining', 'state', 'category'),
                                      'owner')}),)
     search_fields = ('name', 'description', 'user_story__name')
-    
+
     list_editable = ('category',)
-    
+
     actions = [export_as_csv_action(fields=['name', 'owner', 'estimate', 'actuals']), 'add_tag']
 
     class AddTagForm(forms.Form):
         _selected_action = forms.CharField(widget=forms.MultipleHiddenInput)
         tag = forms.ModelChoiceField(Tag.objects)
-        
+
     @csrf_exempt
     def add_tag(self, request, queryset):
         form = None
@@ -109,9 +118,9 @@ class TaskAdmin(admin.ModelAdmin):
 
         return render_to_response('admin/add_tag.html',
                                   context_instance=RequestContext(request, {'tasks': queryset,
-                                                                            'tag_form': form,}))
+                                                                            'tag_form': form}))
     add_tag.short_description = "Add tag to task"
-    
+
 
 class TestCaseAdmin(admin.ModelAdmin):
     fieldsets = ((None, {
@@ -123,34 +132,38 @@ class TestCaseAdmin(admin.ModelAdmin):
                             'postcondition',),
                 }),
                 )
-    
+
     list_display = ('id', 'name', 'user_story', 'priority')
     list_display_links = ('id', 'name',)
     list_filter = ('priority',)
     search_fields = ('name', 'description', 'user_story__name')
+
 
 class TestResultAdmin(admin.ModelAdmin):
     list_display = ('test_case', 'date', 'tester', 'result')
     list_display_links = ('test_case', 'tester')
     list_filter = ('result', 'tester')
 
+
 class TaskLogAdmin(admin.ModelAdmin):
     list_display = ('summary', 'task', 'iteration', 'project', 'date', 'time_on_task', 'owner')
-    list_filter = ('owner','date')
+    list_filter = ('owner', 'date')
     date_hierarchy = 'date'
     search_fields = ('summary', 'iteration__name', 'iteration__project__name')
     ordering = ('-date',)
 
+
 class ImpedimentAdmin(admin.ModelAdmin):
     list_display = ('name', 'description', 'opened', 'resolved')
     ordering = ('-opened',)
-    
+
+
 class ProjectMemberAdmin(admin.ModelAdmin):
-    list_display = ('user','project','role')
-    list_filter = ('project','role')
+    list_display = ('user', 'project', 'role')
+    list_filter = ('project', 'role')
     search_fields = ['member__username']
     list_editable = ('role',)
-    
+
 
 admin.site.register(ProjectMember, ProjectMemberAdmin)
 admin.site.register(Project, ProjectAdmin)

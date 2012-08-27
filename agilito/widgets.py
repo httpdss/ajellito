@@ -1,5 +1,3 @@
-from itertools import chain
-
 from django import forms
 from django.utils.encoding import force_unicode
 from django.utils.html import escape, conditional_escape
@@ -13,6 +11,7 @@ from django.utils import simplejson
 
 import types
 
+
 class TaskHierarchy:
     def __init__(self, id):
         self.id = id
@@ -24,7 +23,7 @@ class TaskHierarchy:
 
     def keys(self):
         return [c.id for c in self.children]
-        
+
     def __getitem__(self, id):
         child = ([c for c in filter(lambda x: x.id == id, self.children)] + [None])[0]
         if child is None:
@@ -39,10 +38,11 @@ class TaskHierarchy:
         if len(self.children) == 1 and self.children[0].shrinkable:
             self.children = self.children[0].children
 
-    def __print(self, level = 0):
+    def __print(self, level=0):
         indent = ' ' * level
         name = self.name
-        if name is None: name = ''
+        if name is None:
+            name = ''
         children = ''
         for c in self.children:
             children += c.__print(level + 1)
@@ -51,9 +51,10 @@ class TaskHierarchy:
     def __str__(self):
         return self.__print()
 
+
 class NestedListRadioFieldRenderer(forms.widgets.RadioFieldRenderer):
     def __init__(self, name, value, attrs, choices, hierarchy):
-        if attrs.has_key('id'):
+        if 'id' in attrs:
             self.id = ' id="%s"' % conditional_escape(force_unicode(attrs['id']))
             del attrs['id']
         else:
@@ -64,7 +65,7 @@ class NestedListRadioFieldRenderer(forms.widgets.RadioFieldRenderer):
         self.__rendered = u''
         # self.__index = 0
 
-    def __render(self, data, id = None):
+    def __render(self, data, id=None):
         if type(data) == types.ListType:
             self.__rendered += u'<ul'
             if id:
@@ -73,7 +74,8 @@ class NestedListRadioFieldRenderer(forms.widgets.RadioFieldRenderer):
             css = []
             if id:
                 css.append(self.name + '-root')
-                if self.attrs.has_key('class'): css.append(self.attrs['class'])
+                if 'class' in self.attrs:
+                    css.append(self.attrs['class'])
                 self.__rendered += ' class="%s"' % " ".join(css)
 
             self.__rendered += u'>'
@@ -105,12 +107,13 @@ class NestedListRadioFieldRenderer(forms.widgets.RadioFieldRenderer):
         self.__render(self.hierarchy.children, self.id)
         return mark_safe(self.__rendered)
 
+
 class TreeTableRadioFieldRenderer(forms.widgets.RadioFieldRenderer):
     def __init__(self, name, value, attrs, choices, hierarchy):
         self.properties = {}
 
         for key in ['id']:
-            if attrs.has_key(key):
+            if key in attrs:
                 self.properties[key] = attrs[key]
                 del attrs[key]
             else:
@@ -141,7 +144,6 @@ class TreeTableRadioFieldRenderer(forms.widgets.RadioFieldRenderer):
         else:
             parent = ''
 
-
         if isinstance(data, types.StringTypes):
             self.__rendered += '<tr id="%s"%s><td>' % (id, parent)
             self.__rendered += force_unicode(forms.widgets.RadioInput(
@@ -160,7 +162,8 @@ class TreeTableRadioFieldRenderer(forms.widgets.RadioFieldRenderer):
         self.__rendered = u'<table%s' % self.properties['id']
 
         css = []
-        if self.attrs.has_key('class'): css.append(self.attrs['class'])
+        if 'class' in self.attrs:
+            css.append(self.attrs['class'])
         if len(css) > 0:
             self.__rendered += ' class="%s"' % " ".join(css)
         self.__rendered += '>'
@@ -171,21 +174,24 @@ class TreeTableRadioFieldRenderer(forms.widgets.RadioFieldRenderer):
 
         return mark_safe(self.__rendered)
 
+
 class HierarchicRadioSelect(forms.RadioSelect):
     renderer = NestedListRadioFieldRenderer
     #renderer = TreeTableRadioFieldRenderer
 
     def __init__(self, *args, **kwargs):
         # Override the default renderer if we were passed one.
-        renderer = kwargs.pop('renderer', None)
+        self.renderer = kwargs.pop('renderer', None)
         self.hierarchy = kwargs.pop('hierarchy', None)
         super(HierarchicRadioSelect, self).__init__(*args, **kwargs)
 
     def render(self, name, value, attrs=None, choices=()):
-        if value is None: value = ''
-        str_value = force_unicode(value) # Normalize to string.
+        if value is None:
+            value = ''
+        str_value = force_unicode(value)  # Normalize to string.
         final_attrs = self.build_attrs(attrs)
         return self.renderer(name, str_value, final_attrs, self.choices, self.hierarchy).render()
+
 
 class AutoCompleteTagInput(forms.TextInput):
     def __init__(self, *args, **kwargs):
@@ -222,6 +228,7 @@ class AutoCompleteTagInput(forms.TextInput):
                 autoFill: true,
             });
             </script>''' % (name, tag_list))
+
 
 class TableSelectMultiple(forms.widgets.SelectMultiple):
     """
@@ -261,13 +268,14 @@ class TableSelectMultiple(forms.widgets.SelectMultiple):
             self.grouper, self.group_label = grouper
 
     def render(self, name, value, attrs=None, choices=()):
-        if value is None: value = []
+        if value is None:
+            value = []
 
         id = attrs['id']
 
         final_attrs = self.build_attrs(attrs, name=name)
         output = ['<table id="%s">' % id]
-        str_values = set([force_unicode(v) for v in value]) # Normalize to strings.
+        str_values = set([force_unicode(v) for v in value])  # Normalize to strings.
         parent = None
         parent_id = '%s-p-%%d' % id
         colspan = len(self.item_attrs) + 1
@@ -283,7 +291,7 @@ class TableSelectMultiple(forms.widgets.SelectMultiple):
                 else:
                     parent = None
                     child = ''
-            
+
             final_attrs = dict(final_attrs, id='%s_%s' % (attrs['id'], i))
             cb = forms.widgets.CheckboxInput(final_attrs, check_test=lambda value: value in str_values)
             option_value = force_unicode(option_value)

@@ -12,6 +12,7 @@ except ImportError:
 from agilito.models import Project, ProjectMember
 import html5lib
 
+
 def touch_cache(request, project_id):
     response = HttpResponse(mimetype="text/plain")
     if CACHE_ENABLED:
@@ -21,7 +22,8 @@ def touch_cache(request, project_id):
     else:
         response.write("Caching is disabled")
     return response
-    
+
+
 def cached_view(f):
     def f_cached(*args, **kwargs):
         global CACHE_ENABLED
@@ -33,7 +35,7 @@ def cached_view(f):
         vardict = dict(zip(params, ['<default>' for d in params]))
         vardict.update(dict(zip(params, args[1:])))
         vardict.update(kwargs)
-        u = args[0].user # request.user
+        u = args[0].user  # request.user
 
         pv = Project.cache_id(vardict["project_id"])
 
@@ -54,10 +56,10 @@ def cached_view(f):
     return f_cached
 
 
-
 def datelabels(dates, l):
     label = ["mo", "tu", "we", "th", "fr", "sa", "su"]
     return list(enumerate([label[d.weekday()][:l] for d in dates]))
+
 
 class SideBar(SortedDict):
     class Sub(list):
@@ -73,23 +75,23 @@ class SideBar(SortedDict):
                 sid, section = section.split('#', 2)
             else:
                 sid = None
-            
-            if not self.has_key(section):
+
+            if not section in self:
                 self[section] = SideBar.Sub()
-            
+
             if sid:
                 self[section].id = sid
-            
+
             if redirect:
                 if isinstance(redirect, basestring):
                     url = "%s?last_page=%s" % (url, redirect)
                 else:
                     url = "%s?last_page=%s" % (url, self.request.path)
-            
+
             entry = {"url": url, "label": label, "properties": props}
             if popup:
                 entry["popup"] = popup
-            
+
             self[section].append(entry)
 
     def enabled(self):
@@ -110,7 +112,7 @@ class SideBar(SortedDict):
                 for i in range(len(nv)):
                     if nv[i]["properties"] is None:
                         nv[i]["properties"] = {}
-                    if not nv[i]["properties"].has_key("id"):
+                    if not "id" in nv[i]["properties"]:
                         if i == 0:
                             nv[i]["properties"]["id"] = id
                         else:
@@ -124,11 +126,10 @@ def is_member(view):
     """ Gives access to everyone which is not a viewer """
     @wraps(view)
     def inner(request, project_id, *args, **kwargs):
-        if request.session.get('is_viewer',True):
+        if request.session.get('is_viewer', True):
             raise Http404
         return view(request, project_id, *args, **kwargs)
     return inner
-
 
 
 def restricted(f):
@@ -143,6 +144,7 @@ def restricted(f):
         return f(request, project_id, *args, **kwargs)
     return wrapper
 
+
 class defaultdict(dict):
     def __init__(self, default_factory=None, *a, **kw):
         if (default_factory is not None and
@@ -150,33 +152,42 @@ class defaultdict(dict):
             raise TypeError("first argument must be callable")
         dict.__init__(self, *a, **kw)
         self.default_factory = default_factory
+
     def __getitem__(self, key):
         try:
             return dict.__getitem__(self, key)
         except KeyError:
             return self.__missing__(key)
+
     def __missing__(self, key):
         if self.default_factory is None:
             raise KeyError(key)
         self[key] = value = self.default_factory()
         return value
+
     def __reduce__(self):
         if self.default_factory is None:
             args = tuple()
         else:
             args = self.default_factory,
         return type(self), args, None, None, self.iteritems()
+
     def copy(self):
         return self.__copy__()
+
     def __copy__(self):
         return type(self)(self.default_factory, self)
+
     def __deepcopy__(self, memo):
         import copy
         return type(self)(self.default_factory,
                             copy.deepcopy(self.items()))
+
     def __repr__(self):
         return 'defaultdict(%s, %s)' % (self.default_factory,
                                         dict.__repr__(self))
+
+
 class HTMLConverter(html5lib.HTMLParser):
     def __init__(self, data):
         html5lib.HTMLParser.__init__(self)
@@ -219,7 +230,8 @@ class HTMLConverter(html5lib.HTMLParser):
             ## later we'll just ignore what we don't understand, but
             ## right now I want explicit notification.
             else:
-                if debug: print 'Unexpected tag', tag
+                if debug:
+                    print 'Unexpected tag', tag
                 output += HTMLConverter.__text__(child, debug)
 
         return output

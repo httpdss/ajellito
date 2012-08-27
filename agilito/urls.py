@@ -1,3 +1,4 @@
+import os
 from django.conf.urls.defaults import *
 from django.contrib import admin
 from django.contrib.auth.decorators import login_required
@@ -9,11 +10,7 @@ from agilito.api import ProjectResource
 
 from agilito.views import ProjectList, ProjectCreate, ProjectDetail, FileList
 
-
-
 admin.autodiscover()
-
-import os
 
 media_root = os.path.join(os.path.dirname(__file__), 'media')
 
@@ -58,7 +55,7 @@ urlpatterns = patterns('agilito.views',
     url(r'^(?P<project_id>\d+)/release/add/$', 'release_create', name="release_create"),
     url(r'^(?P<project_id>\d+)/release/(?P<release_id>\d+)/edit/$', 'release_edit', name='release_edit'),
     (r'^(?P<project_id>\d+)/release/(?P<release_id>\d+)/delete/$', 'release_delete'),
-    
+
     url(r'^(?P<project_id>\d+)/iteration/$', 'iteration_status', name="current_iteration_status"),
     url(r'^(?P<project_id>\d+)/iteration/(?P<iteration_id>\d+)/$', 'iteration_status', name="iteration_status_with_id"),
     url(r'^(?P<project_id>\d+)/iteration/import/$', 'iteration_import', name='iteration_import'),
@@ -68,7 +65,7 @@ urlpatterns = patterns('agilito.views',
 
     url(r'^(?P<project_id>\d+)/taskboard/(?P<iteration_id>\d+)/$', 'taskboard', name="taskboard"),
     url(r'^(?P<project_id>\d+)/iteration/(?P<iteration_id>\d+)/userstory/add/$', 'userstory_create', name="story_from_iteration"),
-        
+
     url(r'^(?P<project_id>\d+)/iteration/hours/$', 'iteration_hours', name="current_iteration_hours"),
     url(r'^(?P<project_id>\d+)/iteration/hours/(?P<username>[A-Za-z0-9_\.]+)/$', 'iteration_daily_hours', name="current_daily_hours"),
     url(r'^(?P<project_id>\d+)/iteration/(?P<iteration_id>\d+)/hours/(?P<username>[A-Za-z0-9_\.]+)/$', 'iteration_daily_hours', name="current_daily_hours_with_id"),
@@ -99,7 +96,7 @@ urlpatterns = patterns('agilito.views',
     (r'^(?P<project_id>\d+)/userstory/(?P<userstory_id>\d+)/attachment/(?P<attachment_id>\d+)/delete/$', 'delete_attachment'),
     url(r'^(?P<project_id>\d+)/userstory/(?P<userstory_id>\d+)/attachment/(?P<attachment_id>\d+)/view/$', 'view_attachment', name="agilito_view_attachment"),
     url(r'^(?P<project_id>\d+)/userstory/(?P<userstory_id>\d+)/attachment/(?P<attachment_id>\d+)/view/(?P<secret>[A-Za-z0-9_]*)/$', 'view_attachment', name="agilito_view_attachment_secret"),
-    
+
     url(r'^(?P<project_id>\d+)/userstory/(?P<userstory_id>\d+)/testcase/add/$', 'testcase_create', name="agilito_testcase_create"),
     (r'^(?P<project_id>\d+)/userstory/(?P<userstory_id>\d+)/testcase/(?P<testcase_id>\d+)/edit/$', 'testcase_edit'),
     (r'^(?P<project_id>\d+)/userstory/(?P<userstory_id>\d+)/testcase/(?P<testcase_id>\d+)/$', 'testcase_detail'),
@@ -113,8 +110,8 @@ urlpatterns = patterns('agilito.views',
     url(r'^(?P<project_id>\d+)/search/', 'search', name="agilito_search"),
     url(r'^json/task/[ra]?(?P<task_id>\d+)/$', 'task_json', name="task_json"),
 
-    url(r'^(?P<project_id>\d+)/log/$', 'timelog',name="timelog"),
-    url(r'^(?P<project_id>\d+)/log_alert/$', 'timelog_alert',name="timelog_alert"),
+    url(r'^(?P<project_id>\d+)/log/$', 'timelog', name="timelog"),
+    url(r'^(?P<project_id>\d+)/log_alert/$', 'timelog_alert', name="timelog_alert"),
     url(r'^(?P<project_id>\d+)/mylog/$', 'timelog_mylog', name="agilito_tasklog_mylog"),
     (r'^(?P<project_id>\d+)/log/task/(?P<task_id>\d+)/$', 'timelog_task'),
 

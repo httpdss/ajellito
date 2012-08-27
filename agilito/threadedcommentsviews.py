@@ -16,7 +16,7 @@ try:
     from functools import wraps
 except ImportError:
     from django.utils.functional import wraps
-    
+
 
 if "notification" in getattr(settings, "INSTALLED_APPS"):
     from notification import models as notification
@@ -47,13 +47,14 @@ def restricted(f):
         return f(request, *args, **kwargs)
     return wrapper
 
+
 #@restricted
 def comment(*args, **kwargs):
     """
     Thin wrapper around threadedviews.comment which checks for project membership
     """
     http_response = threadedcomments.views.comment(*args, **kwargs)
-    messages.add_message(args[0], messages.SUCCESS , _("Comment added succesfully"))
+    messages.add_message(args[0], messages.SUCCESS, _("Comment added succesfully"))
     if notification:
         sendto_ids = args[0].POST.getlist('sendto')
         if sendto_ids:
@@ -70,15 +71,16 @@ def comment(*args, **kwargs):
                               'object': obj})
     return http_response
 
+
 #@restricted
 def comment_delete(*args, **kwargs):
     """
     Thin wrapper around threadedviews.comment which checks for project membership
     """
-    
+
     for a in args:
         logger.error(a)
-        
+
     for key in kwargs:
         logger.error("%s %s" % (key, kwargs[key]))
     return threadedcomments.views.comment_delete(*args, **kwargs)

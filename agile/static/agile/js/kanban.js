@@ -13,8 +13,8 @@ Kanban.Tickets.prototype.$constructor = function(opt){
 		todoElm : null,
 		develElm : null,
 		doneElm : null
-	}
-	for(p in opt){
+	};
+	for(var p in opt){
 		this.opt[p] = opt[p];
 	}
 	this.dom.todo = JAK.gel(this.opt.todoElm);
@@ -59,9 +59,9 @@ Kanban.Tickets.prototype._move = function(txt, status){
 			}
 		} else {
 			if(data.status == 'userError'){
-				alert('Neoprávněné přesunutí tiketu.');
+				alert('Unauthorized move.');
 			} else {
-				alert('Chyba!');
+				alert('Error!');
 			}
 		}
 	}
